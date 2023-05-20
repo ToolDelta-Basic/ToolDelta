@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <code>TooldDelta</code> 是依赖于 <code>PhoenixBuilder</code> 的商业化扩展组件，可以加载各种有趣的插件。
+  <code>TooldDelta</code> 是依赖于 <code>PhoenixBuilder</code> 的多功能扩展组件，可以加载各种各样有趣的插件。
 </p>
 
 
@@ -31,7 +31,7 @@
 
 
 # 注意事项
-- 在 `源代码` 下运行本程序时，请先执行 `install_libs.sh`
+- 在 `源代码` 环境下运行本程序时，请先执行 `install_libs.sh`
 - 此项目中不存在任何未重构代码，且对插件加载做了一定优化，使之能流畅地运行在 `Linux` 面板环境中
 - 请将建议提交到 [`Issues`](https://github.com/SuperScript-PRC/ToolDelta/issues) 中，或者将代码优化提交到 [`Pull Request`](https://github.com/SuperScript-PRC/ToolDelta/pulls) 中
 
