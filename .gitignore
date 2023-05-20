@@ -18,6 +18,7 @@ Python*
 *.out
 *.json
 pluginEnc.py
+DotCSLite.py
 phoenixbuilder
 go-cqhttp
 *.yml

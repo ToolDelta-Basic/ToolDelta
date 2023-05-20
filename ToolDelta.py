@@ -6,12 +6,6 @@ from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
-try:
-    from libs import conn
-except Exception as err:
-    print("加载外部DLL库失败， 请检查其是否存在")
-    print(err)
-    raise SystemExit
 
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 3)
@@ -19,6 +13,13 @@ UPDATE_NOTE = ""
 Print = libs.color_print.Print
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
+
+try:
+    from libs import conn
+except Exception as err:
+    Print.print_err("加载外部DLL库失败， 请检查其是否存在")
+    print(err)
+    raise SystemExit
 
 class Frame:
     class ThreadExit(SystemExit):...
