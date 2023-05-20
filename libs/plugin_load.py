@@ -1,18 +1,25 @@
 from typing import Callable, Tuple, Type
 from .color_print import Print
-import os, sys, traceback
+import os
+import sys
+import traceback
 from .cfg import Cfg
 from .builtins import Builtins
 
-class PluginSkip(Exception):...
+
+class PluginSkip(Exception):
+    ...
+
 
 NON_FUNC = lambda *_: None
 _print = Print
+
 
 class Plugin:
     name = "<未命名插件>"
     version = (0, 0, 1)
     author = "?"
+
     def __init__(this):
         this.require_listen_packets = []
         this.dotcs_old_type = False
@@ -40,12 +47,15 @@ class Plugin:
             if plugin_prg_lines[line].startswith("# PLUGIN TYPE: "):
                 if plugin_start + 1:
                     plugin_end = line
-                    runcode_tmp[plugin_prev_type] = "\n".join(plugin_prg_lines[plugin_start:plugin_end])
+                    runcode_tmp[plugin_prev_type] = "\n".join(
+                        plugin_prg_lines[plugin_start:plugin_end])
                 plugin_start = line + 1
-                plugin_prev_type = plugin_prg_lines[line].strip("# PLUGIN TYPE: ")
+                plugin_prev_type = plugin_prg_lines[line].strip(
+                    "# PLUGIN TYPE: ")
         if plugin_start + 1:
             plugin_end = len(plugin_prg_lines)
-            runcode_tmp[plugin_prev_type] = "\n".join(plugin_prg_lines[plugin_start:plugin_end])
+            runcode_tmp[plugin_prev_type] = "\n".join(
+                plugin_prg_lines[plugin_start:plugin_end])
 
         for k in runcode_tmp:
             match k:
@@ -80,38 +90,48 @@ class Plugin:
                             def_exec_code = f"def %s_packet_{pktID}():\n "
                             this.add_req_listen_packet(pktID)
                         except:
-                            _print.print_war(f"§c不合法的监听数据包ID： {k}, 已跳过")  
+                            _print.print_war(f"§c不合法的监听数据包ID： {k}, 已跳过")
                     else:
                         _print.print_war(f"§c无法识别的插件事件样式： {k}, 已跳过")
-            p_code = def_exec_code % this.name + runcode_tmp[k].replace("\n", "\n ")
+            p_code = def_exec_code % this.name + \
+                runcode_tmp[k].replace("\n", "\n ")
             try:
                 # 奇怪， 作用域没有用， 两个类里的变量字典会互相干扰?
                 # oh我知道了
                 exec(p_code, old_dotcs_env, _dotcs_runcode)
                 if this._dotcs_runcode.get(f"{this.name}_launch", None):
-                    evts["on_def"] = [this.name, _dotcs_runcode[f"{this.name}_launch"]]
+                    evts["on_def"] = [this.name,
+                                      _dotcs_runcode[f"{this.name}_launch"]]
                 if this._dotcs_runcode.get(f"{this.name}_init", None):
-                    evts["on_inject"] = [this.name, _dotcs_runcode[f"{this.name}_init"]]
+                    evts["on_inject"] = [this.name,
+                                         _dotcs_runcode[f"{this.name}_init"]]
                 if this._dotcs_runcode.get(f"{this.name}_player_prejoin", None):
-                    evts["on_player_prejoin"] = [this.name, _dotcs_runcode[f"{this.name}_player_prejoin"]]
+                    evts["on_player_prejoin"] = [this.name,
+                                                 _dotcs_runcode[f"{this.name}_player_prejoin"]]
                 if this._dotcs_runcode.get(f"{this.name}_player_join", None):
-                    evts["on_player_join"] = [this.name, _dotcs_runcode[f"{this.name}_player_join"]]
+                    evts["on_player_join"] = [this.name,
+                                              _dotcs_runcode[f"{this.name}_player_join"]]
                 if this._dotcs_runcode.get(f"{this.name}_player_leave", None):
-                    evts["on_player_leave"] = [this.name, _dotcs_runcode[f"{this.name}_player_death"]]
+                    evts["on_player_leave"] = [this.name,
+                                               _dotcs_runcode[f"{this.name}_player_death"]]
                 if this._dotcs_runcode.get(f"{this.name}_player_leave", None):
-                    evts["on_player_death"] = [this.name, _dotcs_runcode[f"{this.name}_player_death"]]
+                    evts["on_player_death"] = [this.name,
+                                               _dotcs_runcode[f"{this.name}_player_death"]]
                 return evts
             except Exception as err:
                 _print.print_err(f"§c插件<{this.name}>出错: {err}， 跳过执行")
+
 
 class PluginAPI:
     name = "<未命名api>"
     version = (0, 0, 1)
 
+
 class PluginGroup:
     class PluginAPINotFoundError(ModuleNotFoundError):
         def __init__(this, name):
             this.name = name
+
     class PluginAPIVersionError(ModuleNotFoundError):
         def __init__(this, name, m_ver, n_ver):
             this.name = name
@@ -134,6 +154,7 @@ class PluginGroup:
     plugins_api = {}
     excType = 0
     PRG_NAME = ""
+
     def __init__(this, frame, PRG_NAME):
         if this.excType != 0:
             raise OSError
@@ -188,7 +209,8 @@ class PluginGroup:
         api = this.plugins_api.get(apiName, None)
         if api:
             if min_version and api.version < min_version:
-                raise this.PluginAPIVersionError(apiName, min_version, api.version)
+                raise this.PluginAPIVersionError(
+                    apiName, min_version, api.version)
             return api
         else:
             raise this.PluginAPINotFoundError(apiName)
@@ -202,7 +224,8 @@ class PluginGroup:
                         code = f.read()
                     plug = Plugin()
                     plug.name = file.strip(".py")
-                    evts = plug.import_original_dotcs_plugin(code, this.linked_frame._get_old_dotcs_env(), module_env)
+                    evts = plug.import_original_dotcs_plugin(
+                        code, this.linked_frame._get_old_dotcs_env(), module_env)
                     this.plugins_funcs.update(evts)
                     this.add_plugin(plug)
                     _print.print_suc(f"§a成功加载插件 {plug.name}")
@@ -214,11 +237,13 @@ class PluginGroup:
     def read_plugin_from_new(this, root_env: dict):
         pkt_funcs: dict[str, str] = {}
         plug_cls_cache = [None, 0]
+
         def _listen_packet(packetType: int):
             def _add(func: Callable[[dict], None]):
                 pkt_funcs.update({str(packetType): func.__name__})
                 return func
             return _add
+
         def _add_plugin_new(plugin: Plugin):
             plug_cls_cache[1] += 1
             assert Plugin.__subclasscheck__(plugin), 1
@@ -227,41 +252,54 @@ class PluginGroup:
             this.plugins.append(plugin_body)
             _v0, _v1, _v2 = plugin_body.version
             if hasattr(plugin_body, "on_def"):
-                this.plugins_funcs["on_def"].append([plugin_body.name, plugin_body.on_def])
+                this.plugins_funcs["on_def"].append(
+                    [plugin_body.name, plugin_body.on_def])
             if hasattr(plugin_body, "on_inject"):
-                this.plugins_funcs["on_inject"].append([plugin_body.name, plugin_body.on_inject])
+                this.plugins_funcs["on_inject"].append(
+                    [plugin_body.name, plugin_body.on_inject])
             if hasattr(plugin_body, "on_player_prejoin"):
-                this.plugins_funcs["on_player_prejoin"].append([plugin_body.name, plugin_body.on_player_prejoin])
+                this.plugins_funcs["on_player_prejoin"].append(
+                    [plugin_body.name, plugin_body.on_player_prejoin])
             if hasattr(plugin_body, "on_player_join"):
-                this.plugins_funcs["on_player_join"].append([plugin_body.name, plugin_body.on_player_join])
+                this.plugins_funcs["on_player_join"].append(
+                    [plugin_body.name, plugin_body.on_player_join])
             if hasattr(plugin_body, "on_player_message"):
-                this.plugins_funcs["on_player_message"].append([plugin_body.name, plugin_body.on_player_message])
+                this.plugins_funcs["on_player_message"].append(
+                    [plugin_body.name, plugin_body.on_player_message])
             if hasattr(plugin_body, "on_player_death"):
-                this.plugins_funcs["on_player_death"].append([plugin_body.name, plugin_body.on_player_death])
+                this.plugins_funcs["on_player_death"].append(
+                    [plugin_body.name, plugin_body.on_player_death])
             if hasattr(plugin_body, "on_player_leave"):
-                this.plugins_funcs["on_player_leave"].append([plugin_body.name, plugin_body.on_player_leave])
+                this.plugins_funcs["on_player_leave"].append(
+                    [plugin_body.name, plugin_body.on_player_leave])
 
-            _print.print_suc(f"成功载入插件 {plugin_body.name} 版本：{_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
+            _print.print_suc(
+                f"成功载入插件 {plugin_body.name} 版本：{_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
 
-        loc_env = {"add_plugin": _add_plugin_new, "addPluginAPI": this.addPluginAPI, "listen_packet": _listen_packet, "plugins": this.linked_frame.link_plugin_group}
+        loc_env = {"add_plugin": _add_plugin_new, "addPluginAPI": this.addPluginAPI,
+                   "listen_packet": _listen_packet, "plugins": this.linked_frame.link_plugin_group}
         root_env.update(loc_env)
         for plugin_dir in os.listdir(f"{this.PRG_NAME}插件"):
             if os.path.isdir(f"{this.PRG_NAME}插件/" + plugin_dir):
                 pkt_funcs.clear()
                 plug_cls_cache.clear()
                 plug_cls_cache += [None, 0]
-                sys.path.append(os.getcwd() + f"/{this.PRG_NAME}插件/" + plugin_dir)
+                sys.path.append(
+                    os.getcwd() + f"/{this.PRG_NAME}插件/" + plugin_dir)
                 try:
                     with open(f"{this.PRG_NAME}插件/" + plugin_dir + "/__init__.py", "r", encoding='utf-8') as f:
                         code = f.read()
                     exec(code, root_env)
                     assert plug_cls_cache[1] <= 1, 2
-                    assert not pkt_funcs or (pkt_funcs and plug_cls_cache[1] != 0), 3
+                    assert not pkt_funcs or (
+                        pkt_funcs and plug_cls_cache[1] != 0), 3
                     for k in pkt_funcs:
                         pktType = int(k)
                         this.add_listen_packet(pktType)
-                        this.add_listen_packet_func(pktType, getattr(plug_cls_cache[0], pkt_funcs[k]))
-                        this.linked_frame.link_game_ctrl.add_listen_pkt(pktType)
+                        this.add_listen_packet_func(
+                            pktType, getattr(plug_cls_cache[0], pkt_funcs[k]))
+                        this.linked_frame.link_game_ctrl.add_listen_pkt(
+                            pktType)
                 except FileNotFoundError as err:
                     if "__init__.py" in err:
                         _print.print_err(f"插件 {plugin_dir} 不合法： 没有__init__.py")
@@ -271,9 +309,11 @@ class PluginGroup:
                     if err.args[0] == 1:
                         _print.print_err(f"插件 {plugin_dir} 不合法： 主类没有继承 Plugin")
                     elif err.args[0] == 2:
-                        _print.print_err(f"插件 {plugin_dir} 不合法： 只能调用一次 @add_plugin, 实际{plug_cls_cache[1]}次")
+                        _print.print_err(
+                            f"插件 {plugin_dir} 不合法： 只能调用一次 @add_plugin, 实际{plug_cls_cache[1]}次")
                     elif err.args[0] == 3:
-                        _print.print_err(f"插件 {plugin_dir} 不合法： 没有调用 @add_plugin 却监听了数据包")
+                        _print.print_err(
+                            f"插件 {plugin_dir} 不合法： 没有调用 @add_plugin 却监听了数据包")
                     else:
                         raise
                 except Cfg.ConfigError as err:
@@ -281,16 +321,19 @@ class PluginGroup:
                     _print.print_err(f"你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
                     raise SystemExit
                 except PluginGroup.PluginAPINotFoundError as err:
-                    _print.print_err(f"插件 {plugin_dir} 需要包含该种接口的前置组件: {err.name}")
+                    _print.print_err(
+                        f"插件 {plugin_dir} 需要包含该种接口的前置组件: {err.name}")
                     raise SystemExit
                 except PluginGroup.PluginAPIVersionError as err:
-                    _print.print_err(f"插件 {plugin_dir} 需要该前置组件 {err.name} 版本: {err.m_ver}, 但是现有版本过低: {err.n_ver}")
+                    _print.print_err(
+                        f"插件 {plugin_dir} 需要该前置组件 {err.name} 版本: {err.m_ver}, 但是现有版本过低: {err.n_ver}")
                     raise SystemExit
                 except Builtins.SimpleJsonDataReader.DataReadError as err:
                     _print.print_err(f"插件 {plugin_dir} 读取数据失败: {err}")
                 except Exception as err:
                     if "() takes no arguments" in str(err):
-                        _print.print_err(f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
+                        _print.print_err(
+                            f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
                     else:
                         _print.print_err(f"加载插件 {plugin_dir} 出现问题，报错如下: ")
                         _print.print_err(traceback.format_exc())
@@ -304,7 +347,7 @@ class PluginGroup:
                     code = f.read()
 
     def add_listen_packet(this, pktID: int):
-        if not pktID in this.listen_packets: 
+        if not pktID in this.listen_packets:
             this.listen_packets.append(pktID)
 
     def execute_def(this, onerr: Callable[[str, Exception, str], None]):
@@ -312,28 +355,28 @@ class PluginGroup:
             try:
                 func()
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_init(this, onerr: Callable[[str, Exception, str], None]):
         for name, func in this.plugins_funcs["on_inject"]:
             try:
                 func()
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_player_prejoin(this, player, onerr: Callable[[str, Exception, str], None]):
         for name, func in this.plugins_funcs["on_player_prejoin"]:
             try:
                 func(player)
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_player_join(this, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
         for name, func in this.plugins_funcs["on_player_join"]:
             try:
                 func(player)
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_player_message(this, player, msg, onerr: Callable[[str, Exception, str], None]):
         pat = f"[{player}] "
@@ -343,21 +386,21 @@ class PluginGroup:
             try:
                 func(player, msg)
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_player_leave(this, player, onerr: Callable[[str, Exception, str], None]):
         for name, func in this.plugins_funcs["on_player_join"]:
             try:
                 func(player)
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_player_death(this, player, killer, msg, onerr: Callable[[str, Exception, str], None]):
         for name, func in this.plugins_funcs["on_player_death"]:
             try:
                 func(player, killer, msg)
             except Exception as err:
-                 onerr(name, err, traceback.format_exc())
+                onerr(name, err, traceback.format_exc())
 
     def execute_packet(this, packetID, packet, onerr: Callable[[str, Exception, str], None]):
         "Really will be in used?"
@@ -365,7 +408,8 @@ class PluginGroup:
             try:
                 if plugin.dotcs_old_type:
                     if packetID in plugin.require_listen_packets:
-                        plugin.dotcs_runcode.get(f"{plugin.name}_packet_{packetID}", NON_FUNC)(packet)
+                        plugin.dotcs_runcode.get(
+                            f"{plugin.name}_packet_{packetID}", NON_FUNC)(packet)
             except PluginSkip:
                 pass
             except Exception as err:

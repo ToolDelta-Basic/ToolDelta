@@ -20,14 +20,18 @@ Print = libs.color_print.Print
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 
+
 class Frame:
-    class ThreadExit(SystemExit):...
+    class ThreadExit(SystemExit):
+        ...
+
     class FrameBasic:
         max_connect_fb_time = 60
         connect_fb_start_time = time.time()
+
     class ClassicThread(threading.Thread):
         def __init__(this, func: Callable, args: tuple = (), **kwargs):
-            super().__init__(target = func)
+            super().__init__(target=func)
             this.func = func
             this.daemon = True
             this.all_args = [args, kwargs]
@@ -47,9 +51,10 @@ class Frame:
             for id, thread in threading._active.items():
                 if thread is this:
                     return id
-                
+
         def stop(this):
-            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(this.get_id(), ctypes.py_object(Frame.ThreadExit))
+            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                this.get_id(), ctypes.py_object(Frame.ThreadExit))
             return res
 
     MAX_PACKET_CACHE = 500
@@ -66,7 +71,7 @@ class Frame:
     status = 0
     on_plugin_err = libs.builtins.on_plugin_err_common
 
-    def check_us_token(this, tok_name = "", check_md = ""):
+    def check_us_token(this, tok_name="", check_md=""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
@@ -96,8 +101,10 @@ class Frame:
         if this.serverNumber == "0":
             while 1:
                 try:
-                    this.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    this.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                    this.serverNumber = input(
+                        Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
+                    this.serverPasswd = input(Print.fmt_info(
+                        "请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
                     std = CFG.copy()
                     std["服务器号"] = int(this.serverNumber)
                     std["密码"] = int(this.serverPasswd)
@@ -108,8 +115,10 @@ class Frame:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
 
     def welcome(this):
-        Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
-        Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
+        Print.print_with_info(
+            f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
+        Print.print_with_info(
+            f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
     def basicMkDir(this):
@@ -131,7 +140,7 @@ class Frame:
             with open("fbtoken", "w", encoding="utf-8") as f:
                 f.write(token.replace("\n", ""))
 
-    def getFreePort(this, start = 8080, usage = "none"):
+    def getFreePort(this, start=8080, usage="none"):
         if usage == "fbconn":
             for port in range(start, 65535):
                 r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
@@ -149,10 +158,11 @@ class Frame:
             return None
         raise Exception("未找到空闲端口???")
 
-    def runFB(this, ip = "0.0.0.0", port="8080"):
+    def runFB(this, ip="0.0.0.0", port="8080"):
         os.system("chmod +x phoenixbuilder")
         con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {this.serverNumber} {f'-p {this.serverPasswd}' if this.serverPasswd else ''}"
-        this.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        this.fb_pipe = subprocess.Popen(
+            con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         Print.print_suc("FastBuilder 进程已启动.")
 
     def reloadPlugins(this):
@@ -169,7 +179,7 @@ class Frame:
             del this.consoleMenu[2:]
         except:
             pass
-    
+
     def close_fb_thread(this):
         try:
             this.fb_pipe.kill()
@@ -182,7 +192,7 @@ class Frame:
         this.fb_pipe.stdin.flush()
         this.status = 0
 
-    def run_conn(this, ip = "0.0.0.0", port=8080):
+    def run_conn(this, ip="0.0.0.0", port=8080):
         connect_fb_start_time = time.time()
         while 1:
             try:
@@ -191,7 +201,8 @@ class Frame:
                 return 1
             except:
                 if time.time() - connect_fb_start_time > this.sys_data.max_connect_fb_time:
-                    Print.print_err(f"§4{this.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
+                    Print.print_err(
+                        f"§4{this.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
                     this.close_fb_thread()
                     return 0
 
@@ -207,7 +218,8 @@ class Frame:
         Print.print_inf("§a以下是可选的菜单指令项：")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
-                Print.print_inf(f" §e{' 或 '.join(triggers)} {arg_hint}  §f->  {usage}")
+                Print.print_inf(
+                    f" §e{' 或 '.join(triggers)} {arg_hint}  §f->  {usage}")
             else:
                 Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
@@ -218,8 +230,10 @@ class Frame:
         threading.Thread(target=this._console_cmd_thread).start()
 
     def _console_cmd_thread(this):
-        this.add_console_cmd_trigger(["?", "help", "帮助"], None, "查询可用菜单指令", this.init_basic_help_menu)
-        this.add_console_cmd_trigger(["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: this.system_exit())
+        this.add_console_cmd_trigger(
+            ["?", "help", "帮助"], None, "查询可用菜单指令", this.init_basic_help_menu)
+        this.add_console_cmd_trigger(
+            ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: this.system_exit())
         try:
             while 1:
                 rsp = input()
@@ -235,7 +249,8 @@ class Frame:
                     else:
                         for tri in triggers:
                             if rsp.startswith(tri):
-                                res = this._try_execute_console_cmd(func, rsp, 1, tri)
+                                res = this._try_execute_console_cmd(
+                                    func, rsp, 1, tri)
                                 if res == -1:
                                     return
         except EOFError:
@@ -272,9 +287,11 @@ class Frame:
                     Print.print_war(f"未能自动选择为简体中文")
             elif "ERROR" in tmp:
                 if "租赁服未找到" in tmp:
-                    Print.print_err(f"§c租赁服号: {this.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
+                    Print.print_err(
+                        f"§c租赁服号: {this.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
                 elif "租赁服号尚未授权" in tmp:
-                    Print.print_err(f"§c租赁服号: {this.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买")
+                    Print.print_err(
+                        f"§c租赁服号: {this.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买")
                 elif "bad handshake" in tmp:
                     Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
                     try:
@@ -282,12 +299,14 @@ class Frame:
                         requests.get("http://uc.fastbuilder.pro", timeout=10)
                         Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
                     except:
-                        Print.print_err("§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)")
+                        Print.print_err(
+                            "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)")
                         exit()
                 elif "无效用户" in tmp and "请重新登录" in tmp:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
             elif "Transfer: accept new connection @ " in tmp:
-                Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
+                Print.print_with_info(
+                    "FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp[7:]}")
                 this.status = 2
@@ -295,14 +314,14 @@ class Frame:
                 return
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
-    
+
     def _get_old_dotcs_env(this):
         """Create an old dotcs env"""
         return libs.old_dotcs_env.get_dotcs_env(this)
-    
+
     def get_console_menus(this):
         return this.consoleMenu
-    
+
     def set_game_control(this, game_ctrl):
         this.link_game_ctrl = game_ctrl
 
@@ -311,6 +330,7 @@ class Frame:
 
     def get_game_control(this):
         return this.link_game_ctrl
+
 
 class GameManager:
     command_req = []
@@ -359,30 +379,35 @@ class GameManager:
                     continue
                 else:
                     packetGetTime = time.time()
-                    packet_mapping = json.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
+                    packet_mapping = json.loads(
+                        conn.GamePacketBytesAsIsJsonStr(packet_bytes))
                     if packet_type == 79:
-                        cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
+                        cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode(
+                        )
                         if cmd_uuid in this.command_req:
-                            this.command_resp[cmd_uuid] = [packetGetTime, packet_mapping]
+                            this.command_resp[cmd_uuid] = [
+                                packetGetTime, packet_mapping]
                     elif packet_type == 63:
                         if this.requireUUIDPacket:
                             this.store_uuid_pkt = packet_mapping
                         else:
                             this.processPlayerList(packet_mapping)
-                    this.processGamePacketWithPlugin(packet_mapping, packet_type, plugin_grp)
+                    this.processGamePacketWithPlugin(
+                        packet_mapping, packet_type, plugin_grp)
         except Exception as err:
             if "recv on a closed connection" in str(err):
                 this.linked_frame.status = 2
                 return
             print(traceback.format_exc())
 
-    def processPlayerList(this, pkt, first = False):
+    def processPlayerList(this, pkt, first=False):
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining:
                 this.players_uuid[playername] = player["UUID"]
-                this.allplayers.append(playername) if not playername in this.allplayers else None
+                this.allplayers.append(
+                    playername) if not playername in this.allplayers else None
                 if first:
                     Print.print_inf(f"§e{playername} 加入了游戏")
             else:
@@ -391,41 +416,51 @@ class GameManager:
                     if this.players_uuid[k] == player["UUID"]:
                         playername = k
                         break
-                this.allplayers.remove(playername) if playername != "???" else None
+                this.allplayers.remove(
+                    playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
 
     def processGamePacketWithPlugin(this, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
-        if pkt_type == 9: 
+        if pkt_type == 9:
             match pkt['TextType']:
                 case 2:
                     if pkt['Message'] == "§e%multiplayer.player.joined":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_prejoin(player, this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_prejoin(
+                            player, this.linked_frame.on_plugin_err)
                     if pkt['Message'] == "§e%multiplayer.player.join":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_join(player, this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_join(
+                            player, this.linked_frame.on_plugin_err)
                     elif pkt['Message'] == "§e%multiplayer.player.left":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_leave(player, this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_leave(
+                            player, this.linked_frame.on_plugin_err)
                     elif pkt['Message'].startswith("death."):
-                        Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
+                        Print.print_inf(
+                            f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
                         if len(pkt["Parameters"]) >= 2:
                             killer = pkt["Parameters"][1]
                         else:
                             killer = None
-                        plugin_grp.execute_player_death(pkt['Parameters'][0], killer, pkt['Message'], this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_death(
+                            pkt['Parameters'][0], killer, pkt['Message'], this.linked_frame.on_plugin_err)
                 case 1 | 7:
                     player, msg = pkt['SourceName'], pkt['Message']
-                    plugin_grp.execute_player_message(player, msg, this.linked_frame.on_plugin_err)
+                    plugin_grp.execute_player_message(
+                        player, msg, this.linked_frame.on_plugin_err)
                     Print.print_inf(f"<{player}> {msg}")
                 case 8:
                     player, msg = pkt['SourceName'], pkt['Message']
-                    Print.print_inf(f"{player} say -> {msg.strip(f'[{player}]')}")
-                    plugin_grp.execute_player_message(player, msg, this.linked_frame.on_plugin_err)
+                    Print.print_inf(
+                        f"{player} say -> {msg.strip(f'[{player}]')}")
+                    plugin_grp.execute_player_message(
+                        player, msg, this.linked_frame.on_plugin_err)
                 case 9:
-                    msg = pkt['Message'].strip('{"rawtext":[{"text":"').strip("\n").strip('"}]}')
+                    msg = pkt['Message'].strip(
+                        '{"rawtext":[{"text":"').strip("\n").strip('"}]}')
                     Print.print_inf(f"{msg}")
-                    
+
         if pkt_type in plugin_grp.listen_packets:
             this.pkt_cache.append([pkt_type, pkt])
 
@@ -439,12 +474,14 @@ class GameManager:
                 Print.print_war("数据包缓冲区量 > 100")
                 lastPTime = time.time()
             elif len(this.pkt_cache) > this.linked_frame.MAX_PACKET_CACHE:
-                Print.print_err(f"数据包缓冲区量 > {this.linked_frame.MAX_PACKET_CACHE} 超最大阈值， 已清空缓存区")
+                Print.print_err(
+                    f"数据包缓冲区量 > {this.linked_frame.MAX_PACKET_CACHE} 超最大阈值， 已清空缓存区")
                 this.pkt_cache.clear()
 
     def Inject(this):
         startDetTime = time.time()
-        while not this.store_uuid_pkt and time.time() - startDetTime < 10:pass
+        while not this.store_uuid_pkt and time.time() - startDetTime < 10:
+            pass
         if not this.store_uuid_pkt:
             this.linked_frame.status = 2
             Print.print_err("未收取到UUID包， 即将重启")
@@ -455,12 +492,13 @@ class GameManager:
             this.requireUUIDPacket = False
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(this.allplayers))
         this.linked_frame.status = 1
-            
+
     def waitUntilProcess(this):
         this.requireUUIDPacket = True
         this.allplayers.clear()
         this.players_uuid.clear()
-        while this.pkt_unique_id == 0:pass
+        while this.pkt_unique_id == 0:
+            pass
 
     def clearCmdRespList(this):
         while 1:
@@ -472,11 +510,13 @@ class GameManager:
     def tps_thread(this):
         "not archieved"
         return
-        lastGameTime = int(this.sendcmd("time query daytime", True, 10).OutputMessages[0].Parameters[0])
+        lastGameTime = int(this.sendcmd("time query daytime",
+                           True, 10).OutputMessages[0].Parameters[0])
         while 1:
             try:
                 st_time = time.time()
-                tps = int(this.sendcmd("time query gametime", True, 10).OutputMessages[0].Parameters[0])
+                tps = int(this.sendcmd("time query gametime", True,
+                          10).OutputMessages[0].Parameters[0])
                 st_time = time.time() - st_time
                 lastGameTime = tps
             except Exception as err:
@@ -502,7 +542,7 @@ class GameManager:
                     raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
-        
+
     def sendwscmd(this, cmd: str, waitForResp: bool = False, timeout: int = 30):
         uuid = conn.SendWSCommand(this.linked_frame.con, cmd)
         if waitForResp:
@@ -519,16 +559,17 @@ class GameManager:
                     raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
-        
+
     def sendfbcmd(this, cmd: str):
         conn.SendFBCommand(this.linked_frame.con, cmd)
 
     def sendPacket(this, pktType: int, pkt: dict):
         b = conn.JsonStrAsIsGamePacketBytes(pktType, json.dumps(pkt))
         conn.SendGamePacketBytes(this.linked_frame.con, b)
-        
+
     def say_to(this, target: str, msg: str):
-        this.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
+        this.sendwocmd("tellraw " + target +
+                       ' {"rawtext":[{"text":"' + msg + '"}]}')
 
     def player_title(this, target: str, text: str):
         this.sendwocmd(f"title {target} title {text}")
@@ -538,6 +579,7 @@ class GameManager:
 
     def player_actionbar(this, target: str, text: str):
         this.sendwocmd(f"title {target} actionbar {text}")
+
 
 try:
     frame = Frame()
@@ -560,9 +602,11 @@ try:
             frame.runFB(port=frame.conPort)
             frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
-            thread_processPacket = Frame.ClassicThread(game_manager.simpleProcessGamePacket)
+            thread_processPacket = Frame.ClassicThread(
+                game_manager.simpleProcessGamePacket)
             game_manager.waitUntilProcess()
-            thread_processPacketFunc = Frame.ClassicThread(game_manager.threadPacketProcessFunc)
+            thread_processPacketFunc = Frame.ClassicThread(
+                game_manager.threadPacketProcessFunc)
             threading.Thread(target=game_manager.tps_thread).start()
             game_manager.Inject()
         plugin_group.execute_init(frame.on_plugin_err)
