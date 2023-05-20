@@ -1,6 +1,6 @@
 from typing import Callable, Tuple, Type
 from .color_print import Print
-import os, sys, traceback
+import os, sys, traceback, zipfile
 from .cfg import Cfg
 from .builtins import Builtins
 
@@ -8,6 +8,9 @@ class PluginSkip(Exception):...
 
 NON_FUNC = lambda *_: None
 _print = Print
+
+def unzip_plugin(zip_dir, exp_dir):
+    f = zipfile.ZipFile
 
 class Plugin:
     name = "<未命名插件>"
@@ -246,6 +249,9 @@ class PluginGroup:
         loc_env = {"add_plugin": _add_plugin_new, "addPluginAPI": this.addPluginAPI, "listen_packet": _listen_packet, "plugins": this.linked_frame.link_plugin_group}
         root_env.update(loc_env)
         for plugin_dir in os.listdir(f"{this.PRG_NAME}插件"):
+            if not os.path.isdir(f"{this.PRG_NAME}插件/" + plugin_dir) and os.path.isfile(f"{this.PRG_NAME}插件/" + plugin_dir) and plugin_dir.endswith(".zip"):
+                _print.print_with_info(f"正在解压插件{plugin_dir}, 请稍后", "§6 解压 ")
+                
             if os.path.isdir(f"{this.PRG_NAME}插件/" + plugin_dir):
                 pkt_funcs.clear()
                 plug_cls_cache.clear()

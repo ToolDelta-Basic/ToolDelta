@@ -24,4 +24,5 @@ go-cqhttp
 *.yml
 *.token
 pytest.py
+plugDec.py
 *.Identifier

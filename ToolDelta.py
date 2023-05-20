@@ -314,20 +314,19 @@ class Frame:
         return this.link_game_ctrl
 
 class GameManager:
-    command_req = []
-    command_resp = {}
-    players_uuid = {}
-    allplayers = []
-    bot_name = ""
-    linked_frame: Frame
-    pkt_unique_id: int = 0
-    pkt_cache: list = []
-    require_listen_packet_list = [9, 79, 63]
-    store_uuid_pkt = None
-    requireUUIDPacket = True
-
     def __init__(this, frame: Frame):
         this.linked_frame = frame
+        this.command_req = []
+        this.command_resp = {}
+        this.players_uuid = {}
+        this.allplayers = []
+        this.bot_name = ""
+        this.linked_frame: Frame
+        this.pkt_unique_id: int = 0
+        this.pkt_cache: list = []
+        this.require_listen_packet_list = [9, 79, 63]
+        this.store_uuid_pkt = None
+        this.requireUUIDPacket = True
 
     def reset(this):
         this.command_req.clear()
