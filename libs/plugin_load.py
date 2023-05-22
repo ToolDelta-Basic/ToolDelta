@@ -180,7 +180,18 @@ class PluginGroup:
         this.plugins.append(plugin)
         
     def add_broadcast_listener(this, evt_name: str):
-        this.
+        def deco(func):
+            if this._broadcast_evts.get(evt_name, None):
+                this._broadcast_evts[evt_name].append(func)
+            else:
+                this._broadcast_evts[evt_name] = [func]
+        return deco
+    
+    def broadcastEvt(this, evt_name: str, **kwargs):
+        res = this._broascast_evts.get(evt_name, None)
+        if res:
+            for f res:
+                f(**kwargs)
 
     def add_listen_packet(this, packetType: int):
         if not packetType in this.listen_packets:
