@@ -147,20 +147,19 @@ class PluginGroup:
         "on_player_death": [],
         "on_player_leave": []
     }
-    listen_packets = []
-    old_dotcs_env = {}
-    linked_frame = None
-    packet_funcs: dict[str, list[Callable]] = {}
-    plugins_api = {}
-    excType = 0
-    PRG_NAME = ""
 
     def __init__(this, frame, PRG_NAME):
-        if this.excType != 0:
-            raise OSError
-        this.linked_frame = frame
+        this.listen_packets = []
+        this.old_dotcs_env = {}
+        this.linked_frame = None
+        this.packet_funcs: dict[str, list[Callable]] = {}
+        this.plugins_api = {}
+        this.excType = 0
+        this.PRG_NAME = ""
+        this._broadcast_evts = {}
+        this.inked_frame = frame
         this.PRG_NAME = PRG_NAME
-
+      
     def reset(this):
         this.plugins.clear()
         this.listen_packets.clear()
@@ -179,6 +178,9 @@ class PluginGroup:
 
     def add_plugin(this, plugin: Plugin):
         this.plugins.append(plugin)
+        
+    def add_broadcast_listener(this, evt_name: str):
+        this.
 
     def add_listen_packet(this, packetType: int):
         if not packetType in this.listen_packets:
