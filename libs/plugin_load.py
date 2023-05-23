@@ -180,18 +180,28 @@ class PluginGroup:
         this.plugins.append(plugin)
         
     def add_broadcast_listener(this, evt_name: str):
-        def deco(func):
+        "将下面的方法作为一个广播事件接收器"
+        def deco(func: Callable[[any], bool]):
             if this._broadcast_evts.get(evt_name, None):
                 this._broadcast_evts[evt_name].append(func)
             else:
                 this._broadcast_evts[evt_name] = [func]
         return deco
     
-    def broadcastEvt(this, evt_name: str, **kwargs):
+    def broadcastEvt(this, evt_name: str, **kwargs) -> list[any] | None:
+        "向全局广播一个特定事件, 可以传入附加信息参数"
+        callback_list = []
         res = this._broascast_evts.get(evt_name, None)
         if res:
             for f res:
-                f(**kwargs)
+                interrupt, *res2 = f(**kwargs)
+                if res2:
+                    callback_list.append(res)
+                    if interrupt:
+                        break
+            return callback_list
+        else:
+            return None
 
     def add_listen_packet(this, packetType: int):
         if not packetType in this.listen_packets:
