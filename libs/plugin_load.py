@@ -193,10 +193,10 @@ class PluginGroup:
         callback_list = []
         res = this._broascast_evts.get(evt_name, None)
         if res:
-            for f res:
+            for f in res:
                 interrupt, *res2 = f(**kwargs)
                 if res2:
-                    callback_list.append(res)
+                    callback_list.append(res2)
                     if interrupt:
                         break
             return callback_list
