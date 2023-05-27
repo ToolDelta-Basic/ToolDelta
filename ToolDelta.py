@@ -10,7 +10,7 @@ from libs.cfg import Cfg as _Cfg
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 3)
 UPDATE_NOTE = ""
-ADVANCED = True
+ADVANCED = False
 Print = libs.color_print.Print
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
