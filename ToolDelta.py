@@ -10,6 +10,7 @@ from libs.cfg import Cfg as _Cfg
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 3)
 UPDATE_NOTE = ""
+ADVANCED = True
 Print = libs.color_print.Print
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
@@ -27,30 +28,30 @@ class Frame:
         max_connect_fb_time = 60
         connect_fb_start_time = time.time()
     class ClassicThread(threading.Thread):
-        def __init__(this, func: Callable, args: tuple = (), **kwargs):
+        def __init__(self, func: Callable, args: tuple = (), **kwargs):
             super().__init__(target = func)
-            this.func = func
-            this.daemon = True
-            this.all_args = [args, kwargs]
-            this.start()
+            self.func = func
+            self.daemon = True
+            self.all_args = [args, kwargs]
+            self.start()
 
-        def run(this):
+        def run(self):
             try:
-                this.func(*this.all_args[0], **this.all_args[1])
+                self.func(*self.all_args[0], **self.all_args[1])
             except Frame.ThreadExit:
                 pass
             except Exception as err:
                 traceback.print_exc()
 
-        def get_id(this):
-            if hasattr(this, '_thread_id'):
-                return this._thread_id
+        def get_id(self):
+            if hasattr(self, '_thread_id'):
+                return self._thread_id
             for id, thread in threading._active.items():
-                if thread is this:
+                if thread is self:
                     return id
                 
-        def stop(this):
-            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(this.get_id(), ctypes.py_object(Frame.ThreadExit))
+        def stop(self):
+            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(self.get_id(), ctypes.py_object(Frame.ThreadExit))
             return res
 
     MAX_PACKET_CACHE = 500
@@ -65,23 +66,25 @@ class Frame:
     fb_pipe: subprocess.Popen = None
     _old_dotcs_threadinglist = []
     status = 0
-    on_plugin_err = libs.builtins.on_plugin_err_common
+    on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
 
-    def check_us_token(this, tok_name = "", check_md = ""):
+    def check_us_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误:")
             raise SystemExit
 
-    def read_cfg(this):
+    def read_cfg(self):
         CFG = {
             "服务器号": 0,
-            "密码": 0
+            "密码": 0,
+            "是否启用omg": False
         }
         CFG_STD = {
             "服务器号": int,
-            "密码": int
+            "密码": int,
+            "是否启用omg": bool
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err("请到FB官网 uc.fastbuilder.pro 下载FBToken, 并放在本目录中")
@@ -89,31 +92,31 @@ class Frame:
         Config.default_cfg("租赁服登录配置.json", CFG)
         try:
             cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
-            this.serverNumber = str(cfgs["服务器号"])
-            this.serverPasswd = cfgs["密码"]
+            self.serverNumber = str(cfgs["服务器号"])
+            self.serverPasswd = cfgs["密码"]
         except Config.ConfigError:
             Print.print_err("租赁服登录配置有误， 需要更正")
             exit()
-        if this.serverNumber == "0":
+        if self.serverNumber == "0":
             while 1:
                 try:
-                    this.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    this.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                    self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
+                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
                     std = CFG.copy()
-                    std["服务器号"] = int(this.serverNumber)
-                    std["密码"] = int(this.serverPasswd)
+                    std["服务器号"] = int(self.serverNumber)
+                    std["密码"] = int(self.serverPasswd)
                     cfgs = Config.default_cfg("租赁服登录配置.json", std, True)
                     Print.print_suc("登录配置设置成功")
                     break
                 except:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
 
-    def welcome(this):
+    def welcome(self):
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
-    def basicMkDir(this):
+    def basicMkDir(self):
         os.makedirs("DotCS兼容插件", exist_ok=True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
         os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
@@ -121,7 +124,7 @@ class Frame:
         os.makedirs("data/status", exist_ok=True)
         os.makedirs("data/player", exist_ok=True)
 
-    def fbtokenFix(this):
+    def fbtokenFix(self):
         needFix = False
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
@@ -132,12 +135,12 @@ class Frame:
             with open("fbtoken", "w", encoding="utf-8") as f:
                 f.write(token.replace("\n", ""))
 
-    def getFreePort(this, start = 8080, usage = "none"):
+    def getFreePort(self, start = 8080, usage = "none"):
         if usage == "fbconn":
             for port in range(start, 65535):
                 r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
                 if r.read() == '':
-                    this.conPort = port
+                    self.conPort = port
                     Print.print_suc(f"FastBuilder 将会开放端口 {port}")
                     return
                 else:
@@ -150,61 +153,64 @@ class Frame:
             return None
         raise Exception("未找到空闲端口???")
 
-    def runFB(this, ip = "0.0.0.0", port="8080"):
+    def runFB(self, ip = "0.0.0.0", port="8080"):
         os.system("chmod +x phoenixbuilder")
-        con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {this.serverNumber} {f'-p {this.serverPasswd}' if this.serverPasswd else ''}"
-        this.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        if Config.get_cfg("租赁服登录配置.json", {})["是否启用omg"]:
+            con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+        else:
+            con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+        self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         Print.print_suc("FastBuilder 进程已启动.")
 
-    def reloadPlugins(this):
+    def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
         time.sleep(0.1)
         plugin_group.reset()
         game_manager.reset()
-        this.set_game_control(game_manager)
-        this.set_plugin_group(plugin_group)
+        self.set_game_control(game_manager)
+        self.set_plugin_group(plugin_group)
         plugin_group.read_plugin_from_old(dotcs_module_env)
         plugin_group.read_plugin_from_new(globals())
         plugin_group.execute_def(frame.on_plugin_err)
         try:
-            del this.consoleMenu[2:]
+            del self.consoleMenu[2:]
         except:
             pass
     
-    def close_fb_thread(this):
+    def close_fb_thread(self):
         try:
-            this.fb_pipe.kill()
+            self.fb_pipe.kill()
             Print.print_suc("成功关闭FB进程")
         except:
             Print.print_war("未能正常关闭FB进程")
 
-    def system_exit(this):
-        this.fb_pipe.stdin.write("exit\n".encode('utf-8'))
-        this.fb_pipe.stdin.flush()
-        this.status = 0
+    def system_exit(self):
+        self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
+        self.fb_pipe.stdin.flush()
+        self.status = 0
 
-    def run_conn(this, ip = "0.0.0.0", port=8080):
+    def run_conn(self, ip = "0.0.0.0", port=8080):
         connect_fb_start_time = time.time()
         while 1:
             try:
-                this.con = conn.ConnectFB(f"{ip}:{port}")
+                self.con = conn.ConnectFB(f"{ip}:{port}")
                 Print.print_suc("§a成功连接上FastBuilder.")
                 return 1
             except:
-                if time.time() - connect_fb_start_time > this.sys_data.max_connect_fb_time:
-                    Print.print_err(f"§4{this.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
-                    this.close_fb_thread()
+                if time.time() - connect_fb_start_time > self.sys_data.max_connect_fb_time:
+                    Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
+                    self.close_fb_thread()
                     return 0
 
-    def add_console_cmd_trigger(this, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
+    def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
         try:
-            if this.consoleMenu.index(triggers) != -1:
+            if self.consoleMenu.index(triggers) != -1:
                 Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
         except:
-            this.consoleMenu.append([usage, arg_hint, func, triggers])
+            self.consoleMenu.append([usage, arg_hint, func, triggers])
 
-    def init_basic_help_menu(this, cmd):
-        menu = this.get_console_menus()
+    def init_basic_help_menu(self, cmd):
+        menu = self.get_console_menus()
         Print.print_inf("§a以下是可选的菜单指令项：")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
@@ -212,37 +218,37 @@ class Frame:
             else:
                 Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
-    def outputFBMsgsThread(this):
-        threading.Thread(target=this._outputFBMsgsThread).start()
+    def outputFBMsgsThread(self):
+        threading.Thread(target=self._outputFBMsgsThread).start()
 
-    def ConsoleCmd_thread(this):
-        threading.Thread(target=this._console_cmd_thread).start()
+    def ConsoleCmd_thread(self):
+        threading.Thread(target=self._console_cmd_thread).start()
 
-    def _console_cmd_thread(this):
-        this.add_console_cmd_trigger(["?", "help", "帮助"], None, "查询可用菜单指令", this.init_basic_help_menu)
-        this.add_console_cmd_trigger(["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: this.system_exit())
+    def _console_cmd_thread(self):
+        self.add_console_cmd_trigger(["?", "help", "帮助"], None, "查询可用菜单指令", self.init_basic_help_menu)
+        self.add_console_cmd_trigger(["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit())
         try:
             while 1:
                 rsp = input()
-                if this.status == 2 or this.status == 3:
+                if self.status == 2 or self.status == 3:
                     break
-                for _, _, func, triggers in this.consoleMenu:
+                for _, _, func, triggers in self.consoleMenu:
                     if not rsp:
                         continue
                     elif rsp.split()[0] in triggers:
-                        res = this._try_execute_console_cmd(func, rsp, 0, None)
+                        res = self._try_execute_console_cmd(func, rsp, 0, None)
                         if res == -1:
                             return
                     else:
                         for tri in triggers:
                             if rsp.startswith(tri):
-                                res = this._try_execute_console_cmd(func, rsp, 1, tri)
+                                res = self._try_execute_console_cmd(func, rsp, 1, tri)
                                 if res == -1:
                                     return
         except EOFError:
             frame.status = 0
 
-    def _try_execute_console_cmd(this, func, rsp, mode, arg1):
+    def _try_execute_console_cmd(self, func, rsp, mode, arg1):
         try:
             if mode == 0:
                 rsp_arg = rsp.split()[1:]
@@ -259,23 +265,23 @@ class Frame:
             Print.print_err(f"控制台指令出错： {err}")
             return 0
 
-    def _outputFBMsgsThread(this):
+    def _outputFBMsgsThread(self):
         while 1:
-            tmp = this.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
+            tmp: str = self.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
             if not tmp:
                 continue
             elif " 简体中文" in tmp:
                 try:
-                    this.fb_pipe.stdin.write(f"{tmp[1]}\n".encode("utf-8"))
-                    this.fb_pipe.stdin.flush()
+                    self.fb_pipe.stdin.write(f"{tmp[1]}\n".encode("utf-8"))
+                    self.fb_pipe.stdin.flush()
                     Print.print_inf(f"语言已自动选择为简体中文： [{tmp[1]}]")
                 except IndexError:
                     Print.print_war(f"未能自动选择为简体中文")
             elif "ERROR" in tmp:
                 if "租赁服未找到" in tmp:
-                    Print.print_err(f"§c租赁服号: {this.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
+                    Print.print_err(f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
                 elif "租赁服号尚未授权" in tmp:
-                    Print.print_err(f"§c租赁服号: {this.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买")
+                    Print.print_err(f"§c租赁服号: {self.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买")
                 elif "bad handshake" in tmp:
                     Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
                     try:
@@ -291,253 +297,257 @@ class Frame:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp[7:]}")
-                this.status = 2
-                this.fb_pipe.kill()
+                self.status = 2
+                self.fb_pipe.kill()
                 return
             else:
+                if "SUCCESS" in tmp or "WARNING" in tmp and len(tmp) > 31:
+                    tmp = tmp[:30]
                 Print.print_with_info(tmp, "§b  FB  §r")
     
-    def _get_old_dotcs_env(this):
+    def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
-        return libs.old_dotcs_env.get_dotcs_env(this)
+        return libs.old_dotcs_env.get_dotcs_env(self)
     
-    def get_console_menus(this):
-        return this.consoleMenu
+    def get_console_menus(self):
+        return self.consoleMenu
     
-    def set_game_control(this, game_ctrl):
-        this.link_game_ctrl = game_ctrl
+    def set_game_control(self, game_ctrl):
+        self.link_game_ctrl = game_ctrl
 
-    def set_plugin_group(this, plug_grp):
-        this.link_plugin_group = plug_grp
+    def set_plugin_group(self, plug_grp):
+        self.link_plugin_group = plug_grp
 
-    def get_game_control(this):
-        return this.link_game_ctrl
+    def get_game_control(self):
+        return self.link_game_ctrl
 
 class GameManager:
-    def __init__(this, frame: Frame):
-        this.linked_frame = frame
-        this.command_req = []
-        this.command_resp = {}
-        this.players_uuid = {}
-        this.allplayers = []
-        this.bot_name = ""
-        this.linked_frame: Frame
-        this.pkt_unique_id: int = 0
-        this.pkt_cache: list = []
-        this.require_listen_packet_list = [9, 79, 63]
-        this.store_uuid_pkt = None
-        this.requireUUIDPacket = True
+    def __init__(self, frame: Frame):
+        self.linked_frame = frame
+        self.command_req = []
+        self.command_resp = {}
+        self.players_uuid = {}
+        self.allplayers = []
+        self.bot_name = ""
+        self.linked_frame: Frame
+        self.pkt_unique_id: int = 0
+        self.pkt_cache: list = []
+        self.require_listen_packet_list = [9, 79, 63]
+        self.store_uuid_pkt = None
+        self.requireUUIDPacket = True
 
-    def reset(this):
-        this.command_req.clear()
-        this.command_resp.clear()
-        this.players_uuid.clear()
-        this.allplayers.clear()
-        this.bot_name = ""
-        this.linked_frame: Frame
-        this.pkt_unique_id: int = 0
-        this.pkt_cache.clear()
-        this.require_listen_packet_list.clear()
-        this.require_listen_packet_list += [9, 79, 63]
-        this.store_uuid_pkt.clear()
-        this.requireUUIDPacket = True
+    def reset(self):
+        self.command_req.clear()
+        self.command_resp.clear()
+        self.players_uuid.clear()
+        self.allplayers.clear()
+        self.bot_name = ""
+        self.linked_frame: Frame
+        self.pkt_unique_id: int = 0
+        self.pkt_cache.clear()
+        self.require_listen_packet_list.clear()
+        self.require_listen_packet_list += [9, 79, 63]
+        self.store_uuid_pkt.clear()
+        self.requireUUIDPacket = True
 
-    def add_listen_pkt(this, pkt_type: int):
-        if pkt_type not in this.require_listen_packet_list:
-            this.require_listen_packet_list.append(pkt_type)
+    def add_listen_pkt(self, pkt_type: int):
+        if pkt_type not in self.require_listen_packet_list:
+            self.require_listen_packet_list.append(pkt_type)
 
-    def simpleProcessGamePacket(this):
-        con = this.linked_frame.con
-        plugin_grp = this.linked_frame.link_plugin_group
-        this.pkt_unique_id = 0
+    def simpleProcessGamePacket(self):
+        con = self.linked_frame.con
+        plugin_grp = self.linked_frame.link_plugin_group
+        self.pkt_unique_id = 0
         try:
             while 1:
                 packet_bytes = conn.RecvGamePacket(con)
                 packet_type = conn.inspectPacketID(packet_bytes)
-                this.pkt_unique_id += 1
-                if packet_type not in this.require_listen_packet_list:
+                self.pkt_unique_id += 1
+                if packet_type not in self.require_listen_packet_list:
                     continue
                 else:
                     packetGetTime = time.time()
                     packet_mapping = json.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
-                        if cmd_uuid in this.command_req:
-                            this.command_resp[cmd_uuid] = [packetGetTime, packet_mapping]
+                        if cmd_uuid in self.command_req:
+                            self.command_resp[cmd_uuid] = [packetGetTime, packet_mapping]
                     elif packet_type == 63:
-                        if this.requireUUIDPacket:
-                            this.store_uuid_pkt = packet_mapping
+                        if self.requireUUIDPacket:
+                            self.store_uuid_pkt = packet_mapping
                         else:
-                            this.processPlayerList(packet_mapping)
-                    this.processGamePacketWithPlugin(packet_mapping, packet_type, plugin_grp)
+                            self.processPlayerList(packet_mapping)
+                    self.processGamePacketWithPlugin(packet_mapping, packet_type, plugin_grp)
         except Exception as err:
             if "recv on a closed connection" in str(err):
-                this.linked_frame.status = 2
+                self.linked_frame.status = 2
                 return
             print(traceback.format_exc())
 
-    def processPlayerList(this, pkt, first = False):
+    def processPlayerList(self, pkt, first = False):
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining:
-                this.players_uuid[playername] = player["UUID"]
-                this.allplayers.append(playername) if not playername in this.allplayers else None
+                self.players_uuid[playername] = player["UUID"]
+                self.allplayers.append(playername) if not playername in self.allplayers else None
                 if first:
                     Print.print_inf(f"§e{playername} 加入了游戏")
             else:
                 playername = "???"
-                for k in this.players_uuid:
-                    if this.players_uuid[k] == player["UUID"]:
+                for k in self.players_uuid:
+                    if self.players_uuid[k] == player["UUID"]:
                         playername = k
                         break
-                this.allplayers.remove(playername) if playername != "???" else None
+                self.allplayers.remove(playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
 
-    def processGamePacketWithPlugin(this, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
+    def processGamePacketWithPlugin(self, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
         if pkt_type == 9: 
             match pkt['TextType']:
                 case 2:
                     if pkt['Message'] == "§e%multiplayer.player.joined":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_prejoin(player, this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_prejoin(player, self.linked_frame.on_plugin_err)
                     if pkt['Message'] == "§e%multiplayer.player.join":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_join(player, this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_join(player, self.linked_frame.on_plugin_err)
                     elif pkt['Message'] == "§e%multiplayer.player.left":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_leave(player, this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_leave(player, self.linked_frame.on_plugin_err)
                     elif pkt['Message'].startswith("death."):
                         Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
                         if len(pkt["Parameters"]) >= 2:
                             killer = pkt["Parameters"][1]
                         else:
                             killer = None
-                        plugin_grp.execute_player_death(pkt['Parameters'][0], killer, pkt['Message'], this.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_death(pkt['Parameters'][0], killer, pkt['Message'], self.linked_frame.on_plugin_err)
                 case 1 | 7:
                     player, msg = pkt['SourceName'], pkt['Message']
-                    plugin_grp.execute_player_message(player, msg, this.linked_frame.on_plugin_err)
+                    plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
                     Print.print_inf(f"<{player}> {msg}")
                 case 8:
                     player, msg = pkt['SourceName'], pkt['Message']
                     Print.print_inf(f"{player} say -> {msg.strip(f'[{player}]')}")
-                    plugin_grp.execute_player_message(player, msg, this.linked_frame.on_plugin_err)
+                    plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
                 case 9:
                     msg = pkt['Message'].strip('{"rawtext":[{"text":"').strip("\n").strip('"}]}')
                     Print.print_inf(f"{msg}")
                     
         if pkt_type in plugin_grp.listen_packets:
-            this.pkt_cache.append([pkt_type, pkt])
+            self.pkt_cache.append([pkt_type, pkt])
 
-    def threadPacketProcessFunc(this):
+    def threadPacketProcessFunc(self):
         while 1:
             lastPTime = 0
-            if this.pkt_cache:
-                typ, pkt = this.pkt_cache.pop(0)
+            if self.pkt_cache:
+                typ, pkt = self.pkt_cache.pop(0)
                 plugin_group.processPacketFunc(typ, pkt)
-            if len(this.pkt_cache) > 100 and time.time() - lastPTime > 5:
+            if len(self.pkt_cache) > 100 and time.time() - lastPTime > 5:
                 Print.print_war("数据包缓冲区量 > 100")
                 lastPTime = time.time()
-            elif len(this.pkt_cache) > this.linked_frame.MAX_PACKET_CACHE:
-                Print.print_err(f"数据包缓冲区量 > {this.linked_frame.MAX_PACKET_CACHE} 超最大阈值， 已清空缓存区")
-                this.pkt_cache.clear()
+            elif len(self.pkt_cache) > self.linked_frame.MAX_PACKET_CACHE:
+                Print.print_err(f"数据包缓冲区量 > {self.linked_frame.MAX_PACKET_CACHE} 超最大阈值， 已清空缓存区")
+                self.pkt_cache.clear()
 
-    def Inject(this):
+    def Inject(self):
         startDetTime = time.time()
-        while not this.store_uuid_pkt and time.time() - startDetTime < 10:pass
-        if not this.store_uuid_pkt:
-            this.linked_frame.status = 2
+        while not self.store_uuid_pkt and time.time() - startDetTime < 10:pass
+        if not self.store_uuid_pkt:
+            self.linked_frame.status = 2
             Print.print_err("未收取到UUID包， 即将重启")
             exit()
-            return
         else:
-            this.processPlayerList(this.store_uuid_pkt, True)
-            this.requireUUIDPacket = False
-        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(this.allplayers))
-        this.linked_frame.status = 1
+            self.processPlayerList(self.store_uuid_pkt, True)
+            self.requireUUIDPacket = False
+        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
+        self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
+        self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
+        self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
+        self.linked_frame.status = 1
             
-    def waitUntilProcess(this):
-        this.requireUUIDPacket = True
-        this.allplayers.clear()
-        this.players_uuid.clear()
-        while this.pkt_unique_id == 0:pass
+    def waitUntilProcess(self):
+        self.requireUUIDPacket = True
+        self.allplayers.clear()
+        self.players_uuid.clear()
+        while self.pkt_unique_id == 0:pass
 
-    def clearCmdRespList(this):
+    def clearCmdRespList(self):
         while 1:
             time.sleep(3)
-            for k in this.command_resp.copy():
-                if time.time() - this.command_resp[k][0] > 10:
-                    del this.command_resp[k]
+            for k in self.command_resp.copy():
+                if time.time() - self.command_resp[k][0] > 10:
+                    del self.command_resp[k]
 
-    def tps_thread(this):
-        "not archieved"
+    def tps_thread(self):
+        "not archived"
         return
-        lastGameTime = int(this.sendcmd("time query daytime", True, 10).OutputMessages[0].Parameters[0])
+        lastGameTime = int(self.sendcmd("time query daytime", True, 10).OutputMessages[0].Parameters[0])
         while 1:
             try:
                 st_time = time.time()
-                tps = int(this.sendcmd("time query gametime", True, 10).OutputMessages[0].Parameters[0])
+                tps = int(self.sendcmd("time query gametime", True, 10).OutputMessages[0].Parameters[0])
                 st_time = time.time() - st_time
                 lastGameTime = tps
             except Exception as err:
                 pass
             time.sleep(10)
 
-    def sendwocmd(this, cmd: str):
-        conn.SendNoResponseCommand(this.linked_frame.con, cmd)
+    def sendwocmd(self, cmd: str):
+        conn.SendNoResponseCommand(self.linked_frame.con, cmd)
 
-    def sendcmd(this, cmd: str, waitForResp: bool = False, timeout: int = 30):
-        uuid = conn.SendMCCommand(this.linked_frame.con, cmd)
+    def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: int = 30):
+        uuid = conn.SendMCCommand(self.linked_frame.con, cmd)
         if waitForResp:
-            this.command_req.append(uuid)
+            self.command_req.append(uuid)
             waitStartTime = time.time()
             while 1:
-                res = this.command_resp.get(uuid, None)
+                res = self.command_resp.get(uuid, None)
                 if res:
-                    this.command_req.remove(uuid)
-                    del this.command_resp[uuid]
+                    self.command_req.remove(uuid)
+                    del self.command_resp[uuid]
                     return Packet_CommandOutput(res[1])
                 elif time.time() - waitStartTime > timeout:
-                    this.command_req.remove(uuid)
+                    self.command_req.remove(uuid)
                     raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
         
-    def sendwscmd(this, cmd: str, waitForResp: bool = False, timeout: int = 30):
-        uuid = conn.SendWSCommand(this.linked_frame.con, cmd)
+    def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int = 30):
+        uuid = conn.SendWSCommand(self.linked_frame.con, cmd)
         if waitForResp:
-            this.command_req.append(uuid)
+            self.command_req.append(uuid)
             waitStartTime = time.time()
             while 1:
-                res = this.command_resp.get(uuid, None)
+                res = self.command_resp.get(uuid, None)
                 if res:
-                    this.command_req.remove(uuid)
-                    del this.command_resp[uuid]
+                    self.command_req.remove(uuid)
+                    del self.command_resp[uuid]
                     return Packet_CommandOutput(res[1])
                 elif time.time() - waitStartTime > timeout:
-                    this.command_req.remove(uuid)
+                    self.command_req.remove(uuid)
                     raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
         
-    def sendfbcmd(this, cmd: str):
-        conn.SendFBCommand(this.linked_frame.con, cmd)
+    def sendfbcmd(self, cmd: str):
+        conn.SendFBCommand(self.linked_frame.con, cmd)
 
-    def sendPacket(this, pktType: int, pkt: dict):
+    def sendPacket(self, pktType: int, pkt: dict):
         b = conn.JsonStrAsIsGamePacketBytes(pktType, json.dumps(pkt))
-        conn.SendGamePacketBytes(this.linked_frame.con, b)
+        conn.SendGamePacketBytes(self.linked_frame.con, b)
         
-    def say_to(this, target: str, msg: str):
-        this.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
+    def say_to(self, target: str, msg: str):
+        self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
 
-    def player_title(this, target: str, text: str):
-        this.sendwocmd(f"title {target} title {text}")
+    def player_title(self, target: str, text: str):
+        self.sendwocmd(f"title {target} title {text}")
 
-    def player_subtitle(this, target: str, text: str):
-        this.sendwocmd(f"title {target} subtitle {text}")
+    def player_subtitle(self, target: str, text: str):
+        self.sendwocmd(f"title {target} subtitle {text}")
 
-    def player_actionbar(this, target: str, text: str):
-        this.sendwocmd(f"title {target} actionbar {text}")
+    def player_actionbar(self, target: str, text: str):
+        self.sendwocmd(f"title {target} actionbar {text}")
 
 try:
     frame = Frame()
@@ -546,14 +556,14 @@ try:
     frame.set_game_control(game_manager)
     frame.set_plugin_group(plugin_group)
     frame.welcome()
-    frame.check_us_token("Alpha", None)
+    frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("⒈⒖⒋▥┯{|}ToolDeltaÂ▥㈷Ž㊮Â㊯���Xue����Lian���+��RA]4L▥ÂQ⓽▥㊎Ⓢ⒖➼▥▅▥✞", None)
+
     frame.basicMkDir()
     frame.read_cfg()
     frame.fbtokenFix()
     plugin_group.read_plugin_from_old(dotcs_module_env)
     plugin_group.read_plugin_from_new(globals())
     plugin_group.execute_def(frame.on_plugin_err)
-    frame.ConsoleCmd_thread()
     frame.getFreePort(usage="fbconn")
     while 1:
         if frame.status in [0, 2]:
@@ -562,6 +572,7 @@ try:
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_manager.simpleProcessGamePacket)
             game_manager.waitUntilProcess()
+            frame.ConsoleCmd_thread()
             thread_processPacketFunc = Frame.ClassicThread(game_manager.threadPacketProcessFunc)
             threading.Thread(target=game_manager.tps_thread).start()
             game_manager.Inject()
@@ -577,7 +588,7 @@ try:
             Print.print_war("FB断开连接， 尝试重启")
         elif frame.status == 11:
             frame.reloadPlugins()
-
+    game_manager.sendwocmd("/kick FSkyBlueGMB")
     frame.close_fb_thread()
     Print.print_suc("正常退出.")
     os._exit(0)

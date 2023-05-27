@@ -65,6 +65,7 @@ class Cfg:
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
 
     def checkDict(this, patt: dict, cfg: dict, __nowcheck: list = []):
+        patt = patt.copy()
         __nowcheck.append(None)
         if not _CfgIsinstance(patt, dict) or not _CfgIsinstance(cfg, dict):
             raise this.ConfigValueError(f"JSON值 应为json而非{_CfgShowType(cfg)}: {cfg} ? {patt}", __nowcheck)
@@ -120,6 +121,7 @@ class Cfg:
                 this.checkDict(patt, v, __nowcheck)
 
     def getPluginConfigAndVersion(this, pluginName: str, standardType: dict, default: dict, default_vers: tuple[int, int, int]):
+        assert isinstance(standardType, dict)
         p = "插件配置文件/" + pluginName
         if not this.exists(p) and default:
             defaultCfg = PLUGINCFG_DEFAULT.copy()

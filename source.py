@@ -2,7 +2,6 @@ from typing import Callable
 from json import JSONDecodeError
 from libs.packets import Packet_CommandOutput
 
-import datetime
 class _Print:
     def print_with_info(this, text: str, info: str, **print_kwargs):...
     def print_err(this, text: str, **print_kwargs):"输出报错信息"
@@ -61,6 +60,10 @@ class Plugin:
     require_listen_packets = []
     dotcs_old_type = False
 
+class PluginAPI:
+    name = "<未命名api>"
+    version = (0, 0, 1)
+
 class PluginGroup:
     class PluginAPINotFoundError(ModuleNotFoundError):
         def __init__(this, name):...
@@ -77,6 +80,8 @@ class PluginGroup:
     PRG_NAME = ""
     def add_plugin(plugin: Plugin):...
     def getPluginAPI(this, apiName: str, min_version: tuple = None):...
+
+VERSION = tuple[int, int, int]
 
 class Cfg:
     class ConfigError(Exception):
@@ -96,9 +101,10 @@ class Cfg:
     def exists(this, path: str):...
     def checkDict(this, patt: dict, cfg: dict, __nowcheck: list = []):...
     def checkList(this, patt, lst: list, __nowcheck: list = []):...
-    def getPluginConfigAndVersion(this, pluginName: str, standardType: dict, default: dict, default_vers: tuple[int, int, int]):...
+    def getPluginConfigAndVersion(this, pluginName: str, standardType: dict, default: dict, default_vers: VERSION):...
 
 def add_plugin(plugin: Plugin):...
+def addPluginAPI(this, apiName: str, version: tuple):...
 def listen_packet(packetID: int):...
 plugins: PluginGroup
 Config: Cfg

@@ -39,7 +39,7 @@ class _Print:
                         setNextCol = _setNextCol
                     except:
                         pass
-                output_txts.append(datetime.datetime.now().strftime("[%H:%M:%S] ") + this._mccolor_console_st1(info) + " " + this._mccolor_console_common(setNextCol + text_line))
+                output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + this._mccolor_console_st1(info) + " " + this._mccolor_console_common(setNextCol + text_line))
             print("\n".join(output_txts), **print_kwargs)
         else:
             print(datetime.datetime.now().strftime("[%H:%M:%S] ") + this._mccolor_console_st1(info) + " " + this._mccolor_console_common(text), **print_kwargs)
