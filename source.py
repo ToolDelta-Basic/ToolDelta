@@ -1,6 +1,9 @@
 from typing import Callable
-from json import JSONDecodeError
+from orjson import JSONDecodeError
 from libs.packets import Packet_CommandOutput
+from io import TextIOWrapper
+
+VERSION = tuple[int, int, int]
 
 class _Print:
     def print_with_info(this, text: str, info: str, **print_kwargs):...
@@ -13,17 +16,25 @@ class _Print:
 class Builtins:
     class SimpleJsonDataReader:
         class DataReadError(JSONDecodeError):...
-        def readFileFrom(this, plugin_name: str, file: str, default: dict = None) -> any:"读取插件的json数据文件, 如果没有, 则新建一个空的"
-        def writeFileTo(this, plugin_name: str, file: str, obj):"写入插件的json数据文件"
+        def SafeOrJsonDump(obj: str | dict | list, fp: TextIOWrapper):...
+        def SafeOrJsonLoad(fp: TextIOWrapper) -> dict:...
+        def readFileFrom(plugin_name: str, file: str, default: dict = None) -> any:"读取插件的json数据文件, 如果没有, 则新建一个空的"
+        def writeFileTo(plugin_name: str, file: str, obj):"写入插件的json数据文件"
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):...
         def replaceTo(this, __sub: str) -> str:...
 
 class Frame:
+    class FrameBasic:
+        max_connect_fb_time: int
+        connect_fb_start_time: int
+        data_path: str
+        system_version: VERSION
     def __init__(this):...
     def get_game_control(this):
         return GameManager()
     def getFreePort(this, start = 8080, usage = "none") -> int | None:...
+    sys_data: FrameBasic
     
 class GameManager:
     command_req = []
@@ -76,12 +87,12 @@ class PluginGroup:
     linked_frame = None
     packet_funcs: dict[str, list[Callable]] = {}
     plugins_api = {}
+    dotcs_global_vars = {}
     excType = 0
     PRG_NAME = ""
     def add_plugin(plugin: Plugin):...
     def getPluginAPI(this, apiName: str, min_version: tuple = None):...
-
-VERSION = tuple[int, int, int]
+    def checkSystemVersion(this, need_vers: VERSION):...
 
 class Cfg:
     class ConfigError(Exception):

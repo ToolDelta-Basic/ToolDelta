@@ -1,16 +1,27 @@
 import os, json, threading, ctypes, traceback
 
-def get_dotcs_env(__F):
+def get_dotcs_env(__F, print_ins):
     sendcmd = __F.link_game_ctrl.sendcmd
     sendwocmd = __F.link_game_ctrl.sendwocmd
     sendwscmd = __F.link_game_ctrl.sendwscmd
     sendfbcmd = __F.link_game_ctrl.sendfbcmd
-    allplayers = __F.link_game_ctrl.allplayers_name
+    allplayers = __F.link_game_ctrl.allplayers
     robotname = __F.link_game_ctrl.bot_name
-    XUID2playerName = __F.link_game_ctrl.player_uuid
+    XUID2playerName = __F.link_game_ctrl.players_uuid
     threadList = __F._old_dotcs_threadinglist
     tellrawText = lambda target, dispname=None, text="" : __F.link_game_ctrl.say_to(target, dispname+" "+text if dispname else text)
     exiting = False
+    server = hash(__F.serverNumber)
+
+    def color(text: str, output: bool = True, end: str = "\n", replace: bool = False, replaceByNext: bool = False, info = " 信息 "):
+        del replaceByNext
+        if not output:
+            return print_ins.fmt_info(text, info)
+        else:
+            if not replace:
+                print_ins.print_with_info(text, info, end = end)
+            else:
+                print_ins.print_with_info(text, info, end = "\r")
 
     class createThread(threading.Thread):
         def __init__(self, name, data = {}, func = "", output = True):

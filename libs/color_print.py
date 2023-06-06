@@ -42,7 +42,7 @@ class _Print:
                 output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + this._mccolor_console_st1(info) + " " + this._mccolor_console_common(setNextCol + text_line))
             print("\n".join(output_txts), **print_kwargs)
         else:
-            print(datetime.datetime.now().strftime("[%H:%M:%S] ") + this._mccolor_console_st1(info) + " " + this._mccolor_console_common(text), **print_kwargs)
+            print(datetime.datetime.now().strftime("[%H:%M] ") + this._mccolor_console_st1(info) + " " + this._mccolor_console_common(text), **print_kwargs)
 
     def print_err(this, text: str, **print_kwargs):
         this.print_with_info(f"§c{text}", "§c 报错 ", **print_kwargs)

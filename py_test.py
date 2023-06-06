@@ -1,5 +1,5 @@
 import re
+not_import_all_rule = re.compile("from .* import \*")
 
-s = re.compile("\[CQ:image,(.)*\]")
-
-print(re.sub(s, "[图片]", "[CQ:image,file=75589e4fd9a10958067fe14eb4741109.image,subType=0]"))
+a = not_import_all_rule.sub("pass", " from aux import *; from bux import a")
+print(a)

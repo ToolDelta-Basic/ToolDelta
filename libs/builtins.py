@@ -1,28 +1,36 @@
 from libs.color_print import Print
-import json, os
+import orjson, os
 def on_plugin_err_common(pluginName: str, _, trace: str):
     Print.print_err(f"§4插件 {pluginName} 报错, 信息：§c\n" + trace)
 
 class Builtins:
     class SimpleJsonDataReader:
-        class DataReadError(json.JSONDecodeError):...
-        def readFileFrom(this, plugin_name: str, file: str, default: dict = None):
+        def SafeOrJsonDump(obj: str | dict | list, fp):
+            fp.write(orjson.dumps(obj))
+            fp.close()
+
+        def SafeOrJsonLoad(fp):
+            d = orjson.loads(fp.read())
+            fp.close()
+            return d
+        
+        class DataReadError(orjson.JSONDecodeError):...
+
+        def readFileFrom(plugin_name: str, file: str, default: dict = None):
             filepath = f"data/{plugin_name}/{file}.json"
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
-                    with open(filepath, "w", encoding='utf-8') as f:
-                        json.dump(default, f)
-                        return default
-                with open(filepath, "r", encoding='utf-8') as f:
-                    return json.load(f)
-            except json.JSONDecodeError as err:
-                raise this.DataReadError(err.msg, err.doc, err.pos)
+                    Builtins.SimpleJsonDataReader.SafeOrJsonDump(default, open(filepath, "w", encoding='utf-8'))
+                    return default
+                return Builtins.SimpleJsonDataReader.SafeOrJsonLoad(open(filepath, "r", encoding='utf-8'))
+            except orjson.JSONDecodeError as err:
+                raise Builtins.SimpleJsonDataReader.DataReadError(err.msg, err.doc, err.pos)
             
-        def writeFileTo(this, plugin_name: str, file: str, obj):
+        def writeFileTo(plugin_name: str, file: str, obj):
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
-            with open(f"data/{plugin_name}/{file}.json", "w", encoding='utf-8') as f:
-                json.dump(obj, f)
+            Builtins.SimpleJsonDataReader.SafeOrJsonDump(obj, open(f"data/{plugin_name}/{file}.json", "w", encoding='utf-8'))
+
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):
             this.kw = kw
@@ -31,3 +39,9 @@ class Builtins:
                 if k in __sub:
                     __sub = __sub.replace(k, str(v))
             return __sub
+        
+    def SimpleFmt(this, kw: dict[str, any], __sub: str):
+        for k, v in kw.items():
+            if k in __sub:
+                __sub = __sub.replace(k, str(v))
+        return __sub

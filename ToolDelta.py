@@ -8,7 +8,7 @@ from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
 
 PRG_NAME = "ToolDelta"
-VERSION = (0, 1, 3)
+VERSION = (0, 1, 5)
 UPDATE_NOTE = ""
 ADVANCED = False
 Print = libs.color_print.Print
@@ -24,9 +24,12 @@ except Exception as err:
 
 class Frame:
     class ThreadExit(SystemExit):...
+    class SystemVersionException(OSError):...
     class FrameBasic:
+        system_version = VERSION
         max_connect_fb_time = 60
         connect_fb_start_time = time.time()
+        data_path = "data/"
     class ClassicThread(threading.Thread):
         def __init__(self, func: Callable, args: tuple = (), **kwargs):
             super().__init__(target = func)
@@ -40,7 +43,7 @@ class Frame:
                 self.func(*self.all_args[0], **self.all_args[1])
             except Frame.ThreadExit:
                 pass
-            except Exception as err:
+            except:
                 traceback.print_exc()
 
         def get_id(self):
@@ -65,7 +68,7 @@ class Frame:
     link_plugin_group = None
     fb_pipe: subprocess.Popen = None
     _old_dotcs_threadinglist = []
-    status = 0
+    status = [0]
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
 
     def check_us_token(self, tok_name = "", check_md = ""):
@@ -187,7 +190,7 @@ class Frame:
     def system_exit(self):
         self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
         self.fb_pipe.stdin.flush()
-        self.status = 0
+        self.status[0] = 0
 
     def run_conn(self, ip = "0.0.0.0", port=8080):
         connect_fb_start_time = time.time()
@@ -200,7 +203,7 @@ class Frame:
                 if time.time() - connect_fb_start_time > self.sys_data.max_connect_fb_time:
                     Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
                     self.close_fb_thread()
-                    return 0
+                    os._exit(0)
 
     def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
         try:
@@ -230,7 +233,7 @@ class Frame:
         try:
             while 1:
                 rsp = input()
-                if self.status == 2 or self.status == 3:
+                if self.status[0] == 2 or self.status[0] == 3:
                     break
                 for _, _, func, triggers in self.consoleMenu:
                     if not rsp:
@@ -246,7 +249,7 @@ class Frame:
                                 if res == -1:
                                     return
         except EOFError:
-            frame.status = 0
+            frame.status[0] = 0
 
     def _try_execute_console_cmd(self, func, rsp, mode, arg1):
         try:
@@ -296,18 +299,16 @@ class Frame:
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
-                Print.print_err(f"FastBuilder 出现问题: {tmp[7:]}")
-                self.status = 2
+                Print.print_err(f"FastBuilder 出现问题: {tmp}")
+                self.status[0] = 2
                 self.fb_pipe.kill()
                 return
             else:
-                if "SUCCESS" in tmp or "WARNING" in tmp and len(tmp) > 31:
-                    tmp = tmp[:30]
                 Print.print_with_info(tmp, "§b  FB  §r")
     
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
-        return libs.old_dotcs_env.get_dotcs_env(self)
+        return libs.old_dotcs_env.get_dotcs_env(self, Print)
     
     def get_console_menus(self):
         return self.consoleMenu
@@ -321,7 +322,7 @@ class Frame:
     def get_game_control(self):
         return self.link_game_ctrl
 
-class GameManager:
+class GameCtrl:
     def __init__(self, frame: Frame):
         self.linked_frame = frame
         self.command_req = []
@@ -359,15 +360,14 @@ class GameManager:
         plugin_grp = self.linked_frame.link_plugin_group
         self.pkt_unique_id = 0
         try:
-            while 1:
-                packet_bytes = conn.RecvGamePacket(con)
+            for packet_bytes in conn.RecvGamePacketIt(con):
                 packet_type = conn.inspectPacketID(packet_bytes)
                 self.pkt_unique_id += 1
                 if packet_type not in self.require_listen_packet_list:
                     continue
                 else:
                     packetGetTime = time.time()
-                    packet_mapping = json.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
+                    packet_mapping = orjson.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                         if cmd_uuid in self.command_req:
@@ -380,7 +380,7 @@ class GameManager:
                     self.processGamePacketWithPlugin(packet_mapping, packet_type, plugin_grp)
         except Exception as err:
             if "recv on a closed connection" in str(err):
-                self.linked_frame.status = 2
+                self.linked_frame.status[0] = 2
                 return
             print(traceback.format_exc())
 
@@ -452,10 +452,10 @@ class GameManager:
 
     def Inject(self):
         startDetTime = time.time()
-        while not self.store_uuid_pkt and time.time() - startDetTime < 10:pass
+        while not self.store_uuid_pkt and time.time() - startDetTime < 60:pass
         if not self.store_uuid_pkt:
-            self.linked_frame.status = 2
-            Print.print_err("未收取到UUID包， 即将重启")
+            self.linked_frame.status[0] = 2
+            Print.print_err("60s 内未收取到UUID包， 即将重启")
             exit()
         else:
             self.processPlayerList(self.store_uuid_pkt, True)
@@ -464,7 +464,7 @@ class GameManager:
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
-        self.linked_frame.status = 1
+        self.linked_frame.status[0] = 1
             
     def waitUntilProcess(self):
         self.requireUUIDPacket = True
@@ -552,11 +552,11 @@ class GameManager:
 try:
     frame = Frame()
     plugin_group = PluginGroup(frame, PRG_NAME)
-    game_manager = GameManager(frame)
+    game_manager = GameCtrl(frame)
     frame.set_game_control(game_manager)
     frame.set_plugin_group(plugin_group)
     frame.welcome()
-    frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("⒈⒖⒋▥┯{|}ToolDeltaÂ▥㈷Ž㊮Â㊯���Xue����Lian���+��RA]4L▥ÂQ⓽▥㊎Ⓢ⒖➼▥▅▥✞", None)
+    frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("??????", None)
 
     frame.basicMkDir()
     frame.read_cfg()
@@ -565,30 +565,33 @@ try:
     plugin_group.read_plugin_from_new(globals())
     plugin_group.execute_def(frame.on_plugin_err)
     frame.getFreePort(usage="fbconn")
+    # os._exit(0)
     while 1:
-        if frame.status in [0, 2]:
+        if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
             frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_manager.simpleProcessGamePacket)
             game_manager.waitUntilProcess()
-            frame.ConsoleCmd_thread()
             thread_processPacketFunc = Frame.ClassicThread(game_manager.threadPacketProcessFunc)
             threading.Thread(target=game_manager.tps_thread).start()
+            frame.ConsoleCmd_thread()
             game_manager.Inject()
         plugin_group.execute_init(frame.on_plugin_err)
-        frame.status = 1
-        while frame.status == 1:
-            continue
+        plugin_group.execute_dotcs_repeat(frame.on_plugin_err)
+        frame.status[0] = 1
+        while frame.status[0] == 1:
+            time.sleep(0.2)
         thread_processPacket.stop()
         thread_processPacketFunc.stop()
-        if frame.status == 0:
+        if frame.status[0] == 0:
             break
-        elif frame.status == 2:
+        elif frame.status[0] == 2:
             Print.print_war("FB断开连接， 尝试重启")
-        elif frame.status == 11:
+        elif frame.status[0] == 11:
             frame.reloadPlugins()
-    game_manager.sendwocmd("/kick FSkyBlueGMB")
+    if game_manager.bot_name:
+        game_manager.sendwocmd("kick " + game_manager.bot_name)
     frame.close_fb_thread()
     Print.print_suc("正常退出.")
     os._exit(0)

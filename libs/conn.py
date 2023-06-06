@@ -164,6 +164,14 @@ def RecvGamePacket(connID: int) -> bytes:
     freeMem(r.pktBytes)
     return bs
 
+def RecvGamePacketIt(connID: int) -> bytes:
+    while 1:
+        r = LIB.RecvGamePacket(to_GoInt(connID))
+        check_err_in_struct(r)
+        bs=r.pktBytes[:r.l]
+        freeMem(r.pktBytes)
+        yield bs
+
 
 # not tested
 def SendGamePacketBytes(connID: int, content: bytes) -> None:

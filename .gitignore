@@ -8,6 +8,8 @@
 *.yml
 *.token
 *.Identifier
+*storage
+_Plugin_Data
 build
 dist
 ctest
@@ -19,10 +21,14 @@ status
 data
 cache
 bdx_work_shop
-plugDec.pyc
+pluginDec.py
+pluginDec.pyc
+pluginEnc.py
+pluginEnc.pyc
 DotCSLite.py
 plugin__auth_server
 pluginEnc.py
+py_test.py
 ToolDelta
 fbtoken
 phoenixbuilder
