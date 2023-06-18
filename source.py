@@ -2,10 +2,12 @@ from typing import Callable
 from orjson import JSONDecodeError
 from libs.packets import Packet_CommandOutput
 from io import TextIOWrapper
+import threading
 
 VERSION = tuple[int, int, int]
 
 class _Print:
+    def _mccolor_console_st1(this, text: str):...
     def print_with_info(this, text: str, info: str, **print_kwargs):...
     def print_err(this, text: str, **print_kwargs):"输出报错信息"
     def print_inf(this, text: str, **print_kwargs):"输出一般信息"
@@ -16,15 +18,31 @@ class _Print:
 class Builtins:
     class SimpleJsonDataReader:
         class DataReadError(JSONDecodeError):...
+        @staticmethod
         def SafeOrJsonDump(obj: str | dict | list, fp: TextIOWrapper):...
+        @staticmethod
         def SafeOrJsonLoad(fp: TextIOWrapper) -> dict:...
+        @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None) -> any:"读取插件的json数据文件, 如果没有, 则新建一个空的"
+        @staticmethod
         def writeFileTo(plugin_name: str, file: str, obj):"写入插件的json数据文件"
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):...
         def replaceTo(this, __sub: str) -> str:...
 
 class Frame:
+    class ThreadExit(SystemExit):...
+    class SystemVersionException(OSError):...
+    class FrameBasic:
+        system_version: VERSION
+        max_connect_fb_time: int
+        connect_fb_start_time: int
+        data_path: str
+    class ClassicThread(threading.Thread):
+        def __init__(self, func: Callable, args: tuple = (), **kwargs):...
+        def run(self):...
+        def get_id(self):...
+        def stop(self):...
     class FrameBasic:
         max_connect_fb_time: int
         connect_fb_start_time: int

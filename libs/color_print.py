@@ -26,7 +26,7 @@ class _Print:
     def _mccolor_console_st1(this, text: str):
         return text.replace("§1", "\033[7;37;34m").replace("§2", "\033[7;37;32m").replace("§3", "\033[7;37;36m").replace("§4", "\033[7;37;31m").replace("§5", "\033[7;37;35m").replace("§6", "\033[7;37;33m").replace("§7", "\033[7;37;90m").replace("§8", "\033[7;37;2m").replace("§9", "\033[7;37;94m").replace("§a", "\033[7;37;92m").replace("§b", "\033[7;37;96m").replace("§c", "\033[7;37;91m").replace("§d", "\033[7;37;95m").replace("§e", "\033[7;37;93m").replace("§f", "\033[7;37;1m").replace("§r", "\033[0m")+"\033[0m"
 
-    def print_with_info(this, text: str, info: str, **print_kwargs):
+    def print_with_info(this, text: str, info: str = "§f 信息 ", **print_kwargs):
         setNextCol = "§r"
         if "\n" in text:
             output_txts = []

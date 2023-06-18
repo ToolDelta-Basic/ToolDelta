@@ -1,9 +1,10 @@
-from typing import Callable
+from typing import Callable, Type
 from .color_print import Print
 import os, sys, traceback, zipfile, time, threading, re
 from .cfg import Cfg
 from .builtins import Builtins
 try:
+    raise
     from .pluginDec import decPluginAndCMP
 except:
     decPluginAndCMP = None
@@ -11,14 +12,14 @@ except:
 class PluginSkip(EOFError):...
 
 NON_FUNC = lambda *_: None
-not_import_all_rule = re.compile("from .* import \*")
+NOT_IMPORTALL_RULE = re.compile("from .* import \*")
 
 def unzip_plugin(zip_dir, exp_dir):
     try:
         f = zipfile.ZipFile(zip_dir, "r")
         f.extractall(exp_dir)
-    except Exception:
-        Print.print_err(f"zipfile: 解压失败: {zip_dir}")
+    except Exception as err:
+        Print.print_err(f"zipfile: 解压失败: {err}")
         print(traceback.format_exc())
         os._exit(0)
 
@@ -35,7 +36,7 @@ class Plugin:
             self.require_listen_packets.append(pktID)
 
     def import_original_dotcs_plugin(self, plugin_prg: str, old_dotcs_env: dict, module_env: dict, plugin_group):
-        # 太不规范了!!
+        # dotcs插件太不规范了!!
         self.dotcs_old_type = True
         old_dotcs_env.update(module_env)
         runcode_tmp = {}
@@ -53,8 +54,8 @@ class Plugin:
 
         for line in range(len(plugin_prg_lines)):
             if "import *" in plugin_prg_lines[line]:
-                Print.print_war("DotCS插件 存在会出问题的代码 'import *', 已自动替换为 pass")
-                plugin_prg_lines[line] = not_import_all_rule.sub("pass", plugin_prg_lines[line])
+                Print.print_war(f"DotCS插件 存在异常的代码 'import *', 已自动替换为 pass: §7{line} §f|{plugin_prg_lines[line]}")
+                plugin_prg_lines[line] = NOT_IMPORTALL_RULE.sub("pass", plugin_prg_lines[line])
             if plugin_prg_lines[line].startswith("# PLUGIN TYPE: "):
                 if plugin_start + 1:
                     plugin_end = line
@@ -102,10 +103,12 @@ class Plugin:
                         except:
                             Print.print_war(f"§c不合法的监听数据包ID： {k}, 已跳过")  
                     else:
-                        raise Exception(f"§c无法识别的DotCS插件事件样式： {k}")
-            # DotCS 有太多的插件都会出现作用域问题
+                        raise Exception(f"无法识别的DotCS插件事件样式： {k}")
+            # DotCS 有太多的插件都会出现作用域问题, 在此只能这么修复了
             # ouch
-            p_code = fun_exec_code + """globals().update(plugin_group.dotcs_global_vars)\n """ + runcode_tmp[k].replace("\n", "\n ") + "\n plugin_group.dotcs_global_vars.update(locals())"
+            p_code = fun_exec_code + """globals().update(plugin_group.dotcs_global_vars)\n """ \
+                + runcode_tmp[k].replace("\n", "\n ") + \
+                    "\n plugin_group.dotcs_global_vars.update(locals())"
             try:
                 exec(p_code, old_dotcs_env, _dotcs_runcode)
             except Exception as err:
@@ -133,7 +136,7 @@ class Plugin:
         return evts
 
 class PluginAPI:
-    name = "<未命名api>"
+    name = "<未命名插件api>"
     version = (0, 0, 1)
 
 class PluginGroup:
@@ -187,7 +190,7 @@ class PluginGroup:
         self.excType = 1
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
 
-    def add_plugin(self, plugin: Plugin):
+    def add_plugin(self, plugin: Type[Plugin]):
         self.plugins.append(plugin)
         
     def add_broadcast_listener(self, evt_name: str):
@@ -253,13 +256,16 @@ class PluginGroup:
         
     def checkSystemVersion(this, need_vers: tuple[int, int, int]):
         if need_vers > this.linked_frame.sys_data.system_version:
-            raise this.linked_frame.SystemVersionException(f"该组件需要{this.linked_frame.PRG_NAME}为{'.'.join([str(i) for i in this.linked_frame.sys_data.system_version])}")
+            raise this.linked_frame.SystemVersionException(
+                f"该组件需要{this.linked_frame.PRG_NAME}为{'.'.join([str(i) for i in this.linked_frame.sys_data.system_version])}版本"
+            )
 
     def read_plugin_from_old(self, module_env: dict):
+        sys.path.append(os.getcwd() + "/DotCS兼容插件")
         for file in os.listdir("DotCS兼容插件"):
             try:
                 if file.endswith(".py"):
-                    Print.print_inf(f"§6加载DotCS插件: {file.strip('.py')}")
+                    Print.print_inf(f"§6载入DotCS插件: {file.strip('.py')}", end="\r")
                     with open("DotCS兼容插件/" + file, "r", encoding='utf-8') as f:
                         code = f.read()
                     plug = Plugin()
@@ -274,23 +280,23 @@ class PluginGroup:
                     for k, v in evts.items():
                         self.plugins_funcs[k].append(v)
                     self.add_plugin(plug)
-                    Print.print_suc(f"§a成功加载DotCS插件 {plug.name}")
+                    Print.print_suc(f"§a成功载入插件 §2<DotCS> §a{plug.name}")
             except Exception as err:
-                Print.print_err(f"§c加载插件出现问题: {err}")
+                Print.print_err(f"§c加载插件 {plug.name} 出现问题: {err}")
                 raise
 
     def read_plugin_from_new(self, root_env: dict):
         pkt_funcs: dict[str, str] = {}
         plug_cls_cache = [None, 0]
         def _listen_packet(packetType: int):
-            def _add(func: Callable[[dict], None]):
+            def _decorate(func: Callable[[dict], None]):
                 pkt_funcs.update({str(packetType): func.__name__})
                 return func
-            return _add
-        def _add_plugin_new(plugin: Plugin):
+            return _decorate
+        def _add_plugin_new(plugin: Type[Plugin]):
             plug_cls_cache[1] += 1
             assert Plugin.__subclasscheck__(plugin), 1
-            plugin_body: Plugin = plugin(self.linked_frame)
+            plugin_body = plugin(self.linked_frame)
             plug_cls_cache[0] = plugin_body
             self.plugins.append(plugin_body)
             _v0, _v1, _v2 = plugin_body.version
@@ -311,7 +317,7 @@ class PluginGroup:
 
             Print.print_suc(f"成功载入插件 {plugin_body.name} 版本：{_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
 
-        loc_env = {"add_plugin": _add_plugin_new, "addPluginAPI": self.addPluginAPI, "listen_packet": _listen_packet, "plugins": self.linked_frame.link_plugin_group}
+        loc_env = {"add_plugin": _add_plugin_new, "addPluginAPI": self.addPluginAPI, "listen_packet": _listen_packet}
         root_env.update(loc_env)
         for plugin_dir in os.listdir(f"{self.PRG_NAME}插件"):
             if not os.path.isdir(f"{self.PRG_NAME}插件/" + plugin_dir.strip(".zip")) and os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir) and plugin_dir.endswith(".zip"):
@@ -368,10 +374,11 @@ class PluginGroup:
                     if "() takes no arguments" in str(err):
                         Print.print_err(f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
                     else:
-                        Print.print_err(f"加载插件 {plugin_dir} 出现问题，报错如下: ")
+                        Print.print_err(f"加载插件 {plugin_dir} 出现问题, 报错如下: ")
                         Print.print_err(traceback.format_exc())
                         raise SystemExit
-                sys.path.remove(os.getcwd() + f"/{self.PRG_NAME}插件/" + plugin_dir)
+        for spec_func in loc_env.keys():
+            del root_env[spec_func]
 
     def read_plugin_from_nonop(self, root_env: dict):
         for plugin_dir in os.listdir(f"{self.PRG_NAME}无OP运行插件"):
@@ -489,7 +496,7 @@ class PluginGroup:
             try:
                 if plugin.dotcs_old_type:
                     if packetID in plugin.require_listen_packets:
-                        plugin.dotcs_runcode.get(f"{plugin.name}_packet_{packetID}", NON_FUNC)(packet)
+                        plugin.dotcs_runcode.get(f"packet_{packetID}", NON_FUNC)(packet)
             except PluginSkip:
                 pass
             except Exception as err:
@@ -500,7 +507,6 @@ class PluginGroup:
         if d:
             for func in d:
                 try:
-                    print(func.__name__)
                     func(pkt)
                 except:
                     Print.print_err(f"插件方法 {func} 出错：")

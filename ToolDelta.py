@@ -7,8 +7,10 @@ from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
 
+orjson
+
 PRG_NAME = "ToolDelta"
-VERSION = (0, 1, 5)
+VERSION = (0, 1, 6)
 UPDATE_NOTE = ""
 ADVANCED = False
 Print = libs.color_print.Print
@@ -16,10 +18,9 @@ Builtins = libs.builtins.Builtins
 Config = _Cfg()
 
 try:
-    from libs import conn
+    import libs.conn as conn
 except Exception as err:
-    Print.print_err("加载外部DLL库失败， 请检查其是否存在")
-    print(err)
+    Print.print_err("加载外部DLL库失败， 请检查其是否存在:", err)
     raise SystemExit
 
 class Frame:
@@ -81,13 +82,11 @@ class Frame:
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
-            "密码": 0,
-            "是否启用omg": False
+            "密码": 0
         }
         CFG_STD = {
             "服务器号": int,
-            "密码": int,
-            "是否启用omg": bool
+            "密码": int
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err("请到FB官网 uc.fastbuilder.pro 下载FBToken, 并放在本目录中")
@@ -158,7 +157,7 @@ class Frame:
 
     def runFB(self, ip = "0.0.0.0", port="8080"):
         os.system("chmod +x phoenixbuilder")
-        if Config.get_cfg("租赁服登录配置.json", {})["是否启用omg"]:
+        if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
             con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
         else:
             con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
@@ -168,13 +167,13 @@ class Frame:
     def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
         time.sleep(0.1)
-        plugin_group.reset()
-        game_manager.reset()
-        self.set_game_control(game_manager)
-        self.set_plugin_group(plugin_group)
-        plugin_group.read_plugin_from_old(dotcs_module_env)
-        plugin_group.read_plugin_from_new(globals())
-        plugin_group.execute_def(frame.on_plugin_err)
+        plugins.reset()
+        game_control.reset()
+        self.set_game_control(game_control)
+        self.set_plugin_group(plugins)
+        plugins.read_plugin_from_old(dotcs_module_env)
+        plugins.read_plugin_from_new(globals())
+        plugins.execute_def(frame.on_plugin_err)
         try:
             del self.consoleMenu[2:]
         except:
@@ -202,6 +201,10 @@ class Frame:
             except:
                 if time.time() - connect_fb_start_time > self.sys_data.max_connect_fb_time:
                     Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
+                    self.close_fb_thread()
+                    os._exit(0)
+                elif self.status[0] == 2:
+                    Print.print_err(f"§4连接FB时出现问题，已退出")
                     self.close_fb_thread()
                     os._exit(0)
 
@@ -299,9 +302,9 @@ class Frame:
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
-                Print.print_err(f"FastBuilder 出现问题: {tmp}")
                 self.status[0] = 2
                 self.fb_pipe.kill()
+                Print.print_err(f"FastBuilder 出现问题: {tmp}")
                 return
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
@@ -328,7 +331,7 @@ class GameCtrl:
         self.command_req = []
         self.command_resp = {}
         self.players_uuid = {}
-        self.allplayers = []
+        self.allplayers_name = self.allplayers =  []
         self.bot_name = ""
         self.linked_frame: Frame
         self.pkt_unique_id: int = 0
@@ -442,7 +445,7 @@ class GameCtrl:
             lastPTime = 0
             if self.pkt_cache:
                 typ, pkt = self.pkt_cache.pop(0)
-                plugin_group.processPacketFunc(typ, pkt)
+                plugins.processPacketFunc(typ, pkt)
             if len(self.pkt_cache) > 100 and time.time() - lastPTime > 5:
                 Print.print_war("数据包缓冲区量 > 100")
                 lastPTime = time.time()
@@ -551,34 +554,33 @@ class GameCtrl:
 
 try:
     frame = Frame()
-    plugin_group = PluginGroup(frame, PRG_NAME)
-    game_manager = GameCtrl(frame)
-    frame.set_game_control(game_manager)
-    frame.set_plugin_group(plugin_group)
+    plugins = PluginGroup(frame, PRG_NAME)
+    game_control = GameCtrl(frame)
+    frame.set_game_control(game_control)
+    frame.set_plugin_group(plugins)
     frame.welcome()
     frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("??????", None)
 
     frame.basicMkDir()
     frame.read_cfg()
     frame.fbtokenFix()
-    plugin_group.read_plugin_from_old(dotcs_module_env)
-    plugin_group.read_plugin_from_new(globals())
-    plugin_group.execute_def(frame.on_plugin_err)
+    plugins.read_plugin_from_old(dotcs_module_env)
+    plugins.read_plugin_from_new(globals())
+    plugins.execute_def(frame.on_plugin_err)
     frame.getFreePort(usage="fbconn")
-    # os._exit(0)
     while 1:
         if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
             frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
-            thread_processPacket = Frame.ClassicThread(game_manager.simpleProcessGamePacket)
-            game_manager.waitUntilProcess()
-            thread_processPacketFunc = Frame.ClassicThread(game_manager.threadPacketProcessFunc)
-            threading.Thread(target=game_manager.tps_thread).start()
+            thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
+            game_control.waitUntilProcess()
+            thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
+            threading.Thread(target=game_control.tps_thread).start()
             frame.ConsoleCmd_thread()
-            game_manager.Inject()
-        plugin_group.execute_init(frame.on_plugin_err)
-        plugin_group.execute_dotcs_repeat(frame.on_plugin_err)
+            game_control.Inject()
+        plugins.execute_init(frame.on_plugin_err)
+        plugins.execute_dotcs_repeat(frame.on_plugin_err)
         frame.status[0] = 1
         while frame.status[0] == 1:
             time.sleep(0.2)
@@ -590,8 +592,8 @@ try:
             Print.print_war("FB断开连接， 尝试重启")
         elif frame.status[0] == 11:
             frame.reloadPlugins()
-    if game_manager.bot_name:
-        game_manager.sendwocmd("kick " + game_manager.bot_name)
+    if game_control.bot_name:
+        game_control.sendwocmd("kick " + game_control.bot_name)
     frame.close_fb_thread()
     Print.print_suc("正常退出.")
     os._exit(0)
