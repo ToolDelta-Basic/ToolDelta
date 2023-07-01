@@ -7,8 +7,6 @@ from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
 
-orjson
-
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 6)
 UPDATE_NOTE = ""
