@@ -407,7 +407,7 @@ class PluginGroup:
             if nowTime - lastTime1m > 60:
                 for fname, func in self._dotcs_repeat_threadings["1m"]:
                     try:
-                        # A strong desire to delete "try" block !!
+                        # A strong desire to remove "try" block !!
                         func()
                     except Exception as err:
                         Print.print_err(f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}")
@@ -477,7 +477,7 @@ class PluginGroup:
                  onerr(name, err, traceback.format_exc())
 
     def execute_player_leave(self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
-        for name, func in self.plugins_funcs["on_player_join"]:
+        for name, func in self.plugins_funcs["on_player_leave"]:
             try:
                 func(player)
             except Exception as err:

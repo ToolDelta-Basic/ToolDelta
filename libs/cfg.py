@@ -123,7 +123,7 @@ class Cfg:
                                         exc_raise = exc
                                 elif _CfgIsinstance(v_identifier, type):
                                     if not _CfgIsinstance(v2, v_identifier):
-                                        exc_raise = this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in v)} 等, 实际上为 {_CfgShowType(v2)}", __nowcheck)
+                                        exc_raise = this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in v)} 等, 实际上为 {_CfgShowType(v2)}\n可能的另一个错误: {exc_raise}", __nowcheck)
                                     else:
                                         return
                             raise exc_raise

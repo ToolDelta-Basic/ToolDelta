@@ -303,7 +303,6 @@ class Frame:
                 self.status[0] = 2
                 self.fb_pipe.kill()
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
-                return
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
     
@@ -369,6 +368,10 @@ class GameCtrl:
                 else:
                     packetGetTime = time.time()
                     packet_mapping = orjson.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
+                    try:
+                        print(orjson.loads(packet_bytes[1:]))
+                    except Exception as err:
+                        print(err)
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                         if cmd_uuid in self.command_req:
@@ -392,8 +395,11 @@ class GameCtrl:
             if isJoining:
                 self.players_uuid[playername] = player["UUID"]
                 self.allplayers.append(playername) if not playername in self.allplayers else None
-                if first:
+                if not first:
                     Print.print_inf(f"§e{playername} 加入了游戏")
+                    plugins.execute_player_join(playername, self.linked_frame.on_plugin_err)
+                else:
+                    self.bot_name = pkt["Entries"][0]["Username"]
             else:
                 playername = "???"
                 for k in self.players_uuid:
@@ -404,7 +410,7 @@ class GameCtrl:
                 Print.print_inf(f"§e{playername} 退出了游戏")
 
     def processGamePacketWithPlugin(self, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
-        if pkt_type == 9: 
+        if pkt_type == 9:
             match pkt['TextType']:
                 case 2:
                     if pkt['Message'] == "§e%multiplayer.player.joined":
@@ -412,7 +418,6 @@ class GameCtrl:
                         plugin_grp.execute_player_prejoin(player, self.linked_frame.on_plugin_err)
                     if pkt['Message'] == "§e%multiplayer.player.join":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_join(player, self.linked_frame.on_plugin_err)
                     elif pkt['Message'] == "§e%multiplayer.player.left":
                         player = pkt["Parameters"][0]
                         plugin_grp.execute_player_leave(player, self.linked_frame.on_plugin_err)
@@ -432,7 +437,7 @@ class GameCtrl:
                     Print.print_inf(f"{player} say -> {msg.strip(f'[{player}]')}")
                     plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
                 case 9:
-                    msg = pkt['Message'].strip('{"rawtext":[{"text":"').strip("\n").strip('"}]}')
+                    msg = pkt['Message']
                     Print.print_inf(f"{msg}")
                     
         if pkt_type in plugin_grp.listen_packets:
@@ -481,7 +486,6 @@ class GameCtrl:
                     del self.command_resp[k]
 
     def tps_thread(self):
-        "not archived"
         return
         lastGameTime = int(self.sendcmd("time query daytime", True, 10).OutputMessages[0].Parameters[0])
         while 1:
@@ -558,13 +562,13 @@ try:
     frame.set_plugin_group(plugins)
     frame.welcome()
     frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("??????", None)
-
     frame.basicMkDir()
     frame.read_cfg()
     frame.fbtokenFix()
     plugins.read_plugin_from_old(dotcs_module_env)
     plugins.read_plugin_from_new(globals())
     plugins.execute_def(frame.on_plugin_err)
+    libs.builtins.tmpjson_save_thread(frame)
     frame.getFreePort(usage="fbconn")
     while 1:
         if frame.status[0] in [0, 2]:
@@ -591,18 +595,22 @@ try:
         elif frame.status[0] == 11:
             frame.reloadPlugins()
     if game_control.bot_name:
-        game_control.sendwocmd("kick " + game_control.bot_name)
+        game_control.sendcmd("kick " + game_control.bot_name)
+        Print.print_inf(f"{game_control.bot_name} 已退出游戏.")
+    else:
+        Print.print_war(f"无法正常踢出机器人")
     frame.close_fb_thread()
+    Print.print_inf("正在保存缓存数据.")
+    libs.builtins.safe_close()
     Print.print_suc("正常退出.")
     os._exit(0)
 
-except SystemExit:
-    os._exit(0)
-
-except KeyboardInterrupt:
+except (SystemExit, KeyboardInterrupt):
+    libs.builtins.safe_close()
     os._exit(0)
 
 except Exception:
     Print.print_err(traceback.format_exc())
     frame.close_fb_thread()
+    libs.builtins.safe_close()
     os._exit(0)

@@ -29,7 +29,15 @@ class Builtins:
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):...
         def replaceTo(this, __sub: str) -> str:...
-
+    class TMPJson:
+        @staticmethod
+        def loadPathJson(path: str):"初始化一个json文件路径, 之后可对其进行读取和写入, 速度快"
+        @staticmethod
+        def unloadPathJson(path: str):"卸载一个json文件路径, 之后不可对其进行读取和写入"
+        @staticmethod
+        def read(path: str):"读取json文件路径缓存的信息"
+        @staticmethod
+        def write(path: str, obj: any):"向该json文件路径写入信息并缓存, 一段时间或系统关闭时会将其写入磁盘内"
 class Frame:
     class ThreadExit(SystemExit):...
     class SystemVersionException(OSError):...
