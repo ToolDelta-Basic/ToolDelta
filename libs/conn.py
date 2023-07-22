@@ -143,9 +143,13 @@ def check_err(r):
         err=to_PyString(r)
         # freeMem(r.err)
         raise Exception(err)
-
-LIB=ctypes.cdll.LoadLibrary("libs/libfbconn_linux_amd64.so")
+    
+if platform.system() == 'Linux':
+    LIB=ctypes.cdll.LoadLibrary("libs/libfbconn_linux_amd64.so")
+elif platform.system() == 'Windows':
+    LIB=ctypes.cdll.LoadLibrary("libs/libfbconn_windows_x86_64.dll")
 LIB=InitLib(LIB)
+
 
 def ConnectFB(address: str) -> int:
     r = LIB.ConnectFB(to_GoString(address))
@@ -224,44 +228,3 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr:str) -> bytes:
 def inspectPacketID(packet:bytes):
     return packet[0]
 
-if __name__ == '__main__':
-    # 首先启动 FB: fastbuilder --listen-external 0.0.0.0:3456
-
-    # 连接到 FB
-    connID = ConnectFB("localhost:8000")
-
-    # 发送 FB 命令
-    #SendFBCommand(connID, "set 0 0 0")
-
-    # 发送MC命令 (以 Setting Command 发出，无返回值)
-    #SendNoResponseCommand(connID,"time set day")
-
-    # 发送MC命令 (以用户身份发出，返回 uuid 值)
-    #print(SendMCCommand(connID, "tp @a @s"))
-
-    # 发送MC命令 (以Websocket身份发出，返回 uuid 值)
-    #print(SendWSCommand(connID, "tp @a @s"))
-
-    # 发送 Text 类型游戏数据包： "你好，世界"
-    # 你也可以发送别的数据包，例如移动啊，放置方块啊，向命令块内写入信息啊什么的
-    bs=b'\t\x01\x00\x062401PT\x0f\xe4\xbd\xa0\xe5\xa5\xbd\xef\xbc\x8c\xe4\xb8\x96\xe7\x95\x8c\x00\x00\x02\x08PlayerId\t-12345678'
-    SendGamePacketBytes(connID,bs)
-
-    while True:
-        # 接收游戏数据包
-        bytesPkt = RecvGamePacket(connID)
-        packetType=inspectPacketID(bytesPkt)
-        if packetType == 39 or packetType == 40 or packetType == 111 or packetType == 123 or packetType == 58:
-            continue
-        print("-------------")        # 解析数据包格式并转为json字符串（警告！效率低下！）
-        jsonPkt=GamePacketBytesAsIsJsonStr(bytesPkt)
-        #if (not("EntityRuntimeID" in jsonPkt)) and (not("SoundType" in jsonPkt)):
-            #print(jsonPkt)
-        print(jsonPkt)
-
-        # 将Json形式的数据包转为游戏数据包（警告！效率低下！）
-        # asIsbytesPkt=JsonStrAsIsGamePacketBytes(
-        #     inspectPacketID(bytesPkt),
-        #     jsonPkt
-        # )
-        #print(asIsbytesPkt)
