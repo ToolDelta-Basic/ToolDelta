@@ -3,7 +3,7 @@ import json
 import os.path
 import uuid
 from typing import Tuple
-import platform
+import sys
 
 GoInt = ctypes.c_longlong
 GoString = ctypes.c_char_p
@@ -143,9 +143,11 @@ def check_err(r):
         err=to_PyString(r)
         # freeMem(r.err)
         raise Exception(err)
-
-LIB=ctypes.cdll.LoadLibrary("libs/libfbconn_linux_amd64.so")
-LIB=InitLib(LIB)
+if sys.platform in ["win32", "win64"]:
+    LIBRARY=ctypes.cdll.LoadLibrary("libs/")
+else:
+    LIBRARY=ctypes.cdll.LoadLibrary("libs/libfbconn_linux_amd64.so")
+LIB=InitLib(LIBRARY)
 
 def ConnectFB(address: str) -> int:
     r = LIB.ConnectFB(to_GoString(address))
@@ -190,7 +192,7 @@ def SendNoResponseCommand(connID: int, cmd: str) -> None:
     check_err(r)
 
 
-def SendMCCommand(connID: int, cmd: str) -> str:
+def SendMCCommand(connID: int, cmd: str) -> bytes:
     r = LIB.SendMCCommand(to_GoInt(connID), to_GoString(cmd))
     check_err_in_struct(r)
     uuid=r.uuid[:]

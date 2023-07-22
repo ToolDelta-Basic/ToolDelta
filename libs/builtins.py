@@ -56,11 +56,14 @@ class Builtins:
         
     class TMPJson:
         @staticmethod
-        def loadPathJson(path):
+        def loadPathJson(path, needFileExists: bool = True):
             try:
                 js = Builtins.SimpleJsonDataReader.SafeOrJsonLoad(path)
-            except FileNotFoundError:
-                js = None
+            except FileNotFoundError as err:
+                if not needFileExists:
+                    js = None
+                else:
+                    raise err from None
             jsonPathTmp[path] = [False, js]
         @staticmethod
         def unloadPathJson(path):
