@@ -375,7 +375,7 @@ def check_err(r):
         # freeMem(r.err)
         raise Exception(err)
 if sys.platform in ["win32", "win64"]:
-    LIBRARY=ctypes.cdll.LoadLibrary("libs/")
+    LIBRARY=ctypes.cdll.LoadLibrary("libs/dylib.dll")
 else:
     LIBRARY=ctypes.cdll.LoadLibrary("libs/libfbconn_linux_amd64.so")
 LIB=InitLib(LIBRARY)
