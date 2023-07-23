@@ -16,7 +16,7 @@ def _CfgIsinstance(obj, typ):
         Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
         Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
         Cfg.PFloat: lambda:isinstance(obj, float) and obj > 0,
-        Cfg.NNFloat: lambda:(isinstance(obj, float) and obj > 0) or obj == 0,
+        Cfg.NNFloat: lambda:(isinstance(obj, float) or isinstance(obj, int)) and obj >= 0,
     }.get(typ, lambda:isinstance(obj, typ))()
 
 def _CfgShowType(typ):
@@ -36,6 +36,11 @@ def _CfgShowType(typ):
     }.get(typ, typ.__name__)
 
 class Cfg:
+    class Group:
+        def __init__(self, *keys):
+            self.members = keys
+        def __repr__(self) -> str:
+            return '"' + '", "'.join(self.members) + '"'
     class ConfigError(Exception):
         def __init__(this, errStr: str, errPos: list):
             this.errPos = errPos
@@ -77,8 +82,11 @@ class Cfg:
         if not _CfgIsinstance(patt, dict) or not _CfgIsinstance(cfg, dict):
             raise this.ConfigValueError(f"JSON值 应为json, 而非{_CfgShowType(cfg)}: 获取{cfg}, 需要{patt}", __nowcheck)
         for k, v in patt.items():
-            if k == r"%any":
+            if (k == r"%any") or isinstance(k, Cfg.Group):
+                limited_key = isinstance(k, Cfg.Group)
                 for k2, v2 in cfg.items():
+                    if limited_key and k2 not in k.members:
+                        raise this.ConfigKeyError(f"JSON键\"{k2}\"不合法, 其只能是 {k} 中的其中一个", __nowcheck)
                     __nowcheck[-1] = str(k2)
                     if _CfgIsinstance(v, type):
                         if not _CfgIsinstance(v2, v):
@@ -167,8 +175,8 @@ class Cfg:
 
 if __name__ == "__main__":
     try:
-        a_mapping = [{"a": 0.1}]
-        a_std = ["%list", {"a": Cfg.NNFloat}]
+        a_mapping = [{"c": 4}]
+        a_std = ["%list", {Cfg.Group("a", "b"): Cfg.NNFloat}]
         Cfg().checkDict(a_std, a_mapping)
     except Cfg.ConfigError as err:
         import traceback

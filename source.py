@@ -31,13 +31,18 @@ class Builtins:
         def replaceTo(this, __sub: str) -> str:...
     class TMPJson:
         @staticmethod
-        def loadPathJson(path: str):"初始化一个json文件路径, 之后可对其进行读取和写入, 速度快"
+        def loadPathJson(path: str, needFileExists: bool = True):"初始化一个json文件路径, 之后可对其进行读取和写入, 速度快"
         @staticmethod
         def unloadPathJson(path: str):"卸载一个json文件路径, 之后不可对其进行读取和写入"
         @staticmethod
         def read(path: str):"读取json文件路径缓存的信息"
         @staticmethod
         def write(path: str, obj: any):"向该json文件路径写入信息并缓存, 一段时间或系统关闭时会将其写入磁盘内"
+    @staticmethod
+    def SimpleFmt(kw: dict[str, any], __sub: str) -> str:...
+    @staticmethod
+    def simpleAssert(cond: any, exc):...
+
 class Frame:
     class ThreadExit(SystemExit):...
     class SystemVersionException(OSError):...
@@ -121,6 +126,9 @@ class PluginGroup:
     def checkSystemVersion(this, need_vers: VERSION):...
 
 class Cfg:
+    class Group:
+        def __init__(self, *keys):...
+        def __repr__(self) -> str:...
     class ConfigError(Exception):
         def __init__(this, errStr: str, errPos: list):
             this.errPos = errPos
@@ -142,7 +150,7 @@ class Cfg:
 
 def add_plugin(plugin: Plugin):...
 def addPluginAPI(this, apiName: str, version: tuple):...
-def listen_packet(packetID: int):...
+def listen_packet(packetID: int) -> Callable[[Callable[[dict]]]]:"监听数据包."
 plugins: PluginGroup
 Config: Cfg
 Print: _Print
