@@ -71,22 +71,23 @@ class Frame:
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
     system_is_win = sys.platform in ["win32", "win64"]
 
-    def check_us_token(self, tok_name = "", check_md = ""):
+    def check_use_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误:")
             raise SystemExit
+        
     def DownloadFastBuilderfile(self):
-        response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
-        FBversion = response.json()["tag_name"]
-        Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
         if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"): 
             try:
+                response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
+                FBversion = response.json()["tag_name"]
+                Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
                 if self.system_is_win:
                     resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe", stream=True)
                     filename = "phoenixbuilder.exe"
-                elif platform.system() == 'Linux':
+                elif sys.platform == 'linux':
                     resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder", stream=True)
                     filename = "phoenixbuilder"
                 total = int(resp.headers.get('content-length', 0))
@@ -102,7 +103,7 @@ class Frame:
                 raise SystemExit
         else:
             return True
-            
+
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -408,11 +409,12 @@ class GameCtrl:
                 else:
                     packetGetTime = time.time()
                     packet_mapping = orjson.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
+                    if packet_type in plugin_grp.listen_packets:
+                        self.pkt_cache.append([packet_type, packet_mapping])
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                         for iuuid in self.command_req:
-                            if cmd_uuid[:5] == iuuid[:5]:
-                                # What's Netease doing???
+                            if cmd_uuid == iuuid:
                                 self.command_resp[iuuid] = [packetGetTime, packet_mapping]
                                 break
                     elif packet_type == 63:
@@ -420,7 +422,6 @@ class GameCtrl:
                             self.store_uuid_pkt = packet_mapping
                         else:
                             self.processPlayerList(packet_mapping)
-                    self.processGamePacketWithPlugin(packet_mapping, packet_type, plugin_grp)
         except Exception as err:
             if "recv on a closed connection" in str(err):
                 self.linked_frame.status[0] = 2
@@ -478,16 +479,15 @@ class GameCtrl:
                 case 9:
                     msg = pkt['Message']
                     Print.print_inf(f"{msg}")
-                    
-        if pkt_type in plugin_grp.listen_packets:
-            self.pkt_cache.append([pkt_type, pkt])
 
     def threadPacketProcessFunc(self):
         while 1:
             lastPTime = 0
             if self.pkt_cache:
                 typ, pkt = self.pkt_cache.pop(0)
-                plugins.processPacketFunc(typ, pkt)
+                res = plugins.processPacketFunc(typ, pkt)
+                if not res:
+                    self.processGamePacketWithPlugin(pkt, typ, plugins)
             if len(self.pkt_cache) > 100 and time.time() - lastPTime > 5:
                 Print.print_war("数据包缓冲区量 > 100")
                 lastPTime = time.time()
@@ -600,7 +600,6 @@ try:
     frame.set_game_control(game_control)
     frame.set_plugin_group(plugins)
     frame.welcome()
-    frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("??????", None)
     frame.basicMkDir()
     frame.read_cfg()
     frame.fbtokenFix()
