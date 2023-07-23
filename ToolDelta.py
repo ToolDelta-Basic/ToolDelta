@@ -71,12 +71,13 @@ class Frame:
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
     system_is_win = sys.platform in ["win32", "win64"]
 
-    def check_us_token(self, tok_name = "", check_md = ""):
+    def check_use_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误:")
             raise SystemExit
+        
     def DownloadFastBuilderfile(self):
         if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"): 
             try:
@@ -86,7 +87,7 @@ class Frame:
                 if self.system_is_win:
                     resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe", stream=True)
                     filename = "phoenixbuilder.exe"
-                elif platform.system() == 'Linux':
+                elif sys.platform == 'linux':
                     resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder", stream=True)
                     filename = "phoenixbuilder"
                 total = int(resp.headers.get('content-length', 0))
@@ -102,7 +103,7 @@ class Frame:
                 raise SystemExit
         else:
             return True
-            
+
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -165,12 +166,15 @@ class Frame:
         if usage == "fbconn":
             if frame.system_is_win:
                 for port in range(start, 65535):
-                    r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
-                    if r.read() == '':
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        s.connect(("127.0.0.1", port))
+                        s.settimeout(0.1)
+                        s.shutdown(2)
                         self.conPort = port
                         Print.print_suc(f"FastBuilder 将会开放端口 {port}")
                         return
-                    else:
+                    except:
                         Print.print_war(f"端口 {port} 正被占用, 跳过")
             else:
                 for port in range(start, 65535):
@@ -190,16 +194,19 @@ class Frame:
         raise Exception("未找到空闲端口???")
 
     def runFB(self, ip = "0.0.0.0", port="8080"):
-        if not self.system_is_win:
-            os.system("chmod +x phoenixbuilder")
-        if frame.DownloadFastBuilderfile():
+        os.system("chmod +x phoenixbuilder")
+        if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
+            if frame.system_is_win:
+                con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+            else:
+                con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+        else:
             if frame.system_is_win:
                 con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             else:
                 con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-            self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-            Print.print_suc("FastBuilder 进程已启动.")
-            frame.outputFBMsgsThread()
+        self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        Print.print_suc("FastBuilder 进程已启动.")
 
     def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
@@ -408,11 +415,12 @@ class GameCtrl:
                 else:
                     packetGetTime = time.time()
                     packet_mapping = orjson.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
+                    if packet_type in plugin_grp.listen_packets:
+                        self.pkt_cache.append([packet_type, packet_mapping])
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                         for iuuid in self.command_req:
-                            if cmd_uuid[:5] == iuuid[:5]:
-                                # What's Netease doing???
+                            if cmd_uuid == iuuid:
                                 self.command_resp[iuuid] = [packetGetTime, packet_mapping]
                                 break
                     elif packet_type == 63:
@@ -420,7 +428,6 @@ class GameCtrl:
                             self.store_uuid_pkt = packet_mapping
                         else:
                             self.processPlayerList(packet_mapping)
-                    self.processGamePacketWithPlugin(packet_mapping, packet_type, plugin_grp)
         except Exception as err:
             if "recv on a closed connection" in str(err):
                 self.linked_frame.status[0] = 2
@@ -478,16 +485,15 @@ class GameCtrl:
                 case 9:
                     msg = pkt['Message']
                     Print.print_inf(f"{msg}")
-                    
-        if pkt_type in plugin_grp.listen_packets:
-            self.pkt_cache.append([pkt_type, pkt])
 
     def threadPacketProcessFunc(self):
         while 1:
             lastPTime = 0
             if self.pkt_cache:
                 typ, pkt = self.pkt_cache.pop(0)
-                plugins.processPacketFunc(typ, pkt)
+                res = plugins.processPacketFunc(typ, pkt)
+                if not res:
+                    self.processGamePacketWithPlugin(pkt, typ, plugins)
             if len(self.pkt_cache) > 100 and time.time() - lastPTime > 5:
                 Print.print_war("数据包缓冲区量 > 100")
                 lastPTime = time.time()
@@ -600,7 +606,6 @@ try:
     frame.set_game_control(game_control)
     frame.set_plugin_group(plugins)
     frame.welcome()
-    frame.check_us_token("Alpha", None) if not ADVANCED else frame.check_us_token("??????", None)
     frame.basicMkDir()
     frame.read_cfg()
     frame.fbtokenFix()
@@ -612,6 +617,7 @@ try:
     while 1:
         if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
+            frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
             game_control.waitUntilProcess()
