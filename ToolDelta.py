@@ -18,7 +18,7 @@ Config = _Cfg()
 try:
     import libs.conn as conn
 except Exception as err:
-    Print.print_err("加载外部DLL库失败， 请检查其是否存在:", err)
+    Print.print_err("加载外部库失败， 请检查其是否存在:", err)
     raise SystemExit
 
 class Frame:
@@ -69,6 +69,7 @@ class Frame:
     _old_dotcs_threadinglist = []
     status = [0]
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
+    system_is_win = sys.platform in ["win32", "win64"]
 
     def check_us_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
@@ -76,7 +77,32 @@ class Frame:
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误:")
             raise SystemExit
-
+    def DownloadFastBuilderfile(self):
+        if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"): 
+            try:
+                response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
+                FBversion = response.json()["tag_name"]
+                Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
+                if self.system_is_win:
+                    resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe", stream=True)
+                    filename = "phoenixbuilder.exe"
+                elif platform.system() == 'Linux':
+                    resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder", stream=True)
+                    filename = "phoenixbuilder"
+                total = int(resp.headers.get('content-length', 0))
+                with open(filename, 'wb') as file, tqdm.tqdm(
+                    desc=filename,total=total,unit='iB',unit_scale=True,unit_divisor=1024
+                ) as bar:
+                    for data in resp.iter_content(chunk_size=1024):
+                        size = file.write(data)
+                        bar.update(size)
+                return True
+            except:
+                Print.print_err(f"下载FastBuilder失败!")
+                raise SystemExit
+        else:
+            return True
+            
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -137,14 +163,24 @@ class Frame:
 
     def getFreePort(self, start = 8080, usage = "none"):
         if usage == "fbconn":
-            for port in range(start, 65535):
-                r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
-                if r.read() == '':
-                    self.conPort = port
-                    Print.print_suc(f"FastBuilder 将会开放端口 {port}")
-                    return
-                else:
-                    Print.print_war(f"端口 {port} 正被占用, 跳过")
+            if frame.system_is_win:
+                for port in range(start, 65535):
+                    r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
+                    if r.read() == '':
+                        self.conPort = port
+                        Print.print_suc(f"FastBuilder 将会开放端口 {port}")
+                        return
+                    else:
+                        Print.print_war(f"端口 {port} 正被占用, 跳过")
+            else:
+                for port in range(start, 65535):
+                    r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
+                    if r.read() == '':
+                        self.conPort = port
+                        Print.print_suc(f"FastBuilder 将会开放端口 {port}")
+                        return
+                    else:
+                        Print.print_war(f"端口 {port} 正被占用, 跳过")
         else:
             for port in range(start, 65535):
                 r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
@@ -154,13 +190,16 @@ class Frame:
         raise Exception("未找到空闲端口???")
 
     def runFB(self, ip = "0.0.0.0", port="8080"):
-        os.system("chmod +x phoenixbuilder")
-        if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
-            con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-        else:
-            con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-        self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        Print.print_suc("FastBuilder 进程已启动.")
+        if not self.system_is_win:
+            os.system("chmod +x phoenixbuilder")
+        if frame.DownloadFastBuilderfile():
+            if frame.system_is_win:
+                con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+            else:
+                con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+            self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            Print.print_suc("FastBuilder 进程已启动.")
+            frame.outputFBMsgsThread()
 
     def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
@@ -360,22 +399,22 @@ class GameCtrl:
         plugin_grp = self.linked_frame.link_plugin_group
         self.pkt_unique_id = 0
         try:
-            for packet_bytes in conn.RecvGamePacketIt(con):
-                packet_type = conn.inspectPacketID(packet_bytes)
+            while 1:
+                packet_bytes = conn.RecvGamePacket(con)
+                packet_type = packet_bytes[0]
                 self.pkt_unique_id += 1
                 if packet_type not in self.require_listen_packet_list:
                     continue
                 else:
                     packetGetTime = time.time()
                     packet_mapping = orjson.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
-                    try:
-                        print(orjson.loads(packet_bytes[1:]))
-                    except Exception as err:
-                        print(err)
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
-                        if cmd_uuid in self.command_req:
-                            self.command_resp[cmd_uuid] = [packetGetTime, packet_mapping]
+                        for iuuid in self.command_req:
+                            if cmd_uuid[:5] == iuuid[:5]:
+                                # What's Netease doing???
+                                self.command_resp[iuuid] = [packetGetTime, packet_mapping]
+                                break
                     elif packet_type == 63:
                         if self.requireUUIDPacket:
                             self.store_uuid_pkt = packet_mapping
@@ -394,7 +433,7 @@ class GameCtrl:
             playername = player["Username"]
             if isJoining:
                 self.players_uuid[playername] = player["UUID"]
-                self.allplayers.append(playername) if not playername in self.allplayers else None
+                self.allplayers.append(playername) if playername not in self.allplayers else None
                 if not first:
                     Print.print_inf(f"§e{playername} 加入了游戏")
                     plugins.execute_player_join(playername, self.linked_frame.on_plugin_err)
@@ -434,7 +473,7 @@ class GameCtrl:
                     Print.print_inf(f"<{player}> {msg}")
                 case 8:
                     player, msg = pkt['SourceName'], pkt['Message']
-                    Print.print_inf(f"{player} say -> {msg.strip(f'[{player}]')}")
+                    Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
                     plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
                 case 9:
                     msg = pkt['Message']
@@ -507,8 +546,8 @@ class GameCtrl:
             self.command_req.append(uuid)
             waitStartTime = time.time()
             while 1:
-                res = self.command_resp.get(uuid, None)
-                if res:
+                res = self.command_resp.get(uuid)
+                if res is not None:
                     self.command_req.remove(uuid)
                     del self.command_resp[uuid]
                     return Packet_CommandOutput(res[1])
@@ -573,7 +612,6 @@ try:
     while 1:
         if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
-            frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
             game_control.waitUntilProcess()
