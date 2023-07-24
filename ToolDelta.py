@@ -70,6 +70,7 @@ class Frame:
     status = [0]
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
     system_is_win = sys.platform in ["win32", "win64"]
+    isInPanicMode = False
 
     def check_use_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
@@ -342,11 +343,18 @@ class Frame:
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
-                self.status[0] = 2
-                self.fb_pipe.kill()
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
+                if not self.isInPanicMode:
+                    self.ClassicThread(self.panic_later)
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
+
+    def panic_later(self):
+        self.isInPanicMode = True
+        time.sleep(1)
+        self.status[0] = 2
+        self.fb_pipe.kill()
+        self.isInPanicMode = False
     
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
@@ -508,6 +516,7 @@ class GameCtrl:
             self.processPlayerList(self.store_uuid_pkt, True)
             self.requireUUIDPacket = False
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
+        time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
