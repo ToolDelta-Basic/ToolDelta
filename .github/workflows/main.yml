@@ -26,4 +26,4 @@ jobs:
           title: Release v1.0.0
           body: This is the first release of ToolDelta
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
