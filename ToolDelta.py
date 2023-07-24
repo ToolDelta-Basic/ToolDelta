@@ -1,31 +1,4 @@
 import asyncio, sys
-
-
-async def get_user_input(text, timeout):
-    print(text)
-    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
-    return user_input.strip()
-
-
-loop = asyncio.get_event_loop()
-try:
-    printmode = loop.run_until_complete(
-        get_user_input("请选择使用哪种输出[1.默认,2.rich]:", 3))
-except asyncio.TimeoutError:
-    printmode = "1"
-    print("1 -自动选择")
-finally:
-    # loop.close()
-    del loop
-if printmode in ["二", "2"]:
-    import libs.mytest_color_print
-    Print = libs.mytest_color_print.Print
-else:
-    import libs.color_print
-    Print = libs.color_print.Print
-import platform
-
-import tqdm
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
@@ -34,12 +7,34 @@ from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
 
+async def get_user_input(text, timeout):
+    print(text)
+    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
+    return user_input.strip()
+    
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 6)
 UPDATE_NOTE = ""
 ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
+loop = asyncio.get_event_loop()
+
+try:
+    printmode = loop.run_until_complete(
+        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
+except asyncio.TimeoutError:
+    printmode = "1"
+    print("1 - 自动选择")
+finally:
+    # loop.close()
+    del loop
+if printmode in ["二", "2"]:
+    import libs.rich_color_print
+    Print = libs.mytest_color_print.Print
+else:
+    import libs.color_print
+    Print = libs.color_print.Print
 
 try:
     import libs.conn as conn
@@ -49,12 +44,8 @@ except Exception as err:
 
 
 class Frame:
-    class ThreadExit(SystemExit):
-        ...
-
-    class SystemVersionException(OSError):
-        ...
-
+    class ThreadExit(SystemExit):...
+    class SystemVersionException(OSError):...
     class FrameBasic:
         system_version = VERSION
         max_connect_fb_time = 60
@@ -166,7 +157,7 @@ class Frame:
                         self.get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
                 except asyncio.TimeoutError:
                     isUse = "y"
-                    print("y -自动选择")
+                    print("y - 自动选择")
                 finally:
                     self.loop.close()
                     del self.loop
@@ -193,9 +184,7 @@ class Frame:
             while 1:
                 try:
                     self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    # print(self.serverNumber)
                     self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or 0
-                    # print(self.serverPasswd)
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber.replace("\n",""))
                     std["密码"] = int(self.serverPasswd.replace("\n",""))
