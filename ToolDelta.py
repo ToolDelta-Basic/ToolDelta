@@ -1,6 +1,30 @@
+import asyncio, sys
+
+
+async def get_user_input(text, timeout):
+    print(text)
+    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
+    return user_input.strip()
+
+
+loop = asyncio.get_event_loop()
+try:
+    printmode = loop.run_until_complete(
+        get_user_input("请选择使用哪种输出[1.默认,2.rich]:", 3))
+except asyncio.TimeoutError:
+    printmode = "1"
+    print("1 -自动选择")
+finally:
+    # loop.close()
+    del loop
+if printmode in ["二", "2"]:
+    import libs.mytest_color_print
+    Print = libs.mytest_color_print.Print
+else:
+    import libs.color_print
+    Print = libs.color_print.Print
 import platform
 
-import libs.mytest_color_print
 import tqdm
 import libs.sys_args
 import libs.old_dotcs_env
@@ -9,15 +33,11 @@ from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
-from getpass import getpass
-import asyncio
-import sys
 
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 6)
 UPDATE_NOTE = ""
 ADVANCED = False
-Print = libs.mytest_color_print.Print
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 
@@ -92,7 +112,6 @@ class Frame:
             raise SystemExit
 
     def DownloadFastBuilderfile(self):
-        return True
         if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
             try:
                 response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
@@ -123,7 +142,8 @@ class Frame:
             return True
 
     async def get_user_input(self, text, timeout):
-        Print.print_with_info(text, end="")
+        Print.print_with_info(text)
+        # print(text)
         user_input = await asyncio.wait_for(self.loop.run_in_executor(None, sys.stdin.readline), timeout)
         return user_input.strip()
 
@@ -148,6 +168,7 @@ class Frame:
                     print("y -自动选择")
                 finally:
                     self.loop.close()
+                    del self.loop
                 # isUse = input()
                 if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
                     self.UseSysFBtoken = True
@@ -157,10 +178,9 @@ class Frame:
                 else:
                     raise SystemExit
             else:
-                Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
+                Print.print_err("请到FB官网 uc.fastbuilder.pro 下载FBToken, 并放在本目录中")
                 raise SystemExit
         Config.default_cfg("租赁服登录配置.json", CFG)
-        # Print.print_with_info("正在检查租赁服配置", countdown=2)
         try:
             cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
             self.serverNumber = str(cfgs["服务器号"])
@@ -171,13 +191,13 @@ class Frame:
         if self.serverNumber == "0":
             while 1:
                 try:
-                    Print.print_with_info("请输入租赁服号: ", mode=3, end="")
-                    self.serverNumber = input()
-                    Print.print_with_info("请输入租赁服密码(不会回显): ", mode=3, end="")
-                    self.serverPasswd = getpass("") or 0
+                    self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
+                    # print(self.serverNumber)
+                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or 0
+                    # print(self.serverPasswd)
                     std = CFG.copy()
-                    std["服务器号"] = int(self.serverNumber)
-                    std["密码"] = int(self.serverPasswd)
+                    std["服务器号"] = int(self.serverNumber.replace("\n",""))
+                    std["密码"] = int(self.serverPasswd.replace("\n",""))
                     cfgs = Config.default_cfg("租赁服登录配置.json", std, True)
                     Print.print_suc("登录配置设置成功")
                     break
@@ -185,10 +205,10 @@ class Frame:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
 
     def welcome(self):
-        Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript -- §lMono", mode=5)
-        Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", mode=5)
-        Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", mode=5)
-        Print.print_with_info("§l Mono Test", countdown=2, endmsg="仅测试使用...")
+        Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
+        # Print.print_with_info("?")
+        Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
+        Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
     def basicMkDir(self):
         os.makedirs("DotCS兼容插件", exist_ok=True)
@@ -385,7 +405,7 @@ class Frame:
                     Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
                     try:
                         Print.print_war("尝试连接到 FastBuilder 验证服务器")
-                        requests.get("http://uc.fastbuilder.pro", timeout=10)
+                        requests.get("http://user.fastbuilder.pro", timeout=10)
                         Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
                     except:
                         Print.print_err("§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)")
@@ -393,13 +413,13 @@ class Frame:
                 elif "无效用户" in tmp and "请重新登录" in tmp:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
             elif "Transfer: accept new connection @ " in tmp:
-                Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], mode=6)
+                Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
                 self.status[0] = 2
                 self.fb_pipe.kill()
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
             else:
-                Print.print_with_info(tmp, mode=6)
+                Print.print_with_info(tmp, "§b  FB  §r")
 
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
