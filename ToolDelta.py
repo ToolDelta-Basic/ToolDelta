@@ -166,15 +166,12 @@ class Frame:
         if usage == "fbconn":
             if frame.system_is_win:
                 for port in range(start, 65535):
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    try:
-                        s.connect(("127.0.0.1", port))
-                        s.settimeout(0.1)
-                        s.shutdown(2)
+                    r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
+                    if r.read() == '':
                         self.conPort = port
                         Print.print_suc(f"FastBuilder 将会开放端口 {port}")
                         return
-                    except:
+                    else:
                         Print.print_war(f"端口 {port} 正被占用, 跳过")
             else:
                 for port in range(start, 65535):
@@ -194,19 +191,16 @@ class Frame:
         raise Exception("未找到空闲端口???")
 
     def runFB(self, ip = "0.0.0.0", port="8080"):
-        os.system("chmod +x phoenixbuilder")
-        if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
-            if frame.system_is_win:
-                con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-            else:
-                con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-        else:
+        if not self.system_is_win:
+            os.system("chmod +x phoenixbuilder")
+        if frame.DownloadFastBuilderfile():
             if frame.system_is_win:
                 con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             else:
                 con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-        self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        Print.print_suc("FastBuilder 进程已启动.")
+            self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            Print.print_suc("FastBuilder 进程已启动.")
+            frame.outputFBMsgsThread()
 
     def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
@@ -617,7 +611,6 @@ try:
     while 1:
         if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
-            frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
             game_control.waitUntilProcess()
