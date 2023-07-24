@@ -1,4 +1,7 @@
-import libs.color_print
+import platform
+
+import libs.mytest_color_print
+import tqdm
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
@@ -6,12 +9,15 @@ from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
+from getpass import getpass
+import asyncio
+import sys
 
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 6)
 UPDATE_NOTE = ""
 ADVANCED = False
-Print = libs.color_print.Print
+Print = libs.mytest_color_print.Print
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 
@@ -21,17 +27,23 @@ except Exception as err:
     Print.print_err("加载外部库失败， 请检查其是否存在:", err)
     raise SystemExit
 
+
 class Frame:
-    class ThreadExit(SystemExit):...
-    class SystemVersionException(OSError):...
+    class ThreadExit(SystemExit):
+        ...
+
+    class SystemVersionException(OSError):
+        ...
+
     class FrameBasic:
         system_version = VERSION
         max_connect_fb_time = 60
         connect_fb_start_time = time.time()
         data_path = "data/"
+
     class ClassicThread(threading.Thread):
         def __init__(self, func: Callable, args: tuple = (), **kwargs):
-            super().__init__(target = func)
+            super().__init__(target=func)
             self.func = func
             self.daemon = True
             self.all_args = [args, kwargs]
@@ -51,7 +63,7 @@ class Frame:
             for id, thread in threading._active.items():
                 if thread is self:
                     return id
-                
+
         def stop(self):
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(self.get_id(), ctypes.py_object(Frame.ThreadExit))
             return res
@@ -70,30 +82,35 @@ class Frame:
     status = [0]
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
     system_is_win = sys.platform in ["win32", "win64"]
-    isInPanicMode = False
+    UseSysFBtoken = False
 
-    def check_use_token(self, tok_name = "", check_md = ""):
+    def check_use_token(self, tok_name="", check_md=""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误:")
             raise SystemExit
-        
+
     def DownloadFastBuilderfile(self):
-        if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"): 
+        return True
+        if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
             try:
                 response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
                 FBversion = response.json()["tag_name"]
                 Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
                 if self.system_is_win:
-                    resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe", stream=True)
+                    resp = requests.get(
+                        f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
+                        stream=True)
                     filename = "phoenixbuilder.exe"
                 elif sys.platform == 'linux':
-                    resp = requests.get(f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder", stream=True)
+                    resp = requests.get(
+                        f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
+                        stream=True)
                     filename = "phoenixbuilder"
                 total = int(resp.headers.get('content-length', 0))
                 with open(filename, 'wb') as file, tqdm.tqdm(
-                    desc=filename,total=total,unit='iB',unit_scale=True,unit_divisor=1024
+                        desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
                 ) as bar:
                     for data in resp.iter_content(chunk_size=1024):
                         size = file.write(data)
@@ -105,6 +122,11 @@ class Frame:
         else:
             return True
 
+    async def get_user_input(self, text, timeout):
+        Print.print_with_info(text, end="")
+        user_input = await asyncio.wait_for(self.loop.run_in_executor(None, sys.stdin.readline), timeout)
+        return user_input.strip()
+
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -115,9 +137,30 @@ class Frame:
             "密码": int
         }
         if not os.path.isfile("fbtoken"):
-            Print.print_err("请到FB官网 uc.fastbuilder.pro 下载FBToken, 并放在本目录中")
-            raise SystemExit
+            if platform.system() == "Windows" and os.path.isfile(
+                    os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
+                self.loop = asyncio.get_event_loop()
+                try:
+                    isUse = self.loop.run_until_complete(
+                        self.get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
+                except asyncio.TimeoutError:
+                    isUse = "y"
+                    print("y -自动选择")
+                finally:
+                    self.loop.close()
+                # isUse = input()
+                if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
+                    self.UseSysFBtoken = True
+                    with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
+                              encoding="utf-8") as f:
+                        self.fbtoken = f.read().replace("\n", "")
+                else:
+                    raise SystemExit
+            else:
+                Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
+                raise SystemExit
         Config.default_cfg("租赁服登录配置.json", CFG)
+        # Print.print_with_info("正在检查租赁服配置", countdown=2)
         try:
             cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
             self.serverNumber = str(cfgs["服务器号"])
@@ -128,8 +171,10 @@ class Frame:
         if self.serverNumber == "0":
             while 1:
                 try:
-                    self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                    Print.print_with_info("请输入租赁服号: ", mode=3, end="")
+                    self.serverNumber = input()
+                    Print.print_with_info("请输入租赁服密码(不会回显): ", mode=3, end="")
+                    self.serverPasswd = getpass("") or 0
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
@@ -140,9 +185,10 @@ class Frame:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
 
     def welcome(self):
-        Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
-        Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
-        Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
+        Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript -- §lMono", mode=5)
+        Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", mode=5)
+        Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", mode=5)
+        Print.print_with_info("§l Mono Test", countdown=2, endmsg="仅测试使用...")
 
     def basicMkDir(self):
         os.makedirs("DotCS兼容插件", exist_ok=True)
@@ -154,6 +200,8 @@ class Frame:
 
     def fbtokenFix(self):
         needFix = False
+        if self.UseSysFBtoken:
+            return
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
@@ -163,47 +211,49 @@ class Frame:
             with open("fbtoken", "w", encoding="utf-8") as f:
                 f.write(token.replace("\n", ""))
 
-    def getFreePort(self, start = 8080, usage = "none"):
-        if frame.system_is_win:
-            for port in range(start, 65535):
-                r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
-                if r.read() == '':
-                    if usage == "fbconn":
+    def getFreePort(self, start=8080, usage="none"):
+        if usage == "fbconn":
+            if frame.system_is_win:
+                for port in range(start, 65535):
+                    r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
+                    if r.read() == '':
                         self.conPort = port
                         Print.print_suc(f"FastBuilder 将会开放端口 {port}")
                         return
                     else:
-                        return port
-                else:
-                    Print.print_war(f"端口 {port} 正被占用, 跳过")
+                        Print.print_war(f"端口 {port} 正被占用, 跳过")
             else:
                 for port in range(start, 65535):
                     r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
                     if r.read() == '':
-                        if usage == "fbconn":
-                            self.conPort = port
-                            Print.print_suc(f"FastBuilder 将会开放端口 {port}")
-                            return
-                        else:
-                            return port
+                        self.conPort = port
+                        Print.print_suc(f"FastBuilder 将会开放端口 {port}")
+                        return
                     else:
                         Print.print_war(f"端口 {port} 正被占用, 跳过")
+        else:
+            for port in range(start, 65535):
+                r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
+                if r.read() == '':
+                    return port
+            return None
         raise Exception("未找到空闲端口???")
 
-    def runFB(self, ip = "0.0.0.0", port="8080"):
-        os.system("chmod +x phoenixbuilder")
-        if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
+    def runFB(self, ip="0.0.0.0", port="8080"):
+        if not self.system_is_win:
+            os.system("chmod +x phoenixbuilder")
+        if frame.DownloadFastBuilderfile():
             if frame.system_is_win:
-                con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-            else:
-                con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-        else:
-            if frame.system_is_win:
-                con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                if self.UseSysFBtoken:
+                    con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                else:
+                    con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             else:
                 con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-        self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        Print.print_suc("FastBuilder 进程已启动.")
+            self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                            stderr=subprocess.STDOUT, shell=True)
+            Print.print_suc("FastBuilder 进程已启动.")
+            frame.outputFBMsgsThread()
 
     def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
@@ -219,7 +269,7 @@ class Frame:
             del self.consoleMenu[2:]
         except:
             pass
-    
+
     def close_fb_thread(self):
         try:
             self.fb_pipe.kill()
@@ -232,7 +282,7 @@ class Frame:
         self.fb_pipe.stdin.flush()
         self.status[0] = 0
 
-    def run_conn(self, ip = "0.0.0.0", port=8080):
+    def run_conn(self, ip="0.0.0.0", port=8080):
         connect_fb_start_time = time.time()
         while 1:
             try:
@@ -249,7 +299,8 @@ class Frame:
                     self.close_fb_thread()
                     os._exit(0)
 
-    def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
+    def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str,
+                                func: Callable[[list[str]], None]):
         try:
             if self.consoleMenu.index(triggers) != -1:
                 Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
@@ -326,7 +377,8 @@ class Frame:
                     Print.print_war(f"未能自动选择为简体中文")
             elif "ERROR" in tmp:
                 if "租赁服未找到" in tmp:
-                    Print.print_err(f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
+                    Print.print_err(
+                        f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
                 elif "租赁服号尚未授权" in tmp:
                     Print.print_err(f"§c租赁服号: {self.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买")
                 elif "bad handshake" in tmp:
@@ -341,28 +393,21 @@ class Frame:
                 elif "无效用户" in tmp and "请重新登录" in tmp:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
             elif "Transfer: accept new connection @ " in tmp:
-                Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
+                Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], mode=6)
             elif tmp.startswith("panic"):
+                self.status[0] = 2
+                self.fb_pipe.kill()
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
-                if not self.isInPanicMode:
-                    self.ClassicThread(self.panic_later)
             else:
-                Print.print_with_info(tmp, "§b  FB  §r")
+                Print.print_with_info(tmp, mode=6)
 
-    def panic_later(self):
-        self.isInPanicMode = True
-        time.sleep(1)
-        self.status[0] = 2
-        self.fb_pipe.kill()
-        self.isInPanicMode = False
-    
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
         return libs.old_dotcs_env.get_dotcs_env(self, Print)
-    
+
     def get_console_menus(self):
         return self.consoleMenu
-    
+
     def set_game_control(self, game_ctrl):
         self.link_game_ctrl = game_ctrl
 
@@ -372,13 +417,14 @@ class Frame:
     def get_game_control(self):
         return self.link_game_ctrl
 
+
 class GameCtrl:
     def __init__(self, frame: Frame):
         self.linked_frame = frame
         self.command_req = []
         self.command_resp = {}
         self.players_uuid = {}
-        self.allplayers_name = self.allplayers =  []
+        self.allplayers_name = self.allplayers = []
         self.bot_name = ""
         self.linked_frame: Frame
         self.pkt_unique_id: int = 0
@@ -438,7 +484,7 @@ class GameCtrl:
                 return
             print(traceback.format_exc())
 
-    def processPlayerList(self, pkt, first = False):
+    def processPlayerList(self, pkt, first=False):
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
@@ -477,7 +523,8 @@ class GameCtrl:
                             killer = pkt["Parameters"][1]
                         else:
                             killer = None
-                        plugin_grp.execute_player_death(pkt['Parameters'][0], killer, pkt['Message'], self.linked_frame.on_plugin_err)
+                        plugin_grp.execute_player_death(pkt['Parameters'][0], killer, pkt['Message'],
+                                                        self.linked_frame.on_plugin_err)
                 case 1 | 7:
                     player, msg = pkt['SourceName'], pkt['Message']
                     plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
@@ -507,7 +554,7 @@ class GameCtrl:
 
     def Inject(self):
         startDetTime = time.time()
-        while not self.store_uuid_pkt and time.time() - startDetTime < 60:pass
+        while not self.store_uuid_pkt and time.time() - startDetTime < 60: pass
         if not self.store_uuid_pkt:
             self.linked_frame.status[0] = 2
             Print.print_err("60s 内未收取到UUID包， 即将重启")
@@ -516,17 +563,16 @@ class GameCtrl:
             self.processPlayerList(self.store_uuid_pkt, True)
             self.requireUUIDPacket = False
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
-        time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.linked_frame.status[0] = 1
-            
+
     def waitUntilProcess(self):
         self.requireUUIDPacket = True
         self.allplayers.clear()
         self.players_uuid.clear()
-        while self.pkt_unique_id == 0:pass
+        while self.pkt_unique_id == 0: pass
 
     def clearCmdRespList(self):
         while 1:
@@ -567,7 +613,7 @@ class GameCtrl:
                     raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
-        
+
     def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int = 30):
         uuid = conn.SendWSCommand(self.linked_frame.con, cmd)
         if waitForResp:
@@ -584,14 +630,14 @@ class GameCtrl:
                     raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
-        
+
     def sendfbcmd(self, cmd: str):
         conn.SendFBCommand(self.linked_frame.con, cmd)
 
     def sendPacket(self, pktType: int, pkt: dict):
         b = conn.JsonStrAsIsGamePacketBytes(pktType, json.dumps(pkt))
         conn.SendGamePacketBytes(self.linked_frame.con, b)
-        
+
     def say_to(self, target: str, msg: str):
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
 
@@ -603,6 +649,7 @@ class GameCtrl:
 
     def player_actionbar(self, target: str, text: str):
         self.sendwocmd(f"title {target} actionbar {text}")
+
 
 try:
     frame = Frame()
@@ -622,7 +669,6 @@ try:
     while 1:
         if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
-            frame.outputFBMsgsThread()
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
             game_control.waitUntilProcess()
