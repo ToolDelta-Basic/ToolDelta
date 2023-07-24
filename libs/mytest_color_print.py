@@ -106,6 +106,7 @@ class _Print:
                 "§l", "[italic]"))
         else:
             other_mode=None
+            isFBmode=False
             modified_args1=modified_args
             for i in modified_args1:
                 if isinstance(i, str):
@@ -125,10 +126,11 @@ class _Print:
                                 modified_args.remove("[#55FFFF]  FB  ")
                             except ValueError:
                                 modified_args.remove("[#55FFFF]  FB  §r")
+                            isFBmode=True
                             pass
                         else:
                             rprint(this.modes[mode], end="")
-                        if mode == 6 or "§b  FB  " in modified_args or "§b  FB  §r" in modified_args or "[#55FFFF]  FB  " in modified_args or "[#55FFFF]  FB  §r" in modified_args:
+                        if mode == 6 or "§b  FB  " in modified_args or "§b  FB  §r" in modified_args or "[#55FFFF]  FB  " in modified_args or "[#55FFFF]  FB  §r" in modified_args or isFBmode:
                             print(txt, sep=sep, end=end, file=file, flush=flush)
                         else:
                             rprint(txt, sep=sep, end=end, file=file, flush=flush)
