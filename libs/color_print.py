@@ -1,4 +1,6 @@
 import datetime
+from .logger import publicLogger
+
 class _Print:
     INFO_NORMAL = "§f 信息 "
     INFO_WARN = "§6 警告 "
@@ -33,6 +35,7 @@ class _Print:
         return text.replace("§1", "\033[7;37;34m").replace("§2", "\033[7;37;32m").replace("§3", "\033[7;37;36m").replace("§4", "\033[7;37;31m").replace("§5", "\033[7;37;35m").replace("§6", "\033[7;37;33m").replace("§7", "\033[7;37;90m").replace("§8", "\033[7;37;2m").replace("§9", "\033[7;37;94m").replace("§a", "\033[7;37;92m").replace("§b", "\033[7;37;96m").replace("§c", "\033[7;37;91m").replace("§d", "\033[7;37;95m").replace("§e", "\033[7;37;93m").replace("§f", "\033[7;37;1m").replace("§r", "\033[0m")+"\033[0m"
 
     def print_with_info(self, text: str, info: str = INFO_NORMAL, **print_kwargs):
+        self.c_log(info, text)
         setNextCol = "§r"
         if "\n" in text:
             output_txts = []
@@ -67,5 +70,19 @@ class _Print:
         for text_line in str(text).split("\n"):
             output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self._mccolor_console_st1(info) + " " + self._mccolor_console_common(text_line))
         return "\n".join(output_txts)
+    
+    def c_log(self, inf, msg):
+        for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 报错 ", "ERROR"), ("§4 报错 ", "ERROR")]:
+            if inf == _g:
+                inf = _s
+                break
+        for col, _ in self.STD_COLOR_LIST:
+            col = "§" + col
+            msg = msg.replace(col, "")
+        for col, _ in self.STD_COLOR_LIST:
+            col = "§" + col
+            inf = inf.replace(col, "")
+        inf = inf.replace(" ", "")
+        publicLogger.log_in(msg, inf)
     
 Print = _Print()
