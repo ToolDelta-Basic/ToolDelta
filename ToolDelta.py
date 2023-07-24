@@ -102,6 +102,7 @@ class Frame:
     status = [0]
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
     system_is_win = sys.platform in ["win32", "win64"]
+    isInPanicMode = False
     UseSysFBtoken = False
 
     def check_use_token(self, tok_name="", check_md=""):
