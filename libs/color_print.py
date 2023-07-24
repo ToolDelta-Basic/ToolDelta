@@ -72,7 +72,7 @@ class _Print:
         return "\n".join(output_txts)
     
     def c_log(self, inf, msg):
-        for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 报错 ", "ERROR"), ("§4 报错 ", "ERROR")]:
+        for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 失败 ", "FAIL"), ("§4 报错 ", "ERROR")]:
             if inf == _g:
                 inf = _s
                 break
