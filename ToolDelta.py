@@ -102,13 +102,13 @@ class Frame:
                         for data in resp.iter_content(chunk_size=1024):
                             size = file.write(data)
                             bar.update(size)
-                    return True
+                    break
                 except Exception as err:
                     Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
                     Tempcounter +=1
                     if Tempcounter == 5:
                         raise SystemExit
-                break
+            return True
         else:
             return True
 
