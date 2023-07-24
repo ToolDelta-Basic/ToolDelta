@@ -4,7 +4,6 @@ import os, sys, traceback, zipfile, time, threading, re
 from .cfg import Cfg
 from .builtins import Builtins
 try:
-    raise
     from .pluginDec import decPluginAndCMP
 except:
     decPluginAndCMP = None
@@ -343,7 +342,7 @@ class PluginGroup:
                                     raise Exception(f"加密插件: {plugin_dir} 加载失败 ERR={cp}")
                                 exec(cp, root_env)
                         else:
-                            Print.print_err(f"未开启高级模式(需要付费或使用专属面板), 无法加载加密插件{plugin_dir}, 跳过加载")
+                            Print.print_err(f"该条件下无法加载加密插件{plugin_dir}, 跳过加载")
                             continue
                     else:
                         Print.print_err(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
@@ -507,7 +506,10 @@ class PluginGroup:
         if d:
             for func in d:
                 try:
-                    func(pkt)
+                    res = func(pkt)
+                    if res:
+                        return True
                 except:
                     Print.print_err(f"插件方法 {func} 出错：")
                     Print.print_err(traceback.format_exc())
+        return False
