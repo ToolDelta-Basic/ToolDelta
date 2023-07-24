@@ -8,7 +8,7 @@ class _Print:
     INFO_FAIL = "§c 失败 "
     INFO_SUCC = "§a 成功 "
     INFO_LOAD = "§d 加载 "
-    std_color_list = [
+    STD_COLOR_LIST = [
             ["0", "#000000"],
             ["1", "#0000AA"],
             ["2", "#00AA00"],
