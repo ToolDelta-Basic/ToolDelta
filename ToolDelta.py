@@ -81,7 +81,7 @@ class Frame:
     def DownloadFastBuilderfile(self):
         if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"): 
             try:
-                response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
+                response = requests.get("https://api.kgithub.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
                 FBversion = response.json()["tag_name"]
                 Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
                 if self.system_is_win:
