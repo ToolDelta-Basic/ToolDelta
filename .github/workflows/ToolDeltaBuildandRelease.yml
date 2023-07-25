@@ -1,0 +1,76 @@
+name: ToolDelta Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "version"
+  workflow_dispatch: {}
+  
+jobs:
+  build_Windows_job:
+    name: build_Windows
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+      - name: ToolDelta Build
+        run: pyinstaller -F ToolDelta.py
+          
+      - name: Get version
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: echo "::set-env name=VERSION::$(more version)"
+          
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{env.VERSION}}
+          name: ${{env.VERSION}}
+          files: |
+            dist/*
+  build_Linux_job:
+      name: build_Linux
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          python-version: ["3.11"]
+      steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+      - name: ToolDelta Build
+        run: pyinstaller -F ToolDelta.py
+
+      - name: Get version
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: echo "::set-env name=VERSION::$(cat version)"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{env.VERSION}}
+          name: ${{env.VERSION}}
+          files: |
+            dist/*
