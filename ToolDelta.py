@@ -32,11 +32,9 @@ finally:
     del loop
 if printmode in ["二", "2"]:
     import libs.rich_color_print
-
     Print = libs.rich_color_print.Print
 else:
     import libs.color_print
-
     Print = libs.color_print.Print
 
 try:
@@ -45,14 +43,11 @@ except Exception as err:
     Print.print_err("加载外部库失败， 请检查其是否存在:", err)
     raise SystemExit
 
-
 class Frame:
     class ThreadExit(SystemExit):
         ...
-
     class SystemVersionException(OSError):
         ...
-
     class FrameBasic:
         system_version = VERSION
         max_connect_fb_time = 60
@@ -191,7 +186,7 @@ class Frame:
             while 1:
                 try:
                     self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or 0
+                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or 0 # <- TODO: if you use 0, it will cause a exception at line 192.
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber.replace("\n", ""))
                     std["密码"] = int(self.serverPasswd.replace("\n", ""))
@@ -204,6 +199,7 @@ class Frame:
     def welcome(self):
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
         Print.print_with_info("§oMono §eTest")
+        # TODO: test or debug texts shou be removed.
         Print.print_with_info("Test2",countdown=10,endmsg="Ending...")
         Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
