@@ -9,36 +9,35 @@ from libs.cfg import Cfg as _Cfg
 
 async def get_user_input(text, timeout):
     print(text)
-    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin。readline), timeout)
+    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
 
 
 PRG_NAME = "ToolDelta"
-VERSION = (0， 1， 7)
+VERSION = (0, 1, 7)
 UPDATE_NOTE = ""
 ADVANCED = False
-Builtins = libs.builtins。Builtins
+Builtins = libs.builtins.Builtins
 Config = _Cfg()
 loop = asyncio.get_event_loop()
 
 try:
     printmode = loop.run_until_complete(
-        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:"， 3))
+        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
 except asyncio.TimeoutError:
     printmode = "1"
     print("1 - 自动选择")
 finally:
     # loop.close()
     del loop
-if printmode 在 ["二"， "2"]:
+if printmode in ["二", "2"]:
     import libs.rich_color_print
 
-    Print = libs.rich_color_print。Print
+    Print = libs.rich_color_print.Print
 else:
     import libs.color_print
 
     Print = libs.color_print.Print
-
 try:
     import libs.conn as conn
 except Exception as err:
@@ -148,11 +147,6 @@ class Frame:
         else:
             return True
 
-    async def get_user_input(self, text, timeout):
-        Print.print_with_info(text)
-        user_input = await asyncio.wait_for(self.loop.run_in_executor(None, sys.stdin.readline), timeout)
-        return user_input.strip()
-
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -175,6 +169,7 @@ class Frame:
                 finally:
                     self.loop.close()
                     del self.loop
+                # isUse = input()
                 if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
                     self.UseSysFBtoken = True
                     with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
@@ -183,7 +178,7 @@ class Frame:
                 else:
                     raise SystemExit
             else:
-                Print.print_err("请到FB官网 uc.fastbuilder.pro 下载FBToken, 并放在本目录中")
+                Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
                 raise SystemExit
         Config.default_cfg("租赁服登录配置.json", CFG)
         try:
@@ -262,13 +257,22 @@ class Frame:
         if not self.system_is_win:
             os.system("chmod +x phoenixbuilder")
         if frame.DownloadFastBuilderfile():
-            if frame.system_is_win:
-                if self.UseSysFBtoken:
-                    con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+            if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
+                if frame.system_is_win:
+                    if self.UseSysFBtoken:
+                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    else:
+                        con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
-                    con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             else:
-                con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                if frame.system_is_win:
+                    if self.UseSysFBtoken:
+                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    else:
+                        con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                else:
+                    con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT, shell=True)
             Print.print_suc("FastBuilder 进程已启动.")
@@ -691,16 +695,16 @@ try:
     plugins.read_plugin_from_old(dotcs_module_env)
     plugins.read_plugin_from_new(globals())
     plugins.execute_def(frame.on_plugin_err)
-    libs.builtins。tmpjson_save_thread(frame)
+    libs.builtins.tmpjson_save_thread(frame)
     frame.getFreePort(usage="fbconn")
     while 1:
-        if frame.status[0] 在 [0， 2]:
+        if frame.status[0] in [0, 2]:
             frame.runFB(port=frame.conPort)
             frame.run_conn(port=frame.conPort)
             thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
             game_control.waitUntilProcess()
             thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
-            threading.Thread(target=game_control.tps_thread)。start()
+            threading.Thread(target=game_control.tps_thread).start()
             frame.ConsoleCmd_thread()
             game_control.Inject()
         plugins.execute_init(frame.on_plugin_err)
@@ -723,16 +727,16 @@ try:
         Print.print_war(f"无法正常踢出机器人")
     frame.close_fb_thread()
     Print.print_inf("正在保存缓存数据.")
-    libs.builtins。safe_close()
+    libs.builtins.safe_close()
     Print.print_suc("正常退出.")
     os._exit(0)
 
 except (SystemExit, KeyboardInterrupt):
-    libs.builtins。safe_close()
+    libs.builtins.safe_close()
     os._exit(0)
 
 except Exception:
     Print.print_err(traceback.format_exc())
     frame.close_fb_thread()
-    libs.builtins。safe_close()
+    libs.builtins.safe_close()
     os._exit(0)
