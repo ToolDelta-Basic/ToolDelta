@@ -184,7 +184,7 @@ class Frame:
                         return port
                 else:
                     Print.print_war(f"端口 {port} 正被占用, 跳过")
-            else:
+        else:
                 for port in range(start, 65535):
                     r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
                     if r.read() == '':
