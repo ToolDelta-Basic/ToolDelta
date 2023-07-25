@@ -357,7 +357,13 @@ class Frame:
                                     return
         except EOFError:
             frame.status[0] = 0
-
+    def panic_later(self):
+        self.isInPanicMode = True
+        time.sleep(1)
+        self.status[0] = 2
+        self.fb_pipe.kill()
+        self.isInPanicMode = False
+        
     def _try_execute_console_cmd(self, func, rsp, mode, arg1):
         try:
             if mode == 0:
