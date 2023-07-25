@@ -1,3 +1,5 @@
+import libs.color_print
+import libs.rich_color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
@@ -6,12 +8,10 @@ from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
 
-
 async def get_user_input(text, timeout):
     print(text)
     user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
-
 
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 7)
@@ -31,13 +31,10 @@ finally:
     # loop.close()
     del loop
 if printmode in ["二", "2"]:
-    import libs.rich_color_print
-
     Print = libs.rich_color_print.Print
 else:
-    import libs.color_print
-
     Print = libs.color_print.Print
+    
 try:
     import libs.conn as conn
 except Exception as err:
