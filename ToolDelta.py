@@ -410,6 +410,7 @@ class Frame:
                 self.status[0] = 2
                 self.fb_pipe.kill()
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
+                # TODO: it SHOULD NOT BE changed, or it will cause some bugs.
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
 
