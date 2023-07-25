@@ -146,7 +146,11 @@ class Frame:
             return True
         else:
             return True
-
+    async def get_user_input(self, text, timeout):
+        Print.print_with_info(text)
+        # print(text)
+        user_input = await asyncio.wait_for(self.loop.run_in_executor(None, sys.stdin.readline), timeout)
+        return user_input.strip()
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
