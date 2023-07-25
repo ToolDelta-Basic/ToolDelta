@@ -9,30 +9,30 @@ from libs.cfg import Cfg as _Cfg
 
 async def get_user_input(text, timeout):
     print(text)
-    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
+    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin。readline), timeout)
     return user_input.strip()
 
 
 PRG_NAME = "ToolDelta"
-VERSION = (0, 1, 7)
+VERSION = (0， 1， 7)
 UPDATE_NOTE = ""
 ADVANCED = False
-Builtins = libs.builtins.Builtins
+Builtins = libs.builtins。Builtins
 Config = _Cfg()
 loop = asyncio.get_event_loop()
 
 try:
     printmode = loop.run_until_complete(
-        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
+        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:"， 3))
 except asyncio.TimeoutError:
     printmode = "1"
     print("1 - 自动选择")
 finally:
     # loop.close()
     del loop
-if printmode in ["二", "2"]:
+if printmode 在 ["二"， "2"]:
     import libs.rich_color_print
-    Print = libs.rich_color_print.Print
+    Print = libs.rich_color_print。Print
 else:
     import libs.color_print
     Print = libs.color_print.Print
@@ -198,9 +198,6 @@ class Frame:
 
     def welcome(self):
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
-        Print.print_with_info("§oMono §eTest")
-        # TODO: test or debug texts shou be removed.
-        Print.print_with_info("Test2",countdown=10,endmsg="Ending...")
         Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
@@ -259,7 +256,7 @@ class Frame:
         if frame.DownloadFastBuilderfile():
             if frame.system_is_win:
                 if self.UseSysFBtoken:
-                    con_cmd = f"phoenixbuilder.exe --debug -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    # con_cmd = f"phoenixbuilder.exe --debug -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                     con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
                     con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
