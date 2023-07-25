@@ -1,5 +1,3 @@
-import libs.color_print
-import libs.rich_color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
@@ -8,10 +6,12 @@ from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
 
+
 async def get_user_input(text, timeout):
     print(text)
     user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
+
 
 PRG_NAME = "ToolDelta"
 VERSION = (0, 1, 7)
@@ -29,12 +29,16 @@ except asyncio.TimeoutError:
     print("1 - 自动选择")
 finally:
     # loop.close()
-    del loop
+    # del loop
+    pass
 if printmode in ["二", "2"]:
+    import libs.rich_color_print
+
     Print = libs.rich_color_print.Print
 else:
+    import libs.color_print
+
     Print = libs.color_print.Print
-    
 try:
     import libs.conn as conn
 except Exception as err:
@@ -143,7 +147,11 @@ class Frame:
             return True
         else:
             return True
-            
+    async def get_user_input(self, text, timeout):
+        Print.print_with_info(text)
+        # print(text)
+        user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
+        return user_input.strip()
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -156,16 +164,19 @@ class Frame:
         if not os.path.isfile("fbtoken"):
             if platform.system() == "Windows" and os.path.isfile(
                     os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
-                self.loop = asyncio.get_event_loop()
+                # self.loop = asyncio.get_event_loop()
+                # 也许这是唯一一个global
+                global loop
+
                 try:
-                    isUse = self.loop.run_until_complete(
-                        get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
+                    isUse = loop.run_until_complete(
+                        self.get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
                 except asyncio.TimeoutError:
                     isUse = "y"
                     print("y - 自动选择")
                 finally:
-                    self.loop.close()
-                    del self.loop
+                    loop.close()
+                    del loop
                 # isUse = input()
                 if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
                     self.UseSysFBtoken = True
@@ -214,6 +225,8 @@ class Frame:
 
     def fbtokenFix(self):
         needFix = False
+        if self.UseSysFBtoken:
+            return
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
