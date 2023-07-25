@@ -146,11 +146,7 @@ class Frame:
             return True
         else:
             return True
-    async def get_user_input(self, text, timeout):
-        Print.print_with_info(text)
-        # print(text)
-        user_input = await asyncio.wait_for(self.loop.run_in_executor(None, sys.stdin.readline), timeout)
-        return user_input.strip()
+            
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
@@ -166,7 +162,7 @@ class Frame:
                 self.loop = asyncio.get_event_loop()
                 try:
                     isUse = self.loop.run_until_complete(
-                        self.get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
+                        get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
                 except asyncio.TimeoutError:
                     isUse = "y"
                     print("y - 自动选择")
