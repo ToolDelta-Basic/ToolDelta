@@ -130,7 +130,7 @@ class Frame:
                         bar.update(size)
                 return True
             except:
-                Print.print_err(f"下载FastBuilder失败!")
+                Print.print_err(f"下载FastBuilder失败!") # TODO: the changes for it show post a request to its authon.
                 raise SystemExit
         else:
             return True
