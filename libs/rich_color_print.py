@@ -1,11 +1,12 @@
 import datetime
+import os.path
 import time
 import copy
-# from rich import print as rprint
 from rich.text import Text
 from rich.console import Console
 from rich.style import Style
 from rich.progress import track
+
 console = Console()
 
 
@@ -71,8 +72,7 @@ class _Print:
             "f": "#FFFFFF",
             "g": "#DDD605"
         }
-        self.console = Console()
-        self.console.record = True
+        self.console = Console(record=True)
 
     def _mccolor_console_common(this, text: str):
         return text.replace("§1", "\033[0;37;34m").replace("§2", "\033[0;37;32m").replace("§3",
@@ -112,6 +112,7 @@ class _Print:
                         sep=" ",
                         end="\n"):
         """
+        # 默认已开启日志记录
         你可以输出任意形式的东西
         mode表: -- 你也可以自己定义颜色
             1:[black on white] 信息 [/black on white]
@@ -127,6 +128,9 @@ class _Print:
 
         """
         text = Text()
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        log_filename = os.path.join("日志文件", f"{current_date}.log")
+        os.makedirs("日志文件", exist_ok=True)
         text.append(text=f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ")
         had_done_text = []
         FBmode = False
@@ -212,6 +216,12 @@ class _Print:
                 print(*args[:1])
             else:
                 self.console.print(text, end=end)
+        # self.console.export_text()
+        if not os.path.isfile(log_filename):
+            with open(log_filename, "w", encoding="utf-8") as f:
+                f.write("")
+        with open(log_filename, "a+", encoding="utf-8") as f:
+            f.write(self.console.export_text())
 
     def input(self, text: str = "") -> str:
         self.print_with_info(text, end="", mode=3)
