@@ -14,7 +14,10 @@ async def get_user_input(text, timeout):
 
 
 PRG_NAME = "ToolDelta"
-VERSION = (0, 1, 7)
+try:
+    VERSION = tuple(int(v) for v in open("version","r").read().strip()[1:].split('.'))
+except:
+    VERSION = (0,1,7)
 UPDATE_NOTE = ""
 ADVANCED = False
 Builtins = libs.builtins.Builtins
