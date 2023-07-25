@@ -9,32 +9,34 @@ from libs.cfg import Cfg as _Cfg
 
 async def get_user_input(text, timeout):
     print(text)
-    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin。readline), timeout)
+    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
 
 
 PRG_NAME = "ToolDelta"
-VERSION = (0， 1， 7)
+VERSION = (0, 1, 7)
 UPDATE_NOTE = ""
 ADVANCED = False
-Builtins = libs.builtins。Builtins
+Builtins = libs.builtins.Builtins
 Config = _Cfg()
 loop = asyncio.get_event_loop()
 
 try:
     printmode = loop.run_until_complete(
-        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:"， 3))
+        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
 except asyncio.TimeoutError:
     printmode = "1"
     print("1 - 自动选择")
 finally:
     # loop.close()
     del loop
-if printmode 在 ["二"， "2"]:
+if printmode in ["二", "2"]:
     import libs.rich_color_print
-    Print = libs.rich_color_print。Print
+
+    Print = libs.rich_color_print.Print
 else:
     import libs.color_print
+
     Print = libs.color_print.Print
 
 try:
@@ -43,11 +45,14 @@ except Exception as err:
     Print.print_err("加载外部库失败， 请检查其是否存在:", err)
     raise SystemExit
 
+
 class Frame:
     class ThreadExit(SystemExit):
         ...
+
     class SystemVersionException(OSError):
         ...
+
     class FrameBasic:
         system_version = VERSION
         max_connect_fb_time = 60
@@ -106,38 +111,45 @@ class Frame:
             raise SystemExit
 
     def DownloadFastBuilderfile(self):
+        Tempcounter: int = 0
+        try:
+            response = requests.get("https://api.kgithub.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
+            FBversion = response.json()["tag_name"]
+        except:
+            FBversion = "v5.6.1"
+        Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
         if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
-            try:
-                response = requests.get("https://api.github.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
-                FBversion = response.json()["tag_name"]
-                Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
-                if self.system_is_win:
-                    resp = requests.get(
-                        f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
-                        stream=True)
-                    filename = "phoenixbuilder.exe"
-                elif sys.platform == 'linux':
-                    resp = requests.get(
-                        f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
-                        stream=True)
-                    filename = "phoenixbuilder"
-                total = int(resp.headers.get('content-length', 0))
-                with open(filename, 'wb') as file, tqdm.tqdm(
-                        desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
-                ) as bar:
-                    for data in resp.iter_content(chunk_size=1024):
-                        size = file.write(data)
-                        bar.update(size)
-                return True
-            except:
-                Print.print_err(f"下载FastBuilder失败!") # TODO: the changes for it show post a request to its authon.
-                raise SystemExit
+            while 1:
+                try:
+                    if self.system_is_win:
+                        resp = requests.get(
+                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
+                            stream=True)
+                        filename = "phoenixbuilder.exe"
+                    elif sys.platform == 'linux':
+                        resp = requests.get(
+                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
+                            stream=True)
+                        filename = "phoenixbuilder"
+                    total = int(resp.headers.get('content-length', 0))
+                    with open(filename, 'wb') as file, tqdm.tqdm(
+                            desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
+                    ) as bar:
+                        for data in resp.iter_content(chunk_size=1024):
+                            size = file.write(data)
+                            bar.update(size)
+                    break
+                except Exception as err:
+                    Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
+                    Tempcounter += 1
+                    if Tempcounter == 5:
+                        raise SystemExit
+            return True
         else:
             return True
 
     async def get_user_input(self, text, timeout):
         Print.print_with_info(text)
-        # print(text)
         user_input = await asyncio.wait_for(self.loop.run_in_executor(None, sys.stdin.readline), timeout)
         return user_input.strip()
 
@@ -163,7 +175,6 @@ class Frame:
                 finally:
                     self.loop.close()
                     del self.loop
-                # isUse = input()
                 if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
                     self.UseSysFBtoken = True
                     with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
@@ -186,10 +197,10 @@ class Frame:
             while 1:
                 try:
                     self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or 0 # <- TODO: if you use 0, it will cause a exception at line 192.
+                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
                     std = CFG.copy()
-                    std["服务器号"] = int(self.serverNumber.replace("\n", ""))
-                    std["密码"] = int(self.serverPasswd.replace("\n", ""))
+                    std["服务器号"] = int(self.serverNumber)
+                    std["密码"] = int(self.serverPasswd)
                     cfgs = Config.default_cfg("租赁服登录配置.json", std, True)
                     Print.print_suc("登录配置设置成功")
                     break
@@ -211,8 +222,6 @@ class Frame:
 
     def fbtokenFix(self):
         needFix = False
-        if self.UseSysFBtoken:
-            return
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
@@ -223,31 +232,30 @@ class Frame:
                 f.write(token.replace("\n", ""))
 
     def getFreePort(self, start=8080, usage="none"):
-        if usage == "fbconn":
-            if frame.system_is_win:
-                for port in range(start, 65535):
-                    r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
-                    if r.read() == '':
+        if frame.system_is_win:
+            for port in range(start, 65535):
+                r = os.popen(f"netstat -aon|findstr \":{port}\"", "r")
+                if r.read() == '':
+                    if usage == "fbconn":
                         self.conPort = port
                         Print.print_suc(f"FastBuilder 将会开放端口 {port}")
                         return
                     else:
-                        Print.print_war(f"端口 {port} 正被占用, 跳过")
-            else:
-                for port in range(start, 65535):
-                    r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
-                    if r.read() == '':
-                        self.conPort = port
-                        Print.print_suc(f"FastBuilder 将会开放端口 {port}")
-                        return
-                    else:
-                        Print.print_war(f"端口 {port} 正被占用, 跳过")
+                        return port
+                else:
+                    Print.print_war(f"端口 {port} 正被占用, 跳过")
         else:
             for port in range(start, 65535):
                 r = os.popen(f"netstat -aon|grep \":{port}\"", "r")
                 if r.read() == '':
-                    return port
-            return None
+                    if usage == "fbconn":
+                        self.conPort = port
+                        Print.print_suc(f"FastBuilder 将会开放端口 {port}")
+                        return
+                    else:
+                        return port
+                else:
+                    Print.print_war(f"端口 {port} 正被占用, 跳过")
         raise Exception("未找到空闲端口???")
 
     def runFB(self, ip="0.0.0.0", port="8080"):
@@ -256,8 +264,7 @@ class Frame:
         if frame.DownloadFastBuilderfile():
             if frame.system_is_win:
                 if self.UseSysFBtoken:
-                    # con_cmd = f"phoenixbuilder.exe --debug -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-                    con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    con_cmd = f"phoenixbuilder.exe -O -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
                     con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             else:
@@ -357,13 +364,7 @@ class Frame:
                                     return
         except EOFError:
             frame.status[0] = 0
-    def panic_later(self):
-        self.isInPanicMode = True
-        time.sleep(1)
-        self.status[0] = 2
-        self.fb_pipe.kill()
-        self.isInPanicMode = False
-        
+
     def _try_execute_console_cmd(self, func, rsp, mode, arg1):
         try:
             if mode == 0:
@@ -403,7 +404,7 @@ class Frame:
                     Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
                     try:
                         Print.print_war("尝试连接到 FastBuilder 验证服务器")
-                        requests.get("http://user.fastbuilder.pro", timeout=10)
+                        requests.get("http://uc.fastbuilder.pro", timeout=10)
                         Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
                     except:
                         Print.print_err("§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)")
@@ -413,12 +414,18 @@ class Frame:
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
             elif tmp.startswith("panic"):
-                self.status[0] = 2
-                self.fb_pipe.kill()
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
-                # TODO: it SHOULD NOT BE changed, or it will cause some bugs.
+                if not self.isInPanicMode:
+                    self.ClassicThread(self.panic_later)
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
+
+    def panic_later(self):
+        self.isInPanicMode = True
+        time.sleep(1)
+        self.status[0] = 2
+        self.fb_pipe.kill()
+        self.isInPanicMode = False
 
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
@@ -582,6 +589,7 @@ class GameCtrl:
             self.processPlayerList(self.store_uuid_pkt, True)
             self.requireUUIDPacket = False
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
+        time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
@@ -602,11 +610,11 @@ class GameCtrl:
 
     def tps_thread(self):
         return
-        lastGameTime = int(self.sendcmd("time query daytime"， True， 10)。OutputMessages[0]。Parameters[0])
+        lastGameTime = int(self.sendcmd("time query daytime", True, 10).OutputMessages[0].Parameters[0])
         while 1:
             try:
                 st_time = time.time()
-                tps = int(self.sendcmd("time query gametime"， True， 10)。OutputMessages[0]。Parameters[0])
+                tps = int(self.sendcmd("time query gametime", True, 10).OutputMessages[0].Parameters[0])
                 st_time = time.time() - st_time
                 lastGameTime = tps
             except Exception as err:
@@ -614,48 +622,48 @@ class GameCtrl:
             time.sleep(10)
 
     def sendwocmd(self, cmd: str):
-        conn.SendNoResponseCommand(self.linked_frame。con, cmd)
+        conn.SendNoResponseCommand(self.linked_frame.con, cmd)
 
     def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: int = 30):
-        uuid = conn.SendMCCommand(self.linked_frame。con, cmd)
+        uuid = conn.SendMCCommand(self.linked_frame.con, cmd)
         if waitForResp:
-            self.command_req。append(uuid)
+            self.command_req.append(uuid)
             waitStartTime = time.time()
             while 1:
-                res = self.command_resp。get(uuid)
+                res = self.command_resp.get(uuid)
                 if res is not None:
-                    self.command_req。remove(uuid)
+                    self.command_req.remove(uuid)
                     del self.command_resp[uuid]
                     return Packet_CommandOutput(res[1])
                 elif time.time() - waitStartTime > timeout:
-                    self.command_req。remove(uuid)
-                    raise TimeoutError(1， "指令返回获取超时")
+                    self.command_req.remove(uuid)
+                    raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
 
     def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int = 30):
-        uuid = conn.SendWSCommand(self.linked_frame。con, cmd)
+        uuid = conn.SendWSCommand(self.linked_frame.con, cmd)
         if waitForResp:
-            self.command_req。append(uuid)
+            self.command_req.append(uuid)
             waitStartTime = time.time()
             while 1:
-                res = self.command_resp。get(uuid, None)
+                res = self.command_resp.get(uuid, None)
                 if res:
-                    self.command_req。remove(uuid)
+                    self.command_req.remove(uuid)
                     del self.command_resp[uuid]
                     return Packet_CommandOutput(res[1])
                 elif time.time() - waitStartTime > timeout:
-                    self.command_req。remove(uuid)
-                    raise TimeoutError(1， "指令返回获取超时")
+                    self.command_req.remove(uuid)
+                    raise TimeoutError(1, "指令返回获取超时")
         else:
             return uuid
 
     def sendfbcmd(self, cmd: str):
-        conn.SendFBCommand(self.linked_frame。con, cmd)
+        conn.SendFBCommand(self.linked_frame.con, cmd)
 
     def sendPacket(self, pktType: int, pkt: dict):
         b = conn.JsonStrAsIsGamePacketBytes(pktType, json.dumps(pkt))
-        conn.SendGamePacketBytes(self.linked_frame。con, b)
+        conn.SendGamePacketBytes(self.linked_frame.con, b)
 
     def say_to(self, target: str, msg: str):
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
