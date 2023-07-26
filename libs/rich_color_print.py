@@ -1,7 +1,6 @@
 import datetime
 import os.path
 import time
-import copy
 from rich.text import Text
 from rich.console import Console
 from rich.style import Style
@@ -40,7 +39,7 @@ class _Print:
             " 输入 ": "black on white",
             " 成功 ": "white on green",
             " 加载 ": "black on white",
-            "  FB  ": "yellow on white"
+            "  FB  ": "black on #61d6d6"
         }
         self.modes_int = {
             0: " 信息 ",
