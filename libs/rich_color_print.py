@@ -1,14 +1,12 @@
 import datetime
 import os.path
 import time
-import copy
 from rich.text import Text
 from rich.console import Console
 from rich.style import Style
 from rich.progress import track
 
 console = Console()
-
 
 class _Print:
     std_color_list = [
@@ -130,7 +128,6 @@ class _Print:
         text = Text()
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
         log_filename = os.path.join("日志文件", f"{current_date}.log")
-        os.makedirs("日志文件", exist_ok=True)
         text.append(text=f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ")
         had_done_text = []
         FBmode = False
@@ -152,7 +149,6 @@ class _Print:
                     if "§r" in mode:
                         text.append(text=mode.replace("§r", ""), style="black on white")
         for arg in args:
-            # print(arg)
             if FBmode and ("§b  FB  §r" == arg or "§b  FB  " == arg):
                 break
             if "§d 加载 " == arg:
@@ -173,21 +169,18 @@ class _Print:
                                 elif i == arg1[0]:
                                     text.append(text=arg1[1:], style=self.dict_for_color[i])
                     else:
-                        # 因为加了上面这个所以这个 检测多层修饰的就废了，明天2023.7.25再改，至少现在可以用
                         for i in self.dict_for_color:
                             if arg in had_done_text:
                                 break
                             elif "§" + i in arg:
                                 try:
-                                    #  这里我tm sb了,md一直是先检测§a再检测§o，我说怎么一直是两个的,***
                                     if "§" + i == "§o" and arg[arg.find("§o") + 2] == "§":  # 如果多层修饰
                                         if arg[arg.find("§o") + 3] in self.dict_for_color:
                                             had_done_text.append(arg)
-                                            arg1 = copy.deepcopy(arg)
-                                            text.append(text=arg.replace("§o§" + arg1[arg1.find("§o") + 3], ""),
+                                            text.append(text=arg.replace("§o§" + arg[arg.find("§o") + 3], ""),
                                                         style=Style(italic=True,
                                                                     color=self.dict_for_color[
-                                                                        arg1[arg1.find("§o") + 3]]))
+                                                                        arg[arg.find("§o") + 3]]))
                                         else:
                                             text.append(text=arg.replace("§o", ""), style=Style(italic=True))
                                     else:
@@ -210,7 +203,7 @@ class _Print:
             self.console.print(self.modes_int[0], style=self.modes[self.modes_int[0]], end="")
             self.console.print(f" [cyan]{endmsg}[/cyan]")  # 倒计时后的留言
         else:
-            if FBmode:  # 就***的离谱,FB的输出内容rich会自动转行,而且禁用了自动转行还是不行
+            if FBmode:
                 print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ", end="")
                 self.console.print(self.modes_int[6], style=self.modes[self.modes_int[6]], end="")
                 print(*args[:1])
