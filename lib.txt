@@ -17,3 +17,4 @@ transformers==4.27.1
 websocket-client==1.5.1
 orjson==3.9.2
 rich==13.3.2
+psutil==5.9.4
