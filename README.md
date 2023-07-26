@@ -40,7 +40,7 @@
 
 # 更新日志
 - `0.1.6`
-  - 兼容了 dotcs 插件(远古大Bug)的加载
+  - 兼容了 dotcs 插件 (dotcs ver.0.10.5以及之前) 的加载
 - `0.1.7`
   - 更新了[Fastbuilder](https://github.com/LNSSPsd/PhoenixBuilder)下载
   - 新增了一种输出方式`rich` 
