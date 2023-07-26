@@ -23,25 +23,32 @@ ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 loop = asyncio.get_event_loop()
-
 try:
-    printmode = loop.run_until_complete(
-        get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
-except asyncio.TimeoutError:
-    printmode = "1"
-    print("1 - 自动选择")
-finally:
-    # loop.close()
-    # del loop
-    pass
-if printmode in ["二", "2"]:
-    import libs.rich_color_print
-
-    Print = libs.rich_color_print.Print
-else:
-    import libs.color_print
-
-    Print = libs.color_print.Print
+    with open("OutputWay","r",encoding="utf-8") as f:data=f.read()
+    if data not in ["1","2"]:
+        raise Exception
+    if data =="2":
+        import libs.rich_color_print
+        Print = libs.rich_color_print.Print
+    else:
+        import libs.color_print
+        Print = libs.color_print.Print
+    Print.print_suc(f"使用默认输出方式:{data}")
+except:
+    try:
+        printmode = loop.run_until_complete(get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
+    except asyncio.TimeoutError:
+        printmode = "1"
+        print("1 - 自动选择")
+    finally:
+        pass
+    with open("OutputWay", "w", encoding="utf-8") as f:f.write(printmode)
+    if printmode in ["二", "2"]:
+        import libs.rich_color_print
+        Print = libs.rich_color_print.Print
+    else:
+        import libs.color_print
+        Print = libs.color_print.Print
 try:
     import libs.conn as conn
 except Exception as err:
@@ -210,6 +217,7 @@ class Frame:
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
+                    std["输出"] = printmode
                     cfgs = Config.default_cfg("租赁服登录配置.json", std, True)
                     Print.print_suc("登录配置设置成功")
                     break
@@ -284,7 +292,7 @@ class Frame:
             else:
                 if frame.system_is_win:
                     if self.UseSysFBtoken:
-                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                        con_cmd = f"phoenixbuilder.exe --debug -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                     else:
                         con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
