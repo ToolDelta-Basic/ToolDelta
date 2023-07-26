@@ -40,6 +40,9 @@ except:
     except asyncio.TimeoutError:
         printmode = "1"
         print("1 - 自动选择")
+    except DeprecationWarning:
+        printmode = "1"
+        print("1 - 自动选择")
     finally:
         pass
     with open("OutputWay", "w", encoding="utf-8") as f:f.write(printmode)
