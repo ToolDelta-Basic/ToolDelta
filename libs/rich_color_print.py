@@ -128,7 +128,7 @@ class _Print:
         text = Text()
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
         log_filename = os.path.join("日志文件", f"{current_date}.log")
-        text.append(text=f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ")
+        text.append(text=f"[{datetime.datetime.now().strftime('%H:%M')}] ")
         had_done_text = []
         FBmode = False
         if "§" in back:
@@ -199,12 +199,12 @@ class _Print:
         if countdown is not None:
             for i in track(range(countdown), description=args[0]):
                 time.sleep(0.2)
-            self.console.print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ", style="", end="")
+            self.console.print(f"[{datetime.datetime.now().strftime('%H:%M')}] ", style="", end="")
             self.console.print(self.modes_int[0], style=self.modes[self.modes_int[0]], end="")
             self.console.print(f" [cyan]{endmsg}[/cyan]")  # 倒计时后的留言
         else:
             if FBmode:
-                print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ", end="")
+                print(f"[{datetime.datetime.now().strftime('%H:%M')}] ", end="")
                 self.console.print(self.modes_int[6], style=self.modes[self.modes_int[6]], end="")
                 print(*args[:1])
             else:
@@ -235,7 +235,7 @@ class _Print:
     def fmt_info(self, text: str, info: str):
         output_txts = []
         for text_line in str(text).split("\n"):
-            output_txts.append(datetime.datetime.now().strftime("[%H:%M:%S] ") + self._mccolor_console_st1(
+            output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self._mccolor_console_st1(
                 info) + " " + self._mccolor_console_common(text_line))
         return "\n".join(output_txts)
 
