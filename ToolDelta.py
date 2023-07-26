@@ -42,11 +42,55 @@ else:
     import libs.color_print
 
     Print = libs.color_print.Print
-try:
-    import libs.conn as conn
-except Exception as err:
-    Print.print_err("加载外部库失败， 请检查其是否存在:", err)
-    raise SystemExit
+import sys # 调用系统的部分信息
+____is_have_dotcs_port = False
+____run_args = sys.argv[1:]# 第0个肯定是程序路径而不是参数啊
+for i in ____run_args:
+    if "--dotcs" in i:
+        ____is_have_dotcs_port==True
+        break
+frame_conPort = -1
+if ____is_have_dotcs_port:
+    # 这里处于兼容性的考虑,不能使用工具三角洲的conn了，
+    # 这里使用傻一点的方法直接穷举遍历
+    # 语法: --dotcs=port , port是数字
+    # 万恶的兼容性,我不能使用任何解析启动参数的库,只能手动解析
+    for id,i in enumerate(____run_args):
+        if "--dotcs" in i:
+            if "=" in i:# "--dotcs=端口"
+                if i == "--dotcs=":# 没写端口
+                    Print.print_err("请填写正确的启动参数!!!语法如下: --dotcs=端口 或 --dotcs 端口")
+                    sys.exit(1)
+                else:
+                    port = i.lstrip("--dotcs=")
+                    if port.isdigit():
+                        frame_conPort = int(port)
+                    else:
+                        Print.print_err("端口应当是整数,而不是其他")
+                        sys.exit(1)
+            else:# 第2种语法?
+                if id ==len(____run_args)-1:
+                    Print.print_err("未传递端口")
+                    sys.exit(1)
+                else:
+                    port = ____run_args[id+1]
+                    if port.isdigit():
+                        frame_conPort = int(port)
+                    else:
+                        Print.print_err("端口应当是整数,而不是其他")
+                        sys.exit(1)
+    try:
+        import libs.dotcs_conn as conn
+    except Exception as err:
+        Print.print_err("加载外部库失败， 请检查其是否存在:", err)
+        raise SystemExit
+
+else:
+    try:
+        import libs.conn as conn
+    except Exception as err:
+        Print.print_err("加载外部库失败， 请检查其是否存在:", err)
+        raise SystemExit
 
 
 class Frame:
@@ -92,7 +136,7 @@ class Frame:
     MAX_PACKET_CACHE = 500
     sys_data = FrameBasic()
     con: int
-    conPort: int = 8080
+    conPort: int = 8080 if frame_conPort==-1 else frame_conPort
     serverNumber: str = ""
     serverPasswd: int
     consoleMenu = []
@@ -107,47 +151,51 @@ class Frame:
     UseSysFBtoken = False
 
     def check_use_token(self, tok_name="", check_md=""):
-        res = libs.sys_args.SysArgsToDict(sys.argv)
-        res = res.get(tok_name, 1)
-        if (res == 1 and check_md) or res != check_md:
-            Print.print_err(f"启动参数错误:")
-            raise SystemExit
+        if frame_conPort==-1:
+            res = libs.sys_args.SysArgsToDict(sys.argv)
+            res = res.get(tok_name, 1)
+            if (res == 1 and check_md) or res != check_md:
+                Print.print_err(f"启动参数错误:")
+                raise SystemExit
 
     def DownloadFastBuilderfile(self):
-        Tempcounter: int = 0
-        try:
-            response = requests.get("https://api.kgithub.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
-            FBversion = response.json()["tag_name"]
-        except:
-            FBversion = "v5.6.1"
-        Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
-        if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
-            while 1:
-                try:
-                    if self.system_is_win:
-                        resp = requests.get(
-                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
-                            stream=True)
-                        filename = "phoenixbuilder.exe"
-                    elif sys.platform == 'linux':
-                        resp = requests.get(
-                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
-                            stream=True)
-                        filename = "phoenixbuilder"
-                    total = int(resp.headers.get('content-length', 0))
-                    with open(filename, 'wb') as file, tqdm.tqdm(
-                            desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
-                    ) as bar:
-                        for data in resp.iter_content(chunk_size=1024):
-                            size = file.write(data)
-                            bar.update(size)
-                    break
-                except Exception as err:
-                    Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
-                    Tempcounter += 1
-                    if Tempcounter == 5:
-                        raise SystemExit
-            return True
+        if frame_conPort==-1:
+            Tempcounter: int = 0
+            try:
+                response = requests.get("https://api.kgithub.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
+                FBversion = response.json()["tag_name"]
+            except:
+                FBversion = "v5.6.1"
+            Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
+            if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
+                while 1:
+                    try:
+                        if self.system_is_win:
+                            resp = requests.get(
+                                f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
+                                stream=True)
+                            filename = "phoenixbuilder.exe"
+                        elif sys.platform == 'linux':
+                            resp = requests.get(
+                                f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
+                                stream=True)
+                            filename = "phoenixbuilder"
+                        total = int(resp.headers.get('content-length', 0))
+                        with open(filename, 'wb') as file, tqdm.tqdm(
+                                desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
+                        ) as bar:
+                            for data in resp.iter_content(chunk_size=1024):
+                                size = file.write(data)
+                                bar.update(size)
+                        break
+                    except Exception as err:
+                        Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
+                        Tempcounter += 1
+                        if Tempcounter == 5:
+                            raise SystemExit
+                return True
+            else:
+                return True
         else:
             return True
 
@@ -167,33 +215,34 @@ class Frame:
             "密码": int
         }
         global loop
-        if not os.path.isfile("fbtoken"):
-            if platform.system() == "Windows" and os.path.isfile(
-                    os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
-                # self.loop = asyncio.get_event_loop()
-                # 也许这是唯一一个global
+        if frame_conPort==-1:
+            if not os.path.isfile("fbtoken"):
+                if platform.system() == "Windows" and os.path.isfile(
+                        os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
+                    # self.loop = asyncio.get_event_loop()
+                    # 也许这是唯一一个global
 
-                try:
-                    isUse = loop.run_until_complete(
-                        self.get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
-                except asyncio.TimeoutError:
-                    isUse = "y"
-                    print("y - 自动选择")
-                finally:
-                    # loop.close()
-                    # del loop
-                    pass
-                # isUse = input()
-                if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
-                    self.UseSysFBtoken = True
-                    with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
-                              encoding="utf-8") as f:
-                        self.fbtoken = f.read().replace("\n", "")
+                    try:
+                        isUse = loop.run_until_complete(
+                            self.get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
+                    except asyncio.TimeoutError:
+                        isUse = "y"
+                        print("y - 自动选择")
+                    finally:
+                        # loop.close()
+                        # del loop
+                        pass
+                    # isUse = input()
+                    if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
+                        self.UseSysFBtoken = True
+                        with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
+                                  encoding="utf-8") as f:
+                            self.fbtoken = f.read().replace("\n", "")
+                    else:
+                        raise SystemExit
                 else:
+                    Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
                     raise SystemExit
-            else:
-                Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
-                raise SystemExit
         Config.default_cfg("租赁服登录配置.json", CFG)
         try:
             cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
@@ -270,29 +319,32 @@ class Frame:
         raise Exception("未找到空闲端口???")
 
     def runFB(self, ip="0.0.0.0", port="8080"):
-        if not self.system_is_win:
-            os.system("chmod +x phoenixbuilder")
-        if frame.DownloadFastBuilderfile():
-            if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
-                if frame.system_is_win:
-                    if self.UseSysFBtoken:
-                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+        if frame_conPort==-1:
+            if not self.system_is_win:
+                os.system("chmod +x phoenixbuilder")
+            if frame.DownloadFastBuilderfile():
+                if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
+                    if frame.system_is_win:
+                        if self.UseSysFBtoken:
+                            con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                        else:
+                            con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                     else:
-                        con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                        con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
-                    con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-            else:
-                if frame.system_is_win:
-                    if self.UseSysFBtoken:
-                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    if frame.system_is_win:
+                        if self.UseSysFBtoken:
+                            con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                        else:
+                            con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                     else:
-                        con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-                else:
-                    con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-            self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                            stderr=subprocess.STDOUT, shell=True)
-            Print.print_suc("FastBuilder 进程已启动.")
-            frame.outputFBMsgsThread()
+                        con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                stderr=subprocess.STDOUT, shell=True)
+                Print.print_suc("FastBuilder 进程已启动.")
+                frame.outputFBMsgsThread()
+        else:
+            Print.print_suc("本次启动不涉嫌FastBuilder,已跳过.")
 
     def reloadPlugins(self):
         Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
@@ -326,15 +378,24 @@ class Frame:
         while 1:
             try:
                 self.con = conn.ConnectFB(f"{ip}:{port}")
-                Print.print_suc("§a成功连接上FastBuilder.")
+                if frame_conPort==-1:
+                    Print.print_suc("§a成功连接上FastBuilder.")
+                else:
+                    Print.print_suc("§a成功连接上DotCS.")
                 return 1
             except:
                 if time.time() - connect_fb_start_time > self.sys_data.max_connect_fb_time:
-                    Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
+                    if frame_conPort==-1:
+                        Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
+                    else:
+                        Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上DotCS，已退出")
                     self.close_fb_thread()
                     os._exit(0)
                 elif self.status[0] == 2:
-                    Print.print_err(f"§4连接FB时出现问题，已退出")
+                    if frame_conPort==-1:
+                        Print.print_err(f"§4连接FB时出现问题，已退出")
+                    else:
+                        Print.print_err(f"§4连接DotCS时出现问题，已退出")
                     self.close_fb_thread()
                     os._exit(0)
 
@@ -733,7 +794,10 @@ try:
         if frame.status[0] == 0:
             break
         elif frame.status[0] == 2:
-            Print.print_war("FB断开连接， 尝试重启")
+            if frame_conPort==-1:
+                Print.print_war("FB断开连接， 尝试重启")
+            else:
+                Print.print_war("DotCS断开连接， 尝试重启")
         elif frame.status[0] == 11:
             frame.reloadPlugins()
     if game_control.bot_name:

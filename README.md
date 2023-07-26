@@ -14,7 +14,7 @@
 <p align="center">
   <code>TooldDelta</code> 是依赖于 <code>PhoenixBuilder</code> 的多功能扩展组件，可以加载各种各样有趣的插件。
 </p>
-
+> 注意:一些第三方不是基于 PhoenixBuilder开发的,但是协议兼容。
 
 
 
@@ -40,7 +40,7 @@
 
 # 更新日志
 - `0.1.6`
-  - 兼容了 dotcs 插件的加载
+  - 兼容了 dotcs 插件(远古大Bug)的加载
 - `0.1.7`
   - 更新了[Fastbuilder](https://github.com/LNSSPsd/PhoenixBuilder)下载
   - 新增了一种输出方式`rich` 
