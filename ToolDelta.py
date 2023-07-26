@@ -217,7 +217,6 @@ class Frame:
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
-                    std["输出"] = printmode
                     cfgs = Config.default_cfg("租赁服登录配置.json", std, True)
                     Print.print_suc("登录配置设置成功")
                     break
