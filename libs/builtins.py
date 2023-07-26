@@ -1,12 +1,12 @@
 from libs.color_print import Print
-import orjson, os, time, threading
+import ujson, os, time, threading
 def on_plugin_err_common(pluginName: str, _, trace: str):
     Print.print_err(f"§4插件 {pluginName} 报错, 信息：§c\n" + trace)
 
 class Builtins:
     class SimpleJsonDataReader:
         @staticmethod
-        def SafeOrJsonDump(obj: str | dict | list, fp):
+        def SafeJsonDump(obj: str | dict | list, fp):
             """
             导出一个json文件, 弥补orjson库没有dump方法的不足.
                 obj: json对象.
@@ -14,20 +14,20 @@ class Builtins:
             """
             if isinstance(fp, str):
                 fp = open(fp, "w", encoding="utf-8")
-            fp.write(orjson.dumps(obj, option = orjson.OPT_INDENT_2).decode("utf-8"))
+            fp.write(ujson.dumps(obj, indent = 4, ensure_ascii = False))
             fp.close()
         @staticmethod
-        def SafeOrJsonLoad(fp):
+        def SafeJsonLoad(fp):
             """
             读取一个json文件, 弥补orjson库没有load方法的不足.
                 fp: open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
                 fp = open(fp, "r", encoding="utf-8")
-            d = orjson.loads(fp.read())
+            d = ujson.loads(fp.read())
             fp.close()
             return d
-        class DataReadError(orjson.JSONDecodeError):...
+        class DataReadError(ujson.JSONDecodeError):...
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
             """
@@ -38,10 +38,10 @@ class Builtins:
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
-                    Builtins.SimpleJsonDataReader.SafeOrJsonDump(default, open(filepath, "w", encoding='utf-8'))
+                    Builtins.SimpleJsonDataReader.SafeJsonDump(default, open(filepath, "w", encoding='utf-8'))
                     return default
-                return Builtins.SimpleJsonDataReader.SafeOrJsonLoad(open(filepath, "r", encoding='utf-8'))
-            except orjson.JSONDecodeError as err:
+                return Builtins.SimpleJsonDataReader.SafeJsonDump(open(filepath, "r", encoding='utf-8'))
+            except ujson.JSONDecodeError as err:
                 raise Builtins.SimpleJsonDataReader.DataReadError(err.msg, err.doc, err.pos)
         @staticmethod
         def writeFileTo(plugin_name: str, file: str, obj):
@@ -50,7 +50,7 @@ class Builtins:
             这个文件应在data/<plugin_name>/<file>文件夹内
             """
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
-            Builtins.SimpleJsonDataReader.SafeOrJsonDump(obj, open(f"data/{plugin_name}/{file}.json", "w", encoding='utf-8'))
+            Builtins.SimpleJsonDataReader.SafeJsonDump(obj, open(f"data/{plugin_name}/{file}.json", "w", encoding='utf-8'))
     @staticmethod
     def SimpleFmt(kw: dict[str, any], __sub: str):
         """
@@ -71,6 +71,13 @@ class Builtins:
         """
         if not cond:
             raise exc
+        
+    @staticmethod
+    def try_int(arg):
+        try:
+            return int(arg)
+        except:
+            return None
 
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):
@@ -87,10 +94,13 @@ class Builtins:
             """
             将json文件加载到缓存区, 以便快速读写.
             needFileExists = False 时, 若文件路径不存在, 就会自动创建一个文件.
-            path 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
+            在缓存文件已加载的情况下, 再使用一次该方法不会有任何作用.
+            path: 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
             """
+            if path in jsonPathTmp.keys():
+                return
             try:
-                js = Builtins.SimpleJsonDataReader.SafeOrJsonLoad(path)
+                js = Builtins.SimpleJsonDataReader.SafeJsonLoad(path)
             except FileNotFoundError as err:
                 if not needFileExists:
                     js = None
@@ -101,11 +111,12 @@ class Builtins:
         def unloadPathJson(path):
             """
             将json文件从缓存区卸载(保存内容到磁盘), 之后不能再在缓存区对这个文件进行读写.
+            在缓存文件已卸载的情况下, 再使用一次该方法不会有任何作用.
             """
             if jsonPathTmp.get(path) is not None:
                 isChanged, dat = jsonPathTmp[path]
                 if isChanged:
-                    Builtins.SimpleJsonDataReader.SafeOrJsonDump(dat, path)
+                    Builtins.SimpleJsonDataReader.SafeJsonDump(dat, path)
                 del jsonPathTmp[path]
                 return True
             else:
@@ -128,14 +139,14 @@ class Builtins:
 def safe_close():
     for k, (isChanged, dat) in jsonPathTmp.items():
         if isChanged:
-            Builtins.SimpleJsonDataReader.SafeOrJsonDump(dat, k)
+            Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
 
 def _tmpjson_save_thread():
     while 1:
         time.sleep(60)
         for k, (isChanged, dat) in jsonPathTmp.copy().items():
             if isChanged:
-                Builtins.SimpleJsonDataReader.SafeOrJsonDump(dat, k)
+                Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
                 jsonPathTmp[k][0] = False
 
 def tmpjson_save_thread(frame):
