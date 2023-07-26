@@ -121,7 +121,9 @@ class Frame:
         except:
             FBversion = "v5.6.1"
         Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
-        if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
+        if os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
+            return True
+        else:
             while 1:
                 try:
                     if self.system_is_win:
@@ -148,9 +150,8 @@ class Frame:
                     if Tempcounter == 5:
                         raise SystemExit
             return True
-        else:
-            return True
 
+   
     async def get_user_input(self, text, timeout):
         Print.print_with_info(text)
         # print(text)
