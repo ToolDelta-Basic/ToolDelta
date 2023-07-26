@@ -1,5 +1,6 @@
 aiohttp==3.8.4
 arrow==1.2.3
+psutil==5.9.3
 Flask==2.2.3
 h5py==3.8.0
 matplotlib==3.7.1
@@ -17,4 +18,3 @@ transformers==4.27.1
 websocket-client==1.5.1
 orjson==3.9.2
 rich==13.3.2
-psutil==5.9.4
