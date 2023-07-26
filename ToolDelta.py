@@ -273,21 +273,6 @@ class Frame:
                                             stderr=subprocess.STDOUT, shell=True)
             Print.print_suc("FastBuilder 进程已启动.")
             frame.outputFBMsgsThread()
-
-    def reloadPlugins(self):
-        Print.print_war("开始重载插件 (注意: 这是不安全的做法)")
-        time.sleep(0.1)
-        plugins.reset()
-        game_control.reset()
-        self.set_game_control(game_control)
-        self.set_plugin_group(plugins)
-        plugins.read_plugin_from_old(dotcs_module_env)
-        plugins.read_plugin_from_new(globals())
-        plugins.execute_def(frame.on_plugin_err)
-        try:
-            del self.consoleMenu[2:]
-        except:
-            pass
     
     def close_fb_thread(self):
         try:
@@ -325,7 +310,7 @@ class Frame:
         except:
             self.consoleMenu.append([usage, arg_hint, func, triggers])
 
-    def init_basic_help_menu(self, cmd):
+    def init_basic_help_menu(self, _):
         menu = self.get_console_menus()
         Print.print_inf("§a以下是可选的菜单指令项：")
         for usage, arg_hint, _, triggers in menu:
@@ -454,20 +439,6 @@ class GameCtrl:
         self.pkt_cache: list = []
         self.require_listen_packet_list = [9, 79, 63]
         self.store_uuid_pkt = None
-        self.requireUUIDPacket = True
-
-    def reset(self):
-        self.command_req.clear()
-        self.command_resp.clear()
-        self.players_uuid.clear()
-        self.allplayers.clear()
-        self.bot_name = ""
-        self.linked_frame: Frame
-        self.pkt_unique_id: int = 0
-        self.pkt_cache.clear()
-        self.require_listen_packet_list.clear()
-        self.require_listen_packet_list += [9, 79, 63]
-        self.store_uuid_pkt.clear()
         self.requireUUIDPacket = True
 
     def add_listen_pkt(self, pkt_type: int):
@@ -709,8 +680,6 @@ try:
             break
         elif frame.status[0] == 2:
             Print.print_war("FB断开连接， 尝试重启")
-        elif frame.status[0] == 11:
-            frame.reloadPlugins()
     if game_control.bot_name:
         game_control.sendcmd("kick " + game_control.bot_name)
         Print.print_inf(f"{game_control.bot_name} 已退出游戏.")
