@@ -291,7 +291,7 @@ class Frame:
             else:
                 if frame.system_is_win:
                     if self.UseSysFBtoken:
-                        con_cmd = f"phoenixbuilder.exe --debug -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                     else:
                         con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
