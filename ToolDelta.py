@@ -22,35 +22,43 @@ UPDATE_NOTE = ""
 ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
-loop = asyncio.get_event_loop()
 try:
-    with open("OutputWay","r",encoding="utf-8") as f:data=f.read()
-    if data not in ["1","2"]:
-        raise Exception
-    if data =="2":
-        import libs.rich_color_print
-        Print = libs.rich_color_print.Print
-    else:
-        import libs.color_print
-        Print = libs.color_print.Print
-    Print.print_suc(f"使用默认输出方式:{data}")
-except:
+    loop = asyncio.get_event_loop()
     try:
-        printmode = loop.run_until_complete(get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
-    except asyncio.TimeoutError:
-        printmode = "1"
-        print("1 - 自动选择")
-    except DeprecationWarning:
-        printmode = "1"
-        print("1 - 自动选择")
-    finally:
-        pass
-    with open("OutputWay", "w", encoding="utf-8") as f:f.write(printmode)
+        with open("OutputWay","r",encoding="utf-8") as f:data=f.read()
+        if data not in ["1","2"]:
+            raise Exception
+        if data =="2":
+            import libs.rich_color_print
+            Print = libs.rich_color_print.Print
+        else:
+            import libs.color_print
+            Print = libs.color_print.Print
+        Print.print_suc(f"使用默认输出方式:{data}")
+    except:
+        try:
+           printmode = loop.run_until_complete(get_user_input("请选择使用哪种控制台输出[1=默认,2=rich]:", 3))
+        except asyncio.TimeoutError:
+            printmode = "1"
+            print("1 - 自动选择")
+        finally:
+            pass
+        with open("OutputWay", "w", encoding="utf-8") as f:f.write(printmode)
+        if printmode in ["二", "2"]:
+            import libs.rich_color_print
+            Print = libs.rich_color_print.Print
+        else:
+            import libs.color_print
+            Print = libs.color_print.Print
+except DeprecationWarning:
+    printmode =input("请选择使用哪种控制台输出[1=默认,2=rich]:")
     if printmode in ["二", "2"]:
         import libs.rich_color_print
+
         Print = libs.rich_color_print.Print
     else:
         import libs.color_print
+
         Print = libs.color_print.Print
 try:
     import libs.conn as conn
