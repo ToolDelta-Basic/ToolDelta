@@ -10,28 +10,8 @@ console = Console()
 
 
 class _Print:
-    std_color_list = [
-        ["0", "[#000000]"],
-        ["1", "[#0000AA]"],
-        ["2", "[#00AA00]"],
-        ["3", "[#00AAAA]"],
-        ["4", "[#AA0000]"],
-        ["5", "[#AA00AA]"],
-        ["6", "[#FFAA00]"],
-        ["7", "[#AAAAAA]"],
-        ["8", "[#555555]"],
-        ["9", "[#5555FF]"],
-        ["a", "[#55FF55]"],
-        ["b", "[#55FFFF]"],
-        ["c", "[#FF5555]"],
-        ["d", "[#FF55FF]"],
-        ["e", "[#FFFF55]"],
-        ["f", "[#FFFFFF]"],
-        ["g", "[#DDD605]"],
-        ["r", "/"]
-    ]
-
     def __init__(self):
+        self.version = (0,1,3)
         self.modes = {
             " 信息 ": "black on white",
             " 警告 ": "black on yellow",
@@ -145,43 +125,63 @@ class _Print:
         InRange=False
         total_length=len(arg_list)
         Style_list=["o","l","u","s"]
+        italic, bold, underline, strike, color = False, False, False, False, "#FFFFFF"
         for arg1 in arg_list:
             num+=1
-            italic, bold, underline, strike, color = False, False, False, False, None
+            TheStyle=Style(italic=italic, bold=bold, underline=underline, strike=strike, color=color)  #为支持§r
             if not arg1:
                 continue
             if arg1 in self.had_done_text:
                 if arg1 == self.had_done_text[len(self.had_done_text)-1]:
                     self.had_done_text.clear()
                 continue
-            if (arg1 in Style_list or arg1 in self.dict_for_color) and len(arg1)==1 and not InRange:
+            if "r" == arg1 or arg1[0] == "r":  #当出现§r时,将各种样式变为默认
+                italic, bold, underline, strike, color = False, False, False, False, "#FFFFFF"
+                if len(arg1) !=1:
+                    self.text.append(text=arg1[1:], style=Style(italic=italic, bold=bold, underline=underline, strike=strike, color=color))
+                continue
+            elif (arg1 in Style_list or arg1 in self.dict_for_color_without_some or arg1[0] in self.dict_for_color_without_some) and len(arg1)==1 and not InRange:
                 index = num
                 num_=0
                 total_length_ = len(arg_list)
                 can_num=0
                 for x in arg_list[num:]:
                     num_+=1
-                    if total_length_ >= num + num_ and len(arg_list[num + num_-1]) > 0 and (arg_list[num + num_-1][0] in Style_list and len(arg_list[num + num_-1]) == 1):
-                        if total_length_ >= num +num_+1 and len(arg_list[num + num_]) > 0 and arg_list[num + num_][0] in self.dict_for_color_without_some:
+                    if len(arg_list[num + num_-1]) > 0 and arg_list[num + num_ - 1][0] == "r": break
+                    if total_length_ >= num + num_ and len(arg_list[num + num_-1]) > 0 and ((arg_list[num + num_-1][0] in Style_list and len(arg_list[num + num_-1]) == 1) or arg_list[num + num_-1][0] in self.dict_for_color_without_some):
+                        if arg_list[num + num_-1][0] in self.dict_for_color_without_some:self.had_done_text.append(arg_list[num + num_-1])
+                        if total_length_ >= num +num_+1 and len(arg_list[num + num_]) > 0 and (arg_list[num + num_][0] in self.dict_for_color_without_some or (arg_list[num + num_][0] in Style_list and len(arg_list[num + num_]) >1)):
                             can_num += 1
                             break
                         can_num+=1
-                if 1:
-                    end=num+can_num
-                    InRange = True
-                    for i in range(index,end+1):
-                        if arg_list[i][0] =="o":italic=True
-                        elif arg_list[i][0] =="l":bold=True
-                        elif arg_list[i][0] =="u":underline=True
-                        elif arg_list[i][0] =="s":strike=True
-                        elif arg_list[i][0] in self.dict_for_color:color=self.dict_for_color[arg_list[i][0]]
+                end = num + can_num
+                InRange = True
+                for i in range(index, end + 1):
+                    if arg_list[i][0] == "o":
+                        italic = True
+                    elif arg_list[i][0] == "l":
+                        bold = True
+                    elif arg_list[i][0] == "u":
+                        underline = True
+                    elif arg_list[i][0] == "s":
+                        strike = True
+                    elif arg_list[i][0] in self.dict_for_color_without_some:
+                        color = self.dict_for_color[
+                            arg_list[i][0]]
+                    if arg_list[i] not in self.had_done_text:
                         self.had_done_text.append(arg_list[i])
-                    # print(self.had_done_text)
-                    self.text.append(text=arg_list[end][1:],style=Style(italic=italic,bold=bold,underline=underline,strike=strike,color=color))
-                    # self.console.print(self.text)
+                self.text.append(text=arg_list[end][1:],
+                                 style=Style(italic=italic, bold=bold, underline=underline, strike=strike,
+                                             color=color))
                 InRange=False
             elif len(arg1)>0 and arg1[0] in self.dict_for_color and not InRange:
-                self.text.append(text=arg1[1:],style=self.dict_for_color[arg1[0]])
+                color = "#FFFFFF"
+                if arg1[0] == "o":italic = True
+                elif arg1[0] == "l":bold = True
+                elif arg1[0] == "u":underline = True
+                elif arg1[0] == "s":strike = True
+                elif arg1[0] in self.dict_for_color_without_some:color = self.dict_for_color[arg1[0]]
+                self.text.append(text=arg1[1:],style=Style(italic=italic, bold=bold, underline=underline, strike=strike, color=color))
 
     def check_mode(self, mode: int | str = 0, back: str = "white",sep=" ",*args):
         if "§" in back:
