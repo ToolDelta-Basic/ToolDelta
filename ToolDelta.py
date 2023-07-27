@@ -7,6 +7,10 @@ from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
+try:
+    from .pluginDec import decPluginAndCMP
+except:
+    decPluginAndCMP = None
 
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""
