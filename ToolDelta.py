@@ -121,37 +121,57 @@ class Frame:
         except:
             FBversion = "v5.6.1"
         Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
-        if os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
-            return True
+        if frame.system_is_win:
+            if not os.path.exists("phoenixbuilder.exe"):
+                while 1:
+                    try:
+                        if self.system_is_win:
+                            resp = requests.get(
+                                f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
+                                stream=True)
+                            filename = "phoenixbuilder.exe"
+                        elif sys.platform == 'linux':
+                            resp = requests.get(
+                                f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
+                                stream=True)
+                            filename = "phoenixbuilder"
+                        total = int(resp.headers.get('content-length', 0))
+                        with open(filename, 'wb') as file, tqdm.tqdm(
+                                desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
+                        ) as bar:
+                            for data in resp.iter_content(chunk_size=1024):
+                                size = file.write(data)
+                                bar.update(size)
+                        break
+                    except Exception as err:
+                        Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
+                        Tempcounter += 1
+                        if Tempcounter == 5:
+                            raise SystemExit
+                return True
         else:
-            while 1:
-                try:
-                    if self.system_is_win:
-                        resp = requests.get(
-                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
-                            stream=True)
-                        filename = "phoenixbuilder.exe"
-                    elif sys.platform == 'linux':
+            if not os.path.exists("phoenixbuilder"):
+                while 1:
+                    try:
                         resp = requests.get(
                             f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
                             stream=True)
                         filename = "phoenixbuilder"
-                    total = int(resp.headers.get('content-length', 0))
-                    with open(filename, 'wb') as file, tqdm.tqdm(
-                            desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
-                    ) as bar:
-                        for data in resp.iter_content(chunk_size=1024):
-                            size = file.write(data)
-                            bar.update(size)
-                    break
-                except Exception as err:
-                    Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
-                    Tempcounter += 1
-                    if Tempcounter == 5:
-                        raise SystemExit
-            return True
+                        total = int(resp.headers.get('content-length', 0))
+                        with open(filename, 'wb') as file, tqdm.tqdm(
+                                desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
+                        ) as bar:
+                            for data in resp.iter_content(chunk_size=1024):
+                                size = file.write(data)
+                                bar.update(size)
+                        break
+                    except Exception as err:
+                        Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
+                        Tempcounter += 1
+                        if Tempcounter == 5:
+                            raise SystemExit
+                return True
 
-   
     async def get_user_input(self, text, timeout):
         Print.print_with_info(text)
         # print(text)
