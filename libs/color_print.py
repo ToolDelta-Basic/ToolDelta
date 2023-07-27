@@ -69,7 +69,6 @@ class _Print:
         i = 0
         while i < len(text):
             char = text[i]
-            print(char, len(text), i)
             try:
                 if char == "§":
                     if text[i + 1] == "s":
