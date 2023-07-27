@@ -221,8 +221,6 @@ class Frame:
 
     def fbtokenFix(self):
         needFix = False
-        if self.UseSysFBtoken:
-            return
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:

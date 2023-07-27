@@ -1,5 +1,14 @@
 import datetime
-from .logger import publicLogger
+try:
+    from .logger import publicLogger
+except:
+    pass
+
+def simple_fmt(kw, __sub):
+    for k, v in kw.items():
+        if k in __sub:
+            __sub = __sub.replace(k, str(v))
+    return __sub
 
 class _Print:
     INFO_NORMAL = "§f 信息 "
@@ -28,15 +37,59 @@ class _Print:
             ["g", "#DDD605"],
             ["r", "/"]
         ]
-    def _mccolor_console_common(self, text: str):
-        return text.replace("§1", "\033[0;37;34m").replace("§2", "\033[0;37;32m").replace("§3", "\033[0;37;36m").replace("§4", "\033[0;37;31m").replace("§5", "\033[0;37;35m").replace("§6", "\033[0;37;33m").replace("§7", "\033[0;37;90m").replace("§8", "\033[0;37;2m").replace("§9", "\033[0;37;94m").replace("§a", "\033[0;37;92m").replace("§b", "\033[0;37;96m").replace("§c", "\033[0;37;91m").replace("§d", "\033[0;37;95m").replace("§e", "\033[0;37;93m").replace("§f", "\033[0;37;1m").replace("§r", "\033[0m")+"\033[0m"
+
+    def colormode_replace(self, text: str, showmode = 0):
+        text = self._strike(text)
+        return simple_fmt(
+            {
+                "§1": f"\033[{showmode};37;34m",
+                "§2": f"\033[{showmode};37;32m",
+                "§3": f"\033[{showmode};37;36m",
+                "§4": f"\033[{showmode};37;31m",
+                "§5": f"\033[{showmode};37;35m",
+                "§6": f"\033[{showmode};37;33m",
+                "§7": f"\033[{showmode};37;90m",
+                "§8": f"\033[{showmode};37;2m",
+                "§9": f"\033[{showmode};37;94m",
+                "§a": f"\033[{showmode};37;92m",
+                "§b": f"\033[{showmode};37;96m",
+                "§c": f"\033[{showmode};37;96m",
+                "§d": f"\033[{showmode};37;95m",
+                "§e": f"\033[{showmode};37;93m",
+                "§f": f"\033[{showmode};37;1m",
+                "§r": "\033[0m",
+                "§u": "\033[4m",
+                "§l": "\033[1m"
+            }, text
+        ) + "\033[0m"
     
-    def _mccolor_console_st1(self, text: str):
-        return text.replace("§1", "\033[7;37;34m").replace("§2", "\033[7;37;32m").replace("§3", "\033[7;37;36m").replace("§4", "\033[7;37;31m").replace("§5", "\033[7;37;35m").replace("§6", "\033[7;37;33m").replace("§7", "\033[7;37;90m").replace("§8", "\033[7;37;2m").replace("§9", "\033[7;37;94m").replace("§a", "\033[7;37;92m").replace("§b", "\033[7;37;96m").replace("§c", "\033[7;37;91m").replace("§d", "\033[7;37;95m").replace("§e", "\033[7;37;93m").replace("§f", "\033[7;37;1m").replace("§r", "\033[0m")+"\033[0m"
+    def _strike(self, text: str):
+        text_ok = ""
+        strikeMode = False
+        i = 0
+        while i < len(text):
+            char = text[i]
+            print(char, len(text), i)
+            try:
+                if char == "§":
+                    if text[i + 1] == "s":
+                        strikeMode = True
+                        i += 2
+                        continue
+                    elif text[i + 1] == "r":
+                        strikeMode = False
+            except IndexError:
+                pass
+            if strikeMode:
+                text_ok += u'\u0336' + char
+            else:
+                text_ok += char
+            i += 1
+        return text_ok
 
     def print_with_info(self, text: str, info: str = INFO_NORMAL, **print_kwargs):
         self.c_log(info, text)
-        setNextCol = "§r"
+        setNextColor = "§r"
         if "\n" in text:
             output_txts = []
             for text_line in str(text).split("\n"):
@@ -44,14 +97,20 @@ class _Print:
                     try:
                         n = text_line.rfind("§")
                         _setNextCol = text_line[n:n+2]
-                        assert setNextCol != -1
-                        setNextCol = _setNextCol
+                        assert setNextColor != -1
+                        setNextColor = _setNextCol
                     except:
                         pass
-                output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self._mccolor_console_st1(info) + " " + self._mccolor_console_common(setNextCol + text_line))
+                output_txts.append(
+                    datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 1)
+                      + " " + self.colormode_replace(setNextColor + text_line)
+                    )
             print("\n".join(output_txts), **print_kwargs)
         else:
-            print(datetime.datetime.now().strftime("[%H:%M] ") + self._mccolor_console_st1(info) + " " + self._mccolor_console_common(text), **print_kwargs)
+            print(
+                datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 1)
+                  + " " + self.colormode_replace(text), **print_kwargs
+            )
 
     def print_err(self, text: str, **print_kwargs):
         self.print_with_info(f"§c{text}", self.INFO_ERROR, **print_kwargs)
