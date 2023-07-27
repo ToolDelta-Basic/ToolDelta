@@ -17,7 +17,7 @@ PRG_NAME = "ToolDelta"
 try:
     VERSION = tuple(int(v) for v in open("version","r").read().strip()[1:].split('.'))
 except:
-    VERSION = (0,1,7)
+    VERSION = (0,1,8)
 UPDATE_NOTE = ""
 ADVANCED = False
 Builtins = libs.builtins.Builtins
