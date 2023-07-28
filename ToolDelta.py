@@ -1,25 +1,33 @@
+import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
-import libs.color_print
 import libs.rich_color_print
+import libs.color_print
 from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
 from libs.cfg import Cfg as _Cfg
-try:
-    from .pluginDec import decPluginAndCMP
-except:
-    decPluginAndCMP = None
+from libs.logger import publicLogger
 
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""
 ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
-loop = asyncio.get_event_loop()
 Print = libs.color_print.Print
-# A warning will be shown here.
+loop = asyncio.get_event_loop()
+
+try:
+    VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
+except:
+    # Current version
+    VERSION = (0, 1, 7)
+
+async def get_user_input(text, timeout):
+    Print.print_inf(text)
+    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
+    return user_input.strip()
 
 try:
     VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
@@ -106,7 +114,7 @@ class Frame:
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
-    fb_pipe: subprocess.Popen = None
+    fb_pipe: subprocess.Popen | None = None
     _old_dotcs_threadinglist = []
     status = [0]
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
@@ -129,7 +137,7 @@ class Frame:
         except:
             FBversion = "v5.7.2"
         Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
-        if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
+        if not (os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder")):
             while 1:
                 try:
                     if self.system_is_win:
@@ -171,6 +179,9 @@ class Frame:
         if not os.path.isfile("fbtoken"):
             if platform.system() == "Windows" and os.path.isfile(
                     os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
+                # self.loop = asyncio.get_event_loop()
+                # 也许这是唯一一个global
+
                 try:
                     isUse = loop.run_until_complete(
                         get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
@@ -261,7 +272,7 @@ class Frame:
                         Print.print_war(f"端口 {port} 正被占用, 跳过")
         raise Exception("未找到空闲端口???")
 
-    def runFB(self, ip="0.0.0.0", port="8080"):
+    def runFB(self, ip = "0.0.0.0", port = 8080):
         if not self.system_is_win:
             os.system("chmod +x phoenixbuilder")
         if frame.DownloadFastBuilderfile():
@@ -288,12 +299,14 @@ class Frame:
     
     def close_fb_thread(self):
         try:
+            assert self.fb_pipe is not None, "Broken pipe"
             self.fb_pipe.kill()
             Print.print_suc("成功关闭FB进程")
         except:
             Print.print_war("未能正常关闭FB进程")
 
     def system_exit(self):
+        assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "Broken pipe"
         self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
         self.fb_pipe.stdin.flush()
         self.status[0] = 0
@@ -369,6 +382,7 @@ class Frame:
                 rsp_arg = rsp[len(arg1):].split()
         except IndexError:
             Print.print_err("[控制台执行命令] 指令缺少参数")
+            return
         try:
             func(rsp_arg)
             return 1
@@ -380,6 +394,7 @@ class Frame:
 
     def _outputFBMsgsThread(self):
         while 1:
+            assert self.fb_pipe is not None and self.fb_pipe.stdout is not None and self.fb_pipe.stdin is not None, "Broken pipe"
             tmp: str = self.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
             if not tmp:
                 continue
@@ -437,6 +452,10 @@ class Frame:
 
     def get_game_control(self):
         return self.link_game_ctrl
+    
+    def safe_close(self):
+        publicLogger._exit()
+        libs.builtins.safe_close()
 
 class GameCtrl:
     def __init__(self, frame: Frame):
@@ -699,7 +718,7 @@ try:
         Print.print_war(f"无法正常踢出机器人")
     frame.close_fb_thread()
     Print.print_inf("正在保存缓存数据.")
-    libs.builtins.safe_close()
+    frame.safe_close()
     Print.print_suc("正常退出.")
     os._exit(0)
 
@@ -710,5 +729,5 @@ except (SystemExit, KeyboardInterrupt):
 except Exception:
     Print.print_err(traceback.format_exc())
     frame.close_fb_thread()
-    libs.builtins.safe_close()
+    frame.safe_close()
     os._exit(0)
