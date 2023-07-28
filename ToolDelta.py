@@ -127,7 +127,7 @@ class Frame:
             response = requests.get("https://api.kgithub.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
             FBversion = response.json()["tag_name"]
         except:
-            FBversion = "v5.6.1"
+            FBversion = "v5.7.2"
         Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
         if not os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder"):
             while 1:
