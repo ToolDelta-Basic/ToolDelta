@@ -101,13 +101,13 @@ class _Print:
                     except:
                         pass
                 output_txts.append(
-                    datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 1)
+                    datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
                       + " " + self.colormode_replace(setNextColor + text_line)
                     )
             print("\n".join(output_txts), **print_kwargs)
         else:
             print(
-                datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 1)
+                datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
                   + " " + self.colormode_replace(text), **print_kwargs
             )
 
@@ -126,7 +126,7 @@ class _Print:
     def fmt_info(self, text: str, info: str):
         output_txts = []
         for text_line in str(text).split("\n"):
-            output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self._mccolor_console_st1(info) + " " + self._mccolor_console_common(text_line))
+            output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7) + " " + self.colormode_replace(text_line))
         return "\n".join(output_txts)
     
     def c_log(self, inf, msg):
