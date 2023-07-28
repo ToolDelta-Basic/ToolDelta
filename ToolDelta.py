@@ -162,7 +162,7 @@ class Frame:
     def downloadMissingFiles(self):
         try:
             Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
-            url = "http://127.0.0.1:8090/api/file"
+            url = "http://43.153.182.231:24536/api/file"
             def get_md5(file_path):
                 with open(file_path, "rb") as f:
                     md5_obj = hashlib.md5()
