@@ -204,7 +204,7 @@ class PluginGroup:
         self.plugin_added_cache["plugin"] = plugin
         return plugin
     
-    def add_packets_listener(self, pktID):
+    def add_packet_listener(self, pktID):
         def decorator(func):
             self.__add_listen_packet_id(pktID)
             self.__add_listen_packet_func(pktID, func)
