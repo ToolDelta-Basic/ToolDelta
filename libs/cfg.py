@@ -1,4 +1,4 @@
-import json, os
+import ujson, os
 
 NoneType = type(None)
 
@@ -40,11 +40,16 @@ class Cfg:
         def __init__(self, *keys):
             self.members = keys
         def __repr__(self) -> str:
-            return '"' + '", "'.join(self.members) + '"'
+            return 'Cfg.Group("' + '", "'.join(self.members) + '")'
     class ConfigError(Exception):
         def __init__(this, errStr: str, errPos: list):
             this.errPos = errPos
             this.args = (errStr,)
+    class UnneccessaryKey:
+        def __init__(self, key):
+            self.key = key
+        def __repr__(self):
+            return f"Cfg.UnneccessaryKey({self.key})"
     class ConfigKeyError(ConfigError):...
     class ConfigValueError(ConfigError):...
     class VersionLowError(ConfigError):...
@@ -57,8 +62,8 @@ class Cfg:
         path = path if path.endswith(".json") else path + ".json"
         with open(path, "r", encoding="utf-8") as f:
             try:
-                obj = json.load(f)
-            except json.JSONDecodeError:
+                obj = ujson.load(f)
+            except ujson.JSONDecodeError:
                 raise this.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None)
         this.checkDict(standard_type, obj)
         return obj
@@ -67,7 +72,7 @@ class Cfg:
         path = path if path.endswith(".json") else path + ".json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding='utf-8') as f:
-                json.dump(default, f, indent=4, ensure_ascii=False)
+                ujson.dump(default, f, indent=4, ensure_ascii=False)
 
     def exists(this, path: str):
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
@@ -102,7 +107,13 @@ class Cfg:
             else:
                 v2 = cfg.get(k, r"%Exception")
                 if v2 == r"%Exception":
-                    raise this.ConfigKeyError(f'不存在的JSON键: {k}', __nowcheck)
+                    if isinstance(k, Cfg.UnneccessaryKey):
+                        v2 = cfg.get(k.key, r"%Exception")
+                        k = k.key
+                        if v2 == r"%Exception":
+                            continue
+                    else:
+                        raise this.ConfigKeyError(f'不存在的JSON键: {k}', __nowcheck)
                 __nowcheck[-1] = str(v2)
                 if _CfgIsinstance(v, type):
                     # Compare directly
@@ -175,9 +186,11 @@ class Cfg:
 
 if __name__ == "__main__":
     try:
-        a_mapping = [{"c": 4}]
-        a_std = ["%list", {Cfg.Group("a", "b"): Cfg.NNFloat}]
-        Cfg().checkDict(a_std, a_mapping)
-    except Cfg.ConfigError as err:
+        test_cfg = [
+            {"a": 2, "c": -0.5}
+        ] # problem: a not in b, c
+        a_std = [r"%list", {Cfg.UnneccessaryKey("c"): Cfg.NNFloat}]
+        Cfg().checkDict(a_std, test_cfg)
+    except Cfg.ConfigError:
         import traceback
         print(traceback.format_exc())
