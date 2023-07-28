@@ -32,17 +32,28 @@ async def get_user_input(text, timeout):
     user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
 
-try:
-    printmode = loop.run_until_complete(
-        get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 3))
-except asyncio.TimeoutError:
-    printmode = "1"
-    print("1 - 自动选择")
-if printmode in ["二", "2"]:
+if not Config.exists(os.path.join("data","输出模式.json")):
+    Config.default_cfg(os.path.join("data","输出模式.json"),{"mode":0})
+outputMode=Config.get_cfg(os.path.join("data","输出模式.json"),{"mode":0})
+outputMsg=f"使用上次输出模式:1"
+if outputMode["mode"] ==0:
+    try:
+        printmode = loop.run_until_complete(
+            get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 3))
+    except asyncio.TimeoutError:
+        printmode = "1"
+        print("1 - 自动选择")
+        Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 1},force=True)
+    if printmode in ["二", "2"]:
+        Print = libs.rich_color_print.Print
+        Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 2},force=True)
+    outputMsg=f"成功设置输出模式:{printmode},下次启动不会再提示."
+    del printmode
+elif outputMode["mode"] ==2:
     Print = libs.rich_color_print.Print
-else:
-    pass
-del printmode
+    outputMsg=f"使用上次输出模式:2."
+Print.print_suc(outputMsg)
+del outputMode,outputMsg
 
 try:
     import libs.conn as conn
@@ -160,9 +171,6 @@ class Frame:
         if not os.path.isfile("fbtoken"):
             if platform.system() == "Windows" and os.path.isfile(
                     os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
-                # self.loop = asyncio.get_event_loop()
-                # 也许这是唯一一个global
-
                 try:
                     isUse = loop.run_until_complete(
                         get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
@@ -173,7 +181,7 @@ class Frame:
                     self.UseSysFBtoken = True
                     with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
                               encoding="utf-8") as f:
-                        self.fbtoken = f.read().replace("\n", "")
+                        self.fbtoken = f.read().strip()
                 else:
                     raise SystemExit
             else:

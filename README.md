@@ -43,4 +43,6 @@
   - 兼容了 dotcs 插件的加载
 - `0.1.7`
   - 更新了[Fastbuilder](https://github.com/LNSSPsd/PhoenixBuilder)下载
-  - 新增了一种输出方式`rich` 
+  - 新增了一种输出方式`rich`(0.1.3)
+    - 支持了`§r`重置字体及颜色(默认:`#FFFFFF`)
+  - 支持了视窗系统`Windows`中自动检测`fbtoken`并启动

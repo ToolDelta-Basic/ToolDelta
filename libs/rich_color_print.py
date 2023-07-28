@@ -1,7 +1,6 @@
 import datetime
 import os.path
 import time
-import copy
 from rich.text import Text
 from rich.console import Console
 from rich.style import Style
@@ -11,28 +10,8 @@ console = Console()
 
 
 class _Print:
-    std_color_list = [
-        ["0", "[#000000]"],
-        ["1", "[#0000AA]"],
-        ["2", "[#00AA00]"],
-        ["3", "[#00AAAA]"],
-        ["4", "[#AA0000]"],
-        ["5", "[#AA00AA]"],
-        ["6", "[#FFAA00]"],
-        ["7", "[#AAAAAA]"],
-        ["8", "[#555555]"],
-        ["9", "[#5555FF]"],
-        ["a", "[#55FF55]"],
-        ["b", "[#55FFFF]"],
-        ["c", "[#FF5555]"],
-        ["d", "[#FF55FF]"],
-        ["e", "[#FFFF55]"],
-        ["f", "[#FFFFFF]"],
-        ["g", "[#DDD605]"],
-        ["r", "/"]
-    ]
-
     def __init__(self):
+        self.version = (0,1,3)
         self.modes = {
             " 信息 ": "black on white",
             " 警告 ": "black on yellow",
@@ -40,7 +19,7 @@ class _Print:
             " 输入 ": "black on white",
             " 成功 ": "white on green",
             " 加载 ": "black on white",
-            "  FB  ": "yellow on white"
+            "  FB  ": "black on #61d6d6"
         }
         self.modes_int = {
             0: " 信息 ",
@@ -70,9 +49,31 @@ class _Print:
             "d": "#FF55FF",
             "e": "#FFFF55",
             "f": "#FFFFFF",
+            "g": "#DDD605",
+            "u": "underline",
+            "s": "strike"
+        }
+        self.dict_for_color_without_some = {
+            "0": "#000000",
+            "1": "#0000AA",
+            "2": "#00AA00",
+            "3": "#00AAAA",
+            "4": "#AA0000",
+            "5": "#AA00AA",
+            "6": "#FFAA00",
+            "7": "#AAAAAA",
+            "8": "#555555",
+            "9": "#5555FF",
+            "a": "#55FF55",
+            "b": "#55FFFF",
+            "c": "#FF5555",
+            "d": "#FF55FF",
+            "e": "#FFFF55",
+            "f": "#FFFFFF",
             "g": "#DDD605"
         }
         self.console = Console(record=True)
+        os.makedirs("日志文件", exist_ok=True)
 
     def _mccolor_console_common(this, text: str):
         return text.replace("§1", "\033[0;37;34m").replace("§2", "\033[0;37;32m").replace("§3",
@@ -108,6 +109,100 @@ class _Print:
                         formatted_text.append(segment.replace("§" + i, ""), style=self.dict_for_color[i])
         return formatted_text
 
+    def log_record(self,log_txt:str = None):
+        if log_txt is None:
+            log_txt=self.console.export_text()
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        log_filename = os.path.join("日志文件", f"{current_date}.log")
+        if not os.path.isfile(log_filename):
+            with open(log_filename, "w", encoding="utf-8") as f:
+                f.write("")
+        with open(log_filename, "a+", encoding="utf-8") as f:
+            f.write(log_txt)
+
+    def Style_doll(self,arg_list:list):
+        num=-1
+        InRange=False
+        total_length=len(arg_list)
+        Style_list=["o","l","u","s"]
+        italic, bold, underline, strike, color = False, False, False, False, "#FFFFFF"
+        for arg1 in arg_list:
+            num+=1
+            TheStyle=Style(italic=italic, bold=bold, underline=underline, strike=strike, color=color)  #为支持§r
+            if not arg1:
+                continue
+            if arg1 in self.had_done_text:
+                if arg1 == self.had_done_text[len(self.had_done_text)-1]:
+                    self.had_done_text.clear()
+                continue
+            if "r" == arg1 or arg1[0] == "r":  #当出现§r时,将各种样式变为默认
+                italic, bold, underline, strike, color = False, False, False, False, "#FFFFFF"
+                if len(arg1) !=1:
+                    self.text.append(text=arg1[1:], style=Style(italic=italic, bold=bold, underline=underline, strike=strike, color=color))
+                continue
+            elif (arg1 in Style_list or arg1 in self.dict_for_color_without_some or arg1[0] in self.dict_for_color_without_some) and len(arg1)==1 and not InRange:
+                index = num
+                num_=0
+                total_length_ = len(arg_list)
+                can_num=0
+                for x in arg_list[num:]:
+                    num_+=1
+                    if len(arg_list[num + num_-1]) > 0 and arg_list[num + num_ - 1][0] == "r": break
+                    if total_length_ >= num + num_ and len(arg_list[num + num_-1]) > 0 and ((arg_list[num + num_-1][0] in Style_list and len(arg_list[num + num_-1]) == 1) or arg_list[num + num_-1][0] in self.dict_for_color_without_some):
+                        if arg_list[num + num_-1][0] in self.dict_for_color_without_some:self.had_done_text.append(arg_list[num + num_-1])
+                        if total_length_ >= num +num_+1 and len(arg_list[num + num_]) > 0 and (arg_list[num + num_][0] in self.dict_for_color_without_some or (arg_list[num + num_][0] in Style_list and len(arg_list[num + num_]) >1)):
+                            can_num += 1
+                            break
+                        can_num+=1
+                end = num + can_num
+                InRange = True
+                for i in range(index, end + 1):
+                    if arg_list[i][0] == "o":
+                        italic = True
+                    elif arg_list[i][0] == "l":
+                        bold = True
+                    elif arg_list[i][0] == "u":
+                        underline = True
+                    elif arg_list[i][0] == "s":
+                        strike = True
+                    elif arg_list[i][0] in self.dict_for_color_without_some:
+                        color = self.dict_for_color[
+                            arg_list[i][0]]
+                    if arg_list[i] not in self.had_done_text:
+                        self.had_done_text.append(arg_list[i])
+                self.text.append(text=arg_list[end][1:],
+                                 style=Style(italic=italic, bold=bold, underline=underline, strike=strike,
+                                             color=color))
+                InRange=False
+            elif len(arg1)>0 and arg1[0] in self.dict_for_color and not InRange:
+                color = "#FFFFFF"
+                if arg1[0] == "o":italic = True
+                elif arg1[0] == "l":bold = True
+                elif arg1[0] == "u":underline = True
+                elif arg1[0] == "s":strike = True
+                elif arg1[0] in self.dict_for_color_without_some:color = self.dict_for_color[arg1[0]]
+                self.text.append(text=arg1[1:],style=Style(italic=italic, bold=bold, underline=underline, strike=strike, color=color))
+
+    def check_mode(self, mode: int | str = 0, back: str = "white",sep=" ",*args):
+        if "§" in back:
+            back = self.dict_for_color[back[1]]
+        if "§b  FB  §r" in args or "§b  FB  " in args:
+            self.FBmode = True
+        elif "§d 加载 " in args:
+            self.text.append(text=" 加载 ", style=f"#FF55FF on {back}")
+        else:
+            if isinstance(mode, int):
+                if mode in self.modes_int:
+                    self.text.append(text=self.modes_int[mode], style=self.modes[self.modes_int[mode]])
+            else:
+                if "§" in mode:
+                    for i in self.dict_for_color:
+                        if "§" + i in mode:
+                            self.text.append(text=mode.replace("§" + i, ""),
+                                             style=self.dict_for_color[i] + f" on {back}")
+                    if "§r" in mode:
+                        self.text.append(text=mode.replace("§r", ""), style="black on white")
+
     def print_with_info(self, *args, mode: int | str = 0, back: str = "white", countdown=None, endmsg="倒计时结束",
                         sep=" ",
                         end="\n"):
@@ -127,81 +222,28 @@ class _Print:
         endmsg:结束后输出文本
 
         """
-        text = Text()
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        log_filename = os.path.join("日志文件", f"{current_date}.log")
-        os.makedirs("日志文件", exist_ok=True)
-        text.append(text=f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ")
-        had_done_text = []
-        FBmode = False
-        if "§" in back:
-            back = self.dict_for_color[back[1]]
-        if "§b  FB  §r" in args or "§b  FB  " in args:
-            FBmode = True
-        elif "§d 加载 " in args:
-            text.append(text=" 加载 ", style=f"#FF55FF on {back}")
-        else:
-            if isinstance(mode, int):
-                if mode in self.modes_int:
-                    text.append(text=self.modes_int[mode], style=self.modes[self.modes_int[mode]])
-            else:
-                if "§" in mode:
-                    for i in self.dict_for_color:
-                        if "§" + i in mode:
-                            text.append(text=mode.replace("§" + i, ""), style=self.dict_for_color[i] + f" on {back}")
-                    if "§r" in mode:
-                        text.append(text=mode.replace("§r", ""), style="black on white")
+        self.text = Text()
+        self.text.append(text=f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ")
+        self.had_done_text = []
+        self.FBmode = False
+        self.check_mode(mode, back,sep,*args)
         for arg in args:
-            # print(arg)
-            if FBmode and ("§b  FB  §r" == arg or "§b  FB  " == arg):
+            if self.FBmode and ("§b  FB  §r" == arg or "§b  FB  " == arg):
                 break
             if "§d 加载 " == arg:
                 break
-            text.append(sep)
-            if arg in had_done_text:
+            self.text.append(sep)
+            if arg in self.had_done_text:
                 continue
             if isinstance(arg, str):
-                if "§" in arg:
-                    if arg.count("§") > 1:
-                        arg_list = arg.split("§")
-                        for arg1 in arg_list:
-                            for i in self.dict_for_color:
-                                if arg in had_done_text:
-                                    break
-                                elif not len(arg1):
-                                    continue
-                                elif i == arg1[0]:
-                                    text.append(text=arg1[1:], style=self.dict_for_color[i])
-                    else:
-                        # 因为加了上面这个所以这个 检测多层修饰的就废了，明天2023.7.25再改，至少现在可以用
-                        for i in self.dict_for_color:
-                            if arg in had_done_text:
-                                break
-                            elif "§" + i in arg:
-                                try:
-                                    #  这里我tm sb了,md一直是先检测§a再检测§o，我说怎么一直是两个的,***
-                                    if "§" + i == "§o" and arg[arg.find("§o") + 2] == "§":  # 如果多层修饰
-                                        if arg[arg.find("§o") + 3] in self.dict_for_color:
-                                            had_done_text.append(arg)
-                                            arg1 = copy.deepcopy(arg)
-                                            text.append(text=arg.replace("§o§" + arg1[arg1.find("§o") + 3], ""),
-                                                        style=Style(italic=True,
-                                                                    color=self.dict_for_color[
-                                                                        arg1[arg1.find("§o") + 3]]))
-                                        else:
-                                            text.append(text=arg.replace("§o", ""), style=Style(italic=True))
-                                    else:
-                                        if arg not in had_done_text:
-                                            text.append(text=arg.replace("§" + i, ""), style=self.dict_for_color[i])
-                                except IndexError:
-                                    text.append(text=arg.replace("§o", ""), style=Style(italic=True))
-                        if "§r" in arg:
-                            text.append(text=arg)
-                            had_done_text.append(arg)
+                if "Traceback" in arg or "Error" in arg or "error" in arg:
+                    self.console.print(arg)
+                elif "§" in arg:
+                    self.Style_doll(arg_list=arg.split("§"))
                 else:
-                    text.append(text=arg)
+                    self.text.append(text=arg)
             else:
-                text.append(text=arg)
+                self.text.append(text=arg)
 
         if countdown is not None:
             for i in track(range(countdown), description=args[0]):
@@ -210,18 +252,14 @@ class _Print:
             self.console.print(self.modes_int[0], style=self.modes[self.modes_int[0]], end="")
             self.console.print(f" [cyan]{endmsg}[/cyan]")  # 倒计时后的留言
         else:
-            if FBmode:  # 就***的离谱,FB的输出内容rich会自动转行,而且禁用了自动转行还是不行
-                print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ", end="")
+            if self.FBmode:  # 就***的离谱,FB的输出内容rich会自动转行,而且禁用了自动转行还是不行
+                print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ",end="")
                 self.console.print(self.modes_int[6], style=self.modes[self.modes_int[6]], end="")
                 print(*args[:1])
+                self.log_record(f"[{datetime.datetime.now().strftime('%H:%M:%S')}]  FB {''.join(args[:1])}")
             else:
-                self.console.print(text, end=end)
-        # self.console.export_text()
-        if not os.path.isfile(log_filename):
-            with open(log_filename, "w", encoding="utf-8") as f:
-                f.write("")
-        with open(log_filename, "a+", encoding="utf-8") as f:
-            f.write(self.console.export_text())
+                self.console.print(self.text, end=end)
+        self.log_record()
 
     def input(self, text: str = "") -> str:
         self.print_with_info(text, end="", mode=3)
