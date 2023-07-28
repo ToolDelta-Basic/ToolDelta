@@ -123,7 +123,7 @@ class PluginGroup:
     def get_plugin_api(apiName: str, min_version: tuple | None = None) -> Tuple[dict, VERSION]:...
     def add_plugin(self, plugin: Plugin) -> Receiver:... # type: ignore
     def add_plugin_api(self, apiName: str) -> Receiver:... # type: ignore
-    def add_packets_listener(self, pktID) -> Receiver:... # type: ignore
+    def add_packet_listener(self, pktID) -> Receiver:... # type: ignore
     
     @staticmethod
     def checkSystemVersion(need_vers: VERSION):...
