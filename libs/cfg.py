@@ -12,6 +12,7 @@ PLUGINCFG_STANDARD_TYPE = {
 }
 
 def _CfgIsinstance(obj, typ):
+    # 专用于Cfg的类型检测
     return {
         Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
         Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
@@ -59,6 +60,7 @@ class Cfg:
     class NNFloat(float):"非负浮点小数"
 
     def get_cfg(this, path: str, standard_type: dict):
+        # 从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测.
         path = path if path.endswith(".json") else path + ".json"
         with open(path, "r", encoding="utf-8") as f:
             try:
@@ -69,6 +71,7 @@ class Cfg:
         return obj
 
     def default_cfg(this, path: str, default: dict, force: bool = False):
+        # 向path路径写入json文本, 若文件已存在且参数force为False, 将什么都不做
         path = path if path.endswith(".json") else path + ".json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding='utf-8') as f:
@@ -78,6 +81,7 @@ class Cfg:
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
 
     def checkDict(this, patt: dict, cfg: dict | list, __nowcheck: list = []):
+        # 按照patt给出的dict标准形式对cfg进行检查.
         patt = patt.copy()
         __nowcheck.append(None)
         assert patt is not None, "Patt = None???"
@@ -110,8 +114,7 @@ class Cfg:
                     if isinstance(k, Cfg.UnneccessaryKey):
                         v2 = cfg.get(k.key, r"%Exception")
                         k = k.key
-                        if v2 == r"%Exception":
-                            continue
+                        if v2 == r"%Exception": continue
                     else:
                         raise this.ConfigKeyError(f'不存在的JSON键: {k}', __nowcheck)
                 __nowcheck[-1] = str(v2)
@@ -170,6 +173,7 @@ class Cfg:
                 this.checkDict(patt, v, __nowcheck)
 
     def getPluginConfigAndVersion(this, pluginName: str, standardType: dict, default: dict, default_vers: tuple[int, int, int]):
+        # 详情见 插件编写指南.md
         assert isinstance(standardType, dict)
         p = "插件配置文件/" + pluginName
         if not this.exists(p) and default:
@@ -185,6 +189,7 @@ class Cfg:
         return cfgGet["配置项"], cfgVers
 
 if __name__ == "__main__":
+    # Test Part
     try:
         test_cfg = [
             {"a": 2, "c": -0.5}
