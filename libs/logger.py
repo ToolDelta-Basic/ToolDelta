@@ -24,25 +24,27 @@ class ToolDeltaLogger:
         )
 
     def log_in(self, msg, level = INFO):
+        # 写入日志信息. level给定了其等级.
         if not isinstance(msg, str): raise TypeError
         if "\n" in msg: msg = msg.replace("\n", "\n    ")
         if len(msg) > 200: msg = msg[:200] + "..."
         self._check_is_another_day()
         self._wrapper.write(time.strftime(self.logging_fmt) + f" [{level}] " + (msg if msg.endswith("\n") else msg + "\n"))
         if time.time() - self.lastLogTime > 10:
-            self.save_log()
+            self._save_log()
             self.lastLogTime = time.time()
 
-    def save_log(self):
+    def _save_log(self):
         self._wrapper.flush()
 
     def _check_is_another_day(self):
+        # 判断记录日志的时候是否已经是第二天, 是的话就变更文件名.
         if time.strftime("%Y-%m-%d") != self.now_day:
             self._exit()
             self.open_wrapper_io(self.path)
 
     def _exit(self):
-        self.save_log()
+        self._save_log()
         self._wrapper.close()
 
 def new_logger(log_path: str):
