@@ -1,4 +1,4 @@
-name: ToolDelta Build and Release
+name: Build binaries and Upload to Release
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          pip install -r lib.txt
+          pip install -r requirements.txt
           pyinstaller -F ToolDelta.py
           
       - name: Get version
@@ -49,7 +49,7 @@ jobs:
           run: |
             python -m pip install --upgrade pip
             pip install pyinstaller
-            pip install -r lib.txt
+            pip install -r requirements.txt
             pyinstaller -F ToolDelta.py
 
         - name: Get version
