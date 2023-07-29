@@ -4,5 +4,6 @@
 !ToolDelta.py
 !source.py
 !buildin.sh
+!build.yml
 !插件编写指南.md
 py_test.py
