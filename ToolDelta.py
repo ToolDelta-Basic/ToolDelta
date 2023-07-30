@@ -454,7 +454,6 @@ class Frame:
         return self.link_game_ctrl
     
     def safe_close(self):
-        publicLogger._exit()
         libs.builtins.safe_close()
 
 class GameCtrl:
