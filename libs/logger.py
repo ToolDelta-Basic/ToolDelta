@@ -1,4 +1,4 @@
-import atexit, os, time
+import os, time
 
 class ToolDeltaLogger:
     INFO = "INFO"
@@ -13,7 +13,6 @@ class ToolDeltaLogger:
         self.logging_fmt = "[%H-%M-%S]"
         self.lastLogTime = time.time()
         self.open_wrapper_io(log_path)
-        atexit.register(self._exit)
 
     def open_wrapper_io(self, log_path: str):
         self._wrapper = open(
