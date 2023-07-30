@@ -3,6 +3,7 @@ from ujson import JSONDecodeError
 from libs.packets import Packet_CommandOutput
 from io import TextIOWrapper
 import threading
+import libs.conn as conn
 
 VERSION = tuple[int, int, int]
 Receiver = TypeVar("Receiver")
@@ -84,6 +85,7 @@ class GameManager:
     def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int = 30) -> str | Packet_CommandOutput:...
     def sendfbcmd(self, cmd: str):...
     def sendPacket(self, pktType: int, pkt: dict):...
+    def sendPacketBytes(self, pkt: bytes):...
     def say_to(self, target: str, msg: str):
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
     def player_title(self, target: str, text: str):
