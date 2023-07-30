@@ -339,6 +339,8 @@ class PluginGroup:
                     raise SystemExit
                 except Builtins.SimpleJsonDataReader.DataReadError as err:
                     Print.print_err(f"插件 {plugin_dir} 读取数据失败: {err}")
+                except self.linked_frame.SystemVersionException:
+                    Print.print_err(f"插件 {plugin_dir} 需要更高版本的ToolDelta加载: {err}")
                 except Exception as err:
                     if "() takes no arguments" in str(err):
                         Print.print_err(f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
