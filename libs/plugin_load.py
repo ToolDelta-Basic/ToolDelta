@@ -296,7 +296,7 @@ class PluginGroup:
                     assert Plugin.__subclasscheck__(self.plugin_added_cache["plugin"]), 1
                     plugin = self.plugin_added_cache["plugin"]
                     plugin_body: Plugin = plugin(self.linked_frame)
-                    self.plugins.append(plugin_body)
+                    self.plugins.append([plugin_body.name, plugin_body])
                     _v0, _v1, _v2 = plugin_body.version # type: ignore
                     if hasattr(plugin_body, "on_def"):
                         self.plugins_funcs["on_def"].append([plugin_body.name, plugin_body.on_def])
