@@ -7,3 +7,4 @@ alive-progress==3.1.4
 PyMySQL==1.0.2
 websockets==10.4
 ujson==5.8.0
+rich==13.3.2
