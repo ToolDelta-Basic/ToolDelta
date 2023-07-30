@@ -18,12 +18,6 @@ Config = _Cfg()
 Print = libs.color_print.Print
 loop = asyncio.get_event_loop()
 
-try:
-    VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
-except:
-    # Current version
-    VERSION = (0, 1, 7)
-
 async def get_user_input(text, timeout):
     Print.print_inf(text)
     user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
@@ -72,8 +66,7 @@ def set_output_mode():
 try:
     import libs.conn as conn
 except Exception as err:
-    Print.print_err("加载外部库失败， 请检查其是否存在:", err)
-    raise SystemExit
+    Print.print_err(f"加载外部库失败， 请检查其是否存在:{err}")
 
 
 class Frame:
@@ -172,6 +165,44 @@ class Frame:
             return True
         else:
             return True
+
+
+    def downloadMissingFiles(self):
+        try:
+            Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
+            url = "http://43.153.182.231:24536/api/file"
+            def get_md5(file_path):
+                with open(file_path, "rb") as f:
+                    md5_obj = hashlib.md5()
+                    while True:
+                        data = f.read(1024 * 4)
+                        if not data:
+                            break
+                        md5_obj.update(data)
+                    return md5_obj.hexdigest()
+
+            response = requests.get(url)
+            file_data = json.loads(response.text)
+            for path, files in file_data.items():
+                for file_name, file_info in files.items():
+                    file_path = os.path.join(path, file_name)
+                    if os.path.exists(file_path):
+                        local_md5 = get_md5(file_path)
+                        if local_md5 != file_info["md5"]:
+                            file_content = base64.b64decode(file_info["data"])
+                            with open(file_path, "wb") as f:
+                                f.write(file_content)
+                                Print.print_with_info(f"§d写入缺失文件 {file_path}","§d 加载 ")
+                    else:
+                        file_content = base64.b64decode(file_info["data"])
+                        with open(file_path, "wb") as f:
+                            f.write(file_content)
+                            Print.print_with_info(f"§d写入缺失文件 {file_path}","§d 加载 ")
+        except Exception as err:
+            Print.print_err(f"自动检测文件并补全时出现错误:{err}")
+            raise SystemExit
+        import libs.conn as conn
+        return True
 
     def read_cfg(self):
         CFG = {
@@ -281,7 +312,7 @@ class Frame:
     def runFB(self, ip = "0.0.0.0", port = 8080):
         if not self.system_is_win:
             os.system("chmod +x phoenixbuilder")
-        if frame.DownloadFastBuilderfile():
+        if frame.DownloadFastBuilderfile() and frame.downloadMissingFiles():
             if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
                 if frame.system_is_win:
                     if self.UseSysFBtoken:
