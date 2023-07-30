@@ -172,6 +172,7 @@ class Frame:
         try:
             Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
             url = "http://43.153.182.231:24536/api/file"
+            cp = False
             def get_md5(file_path):
                 with open(file_path, "rb") as f:
                     md5_obj = hashlib.md5()
@@ -194,15 +195,20 @@ class Frame:
                             with open(file_path, "wb") as f:
                                 f.write(file_content)
                                 Print.print_with_info(f"§d写入缺失文件 {file_path}","§d 加载 ")
+                                cp = True
                     else:
                         file_content = base64.b64decode(file_info["data"])
                         with open(file_path, "wb") as f:
                             f.write(file_content)
                             Print.print_with_info(f"§d写入缺失文件 {file_path}","§d 加载 ")
+                            cp = True
         except Exception as err:
             Print.print_err(f"自动检测文件并补全时出现错误:{err}")
             raise SystemExit
-        import libs.conn as conn
+        if cp:
+            Print.print_suc("自动补全文件成功!即将关闭")
+            time.sleep(5)
+            raise SystemExit
         return True
 
     def read_cfg(self):
@@ -527,7 +533,7 @@ class GameCtrl:
                 else:
                     packetGetTime = time.time()
                     packet_mapping = ujson.loads(conn.GamePacketBytesAsIsJsonStr(packet_bytes))
-                    if packet_type in plugin_grp.listen_packets:
+                    if packet_type in plugin_grp.listen_packet_ids:
                         self.pkt_cache.append([packet_type, packet_mapping])
                     if packet_type == 79:
                         cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
