@@ -149,13 +149,14 @@ class Frame:
                             f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
                             stream=True)
                         filename = "phoenixbuilder"
-                    total = int(resp.headers.get('content-length', 0))
-                    with open(filename, 'wb') as file, tqdm.tqdm(
-                            desc=filename, total=total, unit='iB', unit_scale=True, unit_divisor=1024
-                    ) as bar:
-                        for data in resp.iter_content(chunk_size=1024):
-                            size = file.write(data)
-                            bar.update(size)
+                    with open(filename, 'wb') as f:
+                        total_length = int(resp.headers.get('content-length'))
+                        with alive_progress.alive_bar(total_length) as bar:
+                            bar.title = "Download Fastbuilder"
+                            for chunk in resp.iter_content(chunk_size=1024):
+                                if chunk:
+                                    f.write(chunk)
+                                    bar(len(chunk))
                     break
                 except Exception as err:
                     Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
