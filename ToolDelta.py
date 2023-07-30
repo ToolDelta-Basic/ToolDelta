@@ -40,28 +40,34 @@ async def get_user_input(text, timeout):
     user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
 
-if not Config.exists(os.path.join("data","输出模式.json")):
-    Config.default_cfg(os.path.join("data","输出模式.json"),{"mode":0})
-outputMode=Config.get_cfg(os.path.join("data","输出模式.json"),{"mode":0})
-outputMsg=f"使用上次输出模式:1"
-if outputMode["mode"] ==0:
-    try:
-        printmode = loop.run_until_complete(
-            get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 3))
-    except asyncio.TimeoutError:
-        printmode = "1"
-        print("1 - 自动选择")
-        Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 1},force=True)
-    if printmode in ["二", "2"]:
+def set_output_mode():
+    global Print
+    if not Config.exists(os.path.join("data","输出模式.json")):
+        Config.default_cfg(os.path.join("data","输出模式.json"), {"mode":0})
+    outputMode=Config.get_cfg(os.path.join("data","输出模式.json"), {"mode":0})
+    outputMsg=f"使用上次输出模式: 1"
+    if outputMode["mode"] == 0:
+        try:
+            printmode = loop.run_until_complete(
+                get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 3))
+            if not printmode.strip():
+                printmode = "1"
+        except asyncio.TimeoutError:
+            printmode = "1"
+            Print.print_inf("1 - 自动选择")
+        if printmode in ["一", "1"]:
+            Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 1}, force=True)
+        if printmode in ["二", "2"]:
+            Print = libs.rich_color_print.Print
+            Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 2}, force=True)
+        outputMsg=f"成功设置输出模式: {printmode}, 下次启动不会再提示. 可在data/输出模式.json修改."
+        del printmode
+    elif outputMode["mode"] == 2:
         Print = libs.rich_color_print.Print
-        Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 2},force=True)
-    outputMsg=f"成功设置输出模式:{printmode},下次启动不会再提示."
-    del printmode
-elif outputMode["mode"] ==2:
-    Print = libs.rich_color_print.Print
-    outputMsg=f"使用上次输出模式:2."
-Print.print_suc(outputMsg)
-del outputMode,outputMsg
+        outputMsg=f"使用上次输出模式: 2"
+    Print.print_suc(outputMsg)
+    del outputMode, outputMsg
+    raise Exception
 
 try:
     import libs.conn as conn
@@ -682,6 +688,7 @@ try:
     frame.set_plugin_group(plugins)
     frame.welcome()
     frame.basicMkDir()
+    set_output_mode()
     frame.read_cfg()
     frame.fbtokenFix()
     plugins.read_plugin_from_old(dotcs_module_env)
