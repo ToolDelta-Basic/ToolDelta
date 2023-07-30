@@ -467,14 +467,15 @@ class Frame:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
-                Print.print_suc("§a成功连接上FastBuilder.")
+                
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
                 if not self.isInPanicMode:
                     self.ClassicThread(self.panic_later)
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
-
+            Print.print_suc("§a成功连接上FastBuilder.")
+            
     def panic_later(self):
         self.isInPanicMode = True
         time.sleep(1)
