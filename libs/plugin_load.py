@@ -206,8 +206,7 @@ class PluginGroup:
     
     def add_packet_listener(self, pktID):
         def decorator(func):
-            self.__add_listen_packet_id(pktID)
-            self.__add_listen_packet_func(pktID, func)
+            self.plugin_added_cache["packets"].append((pktID, func))
             return func
         return decorator
 
@@ -262,10 +261,6 @@ class PluginGroup:
                 raise
 
     def read_plugin_from_new(self, root_env: dict):
-        self.plugin_added_cache["plugin"] = None
-        self.plugin_added_cache["packets"] = None
-        self.pluginAPI_added_cache.clear()
-
         for plugin_dir in os.listdir(f"{self.PRG_NAME}插件"):
             if not os.path.isdir(f"{self.PRG_NAME}插件/" + plugin_dir.strip(".zip")) and os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir) and plugin_dir.endswith(".zip"):
                 Print.print_with_info(f"§6正在解压插件{plugin_dir}, 请稍后", "§6 解压 ")
@@ -274,6 +269,10 @@ class PluginGroup:
                 plugin_dir = plugin_dir.strip(".zip")
             if os.path.isdir(f"{self.PRG_NAME}插件/" + plugin_dir):
                 sys.path.append(os.getcwd() + f"/{self.PRG_NAME}插件/" + plugin_dir)
+                self.plugin_added_cache["plugin"] = None
+                self.plugin_added_cache["packets"].clear()
+                self.pluginAPI_added_cache.clear()
+
                 try:
                     if os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py"):
                         with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py", "r", encoding='utf-8') as f:
@@ -293,8 +292,6 @@ class PluginGroup:
                     else:
                         Print.print_err(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
                         continue
-                    # assert plug_cls_cache[1] <= 1, 2
-                    # assert not pkt_funcs or (pkt_funcs and plug_cls_cache[1] != 0), 3
                     assert self.plugin_added_cache["plugin"] is not None, 2
                     assert Plugin.__subclasscheck__(self.plugin_added_cache["plugin"]), 1
                     plugin = self.plugin_added_cache["plugin"]
@@ -318,10 +315,10 @@ class PluginGroup:
 
                     Print.print_suc(f"成功载入插件 {plugin_body.name} 版本：{_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
                     
-                    if self.plugin_added_cache["packets"] is not None:
+                    if self.plugin_added_cache["packets"] != []:
                         for pktType, func in self.plugin_added_cache["packets"]: # type: ignore
                             self.__add_listen_packet_id(pktType)
-                            self.__add_listen_packet_func(pktType, func)
+                            self.__add_listen_packet_func(pktType, getattr(plugin_body, func.__name__))
                     
                     if self.pluginAPI_added_cache is not None:
                         for (apiName, api) in self.pluginAPI_added_cache:
@@ -330,8 +327,10 @@ class PluginGroup:
                 except AssertionError as err:
                     if err.args[0] == 1:
                         Print.print_err(f"插件 {plugin_dir} 不合法: 主类没有继承 Plugin")
+                        raise SystemExit
                     elif err.args[0] == 2:
                         Print.print_err(f"插件 {plugin_dir} 不合法: 只能调用一次 @plugins.add_plugin, 实际没有调用")
+                        raise SystemExit
                     else:
                         raise
                 except Cfg.ConfigError as err:
