@@ -360,7 +360,7 @@ class Frame:
         while 1:
             try:
                 self.con = conn.ConnectFB(f"{ip}:{port}")
-                Print.print_suc("§a成功连接上FastBuilder.")
+                # Print.print_suc("§a成功连接上FastBuilder.")
                 return 1
             except:
                 if time.time() - connect_fb_start_time > self.sys_data.max_connect_fb_time:
@@ -467,6 +467,7 @@ class Frame:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
+                Print.print_suc("§a成功连接上FastBuilder.")
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
                 if not self.isInPanicMode:
