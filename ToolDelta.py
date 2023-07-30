@@ -67,7 +67,7 @@ def set_output_mode():
         outputMsg=f"使用上次输出模式: 2"
     Print.print_suc(outputMsg)
     del outputMode, outputMsg
-    raise Exception
+    # raise Exception
 
 try:
     import libs.conn as conn
