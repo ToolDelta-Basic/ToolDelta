@@ -124,6 +124,7 @@ class PluginGroup:
     def add_plugin(self, plugin: Plugin) -> Receiver:... # type: ignore
     def add_plugin_api(self, apiName: str) -> Receiver:... # type: ignore
     def add_packet_listener(self, pktID) -> Receiver:... # type: ignore
+    def check_system_version(self, plugin_version: VERSION):...
     
     @staticmethod
     def checkSystemVersion(need_vers: VERSION):...
