@@ -707,6 +707,9 @@ class GameCtrl:
     def sendPacket(self, pktType: int, pkt: dict):
         b = conn.JsonStrAsIsGamePacketBytes(pktType, json.dumps(pkt))
         conn.SendGamePacketBytes(self.linked_frame.con, b)
+
+    def sendPacketBytes(self, pkt: bytes):
+        conn.SendGamePacketBytes(self.linked_frame.con, pkt)
         
     def say_to(self, target: str, msg: str):
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
