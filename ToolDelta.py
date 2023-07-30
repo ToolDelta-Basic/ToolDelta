@@ -149,14 +149,14 @@ class Frame:
                             f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
                             stream=True)
                         filename = "phoenixbuilder"
-                    with open(filename, 'wb') as f:
-                        total_length = int(resp.headers.get('content-length'))
-                        with alive_progress.alive_bar(total_length) as bar:
-                            bar.title = "Download Fastbuilder"
-                            for chunk in resp.iter_content(chunk_size=1024):
-                                if chunk:
-                                    f.write(chunk)
-                                    bar(len(chunk))
+                    total_size_in_bytes = int(resp.headers.get('content-length', 0))
+                    block_size = 1024
+                    with open(filename, 'wb') as file:
+                        with rich.progress.Progress() as progress:
+                            task = progress.add_task(datetime.datetime.now().strftime("[%H:%M] ") + Print.colormode_replace("§d 加载 ",7)+ " "+"Download "+filename, total=total_size_in_bytes)
+                            for data in resp.iter_content(block_size):
+                                file.write(data)
+                                progress.update(task, advance=len(data))
                     break
                 except Exception as err:
                     Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
