@@ -16,13 +16,8 @@ ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 Print = libs.color_print.Print
-loop = asyncio.get_event_loop()
-
-async def get_user_input(text, timeout):
-    Print.print_inf(text)
-    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
-    return user_input.strip()
-
+async_loop = asyncio.get_event_loop()
+sys_args_dict = libs.sys_args.SysArgsToDict(sys.argv)
 try:
     VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
 except:
@@ -31,7 +26,12 @@ except:
 
 async def get_user_input(text, timeout):
     Print.print_inf(text)
-    user_input = await asyncio.wait_for(loop.run_in_executor(None, sys.stdin.readline), timeout)
+    user_input = await asyncio.wait_for(async_loop.run_in_executor(None, sys.stdin.readline), timeout)
+    return user_input.strip()
+
+async def get_user_input(text, timeout):
+    Print.print_inf(text)
+    user_input = await asyncio.wait_for(async_loop.run_in_executor(None, sys.stdin.readline), timeout)
     return user_input.strip()
 
 def set_output_mode():
@@ -42,7 +42,7 @@ def set_output_mode():
     outputMsg=f"使用上次输出模式: 1"
     if outputMode["mode"] == 0:
         try:
-            printmode = loop.run_until_complete(
+            printmode = async_loop.run_until_complete(
                 get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 3))
             if not printmode.strip():
                 printmode = "1"
@@ -121,12 +121,13 @@ class Frame:
     system_is_win = sys.platform in ["win32", "win64"]
     isInPanicMode = False
     UseSysFBtoken = False
+    external_port = sys_args_dict.get("external-port")
 
     def check_use_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
-            Print.print_err(f"启动参数错误:")
+            Print.print_err(f"启动参数错误")
             raise SystemExit
         
     def DownloadFastBuilderfile(self):
@@ -228,7 +229,7 @@ class Frame:
                 # 也许这是唯一一个global
 
                 try:
-                    isUse = loop.run_until_complete(
+                    isUse = async_loop.run_until_complete(
                         get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
                 except asyncio.TimeoutError:
                     isUse = "y"
@@ -356,16 +357,17 @@ class Frame:
         self.fb_pipe.stdin.flush()
         self.status[0] = 0
 
-    def run_conn(self, ip = "0.0.0.0", port=8080):
+    def run_conn(self, ip = "0.0.0.0", port = 8080, timeout = None):
         connect_fb_start_time = time.time()
+        max_con_time = timeout or self.sys_data.max_connect_fb_time
         while 1:
             try:
                 self.con = conn.ConnectFB(f"{ip}:{port}")
-                # Print.print_suc("§a成功连接上FastBuilder.")
+                Print.print_suc("§a成功连接上FastBuilder.")
                 return 1
             except:
-                if time.time() - connect_fb_start_time > self.sys_data.max_connect_fb_time:
-                    Print.print_err(f"§4{self.sys_data.max_connect_fb_time}秒内未连接上FB，已退出")
+                if time.time() - connect_fb_start_time > max_con_time:
+                    Print.print_err(f"§4{max_con_time}秒内未连接上FB，已退出")
                     self.close_fb_thread()
                     os._exit(0)
                 elif self.status[0] == 2:
@@ -475,7 +477,6 @@ class Frame:
                     self.ClassicThread(self.panic_later)
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
-            Print.print_suc("§a成功连接上FastBuilder.")
             
     def panic_later(self):
         self.isInPanicMode = True
@@ -563,7 +564,7 @@ class GameCtrl:
                 self.players_uuid[playername] = player["UUID"]
                 self.allplayers.append(playername) if playername not in self.allplayers else None
                 if not first:
-                    Print.print_inf(f"§e{playername} 加入了游戏")
+                    Print.print_inf(f"§e{playername} 加入了游戏, UUID: {player['UUID']}")
                     plugins.execute_player_join(playername, self.linked_frame.on_plugin_err)
                 else:
                     self.bot_name = pkt["Entries"][0]["Username"]
@@ -638,6 +639,20 @@ class GameCtrl:
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.linked_frame.status[0] = 1
+
+    def Inject2(self):
+        self.allplayers = self.allplayers_name = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
+        for player in self.allplayers:
+            result = json.loads(
+                self.sendcmd("/querytarget " + player, True).OutputMessages[0].Parameters[0]
+            )[0]["uniqueId"]
+            self.players_uuid[player] = result
+            Print.print_inf(f"玩家: {player} 的UUID已获取: {result}")
+        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
+        time.sleep(0.5)
+        self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
+        self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
+        self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
             
     def waitUntilProcess(self):
         self.requireUUIDPacket = True
@@ -739,37 +754,55 @@ try:
     plugins.read_plugin_from_new(globals())
     plugins.execute_def(frame.on_plugin_err)
     libs.builtins.tmpjson_save_thread(frame)
-    frame.getFreePort(usage="fbconn")
-    while 1:
-        if frame.status[0] in [0, 2]:
-            frame.runFB(port=frame.conPort)
-            frame.run_conn(port=frame.conPort)
-            thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
-            game_control.waitUntilProcess()
-            thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
-            threading.Thread(target=game_control.tps_thread).start()
-            frame.ConsoleCmd_thread()
-            game_control.Inject()
+    if not frame.external_port:
+        frame.getFreePort(usage="fbconn")
+        while 1:
+            if frame.status[0] in [0, 2]:
+                frame.runFB(port=frame.conPort)
+                frame.run_conn(port=frame.conPort)
+                thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
+                game_control.waitUntilProcess()
+                thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
+                threading.Thread(target=game_control.tps_thread).start()
+                frame.ConsoleCmd_thread()
+                game_control.Inject()
+            plugins.execute_init(frame.on_plugin_err)
+            plugins.execute_dotcs_repeat(frame.on_plugin_err)
+            frame.status[0] = 1
+            while frame.status[0] == 1:
+                time.sleep(0.2)
+            thread_processPacket.stop()
+            thread_processPacketFunc.stop()
+            if frame.status[0] == 0:
+                break
+            elif frame.status[0] == 2:
+                Print.print_war("FB断开连接， 尝试重启")
+        if game_control.bot_name:
+            game_control.sendcmd("kick " + game_control.bot_name)
+            Print.print_inf(f"{game_control.bot_name} 已退出游戏.")
+        else:
+            Print.print_war(f"无法正常踢出机器人")
+        frame.close_fb_thread()
+        Print.print_inf("正在保存缓存数据.")
+        frame.safe_close()
+        Print.print_suc("正常退出.")
+    else:
+        frame.sys_data.connect_fb_start_time = 5
+        Print.print_inf(f"尝试连接到fb 在端口{frame.external_port}")
+        frame.run_conn(port=int(frame.external_port), timeout = 5)
+        thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
+        thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
+        frame.ConsoleCmd_thread()
+        game_control.Inject2()
         plugins.execute_init(frame.on_plugin_err)
         plugins.execute_dotcs_repeat(frame.on_plugin_err)
         frame.status[0] = 1
         while frame.status[0] == 1:
             time.sleep(0.2)
-        thread_processPacket.stop()
-        thread_processPacketFunc.stop()
-        if frame.status[0] == 0:
-            break
-        elif frame.status[0] == 2:
-            Print.print_war("FB断开连接， 尝试重启")
-    if game_control.bot_name:
-        game_control.sendcmd("kick " + game_control.bot_name)
-        Print.print_inf(f"{game_control.bot_name} 已退出游戏.")
-    else:
-        Print.print_war(f"无法正常踢出机器人")
-    frame.close_fb_thread()
-    Print.print_inf("正在保存缓存数据.")
-    frame.safe_close()
-    Print.print_suc("正常退出.")
+        Print.print_inf("正在保存缓存数据.")
+        frame.safe_close()
+        Print.print_suc("正常退出.")
+
     os._exit(0)
 
 except (SystemExit, KeyboardInterrupt):
@@ -778,6 +811,7 @@ except (SystemExit, KeyboardInterrupt):
 
 except Exception:
     Print.print_err(traceback.format_exc())
-    frame.close_fb_thread()
+    if not frame.external_port:
+        frame.close_fb_thread()
     frame.safe_close()
     os._exit(0)
