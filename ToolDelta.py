@@ -103,7 +103,8 @@ class Frame:
         def stop(self):
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(self.get_id(), ctypes.py_object(Frame.ThreadExit))
             return res
-
+        
+    PRG_NAME = PRG_NAME
     MAX_PACKET_CACHE = 500
     sys_data = FrameBasic()
     con: int
