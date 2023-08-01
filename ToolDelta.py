@@ -16,7 +16,7 @@ ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 Print = libs.color_print.Print
-async_loop = asyncio.get_event_loop()
+async_loop = asyncio.new_event_loop()
 sys_args_dict = libs.sys_args.SysArgsToDict(sys.argv)
 try:
     VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
@@ -43,7 +43,7 @@ def set_output_mode():
     if outputMode["mode"] == 0:
         try:
             printmode = async_loop.run_until_complete(
-                get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 3))
+                get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 5))
             if not printmode.strip():
                 printmode = "1"
         except asyncio.TimeoutError:
@@ -352,9 +352,10 @@ class Frame:
             Print.print_war("未能正常关闭FB进程")
 
     def system_exit(self):
-        assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "Broken pipe"
-        self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
-        self.fb_pipe.stdin.flush()
+        if not self.external_port:
+            assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "Broken pipe"
+            self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
+            self.fb_pipe.stdin.flush()
         self.status[0] = 0
 
     def run_conn(self, ip = "0.0.0.0", port = 8080, timeout = None):
@@ -470,7 +471,6 @@ class Frame:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
-                
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
                 if not self.isInPanicMode:
@@ -606,7 +606,7 @@ class GameCtrl:
                     plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
                 case 9:
                     msg = pkt['Message']
-                    Print.print_inf(f"{msg}")
+                    Print.print_inf(''.join([i["text"] for i in json.loads(msg)['rawtext']]))
 
     def threadPacketProcessFunc(self):
         while 1:
@@ -787,8 +787,9 @@ try:
         frame.safe_close()
         Print.print_suc("正常退出.")
     else:
+        Print.print_inf("§f正在使用 §bExternal §f模式启动, 关闭系统时将不会关闭FastBuilder.")
         frame.sys_data.connect_fb_start_time = 5
-        Print.print_inf(f"尝试连接到fb 在端口{frame.external_port}")
+        Print.print_inf(f"§b尝试在端口{frame.external_port} 连接到FastBuilder")
         frame.run_conn(port=int(frame.external_port), timeout = 5)
         thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
         thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
@@ -806,7 +807,7 @@ try:
     os._exit(0)
 
 except (SystemExit, KeyboardInterrupt):
-    libs.builtins.safe_close()
+    frame.safe_close()
     os._exit(0)
 
 except Exception:
