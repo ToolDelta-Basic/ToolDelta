@@ -1,5 +1,5 @@
 from libs.color_print import Print
-import ujson, os, time, threading
+import ujson, os, time, threading, traceback
 def on_plugin_err_common(pluginName: str, _, trace: str):
     Print.print_err(f"§4插件 {pluginName} 报错, 信息：§c\n" + trace)
 
@@ -51,6 +51,7 @@ class Builtins:
             """
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
             Builtins.SimpleJsonDataReader.SafeJsonDump(obj, open(f"data/{plugin_name}/{file}.json", "w", encoding='utf-8'))
+            
     @staticmethod
     def SimpleFmt(kw: dict[str, any], __sub: str):
         """
@@ -78,6 +79,34 @@ class Builtins:
             return int(arg)
         except:
             return None
+        
+    @staticmethod
+    def add_in_dialogue_player(player: str):
+        "使玩家进入聊天栏对话模式"
+        if player not in in_dialogue_list:
+            in_dialogue_list.append(player)
+        else:
+            raise Exception("Already in a dialogue!")
+        
+    @staticmethod
+    def remove_in_dialogue_player(player: str):
+        "使玩家离开聊天栏对话模式"
+        if player not in in_dialogue_list:
+            return
+        else:
+            in_dialogue_list.remove(player)
+
+    @staticmethod
+    def player_in_dialogue(player: str):
+        "玩家是否处在一个聊天栏对话中."
+        return player in in_dialogue_list
+    
+    @staticmethod
+    def create_dialogue_threading(player, func, exc_cb, args = (), kwargs = {}):
+        "创建一个玩家与聊天栏交互的线程, 若玩家已处于一个对话中, 则向方法exc_cb传参: player(玩家名)"
+        threading.Thread(
+            target = _dialogue_thread_run, args = (player, func, exc_cb, args, kwargs)
+        ).start()
 
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):
@@ -135,6 +164,11 @@ class Builtins:
                 jsonPathTmp[path] = [True, obj]
             else:
                 raise Exception("json路径未初始化, 不能进行读取和写入操作")
+            
+        @staticmethod
+        def get_tmps():
+            "不要调用!"
+            return jsonPathTmp
 
 def safe_close():
     for k, (isChanged, dat) in jsonPathTmp.items():
@@ -152,4 +186,18 @@ def _tmpjson_save_thread():
 def tmpjson_save_thread(frame):
     frame.ClassicThread(_tmpjson_save_thread)
 
+def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
+    if not Builtins.player_in_dialogue(player):
+        Builtins.add_in_dialogue_player(player)
+    else:
+        exc_cb(player)
+        return
+    try:
+        func(*args, **kwargs)
+    except:
+        Print.print_err(f"玩家{player}的会话线程 出现问题:")
+        Print.print_err(traceback.format_exc())
+    Builtins.remove_in_dialogue_player(player)
+
 jsonPathTmp = {}
+in_dialogue_list = []
