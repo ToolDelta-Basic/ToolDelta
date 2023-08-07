@@ -13,12 +13,30 @@ PLUGINCFG_STANDARD_TYPE = {
 
 def _CfgIsinstance(obj, typ):
     # 专用于Cfg的类型检测
-    return {
-        Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
-        Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
-        Cfg.PFloat: lambda:isinstance(obj, float) and obj > 0,
-        Cfg.NNFloat: lambda:(isinstance(obj, float) or isinstance(obj, int)) and obj >= 0,
-    }.get(typ, lambda:isinstance(obj, typ))()
+    if isinstance(typ, type):
+        return {
+            Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
+            Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
+            Cfg.PFloat: lambda:isinstance(obj, float) and obj > 0,
+            Cfg.NNFloat: lambda:(isinstance(obj, float) or obj == 0) and obj >= 0,
+            Cfg.PNumber: lambda:isinstance(obj, (int, float)) and obj > 0,
+            Cfg.NNNumber: lambda:isinstance(obj, (int, float)) and obj >= 0
+        }.get(typ, lambda:isinstance(obj, typ))()
+    elif isinstance(typ, tuple):
+        for i in typ:
+            result = {
+                Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
+                Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
+                Cfg.PFloat: lambda:isinstance(obj, float) and obj > 0,
+                Cfg.NNFloat: lambda:(isinstance(obj, float) or obj == 0) and obj >= 0,
+                Cfg.PNumber: lambda:isinstance(obj, (int, float)) and obj > 0,
+                Cfg.NNNumber: lambda:isinstance(obj, (int, float)) and obj >= 0
+            }.get(i, lambda:isinstance(obj, typ))()
+            if result:
+                return True
+        return False
+    raise ValueError(f"Can't be: {typ}")
+
 
 def _CfgShowType(typ):
     if type(typ) != type:
@@ -58,6 +76,8 @@ class Cfg:
     class NNInt(int):"非负整数"
     class PFloat(float):"正浮点小数"
     class NNFloat(float):"非负浮点小数"
+    class PNumber:"正数"
+    class NNNumber:"大于0的数"
 
     def get_cfg(this, path: str, standard_type: dict):
         # 从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测.
@@ -71,7 +91,7 @@ class Cfg:
         return obj
 
     def default_cfg(this, path: str, default: dict, force: bool = False):
-        # 向path路径写入json文本, 若文件已存在且参数force为False, 将什么都不做
+        # 向path路径写入json文本, 若文件不存在或参数force为True, 将写入提供的默认json文本
         path = path if path.endswith(".json") else path + ".json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding='utf-8') as f:
@@ -104,7 +124,7 @@ class Cfg:
                         if v[0] == r"%list":
                             this.checkList(v[1], v2)
                         else:
-                            if type(v2) not in v:
+                            if type(v2) not in v and not _CfgIsinstance(v2, tuple(v)):
                                 raise this.ConfigValueError(f"JSON键\"{k2}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in patt[k])}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
                     elif _CfgIsinstance(v, dict):
                         this.checkDict(v, v2)
@@ -124,18 +144,24 @@ class Cfg:
                         raise this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {_CfgShowType(v)}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
                 elif _CfgIsinstance(v, list):
                     # Met ["%list", any] or [type1, type2..]
-                    if v[0] == r"%list":
-                        # Met ["%list", any]
+                    if _CfgIsinstance(v[0], str):
+                        if v[0].startswith(r"%list"):
+                            # Met ["%list", any]
+                            if v[0].replace(r"%list", "").isnumeric():
+                                arglen = int(v[0].replace(r"%list", ""))
+                                if len(v2) != arglen:
+                                    raise this.ConfigValueError(f"JSON键\"{k}\" 所对应的值列表有误: 需要 {arglen} 项, 实际上为 {len(v2)} 项", __nowcheck)
                         this.checkList(v[1], v2, __nowcheck)
                     elif _CfgIsinstance(v, list):
                         # Met [type1, type2..]
                         isAllType = all([_CfgIsinstance(vi, type) for vi in v])
                         if isAllType:
-                            if type(v2) not in v:
+                            if type(v2) not in v and not _CfgIsinstance(v2, tuple(v)):
                                 raise this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in patt[k])}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
                         else:
                             # AAAAH!
                             # List[type, dict, ...] ?
+                            exc_raise = None
                             for v_identifier in v:
                                 if _CfgIsinstance(v_identifier, dict) and _CfgIsinstance(v2, dict):
                                     try:
@@ -148,7 +174,8 @@ class Cfg:
                                         exc_raise = this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in v)} 等, 实际上为 {_CfgShowType(v2)}\n可能的另一个错误: {exc_raise}", __nowcheck)
                                     else:
                                         return
-                            raise exc_raise
+                            if exc_raise:
+                                raise exc_raise
                     else:
                         raise this.ConfigValueError(f"??????: v={v} while v2={v2}", __nowcheck)
                 elif _CfgIsinstance(v, dict):
@@ -156,7 +183,7 @@ class Cfg:
 
     def checkList(this, patt, lst: list, __nowcheck: list = []):
         if not _CfgIsinstance(lst, list):
-            raise this.ConfigValueError(f"List Error: {patt} ? {lst}", __nowcheck)
+            raise this.ConfigValueError(f"不是合法列表: p={_CfgShowType(patt)}, r={_CfgShowType(lst)}", __nowcheck)
         __nowcheck.append(None)
         for v in lst:
             __nowcheck[-1] = v
@@ -181,7 +208,6 @@ class Cfg:
             defaultCfg["配置项"] = default
             defaultCfg["配置版本"] = ".".join([str(n) for n in default_vers])
             this.default_cfg(p + ".json", defaultCfg, force=True)
-            return default, default_vers
         cfg_stdtyp = PLUGINCFG_STANDARD_TYPE.copy()
         cfg_stdtyp["配置项"] = standardType
         cfgGet = this.get_cfg(p, cfg_stdtyp)
@@ -191,10 +217,8 @@ class Cfg:
 if __name__ == "__main__":
     # Test Part
     try:
-        test_cfg = [
-            {"a": 2, "c": -0.5}
-        ] # problem: a not in b, c
-        a_std = [r"%list", {Cfg.UnneccessaryKey("c"): Cfg.NNFloat}]
+        test_cfg = {"a": -1}
+        a_std = {"a": [Cfg.PFloat, Cfg.PInt]}
         Cfg().checkDict(a_std, test_cfg)
     except Cfg.ConfigError:
         import traceback
