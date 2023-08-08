@@ -23,18 +23,21 @@ def _CfgIsinstance(obj, typ):
             Cfg.NNNumber: lambda:isinstance(obj, (int, float)) and obj >= 0
         }.get(typ, lambda:isinstance(obj, typ))()
     elif isinstance(typ, tuple):
-        for i in typ:
-            result = {
-                Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
-                Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
-                Cfg.PFloat: lambda:isinstance(obj, float) and obj > 0,
-                Cfg.NNFloat: lambda:(isinstance(obj, float) or obj == 0) and obj >= 0,
-                Cfg.PNumber: lambda:isinstance(obj, (int, float)) and obj > 0,
-                Cfg.NNNumber: lambda:isinstance(obj, (int, float)) and obj >= 0
-            }.get(i, lambda:isinstance(obj, typ))()
-            if result:
-                return True
-        return False
+        try:
+            for i in typ:
+                result = {
+                    Cfg.PInt: lambda:isinstance(obj, int) and obj > 0, 
+                    Cfg.NNInt: lambda:isinstance(obj, int) and obj >= 0,
+                    Cfg.PFloat: lambda:isinstance(obj, float) and obj > 0,
+                    Cfg.NNFloat: lambda:(isinstance(obj, float) or obj == 0) and obj >= 0,
+                    Cfg.PNumber: lambda:isinstance(obj, (int, float)) and obj > 0,
+                    Cfg.NNNumber: lambda:isinstance(obj, (int, float)) and obj >= 0
+                }.get(i, lambda:isinstance(obj, typ))()
+                if result:
+                    return True
+            return False
+        except TypeError:
+            raise ValueError(f"Can't be: {typ}")
     raise ValueError(f"Can't be: {typ}")
 
 
@@ -54,6 +57,8 @@ def _CfgShowType(typ):
         NoneType: "null"
     }.get(typ, typ.__name__)
 
+FIND_NONE = r"%FindNone"
+
 class Cfg:
     class Group:
         def __init__(self, *keys):
@@ -61,9 +66,9 @@ class Cfg:
         def __repr__(self) -> str:
             return 'Cfg.Group("' + '", "'.join(self.members) + '")'
     class ConfigError(Exception):
-        def __init__(this, errStr: str, errPos: list):
-            this.errPos = errPos
-            this.args = (errStr,)
+        def __init__(self, errStr: str, errPos: list = []):
+            self.errPos = errPos
+            self.args = (errStr,)
     class UnneccessaryKey:
         def __init__(self, key):
             self.key = key
@@ -79,147 +84,112 @@ class Cfg:
     class PNumber:"正数"
     class NNNumber:"大于0的数"
 
-    def get_cfg(this, path: str, standard_type: dict):
+    def get_cfg(self, path: str, standard_type: dict):
         # 从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测.
         path = path if path.endswith(".json") else path + ".json"
         with open(path, "r", encoding="utf-8") as f:
             try:
                 obj = ujson.load(f)
             except ujson.JSONDecodeError:
-                raise this.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None)
-        this.checkDict(standard_type, obj)
+                raise self.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None)
+        self.check_dict_2(standard_type, obj)
         return obj
 
-    def default_cfg(this, path: str, default: dict, force: bool = False):
+    def default_cfg(self, path: str, default: dict, force: bool = False):
         # 向path路径写入json文本, 若文件不存在或参数force为True, 将写入提供的默认json文本
         path = path if path.endswith(".json") else path + ".json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding='utf-8') as f:
                 ujson.dump(default, f, indent=4, ensure_ascii=False)
 
-    def exists(this, path: str):
+    def exists(self, path: str):
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
 
-    def checkDict(this, patt: dict, cfg: dict | list, __nowcheck: list = []):
-        # 按照patt给出的dict标准形式对cfg进行检查.
-        patt = patt.copy()
-        __nowcheck.append(None)
-        assert patt is not None, "Patt = None???"
-        if _CfgIsinstance(patt, list) and patt[0] == "%list":
-            this.checkList(patt[1], cfg)
-            return
-        if not _CfgIsinstance(patt, dict) or not _CfgIsinstance(cfg, dict):
-            raise this.ConfigValueError(f"JSON值 应为json, 而非{_CfgShowType(cfg)}: 获取{cfg}, 需要{patt}", __nowcheck)
-        for k, v in patt.items():
-            if (k == r"%any") or isinstance(k, Cfg.Group):
-                limited_key = isinstance(k, Cfg.Group)
-                for k2, v2 in cfg.items():
-                    if limited_key and k2 not in k.members:
-                        raise this.ConfigKeyError(f"JSON键\"{k2}\"不合法, 其只能是 {k} 中的其中一个", __nowcheck)
-                    __nowcheck[-1] = str(k2)
-                    if _CfgIsinstance(v, type):
-                        if not _CfgIsinstance(v2, v):
-                            raise this.ConfigValueError(f"JSON键\"{k2}\" 所对应的值类型不正确: 需要 {_CfgShowType(v)}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
-                    elif _CfgIsinstance(v, list):
-                        if v[0] == r"%list":
-                            this.checkList(v[1], v2)
-                        else:
-                            if type(v2) not in v and not _CfgIsinstance(v2, tuple(v)):
-                                raise this.ConfigValueError(f"JSON键\"{k2}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in patt[k])}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
-                    elif _CfgIsinstance(v, dict):
-                        this.checkDict(v, v2)
-            else:
-                v2 = cfg.get(k, r"%Exception")
-                if v2 == r"%Exception":
-                    if isinstance(k, Cfg.UnneccessaryKey):
-                        v2 = cfg.get(k.key, r"%Exception")
-                        k = k.key
-                        if v2 == r"%Exception": continue
-                    else:
-                        raise this.ConfigKeyError(f'不存在的JSON键: {k}', __nowcheck)
-                __nowcheck[-1] = str(v2)
-                if _CfgIsinstance(v, type):
-                    # Compare directly
-                    if not _CfgIsinstance(v2, v):
-                        raise this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {_CfgShowType(v)}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
-                elif _CfgIsinstance(v, list):
-                    # Met ["%list", any] or [type1, type2..]
-                    if _CfgIsinstance(v[0], str):
-                        if v[0].startswith(r"%list"):
-                            # Met ["%list", any]
-                            if v[0].replace(r"%list", "").isnumeric():
-                                arglen = int(v[0].replace(r"%list", ""))
-                                if len(v2) != arglen:
-                                    raise this.ConfigValueError(f"JSON键\"{k}\" 所对应的值列表有误: 需要 {arglen} 项, 实际上为 {len(v2)} 项", __nowcheck)
-                        this.checkList(v[1], v2, __nowcheck)
-                    elif _CfgIsinstance(v, list):
-                        # Met [type1, type2..]
-                        isAllType = all([_CfgIsinstance(vi, type) for vi in v])
-                        if isAllType:
-                            if type(v2) not in v and not _CfgIsinstance(v2, tuple(v)):
-                                raise this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in patt[k])}, 实际上为 {_CfgShowType(v2)}", __nowcheck)
-                        else:
-                            # AAAAH!
-                            # List[type, dict, ...] ?
-                            exc_raise = None
-                            for v_identifier in v:
-                                if _CfgIsinstance(v_identifier, dict) and _CfgIsinstance(v2, dict):
-                                    try:
-                                        this.checkDict(v_identifier, v2)
-                                        return
-                                    except Exception as exc:
-                                        exc_raise = exc
-                                elif _CfgIsinstance(v_identifier, type):
-                                    if not _CfgIsinstance(v2, v_identifier):
-                                        exc_raise = this.ConfigValueError(f"JSON键\"{k}\" 所对应的值类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in v)} 等, 实际上为 {_CfgShowType(v2)}\n可能的另一个错误: {exc_raise}", __nowcheck)
-                                    else:
-                                        return
-                            if exc_raise:
-                                raise exc_raise
-                    else:
-                        raise this.ConfigValueError(f"??????: v={v} while v2={v2}", __nowcheck)
-                elif _CfgIsinstance(v, dict):
-                    this.checkDict(v, v2)
-
-    def checkList(this, patt, lst: list, __nowcheck: list = []):
-        if not _CfgIsinstance(lst, list):
-            raise this.ConfigValueError(f"不是合法列表: p={_CfgShowType(patt)}, r={_CfgShowType(lst)}", __nowcheck)
-        __nowcheck.append(None)
-        for v in lst:
-            __nowcheck[-1] = v
-            if _CfgIsinstance(patt, type):
-                if not _CfgIsinstance(v, patt):
-                    raise this.ConfigValueError(f"JSON键列表的值\"{v}\" 的类型不正确: 需要 {_CfgShowType(patt)}, 实际上为 {_CfgShowType(v)}", __nowcheck)
-            elif _CfgIsinstance(patt, list):
-                if patt[0] == r"%list":
-                    this.checkList(patt[1], v, __nowcheck)
-                else:
-                    if type(v) not in patt:
-                        raise this.ConfigValueError(f"JSON列表的值\"{v}\" 类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in patt)}, 实际上为 {_CfgShowType(v)}", __nowcheck)
-            elif _CfgIsinstance(patt, dict):
-                this.checkDict(patt, v, __nowcheck)
-
-    def getPluginConfigAndVersion(this, pluginName: str, standardType: dict, default: dict, default_vers: tuple[int, int, int]):
+    def getPluginConfigAndVersion(self, pluginName: str, standardType: dict, default: dict, default_vers: tuple[int, int, int]):
         # 详情见 插件编写指南.md
         assert isinstance(standardType, dict)
         p = "插件配置文件/" + pluginName
-        if not this.exists(p) and default:
+        if not self.exists(p) and default:
             defaultCfg = PLUGINCFG_DEFAULT.copy()
             defaultCfg["配置项"] = default
             defaultCfg["配置版本"] = ".".join([str(n) for n in default_vers])
-            this.default_cfg(p + ".json", defaultCfg, force=True)
+            self.default_cfg(p + ".json", defaultCfg, force=True)
         cfg_stdtyp = PLUGINCFG_STANDARD_TYPE.copy()
         cfg_stdtyp["配置项"] = standardType
-        cfgGet = this.get_cfg(p, cfg_stdtyp)
+        cfgGet = self.get_cfg(p, cfg_stdtyp)
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         return cfgGet["配置项"], cfgVers
+    
+    def check_auto(self, standard, val, fromkey = "?"):
+        if fromkey == FIND_NONE:
+            raise ValueError("不允许传入FindNone")
+        if isinstance(standard, type):
+            if not _CfgIsinstance(val, standard):
+                raise self.ConfigValueError(f"JSON键\"{fromkey}\" 对应值的类型不正确: 需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}")
+        elif isinstance(standard, list):
+            # [%list] or [multi[type/dict]]
+            self.check_list_2(standard, val, fromkey)
+        elif isinstance(standard, dict):
+            self.check_dict_2(standard, val, fromkey)
+        else:
+            raise ValueError(f"JSON键 \"{fromkey}\"未曾遇到过的类型: {standard.__class__.__name__}, 另外两个参数 standard={standard}, val={val}")
+    
+    def check_dict_2(self, pattern: dict, jsondict: dict, fromkey = "?"):
+        for key, std_val in pattern.items():
+            if key == r"%any":
+                # ANY key
+                for js_key, js_val in jsondict.items():
+                    self.check_auto(std_val, js_val, js_key)
+            elif isinstance(key, self.Group):
+                # any key in members?
+                js_val = FIND_NONE
+                for member_key in key.members:
+                    val_get = jsondict.get(member_key, FIND_NONE)
+                    if val_get != FIND_NONE:
+                        self.check_auto(std_val, val_get, member_key)
+            elif isinstance(key, self.UnneccessaryKey):
+                val_get = jsondict.get(key.key, FIND_NONE)
+                if val_get != FIND_NONE:
+                    self.check_auto(std_val, val_get, key.key)
+            else:
+                val_get = jsondict.get(key, FIND_NONE)
+                if val_get == FIND_NONE:
+                    raise self.ConfigKeyError(f'不存在的JSON键: {key}')
+                self.check_auto(std_val, val_get, key)
+                
+    def check_list_2(self, pattern: list, value, fromkey = "?"):
+        if not isinstance(pattern, list):
+            raise ValueError("Not a valid list pattern")
+        if len(pattern) == 0:
+            raise ValueError("Pattern's length can't be 0")
+        if isinstance(pattern[0], str) and pattern[0].startswith(r"%list"):
+            if not isinstance(value, list):
+                raise self.ConfigValueError(f"JSON键 \"{fromkey}\" 需要列表 而不是 {_CfgShowType(value)}")
+            limitNumber = 0
+            if pattern[0].replace(r"%list", "").isnumeric():
+                limitNumber = int(pattern[0].replace(r"%list", ""))
+            if limitNumber and len(value) != limitNumber:
+                raise self.ConfigValueError(f"JSON键 \"{fromkey}\" 所对应的值列表有误: 需要 {limitNumber} 项, 实际上为 {len(value)} 项")
+            for val in value:
+                self.check_auto(pattern[1], val, fromkey)
+        else:
+            for single_type in pattern:
+                try:
+                    self.check_auto(single_type, value, fromkey)
+                    return
+                except:
+                    pass
+            raise self.ConfigValueError(f"JSON列表的值 \"{fromkey}\" 类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in pattern)}, 实际上为 {_CfgShowType(value)}")
+            
+    checkDict = check_dict_2
+
 
 if __name__ == "__main__":
     # Test Part
     try:
-        test_cfg = {"a": -1}
-        a_std = {"a": [Cfg.PFloat, Cfg.PInt]}
-        Cfg().checkDict(a_std, test_cfg)
+        test_cfg = {"a": 1, "b": 2.5, "c": {"a": 3}}
+        a_std = {r"%any": [Cfg.PFloat, Cfg.PInt, {"a": Cfg.PFloat}]}
+        Cfg().check_dict_2(a_std, test_cfg)
     except Cfg.ConfigError:
         import traceback
         print(traceback.format_exc())
