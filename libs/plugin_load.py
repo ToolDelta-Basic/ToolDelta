@@ -278,12 +278,13 @@ class PluginGroup:
                         with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py", "r", encoding='utf-8') as f:
                             code = f.read()
                         exec(code, root_env)
+                        # 会污染整体环境...算了算了
                     elif os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc"):
                         if decPluginAndCMP is not None:
                             with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc", "rb") as f:
                                 compiled_pcode = decPluginAndCMP(f.read())
                                 if (compiled_pcode == 0) | (compiled_pcode == 1):
-                                    raise Exception(f"加密插件: {plugin_dir} 加载失败 ERR={compiled_pcode}")
+                                    raise AssertionError(3, compiled_pcode)
                                 if not isinstance(compiled_pcode, int):
                                     exec(compiled_pcode, root_env)
                         else:
@@ -313,7 +314,7 @@ class PluginGroup:
                     if hasattr(plugin_body, "on_player_leave"):
                         self.plugins_funcs["on_player_leave"].append([plugin_body.name, plugin_body.on_player_leave])
 
-                    Print.print_suc(f"成功载入插件 {plugin_body.name} 版本：{_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
+                    Print.print_suc(f"成功载入插件 {plugin_body.name} 版本: {_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
                     
                     if self.plugin_added_cache["packets"] != []:
                         for pktType, func in self.plugin_added_cache["packets"]: # type: ignore
@@ -329,7 +330,10 @@ class PluginGroup:
                         Print.print_err(f"插件 {plugin_dir} 不合法: 主类没有继承 Plugin")
                         raise SystemExit
                     elif err.args[0] == 2:
-                        Print.print_err(f"插件 {plugin_dir} 不合法: 只能调用一次 @plugins.add_plugin, 实际没有调用")
+                        Print.print_err(f"插件 {plugin_dir} 不合法: 只能调用一次 @plugins.add_plugin, 实际调用了0次或多次")
+                        raise SystemExit
+                    elif err.args[0] == 3:
+                        Print.print_err(f"加密插件: {plugin_dir} 加载失败 ERR={err.args[1]}")
                         raise SystemExit
                     else:
                         raise
@@ -346,7 +350,7 @@ class PluginGroup:
                         Print.print_err(f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
                     else:
                         Print.print_err(f"加载插件 {plugin_dir} 出现问题, 报错如下: ")
-                        Print.print_err(traceback.format_exc())
+                        Print.print_err("§c" + traceback.format_exc())
                         raise SystemExit
 
     def read_plugin_from_nonop(self, root_env: dict):
@@ -430,7 +434,6 @@ class PluginGroup:
                 func()
             except Exception as err:
                  onerr(name, err, traceback.format_exc())
-
     def execute_player_prejoin(self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
         for name, func in self.plugins_funcs["on_player_prejoin"]:
             try:
