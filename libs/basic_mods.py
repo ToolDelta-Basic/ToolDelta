@@ -1,4 +1,25 @@
 import time, os, sys, threading, json, traceback, datetime, platform, subprocess, socket, logging, ctypes, asyncio, copy, math, random
 import psutil, requests, nbt, qrcode, getpass, pymysql, websockets, ujson, hashlib, base64, rich.progress, tqdm
 from typing import Callable
-dotcs_module_env = {"time": time, "os": os, "json": json, "threading": threading, "requests": requests, "traceback": traceback, "qrcode": qrcode, "psutil": psutil, "pymysql": pymysql, "socket": socket, "websockets": websockets}
+dotcs_module_env = {
+    "time": time, 
+    "os": os, 
+    "json": json, 
+    "threading": threading, 
+    "requests": requests, 
+    "traceback": traceback, 
+    "qrcode": qrcode, 
+    "psutil": psutil, 
+    "pymysql": pymysql, 
+    "socket": socket, 
+    "websockets": websockets, 
+    "datetime": datetime,
+    "random": random,
+    "math": math,
+    "platform": platform,
+    "subprocess": subprocess,
+    "base64": base64,
+    "asyncio": asyncio,
+    "sys": sys,
+    "rich": rich,
+}
