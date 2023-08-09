@@ -172,6 +172,8 @@ class PluginGroup:
         self.excType = 0
         self.PRG_NAME = ""
         self._broadcast_evts = {}
+        self.dotcs_plugin_loaded_num = 0
+        self.normal_plugin_loaded_num = 0
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
@@ -251,6 +253,7 @@ class PluginGroup:
                     for k, v in evts.items():
                         self.plugins_funcs[k].append(v)
                     self.__add_plugin(plugin)
+                    self.dotcs_plugin_loaded_num += 1
                     Print.print_suc(f"§a成功载入插件 §2<DotCS> §a{plugin.name}")
             except Exception as err:
                 try:
@@ -315,6 +318,7 @@ class PluginGroup:
                         self.plugins_funcs["on_player_leave"].append([plugin_body.name, plugin_body.on_player_leave])
 
                     Print.print_suc(f"成功载入插件 {plugin_body.name} 版本: {_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
+                    self.normal_plugin_loaded_num += 1
                     
                     if self.plugin_added_cache["packets"] != []:
                         for pktType, func in self.plugin_added_cache["packets"]: # type: ignore
