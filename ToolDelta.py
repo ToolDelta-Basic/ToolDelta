@@ -37,8 +37,8 @@ async def get_user_input(text, timeout):
 def set_output_mode():
     global Print
     if not Config.exists(os.path.join("data","输出模式.json")):
-        Config.default_cfg(os.path.join("data","输出模式.json"), {"mode":0})
-    outputMode=Config.get_cfg(os.path.join("data","输出模式.json"), {"mode":0})
+        Config.default_cfg(os.path.join("data","输出模式.json"), {"mode": 0})
+    outputMode=Config.get_cfg(os.path.join("data","输出模式.json"), {"mode": int})
     outputMsg=f"使用上次输出模式: 1"
     if outputMode["mode"] == 0:
         try:
@@ -78,11 +78,12 @@ class Frame:
         connect_fb_start_time = time.time()
         data_path = "data/"
     class ClassicThread(threading.Thread):
-        def __init__(self, func: Callable, args: tuple = (), **kwargs):
+        def __init__(self, func: Callable, args: tuple = (), usage = "", **kwargs):
             super().__init__(target = func)
             self.func = func
             self.daemon = True
             self.all_args = [args, kwargs]
+            self.usage = usage
             self.start()
 
         def run(self):
@@ -91,7 +92,11 @@ class Frame:
             except Frame.ThreadExit:
                 pass
             except:
-                traceback.print_exc()
+                if self.usage == "fbconn":
+                    frame.status[0] = 2
+                    return
+                else:
+                    Print.print_err(traceback.format_exc())
 
         def get_id(self):
             if hasattr(self, '_thread_id'):
@@ -271,14 +276,17 @@ class Frame:
         Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
+    def plugin_load_finished(self, plugins: PluginGroup):
+        Print.print_suc(f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件")
+
     def basicMkDir(self):
-        os.makedirs("DotCS兼容插件", exist_ok=True)
-        os.makedirs("插件配置文件", exist_ok=True)
-        os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
-        os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
-        os.makedirs("status", exist_ok=True)
-        os.makedirs("data/status", exist_ok=True)
-        os.makedirs("data/player", exist_ok=True)
+        os.makedirs("DotCS兼容插件", exist_ok = True)
+        os.makedirs("插件配置文件", exist_ok = True)
+        os.makedirs(f"{PRG_NAME}插件", exist_ok = True)
+        os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok = True)
+        os.makedirs("status", exist_ok = True)
+        os.makedirs("data/status", exist_ok = True)
+        os.makedirs("data/player", exist_ok = True)
 
     def fbtokenFix(self):
         needFix = False
@@ -352,6 +360,7 @@ class Frame:
             Print.print_war("未能正常关闭FB进程")
 
     def system_exit(self):
+        self.link_game_ctrl.say_to("@a", "§6ToolDelta Exit")
         if not self.external_port:
             assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "Broken pipe"
             self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
@@ -525,7 +534,7 @@ class GameCtrl:
 
     def simpleProcessGamePacket(self):
         con = self.linked_frame.con
-        plugin_grp = self.linked_frame.link_plugin_group
+        plugin_grp: PluginGroup = self.linked_frame.link_plugin_group
         self.pkt_unique_id = 0
         try:
             while 1:
@@ -551,10 +560,7 @@ class GameCtrl:
                         else:
                             self.processPlayerList(packet_mapping)
         except Exception as err:
-            if "recv on a closed connection" in str(err):
-                self.linked_frame.status[0] = 2
-                return
-            print(traceback.format_exc())
+            raise
 
     def processPlayerList(self, pkt, first = False):
         for player in pkt["Entries"]:
@@ -577,7 +583,7 @@ class GameCtrl:
                 self.allplayers.remove(playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
 
-    def processGamePacketWithPlugin(self, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
+    def processMsgPacketWithPlugin(self, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
         if pkt_type == 9:
             match pkt['TextType']:
                 case 2:
@@ -615,7 +621,7 @@ class GameCtrl:
                 typ, pkt = self.pkt_cache.pop(0)
                 res = plugins.processPacketFunc(typ, pkt)
                 if not res:
-                    self.processGamePacketWithPlugin(pkt, typ, plugins)
+                    self.processMsgPacketWithPlugin(pkt, typ, plugins)
             if len(self.pkt_cache) > 100 and time.time() - lastPTime > 5:
                 Print.print_war("数据包缓冲区量 > 100")
                 lastPTime = time.time()
@@ -642,15 +648,17 @@ class GameCtrl:
 
     def Inject2(self):
         self.allplayers = self.allplayers_name = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
+        self.bot_name = self.sendcmd("/testfor @s", True).OutputMessages[0].Parameters[0]
         for player in self.allplayers:
             result = json.loads(
                 self.sendcmd("/querytarget " + player, True).OutputMessages[0].Parameters[0]
             )[0]["uniqueId"]
             self.players_uuid[player] = result
             Print.print_inf(f"玩家: {player} 的UUID已获取: {result}")
-        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
+        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name)
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
+        return
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
             
@@ -752,6 +760,7 @@ try:
     frame.fbtokenFix()
     plugins.read_plugin_from_old(dotcs_module_env)
     plugins.read_plugin_from_new(globals())
+    frame.plugin_load_finished(plugins)
     plugins.execute_def(frame.on_plugin_err)
     libs.builtins.tmpjson_save_thread(frame)
     if not frame.external_port:
@@ -791,8 +800,9 @@ try:
         frame.sys_data.connect_fb_start_time = 5
         Print.print_inf(f"§b尝试在端口{frame.external_port} 连接到FastBuilder")
         frame.run_conn(port=int(frame.external_port), timeout = 5)
-        thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
-        thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
+        game_control.requireUUIDPacket = False
+        thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket, usage = "fbconn")
+        thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc, usage = "fbconn")
         frame.ConsoleCmd_thread()
         game_control.Inject2()
         plugins.execute_init(frame.on_plugin_err)
@@ -800,10 +810,11 @@ try:
         frame.status[0] = 1
         while frame.status[0] == 1:
             time.sleep(0.2)
+        if frame.status[0] == 2:
+            Print.print_err("§cFB断开连接")
         Print.print_inf("正在保存缓存数据.")
         frame.safe_close()
         Print.print_suc("正常退出.")
-
     os._exit(0)
 
 except (SystemExit, KeyboardInterrupt):
@@ -811,6 +822,7 @@ except (SystemExit, KeyboardInterrupt):
     os._exit(0)
 
 except Exception:
+    Print.print_err("ToolDelta 运行中出现问题:")
     Print.print_err(traceback.format_exc())
     if not frame.external_port:
         frame.close_fb_thread()
