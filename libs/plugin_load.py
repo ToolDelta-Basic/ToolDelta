@@ -116,7 +116,7 @@ class Plugin:
                 raise
         for codetype in [
                 "on_def",
-                "on_init",
+                "on_inject",
                 "on_player_prejoin",
                 "on_player_join",
                 "on_player_message",
