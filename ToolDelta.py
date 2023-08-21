@@ -178,7 +178,7 @@ class Frame:
     def downloadMissingFiles(self):
         try:
             Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
-            url = "http://43.153.182.231:24536/api/file"
+            url = "https://panel.tooldelta.fit:24536/api/Md5VerificationFile"
             cp = False
             def get_md5(file_path):
                 with open(file_path, "rb") as f:
