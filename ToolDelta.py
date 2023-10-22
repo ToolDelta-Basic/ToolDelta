@@ -18,6 +18,9 @@ Config = _Cfg()
 Print = libs.color_print.Print
 async_loop = asyncio.new_event_loop()
 sys_args_dict = libs.sys_args.SysArgsToDict(sys.argv)
+
+Print.print_with_info("§d系统正在启动..", "§d 加载 ")
+
 try:
     VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
 except:
@@ -63,10 +66,12 @@ def set_output_mode():
     del outputMode, outputMsg
     # raise Exception
 
-try:
-    import libs.conn as conn
-except Exception as err:
-    Print.print_err(f"加载外部库失败， 请检查其是否存在:{err}")
+def import_proxy_lib():
+    global conn
+    try:
+        import libs.conn as conn
+    except Exception as err:
+        Print.print_err(f"加载外部库失败， 请检查其是否存在:{err}")
 
 
 class Frame:
@@ -91,7 +96,8 @@ class Frame:
                 self.func(*self.all_args[0], **self.all_args[1])
             except Frame.ThreadExit:
                 pass
-            except:
+            except Exception as err:
+                Print.print_err(traceback.format_exc())
                 if self.usage == "fbconn":
                     frame.status[0] = 2
                     return
@@ -135,86 +141,41 @@ class Frame:
             Print.print_err(f"启动参数错误")
             raise SystemExit
         
-    def DownloadFastBuilderfile(self):
-        Tempcounter: int = 0
-        try:
-            response = requests.get("https://api.kgithub.com/repos/LNSSPsd/PhoenixBuilder/releases/latest")
-            FBversion = response.json()["tag_name"]
-        except:
-            FBversion = "v5.7.2"
-        Print.print_suc(f"最新的FastBuilder版本为:{FBversion}")
-        if not (os.path.exists("phoenixbuilder.exe") or os.path.exists("phoenixbuilder")):
-            while 1:
-                try:
-                    if self.system_is_win:
-                        resp = requests.get(
-                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder-windows-executable-x86_64.exe",
-                            stream=True)
-                        filename = "phoenixbuilder.exe"
-                    elif sys.platform == 'linux':
-                        resp = requests.get(
-                            f"https://ghproxy.com/https://github.com/LNSSPsd/PhoenixBuilder/releases/download/{FBversion}/phoenixbuilder",
-                            stream=True)
-                        filename = "phoenixbuilder"
-                    total_size_in_bytes = int(resp.headers.get('content-length', 0))
-                    block_size = 1024
-                    with open(filename, 'wb') as file:
-                        with rich.progress.Progress() as progress:
-                            task = progress.add_task(datetime.datetime.now().strftime("[%H:%M] ") + Print.colormode_replace("§d 加载 ",7)+ " "+"Download "+filename, total=total_size_in_bytes)
-                            for data in resp.iter_content(block_size):
-                                file.write(data)
-                                progress.update(task, advance=len(data))
-                    break
-                except Exception as err:
-                    Print.print_err(f"下载FastBuilder失败!尝试重新下载,当前尝试次数{str(Tempcounter)},错误原因{err}")
-                    Tempcounter += 1
-                    if Tempcounter == 5:
-                        raise SystemExit
-            return True
-        else:
-            return True
-
+    @staticmethod
+    def download_file(f_url: str, f_dir: str):
+        res = requests.get(f_url, stream = True)
+        with open(f_dir, "wb") as dwnf:
+            for chk in res.iter_content(chunk_size = 1024):
+                if chk: dwnf.write(chk)
 
     def downloadMissingFiles(self):
+        mirror_src = "https://gh-proxy.com/"
+        file_get_src = mirror_src + "https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"
+        try:
+            files_to_get = json.loads(requests.get(file_get_src).text)
+        except json.JSONDecodeError:
+            Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
+            sys.exit(0)
+        except requests.Timeout:
+            Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: 请求超时")
+            sys.exit(0)
+        except Exception as err:
+            Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: {err}")
+            sys.exit(0)
         try:
             Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
-            url = "https://api.tooldelta.fit:24536/api/Md5VerificationFile"
-            cp = False
-            def get_md5(file_path):
-                with open(file_path, "rb") as f:
-                    md5_obj = hashlib.md5()
-                    while True:
-                        data = f.read(1024 * 4)
-                        if not data:
-                            break
-                        md5_obj.update(data)
-                    return md5_obj.hexdigest()
-
-            response = requests.get(url)
-            file_data = json.loads(response.text)
-            for path, files in file_data.items():
-                for file_name, file_info in files.items():
-                    file_path = os.path.join(path, file_name)
-                    if os.path.exists(file_path):
-                        local_md5 = get_md5(file_path)
-                        if local_md5 != file_info["md5"]:
-                            file_content = base64.b64decode(file_info["data"])
-                            with open(file_path, "wb") as f:
-                                f.write(file_content)
-                                Print.print_with_info(f"§d写入缺失文件 {file_path}","§d 加载 ")
-                                cp = True
-                    else:
-                        file_content = base64.b64decode(file_info["data"])
-                        with open(file_path, "wb") as f:
-                            f.write(file_content)
-                            Print.print_with_info(f"§d写入缺失文件 {file_path}","§d 加载 ")
-                            cp = True
+            mirr = files_to_get["Mirror"]
+            download_mode = "Windows" if self.system_is_win else "Linux"
+            files = files_to_get[download_mode]
+            for fdir, furl in files.items():
+                if not os.path.isfile(fdir):
+                    Print.print_inf(f"文件: <{fdir}> 缺失, 正在下载..")
+                    self.download_file(mirr + "/https://github.com/" + furl, fdir)
+                    Print.print_inf(f"文件: <{fdir}> 下载完成")
+        except requests.Timeout:
+            Print.print_err(f"自动检测文件并补全时出现错误: 超时, 自动跳过")
         except Exception as err:
-            Print.print_err(f"自动检测文件并补全时出现错误:{err}")
-            raise SystemExit
-        if cp:
-            Print.print_suc("自动补全文件成功!即将关闭")
-            time.sleep(5)
+            Print.print_err(f"自动检测文件并补全时出现错误: {err}")
             raise SystemExit
         return True
 
@@ -229,10 +190,9 @@ class Frame:
         }
         if not os.path.isfile("fbtoken"):
             if platform.system() == "Windows" and os.path.isfile(
-                    os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
+                os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
                 # self.loop = asyncio.get_event_loop()
                 # 也许这是唯一一个global
-
                 try:
                     isUse = async_loop.run_until_complete(
                         get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
@@ -286,7 +246,7 @@ class Frame:
         os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok = True)
         os.makedirs("status", exist_ok = True)
         os.makedirs("data/status", exist_ok = True)
-        os.makedirs("data/player", exist_ok = True)
+        os.makedirs("data/players", exist_ok = True)
 
     def fbtokenFix(self):
         needFix = False
@@ -329,7 +289,7 @@ class Frame:
     def runFB(self, ip = "0.0.0.0", port = 8080):
         if not self.system_is_win:
             os.system("chmod +x phoenixbuilder")
-        if frame.DownloadFastBuilderfile() and frame.downloadMissingFiles():
+        if frame.downloadMissingFiles():
             if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
                 if frame.system_is_win:
                     if self.UseSysFBtoken:
@@ -350,6 +310,8 @@ class Frame:
                                             stderr=subprocess.STDOUT, shell=True)
             Print.print_suc("FastBuilder 进程已启动.")
             frame.outputFBMsgsThread()
+        else:
+            Print.print_err("download not success, denied")
     
     def close_fb_thread(self):
         try:
@@ -362,7 +324,7 @@ class Frame:
     def system_exit(self):
         self.link_game_ctrl.say_to("@a", "§6ToolDelta Exit")
         if not self.external_port:
-            assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "Broken pipe"
+            assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "连接到FastBuilder的通道出现问题"
             self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
             self.fb_pipe.stdin.flush()
         self.status[0] = 0
@@ -410,6 +372,7 @@ class Frame:
     def _console_cmd_thread(self):
         self.add_console_cmd_trigger(["?", "help", "帮助"], None, "查询可用菜单指令", self.init_basic_help_menu)
         self.add_console_cmd_trigger(["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit())
+        self.add_console_cmd_trigger(["l&j"], None, f"测试玩家退出和进入", lambda p: game_control.test_player_leave_and_join(p[0]))
         try:
             while 1:
                 rsp = input()
@@ -612,7 +575,10 @@ class GameCtrl:
                     plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
                 case 9:
                     msg = pkt['Message']
-                    Print.print_inf(''.join([i["text"] for i in json.loads(msg)['rawtext']]))
+                    try:
+                        Print.print_inf(''.join([i["text"] for i in json.loads(msg)['rawtext']]))
+                    except:
+                        pass
 
     def threadPacketProcessFunc(self):
         while 1:
@@ -628,6 +594,11 @@ class GameCtrl:
             elif len(self.pkt_cache) > self.linked_frame.MAX_PACKET_CACHE:
                 Print.print_err(f"数据包缓冲区量 > {self.linked_frame.MAX_PACKET_CACHE} 超最大阈值， 已清空缓存区")
                 self.pkt_cache.clear()
+
+    def test_player_leave_and_join(self, player):
+        Print.print_inf(f"正在测试{player}的进退游戏.")
+        plugins.execute_player_leave(player, self.linked_frame.on_plugin_err)
+        plugins.execute_player_join(player, self.linked_frame.on_plugin_err)
 
     def Inject(self):
         startDetTime = time.time()
@@ -658,7 +629,6 @@ class GameCtrl:
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name)
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
-        return
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
             
@@ -755,6 +725,8 @@ try:
     frame.set_plugin_group(plugins)
     frame.welcome()
     frame.basicMkDir()
+    frame.downloadMissingFiles()
+    import_proxy_lib()
     set_output_mode()
     frame.read_cfg()
     frame.fbtokenFix()
@@ -796,6 +768,7 @@ try:
         frame.safe_close()
         Print.print_suc("正常退出.")
     else:
+        Print.print_suc("正在执行 租赁服初始化..")
         Print.print_inf("§f正在使用 §bExternal §f模式启动, 关闭系统时将不会关闭FastBuilder.")
         frame.sys_data.connect_fb_start_time = 5
         Print.print_inf(f"§b尝试在端口{frame.external_port} 连接到FastBuilder")
