@@ -182,11 +182,13 @@ class Frame:
     def read_cfg(self):
         CFG = {
             "服务器号": 0,
-            "密码": 0
+            "密码": 0,
+            "主动获取UUID": False,
         }
         CFG_STD = {
             "服务器号": int,
-            "密码": int
+            "密码": int,
+            "主动获取UUID": bool,
         }
         if not os.path.isfile("fbtoken"):
             if platform.system() == "Windows" and os.path.isfile(
@@ -214,6 +216,7 @@ class Frame:
             cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
+            self.server_cfgs = cfgs
         except Config.ConfigError:
             Print.print_err("租赁服登录配置有误， 需要更正")
             exit()
@@ -488,7 +491,7 @@ class GameCtrl:
         self.pkt_unique_id: int = 0
         self.pkt_cache: list = []
         self.require_listen_packet_list = [9, 79, 63]
-        self.store_uuid_pkt = None
+        self.store_uuid_pkt: dict[str, str] | None = None
         self.requireUUIDPacket = True
 
     def add_listen_pkt(self, pkt_type: int):
@@ -602,14 +605,26 @@ class GameCtrl:
 
     def Inject(self):
         startDetTime = time.time()
-        while not self.store_uuid_pkt and time.time() - startDetTime < 60:pass
-        if not self.store_uuid_pkt:
-            self.linked_frame.status[0] = 2
-            Print.print_err("60s 内未收取到UUID包， 即将重启")
-            exit()
+        if self.linked_frame.server_cfgs["主动获取UUID"]:
+            time.sleep(2)
+            self.allplayers = self.allplayers_name = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
+            self.store_uuid_pkt = {'ActionType': 0, 'Entries': []}
+            for playername in self.allplayers_name:
+                Print.print_inf(f"开启主动获取UUID模式: 正在获取 {playername} 的UUID")
+                res = self.sendcmd(f"/querytarget @a[name={playername}]", True)
+                uuid = json.loads(res.OutputMessages[0].Parameters[0])[0]["uniqueId"]
+                self.store_uuid_pkt["Entries"].append({'UUID': uuid, 'EntityUniqueID': -21474836462, 'Username': playername, 
+                    'Skin':{"SkinData": 1}, 'XUID': None, 'PlatformChatID': '', 'BuildPlatform': 1})
+                Print.print_inf(f"开启主动获取UUID模式: {playername} 的UUID为 {uuid}")
         else:
-            self.processPlayerList(self.store_uuid_pkt, True)
-            self.requireUUIDPacket = False
+            while not self.store_uuid_pkt and time.time() - startDetTime < 60:pass
+            if not self.store_uuid_pkt:
+                self.linked_frame.status[0] = 2
+                Print.print_err("60s 内未收取到UUID包， 已退出")
+                Print.print_err("可尝试在租赁服登录配置中将\"主动获取UUID\"设置为true来解决此问题")
+                exit()
+        self.processPlayerList(self.store_uuid_pkt, True)
+        self.requireUUIDPacket = False
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
