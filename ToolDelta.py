@@ -25,7 +25,7 @@ try:
     VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
 except:
     # Current version
-    VERSION = (0, 1, 8)
+    VERSION = (0, 2, 0)
 
 async def get_user_input(text, timeout):
     Print.print_inf(text)
@@ -73,6 +73,13 @@ def import_proxy_lib():
     except Exception as err:
         Print.print_err(f"加载外部库失败， 请检查其是否存在:{err}")
 
+class SysStatus:
+    LAUNCHING = 0
+    RUNNING = 1
+    NORMAL_EXIT = 2
+    FB_LAUNCH_EXC = 3
+    FB_CRASHED = 4
+    NEED_RESTART = 5
 
 class Frame:
     class ThreadExit(SystemExit):...
@@ -99,7 +106,7 @@ class Frame:
             except Exception as err:
                 Print.print_err(traceback.format_exc())
                 if self.usage == "fbconn":
-                    frame.status[0] = 2
+                    frame.status = SysStatus.FB_CRASHED
                     return
                 else:
                     Print.print_err(traceback.format_exc())
@@ -127,7 +134,7 @@ class Frame:
     link_plugin_group = None
     fb_pipe: subprocess.Popen | None = None
     _old_dotcs_threadinglist = []
-    status = [0]
+    status = SysStatus.LAUNCHING
     on_plugin_err = lambda _, *args, **kwargs: libs.builtins.on_plugin_err_common(*args, **kwargs)
     system_is_win = sys.platform in ["win32", "win64"]
     isInPanicMode = False
@@ -293,22 +300,13 @@ class Frame:
         if not self.system_is_win:
             os.system("chmod +x phoenixbuilder")
         if frame.downloadMissingFiles():
-            if Config.get_cfg("租赁服登录配置.json", {}).get("是否启用omg", None):
-                if frame.system_is_win:
-                    if self.UseSysFBtoken:
-                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-                    else:
-                        con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+            if frame.system_is_win:
+                if self.UseSysFBtoken:
+                    con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
                 else:
-                    con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check -O --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                    con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             else:
-                if frame.system_is_win:
-                    if self.UseSysFBtoken:
-                        con_cmd = f"phoenixbuilder.exe -T {self.fbtoken} --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-                    else:
-                        con_cmd = f"phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
-                else:
-                    con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
+                con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPasswd}' if self.serverPasswd else ''}"
             self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT, shell=True)
             Print.print_suc("FastBuilder 进程已启动.")
@@ -330,7 +328,7 @@ class Frame:
             assert self.fb_pipe is not None and self.fb_pipe.stdin is not None, "连接到FastBuilder的通道出现问题"
             self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
             self.fb_pipe.stdin.flush()
-        self.status[0] = 0
+        self.status = SysStatus.NORMAL_EXIT
 
     def run_conn(self, ip = "0.0.0.0", port = 8080, timeout = None):
         connect_fb_start_time = time.time()
@@ -345,7 +343,7 @@ class Frame:
                     Print.print_err(f"§4{max_con_time}秒内未连接上FB，已退出")
                     self.close_fb_thread()
                     os._exit(0)
-                elif self.status[0] == 2:
+                elif self.status == SysStatus.FB_LAUNCH_EXC:
                     Print.print_err(f"§4连接FB时出现问题，已退出")
                     self.close_fb_thread()
                     os._exit(0)
@@ -379,7 +377,7 @@ class Frame:
         try:
             while 1:
                 rsp = input()
-                if self.status[0] == 2 or self.status[0] == 3:
+                if self.status not in [SysStatus.LAUNCHING, SysStatus.RUNNING]:
                     break
                 for _, _, func, triggers in self.consoleMenu:
                     if not rsp:
@@ -395,7 +393,7 @@ class Frame:
                                 if res == -1:
                                     return
         except EOFError:
-            frame.status[0] = 0
+            frame.status = SysStatus.NORMAL_EXIT
 
     def _try_execute_console_cmd(self, func, rsp, mode, arg1):
         try:
@@ -416,6 +414,9 @@ class Frame:
             return 0
 
     def _outputFBMsgsThread(self):
+        if self.fb_pipe.returncode:
+            self.status = SysStatus.FB_LAUNCH_EXC
+            raise "FB启动出现故障"
         while 1:
             assert self.fb_pipe is not None and self.fb_pipe.stdout is not None and self.fb_pipe.stdin is not None, "Broken pipe"
             tmp: str = self.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
@@ -456,7 +457,7 @@ class Frame:
     def panic_later(self):
         self.isInPanicMode = True
         time.sleep(1)
-        self.status[0] = 2
+        self.status = SysStatus.FB_CRASHED
         self.fb_pipe.kill()
         self.isInPanicMode = False
     
@@ -525,7 +526,8 @@ class GameCtrl:
                             self.store_uuid_pkt = packet_mapping
                         else:
                             self.processPlayerList(packet_mapping)
-        except Exception as err:
+        except Exception:
+            self.linked_frame.status = SysStatus.FB_CRASHED
             raise
 
     def processPlayerList(self, pkt, first = False):
@@ -619,7 +621,7 @@ class GameCtrl:
         else:
             while not self.store_uuid_pkt and time.time() - startDetTime < 60:pass
             if not self.store_uuid_pkt:
-                self.linked_frame.status[0] = 2
+                self.linked_frame.status = SysStatus.NORMAL_EXIT
                 Print.print_err("60s 内未收取到UUID包， 已退出")
                 Print.print_err("可尝试在租赁服登录配置中将\"主动获取UUID\"设置为true来解决此问题")
                 exit()
@@ -630,7 +632,7 @@ class GameCtrl:
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
-        self.linked_frame.status[0] = 1
+        self.linked_frame.status = SysStatus.RUNNING
 
     def Inject2(self):
         self.allplayers = self.allplayers_name = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
@@ -659,19 +661,6 @@ class GameCtrl:
             for k in self.command_resp.copy():
                 if time.time() - self.command_resp[k][0] > 10:
                     del self.command_resp[k]
-
-    def tps_thread(self):
-        return
-        lastGameTime = int(self.sendcmd("time query daytime", True, 10).OutputMessages[0].Parameters[0])
-        while 1:
-            try:
-                st_time = time.time()
-                tps = int(self.sendcmd("time query gametime", True, 10).OutputMessages[0].Parameters[0])
-                st_time = time.time() - st_time
-                lastGameTime = tps
-            except Exception as err:
-                pass
-            time.sleep(10)
 
     def sendwocmd(self, cmd: str):
         conn.SendNoResponseCommand(self.linked_frame.con, cmd)
@@ -753,25 +742,24 @@ try:
     if not frame.external_port:
         frame.getFreePort(usage="fbconn")
         while 1:
-            if frame.status[0] in [0, 2]:
+            if frame.status in [SysStatus.LAUNCHING, SysStatus.NEED_RESTART]:
                 frame.runFB(port=frame.conPort)
                 frame.run_conn(port=frame.conPort)
                 thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
                 game_control.waitUntilProcess()
                 thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
-                threading.Thread(target=game_control.tps_thread).start()
                 frame.ConsoleCmd_thread()
                 game_control.Inject()
             plugins.execute_init(frame.on_plugin_err)
             plugins.execute_dotcs_repeat(frame.on_plugin_err)
-            frame.status[0] = 1
-            while frame.status[0] == 1:
+            frame.status = SysStatus.RUNNING
+            while frame.status == SysStatus.RUNNING:
                 time.sleep(0.2)
             thread_processPacket.stop()
             thread_processPacketFunc.stop()
-            if frame.status[0] == 0:
+            if frame.status == SysStatus.NORMAL_EXIT:
                 break
-            elif frame.status[0] == 2:
+            elif frame.status == SysStatus.NEED_RESTART:
                 Print.print_war("FB断开连接， 尝试重启")
         if game_control.bot_name:
             game_control.sendcmd("kick " + game_control.bot_name)
@@ -795,10 +783,10 @@ try:
         game_control.Inject2()
         plugins.execute_init(frame.on_plugin_err)
         plugins.execute_dotcs_repeat(frame.on_plugin_err)
-        frame.status[0] = 1
-        while frame.status[0] == 1:
+        frame.status = SysStatus.RUNNING
+        while frame.status == SysStatus.RUNNING:
             time.sleep(0.2)
-        if frame.status[0] == 2:
+        if frame.status == SysStatus.NORMAL_EXIT:
             Print.print_err("§cFB断开连接")
         Print.print_inf("正在保存缓存数据.")
         frame.safe_close()
