@@ -4,6 +4,7 @@ import libs.old_dotcs_env
 import libs.builtins
 import libs.rich_color_print
 import libs.color_print
+import libs.get_python_libs
 from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
@@ -72,6 +73,7 @@ def import_proxy_lib():
         import libs.conn as conn
     except Exception as err:
         Print.print_err(f"加载外部库失败， 请检查其是否存在:{err}")
+        raise SystemExit
 
 class SysStatus:
     LAUNCHING = 0
@@ -249,7 +251,7 @@ class Frame:
     def plugin_load_finished(self, plugins: PluginGroup):
         Print.print_suc(f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件")
 
-    def basicMkDir(self):
+    def basic_op(self):
         os.makedirs("DotCS兼容插件", exist_ok = True)
         os.makedirs("插件配置文件", exist_ok = True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok = True)
@@ -728,7 +730,7 @@ try:
     frame.set_game_control(game_control)
     frame.set_plugin_group(plugins)
     frame.welcome()
-    frame.basicMkDir()
+    frame.basic_op()
     frame.downloadMissingFiles()
     import_proxy_lib()
     set_output_mode()
