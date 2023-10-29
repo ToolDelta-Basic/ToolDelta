@@ -1,5 +1,11 @@
-import time, os, sys, threading, json, traceback, datetime, platform, subprocess, socket, logging, ctypes, asyncio, copy, math, random
-import psutil, requests, nbt, qrcode, getpass, pymysql, websockets, ujson, hashlib, base64, rich.progress, tqdm
+import libs.get_python_libs as _get_py_libs
+try:
+    import time, os, sys, threading, json, traceback, datetime, platform, subprocess, socket, logging, ctypes, asyncio, copy, math, random
+    import psutil, requests, nbt, qrcode, getpass, pymysql, websockets, ujson, hashlib, base64, rich.progress, tqdm
+except ModuleNotFoundError:
+    _get_py_libs.try_install_libs()
+    import time, os, sys, threading, json, traceback, datetime, platform, subprocess, socket, logging, ctypes, asyncio, copy, math, random
+    import psutil, requests, nbt, qrcode, getpass, pymysql, websockets, ujson, hashlib, base64, rich.progress, tqdm
 from typing import Callable
 dotcs_module_env = {
     "time": time, 
