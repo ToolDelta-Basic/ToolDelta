@@ -12,8 +12,7 @@ neccessary_libs = [
     "pymysql",
     "websocket-client",
     "qrcode",
-    "tqdm",
-    "pillow"
+    "tqdm"
 ]
 
 def try_install_libs():
