@@ -39,6 +39,7 @@ class _Print:
         ]
 
     def colormode_replace(self, text: str, showmode = 0):
+        # 1 = bg_color
         text = self._strike(text)
         return simple_fmt(
             {
@@ -53,7 +54,7 @@ class _Print:
                 "§9": f"\033[{showmode};37;94m",
                 "§a": f"\033[{showmode};37;92m",
                 "§b": f"\033[{showmode};37;96m",
-                "§c": f"\033[{showmode};37;96m",
+                "§c": f"\033[{showmode};37;91m",
                 "§d": f"\033[{showmode};37;95m",
                 "§e": f"\033[{showmode};37;93m",
                 "§f": f"\033[{showmode};37;1m",
