@@ -3,21 +3,23 @@ from libs.color_print import Print
 from os import sep
 from sys import argv
 
-neccessary_libs = [
-    "requests",
-    "psutil",
-    "nbt",
-    "flask",
-    "rich",
-    "pymysql",
-    "websocket-client",
-    "qrcode",
-    "tqdm"
-]
+neccessary_libs = {
+    "requests": None,
+    "psutil": None,
+    "nbt": None,
+    "flask": None,
+    "rich": None,
+    "pymysql": None,
+    "websockets": None,
+    "qrcode": None,
+    "ujson": None
+}
 
 def try_install_libs():
     if argv[-1].split(sep)[-1] == "ToolDelta.py":
-        install_libs(neccessary_libs)
+        install_libs(neccessary_libs.keys())
+    else:
+        raise SystemExit("打包程序内模块未能找到")
 
 def check_pip():
     try:
