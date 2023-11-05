@@ -235,7 +235,10 @@ class PluginGroup:
 
     def read_plugin_from_old(self, module_env: dict):
         sys.path.append(os.getcwd() + "/DotCS兼容插件")
-        for file in os.listdir("DotCS兼容插件"):
+        dotcs_env = self.linked_frame._get_old_dotcs_env()
+        files = os.listdir("DotCS兼容插件")
+        files.sort()
+        for file in files:
             try:
                 if file.endswith(".py"):
                     Print.print_inf(f"§6载入DotCS插件: {file.strip('.py')}", end="\r")
@@ -243,7 +246,7 @@ class PluginGroup:
                         code = f.read()
                     plugin = Plugin()
                     plugin.name = file.strip(".py")
-                    evts = plugin.import_original_dotcs_plugin(code, self.linked_frame._get_old_dotcs_env(), module_env, self)
+                    evts = plugin.import_original_dotcs_plugin(code, dotcs_env, module_env, self)
                     if "repeat10s" in evts.keys() or "repeat1s" in evts.keys() or "repeat30s" in evts.keys() or "repeat1m" in evts.keys():
                         evtnew = evts.copy()
                         for i in evtnew.keys():
@@ -294,7 +297,7 @@ class PluginGroup:
                             Print.print_err(f"该条件下无法加载加密插件{plugin_dir}, 跳过加载")
                             continue
                     else:
-                        Print.print_err(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
+                        Print.print_war(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
                         continue
                     assert self.plugin_added_cache["plugin"] is not None, 2
                     assert Plugin.__subclasscheck__(self.plugin_added_cache["plugin"]), 1
