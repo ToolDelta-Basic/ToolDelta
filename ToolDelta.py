@@ -1,10 +1,14 @@
+#!/usr/bin/python3
+# for install libs in debug mode;
+import libs.get_python_libs
+libs.get_python_libs.try_install_libs()
+# start
 import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
 import libs.rich_color_print
 import libs.color_print
-import libs.get_python_libs
 from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput
@@ -153,9 +157,24 @@ class Frame:
     @staticmethod
     def download_file(f_url: str, f_dir: str):
         res = requests.get(f_url, stream = True)
-        with open(f_dir, "wb") as dwnf:
-            for chk in res.iter_content(chunk_size = 1024):
-                if chk: dwnf.write(chk)
+        filesize = int(res.headers["content-length"])
+        nowsize = 0
+        succ = False
+        try:
+            with open(f_dir + ".tmp", "wb") as dwnf:
+                for chk in res.iter_content(chunk_size = 1024):
+                    prgs = nowsize / filesize
+                    _tmp = int(prgs * 20)
+                    bar = Print.colormode_replace("§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r", 7)
+                    Print.print_with_info(f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB", "§a 下载 §r", end = "\r")
+                    nowsize += len(chk)
+                    if chk: dwnf.write(chk)
+            succ = True
+        finally:
+            if succ:
+                os.rename(f_dir + ".tmp", f_dir)
+            else:
+                os.remove(f_dir + ".tmp")
 
     def downloadMissingFiles(self):
         mirror_src = "https://gh-proxy.com/"
