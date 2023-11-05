@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # for install libs in debug mode;
 import libs.get_python_libs
-libs.get_python_libs.try_install_libs()
 # start
 import libs.color_print
 import libs.sys_args
@@ -32,44 +31,19 @@ except:
     # Current version
     VERSION = (0, 2, 0)
 
-async def get_user_input(text, timeout):
-    Print.print_inf(text)
-    user_input = await asyncio.wait_for(async_loop.run_in_executor(None, sys.stdin.readline), timeout)
-    return user_input.strip()
-
-async def get_user_input(text, timeout):
-    Print.print_inf(text)
-    user_input = await asyncio.wait_for(async_loop.run_in_executor(None, sys.stdin.readline), timeout)
-    return user_input.strip()
-
 def set_output_mode():
     global Print
     if not Config.exists(os.path.join("data","输出模式.json")):
         Config.default_cfg(os.path.join("data","输出模式.json"), {"mode": 0})
-    outputMode=Config.get_cfg(os.path.join("data","输出模式.json"), {"mode": int})
-    outputMsg=f"使用上次输出模式: 1"
+    outputMode = Config.get_cfg(os.path.join("data","输出模式.json"), {"mode": int})
     if outputMode["mode"] == 0:
-        try:
-            printmode = async_loop.run_until_complete(
-                get_user_input("请选择使用哪种控制台输出 [1/回车=默认,2=rich]:", 5))
-            if not printmode.strip():
-                printmode = "1"
-        except asyncio.TimeoutError:
-            printmode = "1"
-            Print.print_inf("1 - 自动选择")
-        if printmode in ["一", "1"]:
-            Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 1}, force=True)
-        if printmode in ["二", "2"]:
-            Print = libs.rich_color_print.Print
-            Config.default_cfg(os.path.join("data", "输出模式.json"), {"mode": 2}, force=True)
-        outputMsg=f"成功设置输出模式: {printmode}, 下次启动不会再提示. 可在data/输出模式.json修改."
-        del printmode
-    elif outputMode["mode"] == 2:
+        Print.print_inf("在配置文件(data/输出模式.json)内可更改输出模式")
+        Print.print_inf("[普通=1, rich=2] (修改了该配置后此条信息不再显示)")
+    if outputMode["mode"] == 2:
         Print = libs.rich_color_print.Print
-        outputMsg=f"使用上次输出模式: 2"
-    Print.print_suc(outputMsg)
-    del outputMode, outputMsg
-    # raise Exception
+    else:
+        Print = libs.color_print.Print
+    del outputMode
 
 def import_proxy_lib():
     global conn
@@ -219,26 +193,8 @@ class Frame:
             "主动获取UUID": bool,
         }
         if not os.path.isfile("fbtoken"):
-            if platform.system() == "Windows" and os.path.isfile(
-                os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken")):
-                # self.loop = asyncio.get_event_loop()
-                # 也许这是唯一一个global
-                try:
-                    isUse = async_loop.run_until_complete(
-                        get_user_input("检测到系统中已有fbtoken,是否使用(y/n):", 5))
-                except asyncio.TimeoutError:
-                    isUse = "y"
-                    print("y - 自动选择")
-                if isUse in ["y", "Y", "yes", "Yes", "YES", ""]:
-                    self.UseSysFBtoken = True
-                    with open(os.path.join(os.path.expanduser("~"), ".config", "fastbuilder", "fbtoken"), "r",
-                              encoding="utf-8") as f:
-                        self.fbtoken = f.read().strip()
-                else:
-                    raise SystemExit
-            else:
-                Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
-                raise SystemExit
+            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
+            raise SystemExit
         Config.default_cfg("租赁服登录配置.json", CFG)
         try:
             cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
