@@ -1,5 +1,5 @@
 from libs.color_print import Print
-import ujson, os, time, threading, traceback
+import ujson, os, time, threading, traceback, copy
 def on_plugin_err_common(pluginName: str, _, trace: str):
     Print.print_err(f"§4插件 {pluginName} 报错, 信息：§c\n" + trace)
 
@@ -102,7 +102,7 @@ class Builtins:
         return player in in_dialogue_list
     
     @staticmethod
-    def create_dialogue_threading(player, func, exc_cb, args = (), kwargs = {}):
+    def create_dialogue_threading(player, func, exc_cb = None, args = (), kwargs = {}):
         "创建一个玩家与聊天栏交互的线程, 若玩家已处于一个对话中, 则向方法exc_cb传参: player(玩家名)"
         threading.Thread(
             target = _dialogue_thread_run, args = (player, func, exc_cb, args, kwargs)
@@ -154,21 +154,28 @@ class Builtins:
         def read(path):
             "对缓存区的该虚拟路径的文件进行读操作"
             if path in jsonPathTmp.keys():
-                return jsonPathTmp.get(path)[1]
+                val = jsonPathTmp.get(path)[1]
+                if isinstance(val, (list, dict)):
+                    val = copy.deepcopy(val)
+                return val
             else:
-                raise Exception("json路径未初始化, 不能进行读取和写入操作")
+                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
         @staticmethod
         def write(path, obj):
             "对缓存区的该虚拟路径的文件进行写操作"
             if path in jsonPathTmp.keys():
                 jsonPathTmp[path] = [True, obj]
             else:
-                raise Exception("json路径未初始化, 不能进行读取和写入操作")
+                raise Exception(f"json路径未初始化, 不能进行读取和写入操作: " + path)
+            
+        @staticmethod
+        def cancel_change(path):
+            jsonPathTmp[path][0] = False
             
         @staticmethod
         def get_tmps():
             "不要调用!"
-            return jsonPathTmp
+            return jsonPathTmp.copy()
 
 def safe_close():
     for k, (isChanged, dat) in jsonPathTmp.items():
@@ -190,7 +197,8 @@ def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
     if not Builtins.player_in_dialogue(player):
         Builtins.add_in_dialogue_player(player)
     else:
-        exc_cb(player)
+        if exc_cb is not None:
+            exc_cb(player)
         return
     try:
         func(*args, **kwargs)
