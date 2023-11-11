@@ -151,7 +151,7 @@ class Frame:
                 os.remove(f_dir + ".tmp")
 
     def downloadMissingFiles(self):
-        mirror_src = "https://gh-proxy.com/"
+        mirror_src = "https://mirror.ghproxy.com/"
         file_get_src = mirror_src + "https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"
         try:
             files_to_get = json.loads(requests.get(file_get_src).text)
@@ -166,13 +166,24 @@ class Frame:
             sys.exit(0)
         try:
             Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
-            mirr = files_to_get["Mirror"]
+            mirrs = files_to_get["Mirror"]
             download_mode = "Windows" if self.system_is_win else "Linux"
             files = files_to_get[download_mode]
             for fdir, furl in files.items():
                 if not os.path.isfile(fdir):
                     Print.print_inf(f"文件: <{fdir}> 缺失, 正在下载..")
-                    self.download_file(mirr + "/https://github.com/" + furl, fdir)
+                    succ = False
+                    for mirr in mirrs:
+                        try:
+                            self.download_file(mirr + "/https://github.com/" + furl, fdir)
+                            succ = True
+                            break
+                        except requests.exceptions.RequestException:
+                            Print.print_war("镜像源故障, 正在切换")
+                            pass
+                    if not succ:
+                        Print.print_err("镜像源全不可用..")
+                        raise SystemExit
                     Print.print_inf(f"文件: <{fdir}> 下载完成")
         except requests.Timeout:
             Print.print_err(f"自动检测文件并补全时出现错误: 超时, 自动跳过")
