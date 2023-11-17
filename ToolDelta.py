@@ -2,17 +2,17 @@
 # for install libs in debug mode;
 import libs.get_python_libs
 # start
+from libs.basic_mods import *
+from libs.plugin_load import Plugin, PluginAPI, PluginGroup
+from libs.packets import Packet_CommandOutput
+from libs.cfg import Cfg as _Cfg
+from libs.logger import publicLogger
 import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
 import libs.rich_color_print
 import libs.color_print
-from libs.basic_mods import *
-from libs.plugin_load import Plugin, PluginAPI, PluginGroup
-from libs.packets import Packet_CommandOutput
-from libs.cfg import Cfg as _Cfg
-from libs.logger import publicLogger
 
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""
