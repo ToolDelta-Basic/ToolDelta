@@ -514,7 +514,7 @@ class GameCtrl:
                     elif packet_type == 63:
                         if self.requireUUIDPacket:
                             self.store_uuid_pkt = packet_mapping
-                        else:A
+                        else:
                             self.linked_frame.createThread(self.processPlayerList, (packet_mapping,))
         except Exception:
             self.linked_frame.status = SysStatus.FB_CRASHED
