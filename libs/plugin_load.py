@@ -203,6 +203,7 @@ class PluginGroup:
             return None
 
     def add_plugin(self, plugin):
+        assert Plugin.__subclasscheck__(plugin), (1, "插件主类必须继承Plugin类")
         self.plugin_added_cache["plugin"] = plugin
         return plugin
     
@@ -214,9 +215,16 @@ class PluginGroup:
 
     def add_plugin_api(self, apiName: str):
         def _add_api(api: Type[PluginAPI]):
-            assert PluginAPI.__subclasscheck__(api), "插件API类必须继承PluginAPI类"
+            assert PluginAPI.__subclasscheck__(api), (1, "插件API类必须继承PluginAPI类")
             self.pluginAPI_added_cache.append((apiName, api))
         return _add_api
+    
+    def add_plugin_as_api(self, apiName: str):
+        def _add_plugin_2_api(api_plugin: Type[PluginAPI]):
+            assert PluginAPI.__subclasscheck__(api_plugin), (1, "API插件API类必须继承PluginAPI类和Plugin类")
+            self.plugin_added_cache["plugin"] = api_plugin
+            self.pluginAPI_added_cache.append(apiName)
+        return _add_plugin_2_api
 
     def get_plugin_api(self, apiName: str, min_version: tuple | None = None):
         api = self.plugins_api.get(apiName, None)
@@ -278,7 +286,6 @@ class PluginGroup:
                 self.plugin_added_cache["plugin"] = None
                 self.plugin_added_cache["packets"].clear()
                 self.pluginAPI_added_cache.clear()
-
                 try:
                     if os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py"):
                         with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py", "r", encoding='utf-8') as f:
@@ -300,7 +307,6 @@ class PluginGroup:
                         Print.print_war(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
                         continue
                     assert self.plugin_added_cache["plugin"] is not None, 2
-                    assert Plugin.__subclasscheck__(self.plugin_added_cache["plugin"]), 1
                     plugin = self.plugin_added_cache["plugin"]
                     plugin_body: Plugin = plugin(self.linked_frame)
                     self.plugins.append([plugin_body.name, plugin_body])
@@ -319,22 +325,22 @@ class PluginGroup:
                         self.plugins_funcs["on_player_death"].append([plugin_body.name, plugin_body.on_player_death])
                     if hasattr(plugin_body, "on_player_leave"):
                         self.plugins_funcs["on_player_leave"].append([plugin_body.name, plugin_body.on_player_leave])
-
                     Print.print_suc(f"成功载入插件 {plugin_body.name} 版本: {_v0}.{_v1}.{_v2}  作者：{plugin_body.author}")
                     self.normal_plugin_loaded_num += 1
-                    
                     if self.plugin_added_cache["packets"] != []:
                         for pktType, func in self.plugin_added_cache["packets"]: # type: ignore
                             self.__add_listen_packet_id(pktType)
                             self.__add_listen_packet_func(pktType, getattr(plugin_body, func.__name__))
-                    
                     if self.pluginAPI_added_cache is not None:
-                        for (apiName, api) in self.pluginAPI_added_cache:
-                            self.plugins_api[apiName] = api(self.linked_frame)
-
+                        for _api in self.pluginAPI_added_cache:
+                            if isinstance(_api, str):
+                                self.plugins_api[_api] = plugin_body
+                            else:
+                                (apiName, api) = _api
+                                self.plugins_api[apiName] = api(self.linked_frame)
                 except AssertionError as err:
-                    if err.args[0] == 1:
-                        Print.print_err(f"插件 {plugin_dir} 不合法: 主类没有继承 Plugin")
+                    if len(err.args[0]) == 2:
+                        Print.print_err(f"插件 {plugin_dir} 不合法: {err.args[0][1]}")
                         raise SystemExit
                     elif err.args[0] == 2:
                         Print.print_err(f"插件 {plugin_dir} 不合法: 只能调用一次 @plugins.add_plugin, 实际调用了0次或多次")
