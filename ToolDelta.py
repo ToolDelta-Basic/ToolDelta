@@ -2,17 +2,17 @@
 # for install libs in debug mode;
 import libs.get_python_libs
 # start
-from libs.basic_mods import *
-from libs.plugin_load import Plugin, PluginAPI, PluginGroup
-from libs.packets import Packet_CommandOutput
-from libs.cfg import Cfg as _Cfg
-from libs.logger import publicLogger
 import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
 import libs.rich_color_print
 import libs.color_print
+from libs.basic_mods import *
+from libs.plugin_load import Plugin, PluginAPI, PluginGroup
+from libs.packets import Packet_CommandOutput
+from libs.cfg import Cfg as _Cfg
+from libs.logger import publicLogger
 
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""
@@ -120,6 +120,7 @@ class Frame:
     isInPanicMode = False
     UseSysFBtoken = False
     external_port = sys_args_dict.get("external-port")
+    createThread = ClassicThread
 
     def check_use_token(self, tok_name = "", check_md = ""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
@@ -151,10 +152,11 @@ class Frame:
                 os.remove(f_dir + ".tmp")
 
     def downloadMissingFiles(self):
+        Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
         mirror_src = "https://mirror.ghproxy.com/"
         file_get_src = mirror_src + "https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"
         try:
-            files_to_get = json.loads(requests.get(file_get_src).text)
+            files_to_get = json.loads(requests.get(file_get_src, timeout = 30).text)
         except json.JSONDecodeError:
             Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
             sys.exit(0)
@@ -165,7 +167,7 @@ class Frame:
             Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: {err}")
             sys.exit(0)
         try:
-            Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
+            Print.print_with_info(f"§d正在检测需要补全的文件","§d 加载 ")
             mirrs = files_to_get["Mirror"]
             download_mode = "Windows" if self.system_is_win else "Linux"
             files = files_to_get[download_mode]
@@ -184,7 +186,7 @@ class Frame:
                     if not succ:
                         Print.print_err("镜像源全不可用..")
                         raise SystemExit
-                    Print.print_inf(f"文件: <{fdir}> 下载完成")
+                    Print.print_inf(f"文件: <{fdir}> 下载完成        ")
         except requests.Timeout:
             Print.print_err(f"自动检测文件并补全时出现错误: 超时, 自动跳过")
         except Exception as err:
@@ -438,7 +440,7 @@ class Frame:
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
                 if not self.isInPanicMode:
-                    self.ClassicThread(self.panic_later)
+                    self.createThread(self.panic_later)
             else:
                 Print.print_with_info(tmp, "§b  FB  §r")
             
@@ -512,8 +514,8 @@ class GameCtrl:
                     elif packet_type == 63:
                         if self.requireUUIDPacket:
                             self.store_uuid_pkt = packet_mapping
-                        else:
-                            self.processPlayerList(packet_mapping)
+                        else:A
+                            self.linked_frame.createThread(self.processPlayerList, (packet_mapping,))
         except Exception:
             self.linked_frame.status = SysStatus.FB_CRASHED
             raise
@@ -615,12 +617,7 @@ class GameCtrl:
                 exit()
         self.processPlayerList(self.store_uuid_pkt, True)
         self.requireUUIDPacket = False
-        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
-        time.sleep(0.5)
-        self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
-        self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
-        self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
-        self.linked_frame.status = SysStatus.RUNNING
+        self.inject_welcome()
 
     def Inject2(self):
         self.allplayers = self.allplayers_name = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
@@ -631,11 +628,15 @@ class GameCtrl:
             )[0]["uniqueId"]
             self.players_uuid[player] = result
             Print.print_inf(f"玩家: {player} 的UUID已获取: {result}")
+        self.inject_welcome()
+
+    def inject_welcome(self):
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name)
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
+        self.sendcmd("/tag @s add robot")
             
     def waitUntilProcess(self):
         self.requireUUIDPacket = True
@@ -717,7 +718,8 @@ try:
     frame.set_plugin_group(plugins)
     frame.welcome()
     frame.basic_op()
-    frame.downloadMissingFiles()
+    if not frame.external_port:
+        frame.downloadMissingFiles()
     import_proxy_lib()
     set_output_mode()
     frame.read_cfg()
