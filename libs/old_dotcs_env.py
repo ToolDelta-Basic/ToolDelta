@@ -64,6 +64,17 @@ def get_dotcs_env(__F, print_ins):
             if res > 1:
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
 
+    def getTarget(sth: str, timeout: bool | int = 1) -> list:
+        if not sth.startswith("@"):
+            raise Exception("Minecraft Target Selector is not correct.")
+        result = sendcmd("/tell @s get%s" % sth, True, timeout).OutputMessages[0].Parameters[1][3:]
+        if ", " not in result:
+            if not result:
+                return []
+            return [result]
+        else:
+            return result.split(", ")
+
     def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int:
         resultList = sendcmd("/scoreboard players list %s" % targetNameToGet, True)["OutputMessages"]
         result = {}
