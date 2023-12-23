@@ -99,7 +99,7 @@ class Plugin:
                             if pktID == -1:
                                 Print.print_war(f"§c无法监听任意数据包, 已跳过")
                             else:
-                                fun_exec_code = f"def packet_{pktID}(packetType, jsonPkt):\n "
+                                fun_exec_code = f"def packet_{pktID}(jsonPkt):\n packetType={pktID}\n "
                                 self._add_req_listen_packet(pktID)
                                 packetFuncs.append((pktID, f"packet_{pktID}"))
                         except:
@@ -169,7 +169,7 @@ class PluginGroup:
     pluginAPI_added_cache = []
 
     def __init__(self, frame, PRG_NAME):
-        self.listen_packet_ids = []
+        self.listen_packet_ids = set()
         self.old_dotcs_env = {}
         self.dotcs_global_vars = {}
         self.packet_funcs: dict[str, list[Callable]] = {}
@@ -269,6 +269,7 @@ class PluginGroup:
                     for pkt, func in pkfuncs:
                         self.__add_listen_packet_id(pkt)
                         self.__add_listen_packet_func(pkt, func)
+                        Print.print_suc(f"[DotCS插件 特殊数据包监听] 添加成功: {plugin.name} <- {func.__name__}")
                     for k, v in evts.items():
                         self.plugins_funcs[k].append(v)
                     self.__add_plugin(plugin)
@@ -386,8 +387,8 @@ class PluginGroup:
         self.plugins.append(plugin)
 
     def __add_listen_packet_id(self, packetType: int):
-        if not packetType in self.listen_packet_ids:
-            self.listen_packet_ids.append(packetType)
+        self.listen_packet_ids.add(packetType)
+        self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
     def __add_listen_packet_func(self, packetType, func: Callable):
         if self.packet_funcs.get(str(packetType), None):
@@ -503,6 +504,6 @@ class PluginGroup:
                     if res:
                         return True
                 except:
-                    Print.print_err(f"插件方法 {func} 出错：")
+                    Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False
