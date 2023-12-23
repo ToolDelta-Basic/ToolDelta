@@ -9,6 +9,7 @@ def get_dotcs_env(__F, print_ins):
     robotname = __F.link_game_ctrl.bot_name
     XUID2playerName = __F.link_game_ctrl.players_uuid
     threadList = __F._old_dotcs_threadinglist
+    admin = adminhigh = [robotname]
     tellrawText = lambda target, dispname=None, text="" : __F.link_game_ctrl.say_to(target, dispname+" "+text if dispname else text)
     exiting = False
     server = hash(__F.serverNumber)
