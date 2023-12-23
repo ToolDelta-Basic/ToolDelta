@@ -135,14 +135,25 @@ class Frame:
         filesize = int(res.headers["content-length"])
         nowsize = 0
         succ = False
+        lastime = time.time()
+        def pretty_kb(n):
+            if n >= 1048576:
+                return f"{round(n / 1048576, 2)}M"
+            elif n >= 1024:
+                return f"{round(n / 1024, 2)}K"
+            else:
+                return f"{round(n, 1)}"
         try:
             with open(f_dir + ".tmp", "wb") as dwnf:
                 for chk in res.iter_content(chunk_size = 1024):
+                    nowtime = time.time()
+                    useSpeed = 1024 / (nowtime - lastime)
                     prgs = nowsize / filesize
                     _tmp = int(prgs * 20)
-                    bar = Print.colormode_replace("§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r", 7)
-                    Print.print_with_info(f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB", "§a 下载 §r", end = "\r")
+                    bar = Print.colormode_replace("§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r ", 7)
+                    Print.print_with_info(f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB ({pretty_kb(useSpeed)}B/s)    ", "§a 下载 §r", end = "\r")
                     nowsize += len(chk)
+                    lastime = nowtime
                     if chk: dwnf.write(chk)
             succ = True
         finally:
@@ -413,6 +424,7 @@ class Frame:
             if not tmp:
                 continue
             elif " 简体中文" in tmp:
+                # seems will be unable forever because it's no longer supported.
                 try:
                     self.fb_pipe.stdin.write(f"{tmp[1]}\n".encode("utf-8"))
                     self.fb_pipe.stdin.flush()
@@ -481,13 +493,12 @@ class GameCtrl:
         self.linked_frame: Frame
         self.pkt_unique_id: int = 0
         self.pkt_cache: list = []
-        self.require_listen_packet_list = [9, 79, 63]
+        self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.requireUUIDPacket = True
 
     def add_listen_pkt(self, pkt_type: int):
-        if pkt_type not in self.require_listen_packet_list:
-            self.require_listen_packet_list.append(pkt_type)
+        self.require_listen_packets.add(pkt_type)
 
     def simpleProcessGamePacket(self):
         con = self.linked_frame.con
@@ -498,7 +509,7 @@ class GameCtrl:
                 packet_bytes = conn.RecvGamePacket(con)
                 packet_type = packet_bytes[0]
                 self.pkt_unique_id += 1
-                if packet_type not in self.require_listen_packet_list:
+                if packet_type not in self.require_listen_packets:
                     continue
                 else:
                     packetGetTime = time.time()
@@ -620,12 +631,15 @@ class GameCtrl:
         self.inject_welcome()
 
     def Inject2(self):
-        self.allplayers = self.allplayers_name = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
+        res = self.sendcmd("/testfor @a", True)
+        self.allplayers = self.allplayers_name = res.OutputMessages[0].Parameters[0].split(", ")
         self.bot_name = self.sendcmd("/testfor @s", True).OutputMessages[0].Parameters[0]
         for player in self.allplayers:
-            result = json.loads(
-                self.sendcmd("/querytarget " + player, True).OutputMessages[0].Parameters[0]
-            )[0]["uniqueId"]
+            res = self.sendwscmd("/querytarget @a[name=" + player + "]", True)
+            if res.OutputMessages[0].Message.startswith("commands.generic"):
+                Print.print_err("无法获取UUID列表")
+                raise SystemExit
+            result = json.loads(res.OutputMessages[0].Parameters[0])[0]["uniqueId"]
             self.players_uuid[player] = result
             Print.print_inf(f"玩家: {player} 的UUID已获取: {result}")
         self.inject_welcome()
@@ -735,9 +749,9 @@ try:
             if frame.status in [SysStatus.LAUNCHING, SysStatus.NEED_RESTART]:
                 frame.runFB(port=frame.conPort)
                 frame.run_conn(port=frame.conPort)
-                thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket)
+                thread_processPacket = Frame.createThread(game_control.simpleProcessGamePacket)
                 game_control.waitUntilProcess()
-                thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc)
+                thread_processPacketFunc = Frame.createThread(game_control.threadPacketProcessFunc)
                 frame.ConsoleCmd_thread()
                 game_control.Inject()
             plugins.execute_init(frame.on_plugin_err)
@@ -767,8 +781,8 @@ try:
         Print.print_inf(f"§b尝试在端口{frame.external_port} 连接到FastBuilder")
         frame.run_conn(port=int(frame.external_port), timeout = 5)
         game_control.requireUUIDPacket = False
-        thread_processPacket = Frame.ClassicThread(game_control.simpleProcessGamePacket, usage = "fbconn")
-        thread_processPacketFunc = Frame.ClassicThread(game_control.threadPacketProcessFunc, usage = "fbconn")
+        thread_processPacket = Frame.createThread(game_control.simpleProcessGamePacket, usage = "fbconn")
+        thread_processPacketFunc = Frame.createThread(game_control.threadPacketProcessFunc, usage = "fbconn")
         frame.ConsoleCmd_thread()
         game_control.Inject2()
         plugins.execute_init(frame.on_plugin_err)
