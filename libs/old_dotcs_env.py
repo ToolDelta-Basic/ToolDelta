@@ -1,9 +1,9 @@
 import os, json, threading, ctypes, traceback
 
 def get_dotcs_env(__F, print_ins):
-    sendcmd = __F.link_game_ctrl.sendcmd
+    sendcmd = lambda cmd, waitForResp=False, timeout=30: __F.link_game_ctrl.sendcmd(cmd, waitForResp, timeout).as_dict if waitForResp else __F.link_game_ctrl.sendcmd(cmd)
     sendwocmd = __F.link_game_ctrl.sendwocmd
-    sendwscmd = __F.link_game_ctrl.sendwscmd
+    sendwscmd = lambda cmd, waitForResp=False, timeout=30: __F.link_game_ctrl.sendwscmd(cmd, waitForResp, timeout).as_dict if waitForResp else __F.link_game_ctrl.sendwscmd(cmd)
     sendfbcmd = __F.link_game_ctrl.sendfbcmd
     allplayers = __F.link_game_ctrl.allplayers
     robotname = __F.link_game_ctrl.bot_name
@@ -68,7 +68,7 @@ def get_dotcs_env(__F, print_ins):
     def getTarget(sth: str, timeout: bool | int = 1) -> list:
         if not sth.startswith("@"):
             raise Exception("Minecraft Target Selector is not correct.")
-        result = sendcmd("/tell @s get%s" % sth, True, timeout).OutputMessages[0].Parameters[1][3:]
+        result = sendcmd("/tell @s get%s" % sth, True, timeout)["OutputMessages"][0]["Parameters"][1][3:]
         if ", " not in result:
             if not result:
                 return []
