@@ -300,7 +300,7 @@ class PluginGroup:
                         with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py", "r", encoding='utf-8') as f:
                             code = f.read()
                         exec(code, root_env)
-                        # 会污染整体环境...算了算了
+                        # 理论上所有插件共享一个整体环境
                     elif os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc"):
                         if decPluginAndCMP is not None:
                             with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc", "rb") as f:
@@ -397,6 +397,7 @@ class PluginGroup:
             self.packet_funcs[str(packetType)] = [func]
 
     def execute_dotcs_repeat(self, on_plugin_err):
+        "启动dotcs插件的循环执行模式插件事件"
         threading.Thread(target=self.run_dotcs_repeat_funcs).start()
 
     def run_dotcs_repeat_funcs(self):
