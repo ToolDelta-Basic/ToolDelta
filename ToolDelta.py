@@ -50,7 +50,7 @@ def import_proxy_lib():
     try:
         import libs.conn as conn
     except Exception as err:
-        Print.print_err(f"加载外部库失败， 请检查其是否存在:{err}")
+        Print.print_err(f"加载FastBuilder连接库失败， 请检查其是否存在:{err}")
         raise SystemExit
 
 class SysStatus:
@@ -163,6 +163,7 @@ class Frame:
                 os.remove(f_dir + ".tmp")
 
     def downloadMissingFiles(self):
+        "获取缺失文件"
         Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
         mirror_src = "https://mirror.ghproxy.com/"
         file_get_src = mirror_src + "https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"
@@ -250,7 +251,7 @@ class Frame:
     def plugin_load_finished(self, plugins: PluginGroup):
         Print.print_suc(f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件")
 
-    def basic_op(self):
+    def basic_operation(self):
         os.makedirs("DotCS兼容插件", exist_ok = True)
         os.makedirs("插件配置文件", exist_ok = True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok = True)
@@ -471,9 +472,11 @@ class Frame:
         return self.consoleMenu
     
     def set_game_control(self, game_ctrl):
+        "使用外源GameControl..."
         self.link_game_ctrl = game_ctrl
 
     def set_plugin_group(self, plug_grp):
+        "使用外源PluginGroup..."
         self.link_plugin_group = plug_grp
 
     def get_game_control(self):
@@ -501,6 +504,7 @@ class GameCtrl:
         self.require_listen_packets.add(pkt_type)
 
     def simpleProcessGamePacket(self):
+        "简单处理游戏数据包, 并将数据包放入缓冲区等待插件处理"
         con = self.linked_frame.con
         plugin_grp: PluginGroup = self.linked_frame.link_plugin_group
         self.pkt_unique_id = 0
@@ -532,6 +536,7 @@ class GameCtrl:
             raise
 
     def processPlayerList(self, pkt, first = False):
+        "处理玩家进出事件"
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
@@ -553,6 +558,7 @@ class GameCtrl:
                 Print.print_inf(f"§e{playername} 退出了游戏")
 
     def processMsgPacketWithPlugin(self, pkt: dict, pkt_type: int, plugin_grp: PluginGroup):
+        "处理9号数据包的消息, 因特殊原因将一些插件事件放到此处理"
         if pkt_type == 9:
             match pkt['TextType']:
                 case 2:
@@ -563,7 +569,7 @@ class GameCtrl:
                         player = pkt["Parameters"][0]
                     elif pkt['Message'] == "§e%multiplayer.player.left":
                         player = pkt["Parameters"][0]
-                        plugin_grp.execute_player_leave(player, self.linked_frame.on_plugin_err)
+                        
                     elif pkt['Message'].startswith("death."):
                         Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
                         if len(pkt["Parameters"]) >= 2:
@@ -587,6 +593,7 @@ class GameCtrl:
                         pass
 
     def threadPacketProcessFunc(self):
+        "对缓冲区的数据包进行处理, 特别是防止因插件阻塞而导致数据包溢出"
         while 1:
             lastPTime = 0
             if self.pkt_cache:
@@ -602,11 +609,13 @@ class GameCtrl:
                 self.pkt_cache.clear()
 
     def test_player_leave_and_join(self, player):
+        "必要时测试玩家进出的处理有没有问题."
         Print.print_inf(f"正在测试{player}的进退游戏.")
         plugins.execute_player_leave(player, self.linked_frame.on_plugin_err)
         plugins.execute_player_join(player, self.linked_frame.on_plugin_err)
 
     def Inject(self):
+        "TooDelta启动FB模式下的Inject"
         startDetTime = time.time()
         if self.linked_frame.server_cfgs["主动获取UUID"]:
             time.sleep(2)
@@ -631,13 +640,19 @@ class GameCtrl:
         self.inject_welcome()
 
     def Inject2(self):
-        res = self.sendcmd("/testfor @a", True)
+        "ToolDelta外连FB时的Inject"
+        Print.print_inf("正在获取玩家UUID列表..")
+        try:
+            res = self.sendcmd("/testfor @a", True, 10)
+        except TimeoutError:
+            Print.print_err("无法获取UUID列表: 超时")
+            raise SystemExit
         self.allplayers = self.allplayers_name = res.OutputMessages[0].Parameters[0].split(", ")
-        self.bot_name = self.sendcmd("/testfor @s", True).OutputMessages[0].Parameters[0]
+        self.bot_name = self.sendcmd("/testfor @s", True, 10).OutputMessages[0].Parameters[0]
         for player in self.allplayers:
             res = self.sendwscmd("/querytarget @a[name=" + player + "]", True)
             if res.OutputMessages[0].Message.startswith("commands.generic"):
-                Print.print_err("无法获取UUID列表")
+                Print.print_err("无法获取UUID列表: 未知命令, 或许机器人没有OP权限")
                 raise SystemExit
             result = json.loads(res.OutputMessages[0].Parameters[0])[0]["uniqueId"]
             self.players_uuid[player] = result
@@ -653,12 +668,14 @@ class GameCtrl:
         self.sendcmd("/tag @s add robot")
             
     def waitUntilProcess(self):
+        "等待第一个数据包的接收"
         self.requireUUIDPacket = True
         self.allplayers.clear()
         self.players_uuid.clear()
         while self.pkt_unique_id == 0:pass
 
     def clearCmdRespList(self):
+        "对未能及时处理的指令返回消息进行清除"
         while 1:
             time.sleep(3)
             for k in self.command_resp.copy():
@@ -681,7 +698,12 @@ class GameCtrl:
                     return Packet_CommandOutput(res[1])
                 elif time.time() - waitStartTime > timeout:
                     self.command_req.remove(uuid)
-                    raise TimeoutError(1, "指令返回获取超时")
+                    try:
+                        # 特殊情况下只有 sendwscmd 能接收到返回的命令
+                        Print.print_war(f"sendcmd \"{cmd}\" 超时, 尝试 sendwscmd")
+                        return self.sendwscmd(cmd, True, timeout)
+                    except TimeoutError:
+                        raise
         else:
             return uuid
         
@@ -731,7 +753,7 @@ try:
     frame.set_game_control(game_control)
     frame.set_plugin_group(plugins)
     frame.welcome()
-    frame.basic_op()
+    frame.basic_operation()
     if not frame.external_port:
         frame.downloadMissingFiles()
     import_proxy_lib()
@@ -780,8 +802,9 @@ try:
         frame.sys_data.connect_fb_start_time = 5
         Print.print_inf(f"§b尝试在端口{frame.external_port} 连接到FastBuilder")
         frame.run_conn(port=int(frame.external_port), timeout = 5)
-        game_control.requireUUIDPacket = False
         thread_processPacket = Frame.createThread(game_control.simpleProcessGamePacket, usage = "fbconn")
+        game_control.waitUntilProcess()
+        game_control.requireUUIDPacket = False
         thread_processPacketFunc = Frame.createThread(game_control.threadPacketProcessFunc, usage = "fbconn")
         frame.ConsoleCmd_thread()
         game_control.Inject2()
