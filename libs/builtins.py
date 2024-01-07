@@ -1,9 +1,38 @@
 from libs.color_print import Print
-import ujson, os, time, threading, traceback, copy
-def on_plugin_err_common(pluginName: str, _, trace: str):
-    Print.print_err(f"§4插件 {pluginName} 报错, 信息：§c\n" + trace)
+import ujson, os, time, threading, traceback, copy, ctypes
 
 class Builtins:
+    class ThreadExit(SystemExit):...
+    class ClassicThread(threading.Thread):
+        def __init__(self, func, args: tuple = (), usage = "", **kwargs):
+            super().__init__(target = func)
+            self.func = func
+            self.daemon = True
+            self.all_args = [args, kwargs]
+            self.usage = usage
+            self.start()
+
+        def run(self):
+            try:
+                self.func(*self.all_args[0], **self.all_args[1])
+            except Builtins.ThreadExit:
+                pass
+            except:
+                Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
+                if "exc_cb" in self.all_args[1].keys():
+                    self.all_args[1]["exc_cb"]
+
+        def get_id(self):
+            if hasattr(self, '_thread_id'):
+                return self._thread_id
+            for id, thread in threading._active.items():
+                if thread is self:
+                    return id
+                
+        def stop(self):
+            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(self.get_id(), ctypes.py_object(Builtins.ThreadExit))
+            return res
+    createThread = ClassicThread
     class SimpleJsonDataReader:
         @staticmethod
         def SafeJsonDump(obj: str | dict | list, fp):
