@@ -106,7 +106,7 @@ class Frame:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
-        self.launcher = FrameNeOmg(self.serverNumber, self.serverPasswd, fbtoken)
+        self.launcher = FrameFBConn(self.serverNumber, self.serverPasswd, fbtoken)
 
     def welcome(self):
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
@@ -163,36 +163,39 @@ class Frame:
                         if not rsp:
                             continue
                         elif rsp.split()[0] in triggers:
-                            res = self._try_execute_console_cmd(func, rsp, 0, None)
+                            res = _try_execute_console_cmd(func, rsp, 0, None)
                             if res == -1:
                                 return
                         else:
                             for tri in triggers:
                                 if rsp.startswith(tri):
-                                    res = self._try_execute_console_cmd(func, rsp, 1, tri)
+                                    res = _try_execute_console_cmd(func, rsp, 1, tri)
                                     if res == -1:
                                         return
             except EOFError:
                 pass
-        threading.Thread(target=_console_cmd_thread).start()
+        def _try_execute_console_cmd(func, rsp, mode, arg1):
+            try:
+                if mode == 0:
+                    rsp_arg = rsp.split()[1:]
+                elif mode == 1:
+                    rsp_arg = rsp[len(arg1):].split()
+            except IndexError:
+                Print.print_err("[控制台执行命令] 指令缺少参数")
+                return
+            try:
+                func(rsp_arg)
+                return 1
+            except Exception as err:
+                if "id 0 out of range 0" in str(err):
+                    return -1
+                Print.print_err(f"控制台指令出错： {err}")
+                return 0
+        self.createThread(_console_cmd_thread)
 
-    def _try_execute_console_cmd(self, func, rsp, mode, arg1):
-        try:
-            if mode == 0:
-                rsp_arg = rsp.split()[1:]
-            elif mode == 1:
-                rsp_arg = rsp[len(arg1):].split()
-        except IndexError:
-            Print.print_err("[控制台执行命令] 指令缺少参数")
-            return
-        try:
-            func(rsp_arg)
-            return 1
-        except Exception as err:
-            if "id 0 out of range 0" in str(err):
-                return -1
-            Print.print_err(f"控制台指令出错： {err}")
-            return 0
+    def system_exit(self):
+        self.safe_close()
+        os._exit(0)
     
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
