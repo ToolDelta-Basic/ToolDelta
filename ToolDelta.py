@@ -57,7 +57,7 @@ class Frame:
     link_game_ctrl = None
     link_plugin_group = None
     _old_dotcs_threadinglist = []
-    on_plugin_err = lambda _, *args, **kwargs: None
+    on_plugin_err = lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     system_is_win = sys.platform in ["win32", "win64"]
     external_port = sys_args_dict.get("external-port")
 
