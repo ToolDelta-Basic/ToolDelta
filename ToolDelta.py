@@ -69,27 +69,33 @@ class Frame:
             raise SystemExit
         
     def read_cfg(self):
+        public_launcher = [
+            ("FastBuilder External 模式 (经典模式)", FrameFBConn),
+            ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg)
+        ]
         CFG = {
             "服务器号": 0,
             "密码": 0,
-            "主动获取UUID": False,
+            "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
         }
         CFG_STD = {
             "服务器号": int,
             "密码": int,
-            "主动获取UUID": bool,
+            "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
             raise SystemExit
-        Config.default_cfg("租赁服登录配置.json", CFG)
+        Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
-            cfgs = Config.get_cfg("租赁服登录配置.json", CFG_STD)
+            cfgs = Config.get_cfg("ToolDelta基本配置.json", CFG_STD)
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
-            self.server_cfgs = cfgs
+            self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+            if self.launchMode != 0 and self.launchMode not in range(1, len(public_launcher) + 1):
+                raise Config.ConfigError("")
         except Config.ConfigError:
-            Print.print_err("租赁服登录配置有误， 需要更正")
+            Print.print_err("ToolDelta基本配置有误， 需要更正")
             exit()
         if self.serverNumber == "0":
             while 1:
@@ -99,14 +105,29 @@ class Frame:
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
-                    cfgs = Config.default_cfg("租赁服登录配置.json", std, True)
+                    Config.default_cfg("ToolDelta基本配置.json", std, True)
                     Print.print_suc("登录配置设置成功")
+                    cfgs = std
                     break
                 except:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
+        if self.launchMode == 0:
+            Print.print_inf("请选择启动器启动模式(之后可在ToolDelta启动配置更改):")
+            for i, (nm, _) in enumerate(public_launcher):
+                Print.print_inf(f" {i + 1} - {nm}")
+            while 1:
+                try:
+                    ch = int(input(Print.fmt_info("请选择: ", "输入")))
+                    assert ch in range(1, len(public_launcher) + 1)
+                    cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
+                    break
+                except (ValueError, AssertionError):
+                    Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
+            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+        launcher = public_launcher[cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1][1]
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
-        self.launcher = FrameFBConn(self.serverNumber, self.serverPasswd, fbtoken)
+        self.launcher: StandardFrame = launcher(self.serverNumber, self.serverPasswd, fbtoken)
 
     def welcome(self):
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
@@ -194,6 +215,11 @@ class Frame:
         self.createThread(_console_cmd_thread)
 
     def system_exit(self):
+        if self.link_game_ctrl.allplayers:
+            try:
+                self.link_game_ctrl.sendcmd(f"/kick {self.link_game_ctrl.bot_name}")
+            except:
+                pass
         self.safe_close()
         os._exit(0)
     
@@ -368,6 +394,8 @@ def start_tool_delta():
         raise frame.launcher.launch()
     except KeyboardInterrupt:
         frame.safe_close()
+    except SystemExit:
+        pass
     except:
         print(traceback.format_exc())
     finally:
