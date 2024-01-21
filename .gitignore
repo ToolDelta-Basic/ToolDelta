@@ -136,7 +136,18 @@ dmypy.json
 .pytype/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+ToolDelta插件/
+DotCS兼容插件/
+ToolDelta无OP运行组件/
+插件配置文件/
+插件配置文件/
+日志文件/
+data/
+_Plugin_Data/
+.vscode/
 py_test.py
 fbtoken
 ToolDelta基本配置.json
 phoenixbuilder*
+*.bdx
+tos.sh

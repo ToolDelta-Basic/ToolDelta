@@ -8,7 +8,6 @@ from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .urlmethod import get_free_port
 
-
 class SysStatus:
     LAUNCHING = 0
     RUNNING = 1
@@ -17,7 +16,6 @@ class SysStatus:
     FB_CRASHED = 4
     NEED_RESTART = 5
     launch_type = "None"
-
 
 class StandardFrame:
     # 提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口
@@ -61,12 +59,10 @@ class StandardFrame:
     sendPacket = None
     sendPacketJson = None
 
-
 class FrameFBConn(StandardFrame):
     # 使用原生 FastBuilder External 连接
     cmds_reqs = []
     cmds_resp = {}
-
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
@@ -75,8 +71,8 @@ class FrameFBConn(StandardFrame):
     def launch(self):
         try:
             free_port = get_free_port(10000)
-            self.runFB(port=free_port)
-            self.run_conn(port=free_port)
+            self.runFB(port = free_port)
+            self.run_conn(port = free_port)
             Builtins.createThread(self.output_fb_msgs_thread)
             self.process_game_packets()
         except Exception as err:
@@ -255,7 +251,7 @@ class FrameFBConn(StandardFrame):
             Print.print_err(f"自动检测文件并补全时出现错误: {err}")
             return False
         return True
-
+    
     def init_all_functions(self):
         def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendMCCommand(self.con, cmd)
@@ -278,7 +274,6 @@ class FrameFBConn(StandardFrame):
                             raise
             else:
                 return uuid
-
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendWSCommand(self.con, cmd)
             if waitForResp:
@@ -357,16 +352,14 @@ class FrameNeOmg(StandardFrame):
 
     def init_all_functions(self):
         omg = self.omega
-
-        def sendcmd(cmd, waitForResp=False, timeout=30):
+        def sendcmd(cmd, waitForResp = False, timeout = 30):
             if waitForResp:
                 res = omg.send_player_command_need_response(cmd, timeout)
                 return res
             else:
                 omg.send_player_command_omit_response(cmd)
                 return b""
-
-        def sendwscmd(cmd, waitForResp=False, timeout=30):
+        def sendwscmd(cmd, waitForResp = False, timeout = 30):
             if waitForResp:
                 res = omg.send_websocket_command_need_response(cmd, timeout)
                 return res

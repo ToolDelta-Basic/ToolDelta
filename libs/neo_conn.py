@@ -856,4 +856,8 @@ class ThreadOmega:
 
     def __del__(self):
         for t in self._running_threads.values():
+<<<<<<< HEAD
             t.join()
+=======
+            t.join()
+>>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae

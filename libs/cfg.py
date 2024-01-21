@@ -6,6 +6,7 @@ PLUGINCFG_DEFAULT = {
     "配置版本": "0.0.1",
     "配置项": None
 }
+
 PLUGINCFG_STANDARD_TYPE = {
     "配置版本": str,
     "配置项": [type(None), dict]

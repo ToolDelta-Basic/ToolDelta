@@ -138,7 +138,6 @@ def check_err(r):
         # freeMem(r.err)
         raise Exception(err)
 
-
 if platform.uname()[0] == "Linux":
     LIB = ctypes.cdll.LoadLibrary("libs/fb_libs/libfbconn_linux_amd64.so")
 elif platform.uname()[0] == "Windows":

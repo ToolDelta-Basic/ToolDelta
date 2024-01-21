@@ -3,7 +3,7 @@ from ujson import JSONDecodeError
 from libs.packets import Packet_CommandOutput
 from io import TextIOWrapper
 import threading
-import libs.conn as conn
+import libs.fbconn as fbconn
 
 VERSION = tuple[int, int, int]
 
@@ -90,19 +90,13 @@ class Frame:
             func: Callable[[list[str]], None]
         ):...
     sys_data: FrameBasic
+    createThread = ClassicThread
     
 class GameManager:
-    command_req = []
-    command_resp = {}
     players_uuid = {}
     allplayers = []
     bot_name = ""
     linked_frame: Frame
-    pkt_unique_id: int = 0
-    pkt_cache: list = []
-    require_listen_packet_list = [9, 79, 63]
-    store_uuid_pkt = None
-    requireUUIDPacket = True
     def __init__(self, frame: Frame):
         self.linked_frame = frame
     def sendwocmd(self, cmd: str):...
@@ -140,13 +134,8 @@ class PluginGroup:
         def __init__(self, name, m_ver, n_ver):...
     plugins: list[Plugin] = []
     plugins_funcs: dict[str, list]
-    listen_packet_ids = []
-    old_dotcs_env = {}
-    linked_frame = None
+    linked_frame: Frame
     packet_funcs: dict[str, list[Callable]] = {}
-    plugins_api = {}
-    dotcs_global_vars = {}
-    excType = 0
     PRG_NAME = ""
     @staticmethod
     def get_plugin_api(apiName: str, min_version: tuple | None = None) -> PluginAPI | NoReturn:...
