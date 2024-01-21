@@ -10,6 +10,6 @@
     },
     "Windows": {
         "libs/libfbconn_windows_x86_64.dll": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_windows_x86_64.dll",
-        "phenixbuilder.exe": "rnhws-Team/ToolDelta-PhoenixBuilder/releases/download/v1.1.1/phoenixbuilder-windows-executable-x86.exe"
+        "phoenixbuilder.exe": "rnhws-Team/ToolDelta-PhoenixBuilder/releases/download/v1.1.1/phoenixbuilder-windows-executable-x86.exe"
     }
 }
