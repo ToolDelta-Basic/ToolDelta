@@ -75,6 +75,7 @@ class Frame:
         if not os.path.isfile("fbtoken"):
             Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
             raise SystemExit
+        self.fbtokenFix()
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
             cfgs = Config.get_cfg("ToolDelta基本配置.json", CFG_STD)
@@ -371,7 +372,6 @@ def start_tool_delta():
         frame.welcome()
         frame.basic_operation()
         frame.read_cfg()
-        frame.fbtokenFix()
         game_control.init_funcs()
         plugins.read_plugin_from_old(dotcs_module_env)
         plugins.read_plugin_from_new(globals())
