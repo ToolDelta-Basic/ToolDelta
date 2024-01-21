@@ -1,4 +1,4 @@
-from libs.color_print import Print
+from color_print import Print
 import ujson, os, time, threading, traceback, copy, ctypes
 
 class Builtins:
