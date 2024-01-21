@@ -1,13 +1,12 @@
-#!/usr/bin/python3
-# for install libs in debug mode;
+# for installing libs in debug mode;
 import libs.get_python_libs
+from libs.basic_mods import *
 # start
 import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
 import libs.color_print
-from libs.basic_mods import *
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput, PacketIDS
 from libs.cfg import Cfg as _Cfg
@@ -210,14 +209,14 @@ class Frame:
             except Exception as err:
                 if "id 0 out of range 0" in str(err):
                     return -1
-                Print.print_err(f"控制台指令出错： {err}")
+                Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
         self.createThread(_console_cmd_thread)
 
     def system_exit(self):
         if self.link_game_ctrl.allplayers:
             try:
-                self.link_game_ctrl.sendcmd(f"/kick {self.link_game_ctrl.bot_name}")
+                self.link_game_ctrl.sendcmd(f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)")
             except:
                 pass
         self.safe_close()
@@ -294,7 +293,7 @@ class GameCtrl:
                     plugin_group.execute_player_join(playername, self.linked_frame.on_plugin_err)
                 else:
                     self.bot_name = pkt["Entries"][0]["Username"]
-                    self.requireUUIDPacket = True
+                    self.requireUUIDPacket = False
             else:
                 for k in self.players_uuid:
                     if self.players_uuid[k] == player["UUID"]:
@@ -346,6 +345,7 @@ class GameCtrl:
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
+        self.allplayers = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
         self.linked_frame.comsole_cmd_start()
         self.linked_frame.link_plugin_group.execute_init(self.linked_frame.on_plugin_err)
         self.inject_welcome()
