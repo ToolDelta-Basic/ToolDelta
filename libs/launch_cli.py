@@ -170,6 +170,8 @@ class FrameFBConn(StandardFrame):
                 Print.print_with_info(
                     "FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  "
                 )
+            elif "Successfully created minecraft dialer." in tmp:
+                Print.print_with_info("§e成功创建于 Minecraft 的链接", "§b  FB  §r")
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
             else:
