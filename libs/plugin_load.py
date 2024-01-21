@@ -1,9 +1,10 @@
 from typing import Callable, Type, Any
-from .color_print import Print
 import os, sys, traceback, zipfile, time, threading, re
-from .cfg import Cfg
+from color_print import Print
+from cfg import Cfg
 from .builtins import Builtins
 try:
+    # you'd like to delete this block
     from .pluginDec import decPluginAndCMP
 except:
     decPluginAndCMP = None
@@ -22,6 +23,112 @@ def unzip_plugin(zip_dir, exp_dir):
         print(traceback.format_exc())
         os._exit(0)
 
+def _import_original_dotcs_plugin(plugin_code: str, old_dotcs_env: dict, module_env: dict, plugin_group):
+    # dotcs插件太不规范了!!
+    plugin_body = Plugin()
+    plugin_body.dotcs_old_type = True
+    old_dotcs_env.update(module_env)
+    runcode_tmp = {}
+    plugin_code_lines = plugin_code.split("\n")
+    _dotcs_runcode = {}
+    evts = {}
+    packetFuncs = []
+    while 1:
+        if "" in plugin_code_lines:
+            plugin_code_lines.remove("")
+        else:
+            break
+    plugin_start = -1
+    plugin_end = 0
+    plugin_prev_type = ""
+
+    for line in range(len(plugin_code_lines)):
+        if "import *" in plugin_code_lines[line]:
+            Print.print_war(f"DotCS插件 存在异常的代码 'import *', 已自动替换为 pass: §7{line} §f|{plugin_code_lines[line]}")
+            plugin_code_lines[line] = NOT_IMPORTALL_RULE.sub("pass", plugin_code_lines[line])
+        if plugin_code_lines[line].startswith("# PLUGIN TYPE: "):
+            if plugin_start + 1:
+                plugin_end = line
+                runcode_tmp[plugin_prev_type] = "\n".join(plugin_code_lines[plugin_start:plugin_end])
+            plugin_start = line + 1
+            plugin_prev_type = plugin_code_lines[line].strip("# PLUGIN TYPE: ")
+    if plugin_start + 1:
+        plugin_end = len(plugin_code_lines)
+        runcode_tmp[plugin_prev_type] = "\n".join(plugin_code_lines[plugin_start:plugin_end])
+
+    old_dotcs_env.update({"plugin_group": plugin_group})
+    fun_exec_code = ""
+    for k in runcode_tmp:
+        match k:
+            case "def":
+                fun_exec_code = "def on_def():\n "
+            case "init":
+                fun_exec_code = "def on_inject():\n "
+            case "player prejoin":
+                fun_exec_code = "def on_player_prejoin(playername):\n "
+            case "player join":
+                fun_exec_code = "def on_player_join(playername):\n "
+            case "player message":
+                fun_exec_code = "def on_player_message(playername, msg):\n "
+            case "player leave":
+                fun_exec_code = "def on_player_leave(playername):\n "
+            case "player death":
+                fun_exec_code = "def on_player_death(playername, killer, msg):\n "
+            case "repeat 1s":
+                fun_exec_code = "def repeat1s():\n "
+            case "repeat 10s":
+                fun_exec_code = "def repeat10s():\n "
+            case "repeat 30s":
+                fun_exec_code = "def repeat30s():\n "
+            case "repeat 1m":
+                fun_exec_code = "def repeat1m():\n "
+            case _:
+                if k.startswith("packet"):
+                    try:
+                        pktID = int(k.split()[1])
+                        if pktID == -1:
+                            Print.print_war(f"§c无法监听任意数据包, 已跳过")
+                        else:
+                            fun_exec_code = f"def packet_{pktID}(jsonPkt):\n packetType={pktID}\n "
+                            plugin_body._add_req_listen_packet(pktID)
+                            packetFuncs.append((pktID, f"packet_{pktID}"))
+                    except:
+                        Print.print_war(f"§c不合法的监听数据包ID： {k}, 已跳过")  
+                else:
+                    raise Exception(f"无法识别的DotCS插件事件样式： {k}")
+        # DotCS 有太多的插件都会出现作用域问题, 在此只能这么修复了
+        p_code = fun_exec_code + """globals().update(plugin_group.dotcs_global_vars)\n """ \
+            + runcode_tmp[k].replace("\n", "\n ") + \
+                "\n plugin_group.dotcs_global_vars.update(locals())"
+        try:
+            exec(p_code, old_dotcs_env, _dotcs_runcode)
+        except Exception as err:
+            Print.print_err(f"DotCS插件 <{plugin_body.name}> 出错: {err}")
+            raise
+    newPacketFuncs = []
+    for pkt, funcname in packetFuncs:
+        newPacketFuncs.append((pkt, _dotcs_runcode[funcname]))
+    for codetype in [
+        "on_def",
+        "on_inject",
+        "on_player_prejoin",
+        "on_player_join",
+        "on_player_message",
+        "on_player_death",
+        "on_player_leave"
+    ]:
+        if _dotcs_runcode.get(codetype, None):
+            evts[codetype] = [plugin_body.name, _dotcs_runcode[codetype]]
+        if _dotcs_runcode.get(f"repeat1s", None):
+            evts["repeat1s"] = [plugin_body.name, _dotcs_runcode[f"repeat1s"]]
+        if _dotcs_runcode.get(f"repeat10s", None):
+            evts["repeat10s"] = [plugin_body.name, _dotcs_runcode[f"repeat10s"]]
+        if _dotcs_runcode.get(f"repeat30s", None):
+            evts["repeat30s"] = [plugin_body.name, _dotcs_runcode[f"repeat30s"]]
+        if _dotcs_runcode.get(f"repeat1m", None):
+            evts["repeat1m"] = [plugin_body.name, _dotcs_runcode[f"repeat1m"]]
+    return plugin_body, evts, newPacketFuncs
+
 class Plugin:
     name = "<未命名插件>"
     version = (0, 0, 1)
@@ -34,111 +141,10 @@ class Plugin:
         if not pktID in self.require_listen_packets:
             self.require_listen_packets.append(pktID)
 
-    def import_original_dotcs_plugin(self, plugin_prg: str, old_dotcs_env: dict, module_env: dict, plugin_group) -> dict[str, Any]:
-        # dotcs插件太不规范了!!
-        self.dotcs_old_type = True
-        old_dotcs_env.update(module_env)
-        runcode_tmp = {}
-        plugin_prg_lines = plugin_prg.split("\n")
-        _dotcs_runcode = {}
-        evts = {}
-        while 1:
-            if "" in plugin_prg_lines:
-                plugin_prg_lines.remove("")
-            else:
-                break
-        plugin_start = -1
-        plugin_end = 0
-        plugin_prev_type = ""
-
-        for line in range(len(plugin_prg_lines)):
-            if "import *" in plugin_prg_lines[line]:
-                Print.print_war(f"DotCS插件 存在异常的代码 'import *', 已自动替换为 pass: §7{line} §f|{plugin_prg_lines[line]}")
-                plugin_prg_lines[line] = NOT_IMPORTALL_RULE.sub("pass", plugin_prg_lines[line])
-            if plugin_prg_lines[line].startswith("# PLUGIN TYPE: "):
-                if plugin_start + 1:
-                    plugin_end = line
-                    runcode_tmp[plugin_prev_type] = "\n".join(plugin_prg_lines[plugin_start:plugin_end])
-                plugin_start = line + 1
-                plugin_prev_type = plugin_prg_lines[line].strip("# PLUGIN TYPE: ")
-        if plugin_start + 1:
-            plugin_end = len(plugin_prg_lines)
-            runcode_tmp[plugin_prev_type] = "\n".join(plugin_prg_lines[plugin_start:plugin_end])
-
-        old_dotcs_env.update({"plugin_group": plugin_group})
-        fun_exec_code = ""
-        for k in runcode_tmp:
-            match k:
-                case "def":
-                    fun_exec_code = "def on_def():\n "
-                case "init":
-                    fun_exec_code = "def on_inject():\n "
-                case "player prejoin":
-                    fun_exec_code = "def on_player_prejoin(playername):\n "
-                case "player join":
-                    fun_exec_code = "def on_player_join(playername):\n "
-                case "player message":
-                    fun_exec_code = "def on_player_message(playername, msg):\n "
-                case "player leave":
-                    fun_exec_code = "def on_player_leave(playername):\n "
-                case "player death":
-                    fun_exec_code = "def on_player_death(playername, killer, msg):\n "
-                case "repeat 1s":
-                    fun_exec_code = "def repeat1s():\n "
-                case "repeat 10s":
-                    fun_exec_code = "def repeat10s():\n "
-                case "repeat 30s":
-                    fun_exec_code = "def repeat30s():\n "
-                case "repeat 1m":
-                    fun_exec_code = "def repeat1m():\n "
-                case _:
-                    if k.startswith("packet"):
-                        try:
-                            pktID = int(k.split()[1])
-                            if pktID == -1:
-                                Print.print_war(f"§c无法监听任意数据包, 已跳过")
-                            else:
-                                fun_exec_code = f"def packet_{pktID}(packetType, jsonPkt):\n "
-                                self._add_req_listen_packet(pktID)
-                        except:
-                            Print.print_war(f"§c不合法的监听数据包ID： {k}, 已跳过")  
-                    else:
-                        raise Exception(f"无法识别的DotCS插件事件样式： {k}")
-            # DotCS 有太多的插件都会出现作用域问题, 在此只能这么修复了
-            # ouch
-            p_code = fun_exec_code + """globals().update(plugin_group.dotcs_global_vars)\n """ \
-                + runcode_tmp[k].replace("\n", "\n ") + \
-                    "\n plugin_group.dotcs_global_vars.update(locals())"
-            try:
-                exec(p_code, old_dotcs_env, _dotcs_runcode)
-            except Exception as err:
-                Print.print_err(f"DotCS插件 <{self.name}> 出错: {err}")
-                raise
-        for codetype in [
-                "on_def",
-                "on_inject",
-                "on_player_prejoin",
-                "on_player_join",
-                "on_player_message",
-                "on_player_death",
-                "on_player_leave"
-        ]:
-            if _dotcs_runcode.get(codetype, None):
-                evts[codetype] = [self.name, _dotcs_runcode[codetype]]
-        if _dotcs_runcode.get(f"repeat1s", None):
-                evts["repeat1s"] = [self.name, _dotcs_runcode[f"repeat1s"]]
-        if _dotcs_runcode.get(f"repeat10s", None):
-                evts["repeat10s"] = [self.name, _dotcs_runcode[f"repeat10s"]]
-        if _dotcs_runcode.get(f"repeat30s", None):
-                evts["repeat30s"] = [self.name, _dotcs_runcode[f"repeat30s"]]
-        if _dotcs_runcode.get(f"repeat1m", None):
-                evts["repeat1m"] = [self.name, _dotcs_runcode[f"repeat1m"]]
-        return evts
-
 class PluginAPI:
     name = "<未命名插件api>"
     version = (0, 0, 1)
-    def __init__(self, frame):
+    def __init__(self, _):
         raise Exception("需要初始化__init__方法")
 
 class PluginGroup:
@@ -164,11 +170,11 @@ class PluginGroup:
     pluginAPI_added_cache = []
 
     def __init__(self, frame, PRG_NAME):
-        self.listen_packet_ids = []
+        self.listen_packet_ids = set()
         self.old_dotcs_env = {}
         self.dotcs_global_vars = {}
         self.packet_funcs: dict[str, list[Callable]] = {}
-        self.plugins_api = {}
+        self.plugins_api: dict[str, PluginAPI] = {}
         self.excType = 0
         self.PRG_NAME = ""
         self._broadcast_evts = {}
@@ -252,15 +258,18 @@ class PluginGroup:
                     Print.print_inf(f"§6载入DotCS插件: {file.strip('.py')}", end="\r")
                     with open("DotCS兼容插件/" + file, "r", encoding='utf-8') as f:
                         code = f.read()
-                    plugin = Plugin()
+                    plugin, evts, pkfuncs = _import_original_dotcs_plugin(code, dotcs_env, module_env, self)
                     plugin.name = file.strip(".py")
-                    evts = plugin.import_original_dotcs_plugin(code, dotcs_env, module_env, self)
                     if "repeat10s" in evts.keys() or "repeat1s" in evts.keys() or "repeat30s" in evts.keys() or "repeat1m" in evts.keys():
                         evtnew = evts.copy()
                         for i in evtnew.keys():
                             if i.startswith("repeat"):
                                 del evts[i]
                                 self._dotcs_repeat_threadings[i.strip("repeat")].append(evtnew[i])
+                    for pkt, func in pkfuncs:
+                        self.__add_listen_packet_id(pkt)
+                        self.__add_listen_packet_func(pkt, func)
+                        Print.print_suc(f"[DotCS插件 特殊数据包监听] 添加成功: {plugin.name} <- {func.__name__}")
                     for k, v in evts.items():
                         self.plugins_funcs[k].append(v)
                     self.__add_plugin(plugin)
@@ -291,7 +300,7 @@ class PluginGroup:
                         with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__init__.py", "r", encoding='utf-8') as f:
                             code = f.read()
                         exec(code, root_env)
-                        # 会污染整体环境...算了算了
+                        # 理论上所有插件共享一个整体环境
                     elif os.path.isfile(f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc"):
                         if decPluginAndCMP is not None:
                             with open(f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc", "rb") as f:
@@ -339,14 +348,14 @@ class PluginGroup:
                                 (apiName, api) = _api
                                 self.plugins_api[apiName] = api(self.linked_frame)
                 except AssertionError as err:
-                    if len(err.args[0]) == 2:
-                        Print.print_err(f"插件 {plugin_dir} 不合法: {err.args[0][1]}")
-                        raise SystemExit
-                    elif err.args[0] == 2:
+                    if err.args[0] == 2:
                         Print.print_err(f"插件 {plugin_dir} 不合法: 只能调用一次 @plugins.add_plugin, 实际调用了0次或多次")
                         raise SystemExit
                     elif err.args[0] == 3:
                         Print.print_err(f"加密插件: {plugin_dir} 加载失败 ERR={err.args[1]}")
+                        raise SystemExit
+                    if len(err.args[0]) == 2:
+                        Print.print_err(f"插件 {plugin_dir} 不合法: {err.args[0][1]}")
                         raise SystemExit
                     else:
                         raise
@@ -378,8 +387,8 @@ class PluginGroup:
         self.plugins.append(plugin)
 
     def __add_listen_packet_id(self, packetType: int):
-        if not packetType in self.listen_packet_ids:
-            self.listen_packet_ids.append(packetType)
+        self.listen_packet_ids.add(packetType)
+        self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
     def __add_listen_packet_func(self, packetType, func: Callable):
         if self.packet_funcs.get(str(packetType), None):
@@ -388,6 +397,7 @@ class PluginGroup:
             self.packet_funcs[str(packetType)] = [func]
 
     def execute_dotcs_repeat(self, on_plugin_err):
+        "启动dotcs插件的循环执行模式插件事件"
         threading.Thread(target=self.run_dotcs_repeat_funcs).start()
 
     def run_dotcs_repeat_funcs(self):
@@ -447,6 +457,7 @@ class PluginGroup:
                 func()
             except Exception as err:
                  onerr(name, err, traceback.format_exc())
+
     def execute_player_prejoin(self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
         for name, func in self.plugins_funcs["on_player_prejoin"]:
             try:
@@ -494,6 +505,6 @@ class PluginGroup:
                     if res:
                         return True
                 except:
-                    Print.print_err(f"插件方法 {func} 出错：")
+                    Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False

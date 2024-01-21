@@ -1,3 +1,4 @@
+# FURTURE library for Plugin Emulator
 import json, re
 from .color_print import Print
 

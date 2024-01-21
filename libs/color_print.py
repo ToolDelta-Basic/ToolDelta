@@ -1,6 +1,6 @@
 import datetime
 try:
-    from .logger import publicLogger
+    from logger import publicLogger
 except:
     pass
 

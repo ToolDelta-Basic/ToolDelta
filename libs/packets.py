@@ -1,3 +1,8 @@
+class PacketIDS:
+    Text = 9
+    PlayerList = 63
+    CommandOutput = 79
+
 packets = {
     "1": "IDLogin",
     "2": "IDPlayStatus",
