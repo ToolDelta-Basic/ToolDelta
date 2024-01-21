@@ -56,7 +56,7 @@ class Frame:
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误")
             raise SystemExit
-        
+
     def read_cfg(self):
         public_launcher = [
             ("FastBuilder External 模式 (经典模式)", FrameFBConn),
@@ -211,14 +211,14 @@ class Frame:
                 pass
         self.safe_close()
         os._exit(0)
-    
+
     def _get_old_dotcs_env(self):
         """Create an old dotcs env"""
         return libs.old_dotcs_env.get_dotcs_env(self, Print)
-    
+
     def get_console_menus(self):
         return self.consoleMenu
-    
+
     def set_game_control(self, game_ctrl):
         "使用外源GameControl..."
         self.link_game_ctrl = game_ctrl
@@ -229,7 +229,7 @@ class Frame:
 
     def get_game_control(self):
         return self.link_game_ctrl
-    
+
     def safe_close(self):
         libs.builtins.safe_close()
 
@@ -245,7 +245,7 @@ class GameCtrl:
         self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.requireUUIDPacket = True
-    
+
     def init_funcs(self):
         self.launcher = self.linked_frame.launcher
         self.launcher.packet_handler = lambda pckType, pck: createThread(self.packet_handler, (pckType, pck))
@@ -347,7 +347,7 @@ class GameCtrl:
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
-        
+
     def say_to(self, target: str, msg: str):
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
 
@@ -370,8 +370,8 @@ def start_tool_delta():
         frame.set_plugin_group(plugins)
         frame.welcome()
         frame.basic_operation()
-        frame.fbtokenFix()
         frame.read_cfg()
+        frame.fbtokenFix()
         game_control.init_funcs()
         plugins.read_plugin_from_old(dotcs_module_env)
         plugins.read_plugin_from_new(globals())
