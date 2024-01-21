@@ -47,11 +47,11 @@ class SingleChannel:
             return True
         else:
             return False
-        
+
     async def broadcast(self, data_type, data, noip: str = ""):
         for ips, client in self.members.items():
             if ips != noip:
-                await client.ws.send(make_data_msg(data_type, data))  
+                await client.ws.send(make_data_msg(data_type, data))
 
     async def trans_chat_msg(self, from_cli: RentalServer, sender: str, msg: str, noip: str = ""):
         for ip in self.members.keys():
