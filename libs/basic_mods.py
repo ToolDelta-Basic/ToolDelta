@@ -1,8 +1,10 @@
-import libs.get_python_libs as _get_py_libs
+# Manage libraries
+import get_python_libs as _get_py_libs
 try:
     import time, os, sys, threading, json, traceback, datetime, platform, subprocess, socket, logging, ctypes, asyncio, copy, math, random
     import psutil, requests, nbt, qrcode, getpass, pymysql, websockets, ujson, hashlib, base64, rich.progress
 except ModuleNotFoundError:
+    # 第一次部署该项目, 将会自动安装这些模块.
     _get_py_libs.try_install_libs()
     import time, os, sys, threading, json, traceback, datetime, platform, subprocess, socket, logging, ctypes, asyncio, copy, math, random
     import psutil, requests, nbt, qrcode, getpass, pymysql, websockets, ujson, hashlib, base64, rich.progress
