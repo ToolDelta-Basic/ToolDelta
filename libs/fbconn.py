@@ -144,10 +144,12 @@ def check_err(r):
         # freeMem(r.err)
         raise Exception(err)
     
-if platform.system() == 'Linux':
+if platform.uname()[0] == 'Linux':
     LIB=ctypes.cdll.LoadLibrary("libs/libfbconn_linux_amd64.so")
-elif platform.system() == 'Windows':
+elif platform.uname()[0] == 'Windows':
     LIB=ctypes.cdll.LoadLibrary("libs/libfbconn_windows_x86_64.dll")
+else:
+    raise Exception("Platform unknown: " + platform.uname()[0])
 LIB=InitLib(LIB)
 
 
@@ -161,12 +163,16 @@ def ReleaseConnByID(connID: int) -> None:
     LIB.ReleaseConnByID(to_GoInt(connID))
 
 
-def RecvGamePacket(connID: int) -> bytes:
-    r = LIB.RecvGamePacket(to_GoInt(connID))
-    check_err_in_struct(r)
-    bs=r.pktBytes[:r.l]
-    freeMem(r.pktBytes)
-    return bs
+def RecvGamePacket(connID: int):
+    try:
+        while 1:
+            r = LIB.RecvGamePacket(to_GoInt(connID))
+            check_err_in_struct(r)
+            bs:bytes=r.pktBytes[:r.l]
+            freeMem(r.pktBytes)
+            yield bs
+    except:
+        raise StopIteration
 
 def RecvGamePacketIt(connID: int) -> bytes:
     while 1:
