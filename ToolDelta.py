@@ -116,6 +116,7 @@ class Frame:
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         launcher = public_launcher[cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1][1]
+        self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
         self.launcher: StandardFrame = launcher(self.serverNumber, self.serverPasswd, fbtoken)
@@ -389,7 +390,6 @@ def start_tool_delta():
         frame.welcome()
         frame.basic_operation()
         frame.read_cfg()
-        frame.fbtokenFix()
         game_control.init_funcs()
         plugins.read_plugin_from_old(dotcs_module_env)
         plugins.read_plugin_from_new(globals())
