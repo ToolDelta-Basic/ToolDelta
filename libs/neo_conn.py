@@ -599,7 +599,7 @@ class ThreadOmega:
             elif eventType=="MCPacket":
                 packetTypeName=retriever
                 if packetTypeName == "":
-                    return
+                    print("'', ignored")
                 # print(f"mc packet {packetTypeName}")
                 listeners=self._packet_listeners[packetTypeName]
                 if len(listeners)==0:
@@ -856,4 +856,8 @@ class ThreadOmega:
 
     def __del__(self):
         for t in self._running_threads.values():
+<<<<<<< HEAD
             t.join()
+=======
+            t.join()
+>>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
