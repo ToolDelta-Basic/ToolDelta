@@ -143,15 +143,12 @@ class Frame:
 
     def fbtokenFix(self):
         # 对异常FbToken的自动修复
-        needFix = False
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
                 Print.print_war("fbtoken里有换行符， 会造成fb登录失败， 已自动修复")
-                needFix = True
-        if needFix:
-            with open("fbtoken", "w", encoding="utf-8") as f:
-                f.write(token.replace("\n", ""))
+                with open("fbtoken", "w", encoding="utf-8") as f:
+                    f.write(token.replace("\n", ""))
 
     def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
         # 添加控制台菜单触发词

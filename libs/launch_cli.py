@@ -155,6 +155,14 @@ class FrameFBConn(StandardFrame):
                 elif "无效用户" in tmp and "请重新登录" in tmp:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
                     self.status = SysStatus.NORMAL_EXIT
+                elif "netease.report.kick.hint" in tmp:
+                    Print.print_err(
+                        "§c无法连接到网易租赁服 -> 网易土豆的常见问题，检查你的租赁服状态（等级、是否开启、密码）并重试, 也可能是你的网络问题"
+                    )
+                    self.status = SysStatus.NORMAL_EXIT
+                else:
+                    Print.print_with_info(tmp, "§b  FB  §r")
+
             elif "Transfer: accept new connection @ " in tmp:
                 Print.print_with_info(
                     "FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  "
