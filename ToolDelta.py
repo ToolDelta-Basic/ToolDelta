@@ -1,5 +1,4 @@
-# for installing libs in debug mode;
-import libs.get_python_libs
+# for installing libs in debug mode
 from libs.basic_mods import *
 # start
 import libs.color_print
@@ -19,25 +18,16 @@ ADVANCED = False
 Builtins = libs.builtins.Builtins
 Config = _Cfg()
 Print = libs.color_print.Print
-async_loop = asyncio.new_event_loop()
 sys_args_dict = libs.sys_args.SysArgsToDict(sys.argv)
 createThread = Builtins.createThread
 
-Print.print_with_info("§d系统正在启动..", "§d 加载 ")
+Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
 
 try:
     VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
 except:
     # Current version
     VERSION = (0, 2, 0)
-
-def import_proxy_lib():
-    global fbconn
-    try:
-        import libs.fbconn as fbconn
-    except Exception as err:
-        Print.print_err(f"加载FastBuilder连接库失败， 请检查其是否存在:{err}")
-        raise SystemExit
 
 class Frame:
     class SystemVersionException(OSError):...
@@ -380,7 +370,6 @@ def start_tool_delta():
         frame.set_plugin_group(plugins)
         frame.welcome()
         frame.basic_operation()
-        import_proxy_lib()
         frame.fbtokenFix()
         frame.read_cfg()
         game_control.init_funcs()
