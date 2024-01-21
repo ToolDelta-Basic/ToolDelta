@@ -30,6 +30,7 @@ except:
     VERSION = (0, 2, 0)
 
 class Frame:
+    # 系统框架
     class SystemVersionException(OSError):...
     class FrameBasic:
         system_version = VERSION
@@ -58,6 +59,7 @@ class Frame:
             raise SystemExit
 
     def read_cfg(self):
+        # 读取启动配置等
         public_launcher = [
             ("FastBuilder External 模式 (经典模式)", FrameFBConn),
             ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg)
@@ -115,19 +117,23 @@ class Frame:
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         launcher = public_launcher[cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1][1]
+        self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
         self.launcher: StandardFrame = launcher(self.serverNumber, self.serverPasswd, fbtoken)
 
     def welcome(self):
+        # 欢迎提示
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
     def plugin_load_finished(self, plugins: PluginGroup):
+        # 插件成功载入提示
         Print.print_suc(f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件")
 
     def basic_operation(self):
+        # 初始化文件夹
         os.makedirs("DotCS兼容插件", exist_ok = True)
         os.makedirs("插件配置文件", exist_ok = True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok = True)
@@ -137,6 +143,7 @@ class Frame:
         os.makedirs("data/players", exist_ok = True)
 
     def fbtokenFix(self):
+        # 对异常FbToken的自动修复
         needFix = False
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
@@ -148,6 +155,8 @@ class Frame:
                 f.write(token.replace("\n", ""))
 
     def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
+        # 添加控制台菜单触发词
+        #   triggers: 触发词组, arg_hint: 菜单命令参数提示句, usage: 命令说明, func: 菜单回调, 传入命令参数
         try:
             if self.consoleMenu.index(triggers) != -1:
                 Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
@@ -214,10 +223,11 @@ class Frame:
         os._exit(0)
 
     def _get_old_dotcs_env(self):
-        """Create an old dotcs env"""
+        # 获取 dotcs 的插件环境
         return libs.old_dotcs_env.get_dotcs_env(self, Print)
 
     def get_console_menus(self):
+        # 获取所有控制台命令菜单
         return self.consoleMenu
 
     def set_game_control(self, game_ctrl):
@@ -235,6 +245,7 @@ class Frame:
         libs.builtins.safe_close()
 
 class GameCtrl:
+    # 游戏连接和交互部分
     def __init__(self, frame: Frame):
         self.linked_frame = frame
         self.players_uuid = {}
@@ -258,6 +269,8 @@ class GameCtrl:
         self.sendfbcmd = self.launcher.sendfbcmd
 
     def set_listen_packets(self):
+        # 向启动器初始化监听的游戏数据包
+        # 不应该再次调用此方法
         for pktID in self.require_listen_packets:
             self.launcher.add_listen_packets(pktID)
 
@@ -272,7 +285,7 @@ class GameCtrl:
         plugins.processPacketFunc(pkt_type, pkt)
 
     def process_player_list(self, pkt, plugin_group: PluginGroup):
-        "处理玩家进出事件"
+        # 处理玩家进出事件
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
@@ -298,7 +311,7 @@ class GameCtrl:
                 plugin_group.execute_player_leave(playername, self.linked_frame.on_plugin_err)
 
     def process_text_packet(self, pkt: dict, plugin_grp: PluginGroup):
-        "处理9号数据包的消息, 因特殊原因将一些插件事件放到此处理"
+        # 处理9号数据包的消息, 因特殊原因将一些插件事件放到此处理
         match pkt['TextType']:
             case 2:
                 if pkt['Message'] == "§e%multiplayer.player.joined":
@@ -331,7 +344,7 @@ class GameCtrl:
                     pass
 
     def Inject(self):
-        "TooDelta启动FB模式下的Inject"
+        # 载入游戏时的初始化
         res = self.launcher.get_players_and_uuids()
         if res:
             self.allplayers = list(res.keys())
@@ -342,6 +355,7 @@ class GameCtrl:
         self.inject_welcome()
 
     def inject_welcome(self):
+        # 载入游戏后的欢迎提示语
         Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name)
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
@@ -350,19 +364,24 @@ class GameCtrl:
         self.sendcmd("/tag @s add robot")
 
     def say_to(self, target: str, msg: str):
+        # 向玩家发送聊天栏信息
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
 
     def player_title(self, target: str, text: str):
+        # 向玩家显示大标题
         self.sendwocmd(f"title {target} title {text}")
 
     def player_subtitle(self, target: str, text: str):
+        # 向玩家显示小标题
         self.sendwocmd(f"title {target} subtitle {text}")
 
     def player_actionbar(self, target: str, text: str):
+        # 向玩家显示行动栏信息
         self.sendwocmd(f"title {target} actionbar {text}")
 
 def start_tool_delta():
-    global plugins
+    # 初始化系统
+    global frame, game_control, plugins
     try:
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
