@@ -1,12 +1,12 @@
 import platform, os, subprocess, time, json, requests, ujson
-import libs.fbconn as fbconn
-import libs.neo_conn as neo_conn
+import fbconn
+import neo_conn
 from typing import Callable
-from libs.color_print import Print
-from libs.urlmethod import download_file, get_free_port
-from libs.builtins import Builtins
-from libs.packets import Packet_CommandOutput, PacketIDS
-from libs.urlmethod import get_free_port
+from .color_print import Print
+from .urlmethod import download_file, get_free_port
+from .builtins import Builtins
+from .packets import Packet_CommandOutput, PacketIDS
+from .urlmethod import get_free_port
 
 class SysStatus:
     LAUNCHING = 0
@@ -18,6 +18,7 @@ class SysStatus:
     launch_type = "None"
 
 class StandardFrame:
+    # 提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口
     launch_type = "Original"
     def __init__(self, serverNumber, password, fbToken):
         self.serverNumber = serverNumber
@@ -55,6 +56,7 @@ class StandardFrame:
     sendPacketJson = None
 
 class FrameFBConn(StandardFrame):
+    # 使用原生 FastBuilder External 连接
     cmds_reqs = []
     cmds_resp = {}
     def __init__(self, serverNumber, password, fbToken):
@@ -250,12 +252,12 @@ class FrameFBConn(StandardFrame):
                 return uuid
         self.sendcmd = sendcmd
         self.sendwscmd = sendwscmd
-        self.sendwocmd = lambda cmd: fbconn.SendNoResponseCommand(self.con, cmd)
-        self.sendPacket = lambda pck: fbconn.SendGamePacketBytes(self.con, pck)
-        self.sendPacketJson = lambda pckID, pck: fbconn.SendGamePacketBytes(self.con, fbconn.JsonStrAsIsGamePacketBytes(pckID, pck))
-        self.sendfbcmd = lambda cmd: fbconn.SendFBCommand(self.con, cmd)
+        self.sendwocmd = staticmethod(lambda cmd: fbconn.SendNoResponseCommand(self.con, cmd))
+        self.sendPacket = self.sendPacketJson = staticmethod(lambda pckID, pck: fbconn.SendGamePacketBytes(self.con, fbconn.JsonStrAsIsGamePacketBytes(pckID, ujson.dumps(pck, ensure_ascii = False))))
+        self.sendfbcmd = staticmethod(lambda cmd: fbconn.SendFBCommand(self.con, cmd))
 
 class FrameNeOmg(StandardFrame):
+    # 使用 NeOmega 框架连接到游戏
     launch_type = "NeOmega"
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
