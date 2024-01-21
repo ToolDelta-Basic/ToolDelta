@@ -1,9 +1,10 @@
 from typing import Callable, Type, Any
 import os, sys, traceback, zipfile, time, threading, re
-from .color_print import Print
-from .cfg import Cfg
+from color_print import Print
+from cfg import Cfg
 from .builtins import Builtins
 try:
+    # you'd like to delete this block
     from .pluginDec import decPluginAndCMP
 except:
     decPluginAndCMP = None
