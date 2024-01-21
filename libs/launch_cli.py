@@ -8,6 +8,7 @@ from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .urlmethod import get_free_port
 
+
 class SysStatus:
     LAUNCHING = 0
     RUNNING = 1
@@ -17,9 +18,11 @@ class SysStatus:
     NEED_RESTART = 5
     launch_type = "None"
 
+
 class StandardFrame:
     # 提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口
     launch_type = "Original"
+
     def __init__(self, serverNumber, password, fbToken):
         self.serverNumber = serverNumber
         self.serverPassword = password
@@ -37,16 +40,19 @@ class StandardFrame:
 
     def launch(self):
         raise Exception("Cannot launch this launcher")
-    
+
     def listen_launched(self, cb):
         self._launcher_listener = cb
 
-    def close_fb(self):...
+    def close_fb(self):
+        ...
 
-    def get_players_and_uuids(self):return None
+    def get_players_and_uuids(self):
+        return None
 
-    def get_bot_name(self):return None
-    
+    def get_bot_name(self):
+        return None
+
     get_all_players = None
     sendcmd: Callable[[str, bool, int], bytes | Packet_CommandOutput] = None
     sendwscmd: Callable[[str, bool, int], bytes | Packet_CommandOutput] = None
@@ -55,10 +61,12 @@ class StandardFrame:
     sendPacket = None
     sendPacketJson = None
 
+
 class FrameFBConn(StandardFrame):
     # 使用原生 FastBuilder External 连接
     cmds_reqs = []
     cmds_resp = {}
+
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
@@ -67,21 +75,31 @@ class FrameFBConn(StandardFrame):
     def launch(self):
         try:
             free_port = get_free_port(10000)
-            self.runFB(port = free_port)
-            self.run_conn(port = free_port)
+            self.runFB(port=free_port)
+            self.run_conn(port=free_port)
             Builtins.createThread(self.output_fb_msgs_thread)
             self.process_game_packets()
         except Exception as err:
             return err
 
-    def runFB(self, ip = "0.0.0.0", port = 8080):
-        os.system("chmod +x phoenixbuilder")
+    def runFB(self, ip="0.0.0.0", port=8080):
+        self.downloadMissingFiles()
+        if self.system_type == "Linux":
+            os.system("chmod +x phoenixbuilder")
+            con_cmd = rf"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
+
         # windows updated "./PRGM" command.
-        con_cmd = f"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
-        self.fb_pipe = subprocess.Popen(con_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, shell=True)
-        
-    def run_conn(self, ip = "0.0.0.0", port = 8080, timeout = None):
+        if self.system_type == "Windows":
+            con_cmd = rf".\phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
+        self.fb_pipe = subprocess.Popen(
+            con_cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+        )
+
+    def run_conn(self, ip="0.0.0.0", port=8080, timeout=None):
         connect_fb_start_time = time.time()
         max_con_time = timeout or 10
         while 1:
@@ -114,10 +132,14 @@ class FrameFBConn(StandardFrame):
                     Print.print_war(f"未能自动选择为简体中文")
             elif "ERROR" in tmp:
                 if "租赁服未找到" in tmp:
-                    Print.print_err(f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码")
+                    Print.print_err(
+                        f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码"
+                    )
                     self.status = SysStatus.NORMAL_EXIT
                 elif "租赁服号尚未授权" in tmp:
-                    Print.print_err(f"§c租赁服号: {self.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买")
+                    Print.print_err(
+                        f"§c租赁服号: {self.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买"
+                    )
                     self.status = SysStatus.NORMAL_EXIT
                 elif "bad handshake" in tmp:
                     Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
@@ -126,13 +148,25 @@ class FrameFBConn(StandardFrame):
                         requests.get("http://user.fastbuilder.pro", timeout=10)
                         Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
                     except:
-                        Print.print_err("§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)")
+                        Print.print_err(
+                            "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)"
+                        )
                     self.status = SysStatus.NORMAL_EXIT
                 elif "无效用户" in tmp and "请重新登录" in tmp:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
                     self.status = SysStatus.NORMAL_EXIT
+                elif "netease.report.kick.hint" in tmp:
+                    Print.print_err(
+                        "§c无法连接到网易租赁服 -> 网易土豆的常见问题，检查你的租赁服状态（等级、是否开启、密码）并重试, 也可能是你的网络问题"
+                    )
+                    self.status = SysStatus.NORMAL_EXIT
+                else:
+                    Print.print_with_info(tmp, "§b  FB  §r")
+
             elif "Transfer: accept new connection @ " in tmp:
-                Print.print_with_info("FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  ")
+                Print.print_with_info(
+                    "FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  "
+                )
             elif tmp.startswith("panic"):
                 Print.print_err(f"FastBuilder 出现问题: {tmp}")
             else:
@@ -140,12 +174,12 @@ class FrameFBConn(StandardFrame):
 
     def close_fb(self):
         try:
-            self.fb_pipe.stdin.write("exit\n".encode('utf-8'))
+            self.fb_pipe.stdin.write("exit\n".encode("utf-8"))
             self.fb_pipe.stdin.flush()
         except:
             pass
         try:
-            self.fb_pipe.kill()    
+            self.fb_pipe.kill()
         except:
             pass
         Print.print_suc("成功关闭FB进程")
@@ -156,7 +190,9 @@ class FrameFBConn(StandardFrame):
                 packet_type = packet_bytes[0]
                 if packet_type not in self.need_listen_packets:
                     continue
-                packet_mapping = ujson.loads(fbconn.GamePacketBytesAsIsJsonStr(packet_bytes))
+                packet_mapping = ujson.loads(
+                    fbconn.GamePacketBytesAsIsJsonStr(packet_bytes)
+                )
                 if packet_type == PacketIDS.CommandOutput:
                     cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                     if cmd_uuid in self.cmds_reqs:
@@ -171,11 +207,14 @@ class FrameFBConn(StandardFrame):
 
     def downloadMissingFiles(self):
         "获取缺失文件"
-        Print.print_with_info(f"§d将自动检测缺失文件并补全","§d 加载 ")
+        Print.print_with_info(f"§d将自动检测缺失文件并补全", "§d 加载 ")
         mirror_src = "https://mirror.ghproxy.com/"
-        file_get_src = mirror_src + "https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"
+        file_get_src = (
+            mirror_src
+            + "https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"
+        )
         try:
-            files_to_get = json.loads(requests.get(file_get_src, timeout = 30).text)
+            files_to_get = json.loads(requests.get(file_get_src, timeout=30).text)
         except json.JSONDecodeError:
             Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
             return False
@@ -186,7 +225,7 @@ class FrameFBConn(StandardFrame):
             Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: {err}")
             return False
         try:
-            Print.print_with_info(f"§d正在检测需要补全的文件","§d 加载 ")
+            Print.print_with_info(f"§d正在检测需要补全的文件", "§d 加载 ")
             mirrs = files_to_get["Mirror"]
             files = files_to_get[self.system_type]
             for fdir, furl in files.items():
@@ -211,7 +250,7 @@ class FrameFBConn(StandardFrame):
             Print.print_err(f"自动检测文件并补全时出现错误: {err}")
             return False
         return True
-    
+
     def init_all_functions(self):
         def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendMCCommand(self.con, cmd)
@@ -228,12 +267,13 @@ class FrameFBConn(StandardFrame):
                         self.cmds_reqs.remove(uuid)
                         try:
                             # 特殊情况下只有 sendwscmd 能接收到返回的命令
-                            Print.print_war(f"sendcmd \"{cmd}\" 超时, 尝试 sendwscmd")
+                            Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
                             return self.sendwscmd(cmd, True, timeout)
                         except TimeoutError:
                             raise
             else:
                 return uuid
+
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendWSCommand(self.con, cmd)
             if waitForResp:
@@ -250,72 +290,88 @@ class FrameFBConn(StandardFrame):
                         raise TimeoutError("指令超时")
             else:
                 return uuid
+
         self.sendcmd = sendcmd
         self.sendwscmd = sendwscmd
-        self.sendwocmd = staticmethod(lambda cmd: fbconn.SendNoResponseCommand(self.con, cmd))
-        self.sendPacket = self.sendPacketJson = staticmethod(lambda pckID, pck: fbconn.SendGamePacketBytes(self.con, fbconn.JsonStrAsIsGamePacketBytes(pckID, ujson.dumps(pck, ensure_ascii = False))))
+        self.sendwocmd = staticmethod(
+            lambda cmd: fbconn.SendNoResponseCommand(self.con, cmd)
+        )
+        self.sendPacket = self.sendPacketJson = staticmethod(
+            lambda pckID, pck: fbconn.SendGamePacketBytes(
+                self.con,
+                fbconn.JsonStrAsIsGamePacketBytes(
+                    pckID, ujson.dumps(pck, ensure_ascii=False)
+                ),
+            )
+        )
         self.sendfbcmd = staticmethod(lambda cmd: fbconn.SendFBCommand(self.con, cmd))
+
 
 class FrameNeOmg(StandardFrame):
     # 使用 NeOmega 框架连接到游戏
     launch_type = "NeOmega"
+
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
         self.omega = neo_conn.ThreadOmega(
-            connect_type = neo_conn.ConnectType.Local,
+            connect_type=neo_conn.ConnectType.Local,
             address="tcp://localhost:" + str(get_free_port(10000)),
-            accountOption = neo_conn.AccountOptions(
-                UserToken = self.fbToken,
-                ServerCode = self.serverNumber,
-                ServerPassword = str(self.serverPassword)
-            )
+            accountOption=neo_conn.AccountOptions(
+                UserToken=self.fbToken,
+                ServerCode=self.serverNumber,
+                ServerPassword=str(self.serverPassword),
+            ),
         )
         self.omega.start_new(self.omega.wait_disconnect)
         self.init_all_functions()
 
     def launch(self):
-        pcks = [self.omega.get_packet_id_to_name_mapping(i) for i in self.need_listen_packets]
-        self.omega.listen_packets(
-            pcks, 
-            self.packet_handler_parent
-        )
+        pcks = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        self.omega.listen_player_chat(lambda _, _2:None)
+        self.omega.listen_player_chat(lambda _, _2: None)
         r = self.omega.wait_disconnect()
         return Exception(r)
-    
+
     def get_players_and_uuids(self):
         players_uuid = {}
         for i in self.omega.get_all_online_players():
             players_uuid[i.name] = i.uuid
         return players_uuid
-    
+
     def get_bot_name(self):
         return self.omega.get_bot_name()
-    
+
     def packet_handler_parent(self, pkt_type, pkt):
         pkt_type = self.omega.get_packet_name_to_id_mapping(pkt_type)
         self.packet_handler(pkt_type, pkt)
 
     def init_all_functions(self):
         omg = self.omega
-        def sendcmd(cmd, waitForResp = False, timeout = 30):
+
+        def sendcmd(cmd, waitForResp=False, timeout=30):
             if waitForResp:
                 res = omg.send_player_command_need_response(cmd, timeout)
                 return res
             else:
                 omg.send_player_command_omit_response(cmd)
                 return b""
-        def sendwscmd(cmd, waitForResp = False, timeout = 30):
+
+        def sendwscmd(cmd, waitForResp=False, timeout=30):
             if waitForResp:
                 res = omg.send_websocket_command_need_response(cmd, timeout)
                 return res
             else:
                 omg.send_websocket_command_omit_response(cmd)
                 return b""
+
         def sendfbcmd(_):
             raise AttributeError("NeOmg模式无法发送FBCommand")
+
         self.sendcmd = sendcmd
         self.sendwscmd = sendwscmd
         self.sendwocmd = omg.send_settings_command

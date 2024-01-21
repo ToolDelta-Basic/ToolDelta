@@ -57,7 +57,7 @@ class Frame:
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误")
             raise SystemExit
-        
+
     def read_cfg(self):
         # 读取启动配置等
         public_launcher = [
@@ -143,15 +143,12 @@ class Frame:
 
     def fbtokenFix(self):
         # 对异常FbToken的自动修复
-        needFix = False
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
                 Print.print_war("fbtoken里有换行符， 会造成fb登录失败， 已自动修复")
-                needFix = True
-        if needFix:
-            with open("fbtoken", "w", encoding="utf-8") as f:
-                f.write(token.replace("\n", ""))
+                with open("fbtoken", "w", encoding="utf-8") as f:
+                    f.write(token.replace("\n", ""))
 
     def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
         # 添加控制台菜单触发词
@@ -220,15 +217,15 @@ class Frame:
                 pass
         self.safe_close()
         os._exit(0)
-    
+
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
         return libs.old_dotcs_env.get_dotcs_env(self, Print)
-    
+
     def get_console_menus(self):
         # 获取所有控制台命令菜单
         return self.consoleMenu
-    
+
     def set_game_control(self, game_ctrl):
         "使用外源GameControl..."
         self.link_game_ctrl = game_ctrl
@@ -239,7 +236,7 @@ class Frame:
 
     def get_game_control(self):
         return self.link_game_ctrl
-    
+
     def safe_close(self):
         libs.builtins.safe_close()
 
@@ -256,7 +253,7 @@ class GameCtrl:
         self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.requireUUIDPacket = True
-    
+
     def init_funcs(self):
         self.launcher = self.linked_frame.launcher
         self.launcher.packet_handler = lambda pckType, pck: createThread(self.packet_handler, (pckType, pck))
@@ -361,7 +358,7 @@ class GameCtrl:
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
-        
+
     def say_to(self, target: str, msg: str):
         # 向玩家发送聊天栏信息
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
