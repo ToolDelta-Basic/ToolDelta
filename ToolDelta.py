@@ -77,7 +77,6 @@ class Frame:
         if not os.path.isfile("fbtoken"):
             Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
             raise SystemExit
-        self.fbtokenFix()
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
             cfgs = Config.get_cfg("ToolDelta基本配置.json", CFG_STD)
