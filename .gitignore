@@ -9,9 +9,6 @@ __pycache__/
 *$py.class
 data/
 
-# C extensions
-*.so
-
 # Distribution / packaging
 .Python
 build/
