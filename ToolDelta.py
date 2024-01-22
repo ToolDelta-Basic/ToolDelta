@@ -211,6 +211,7 @@ class Frame:
 
     def system_exit(self):
         if self.link_game_ctrl.allplayers:
+            # kick @s
             try:
                 self.link_game_ctrl.sendcmd(f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)")
             except:
