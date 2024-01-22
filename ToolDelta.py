@@ -57,11 +57,7 @@ class Frame:
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误")
             raise SystemExit
-<<<<<<< HEAD
         
-=======
-
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
     def read_cfg(self):
         # 读取启动配置等
         public_launcher = [
@@ -147,23 +143,12 @@ class Frame:
 
     def fbtokenFix(self):
         # 对异常FbToken的自动修复
-<<<<<<< HEAD
-        needFix = False
-=======
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
                 Print.print_war("fbtoken里有换行符， 会造成fb登录失败， 已自动修复")
-<<<<<<< HEAD
-                needFix = True
-        if needFix:
-            with open("fbtoken", "w", encoding="utf-8") as f:
-                f.write(token.replace("\n", ""))
-=======
                 with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(token.replace("\n", ""))
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
 
     def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
         # 添加控制台菜单触发词
@@ -232,11 +217,7 @@ class Frame:
                 pass
         self.safe_close()
         os._exit(0)
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
         return libs.old_dotcs_env.get_dotcs_env(self, Print)
@@ -283,7 +264,6 @@ class GameCtrl:
         self.sendPacketJson = self.launcher.sendPacketJson
         self.sendfbcmd = self.launcher.sendfbcmd
 
-<<<<<<< HEAD
     def set_listen_packets(self):
         # 向启动器初始化监听的游戏数据包
         # 不应该再次调用此方法
@@ -293,27 +273,6 @@ class GameCtrl:
     def add_listen_pkt(self, pkt: int):
         self.require_listen_packets.add(pkt)
 
-=======
-    def init_funcs(self):
-        self.launcher = self.linked_frame.launcher
-        self.launcher.packet_handler = lambda pckType, pck: createThread(self.packet_handler, (pckType, pck))
-        self.sendcmd = self.launcher.sendcmd
-        self.sendwscmd = self.launcher.sendwscmd
-        self.sendwocmd = self.launcher.sendwocmd
-        self.sendPacket = self.launcher.sendPacket
-        self.sendPacketJson = self.launcher.sendPacketJson
-        self.sendfbcmd = self.launcher.sendfbcmd
-
-    def set_listen_packets(self):
-        # 向启动器初始化监听的游戏数据包
-        # 不应该再次调用此方法
-        for pktID in self.require_listen_packets:
-            self.launcher.add_listen_packets(pktID)
-
-    def add_listen_pkt(self, pkt: int):
-        self.require_listen_packets.add(pkt)
-
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
     def packet_handler(self, pkt_type: int, pkt: int):
         if pkt_type == PacketIDS.PlayerList:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
@@ -399,11 +358,7 @@ class GameCtrl:
         self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
-<<<<<<< HEAD
         
-=======
-
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
     def say_to(self, target: str, msg: str):
         # 向玩家发送聊天栏信息
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
@@ -451,8 +406,4 @@ def start_tool_delta():
         frame.safe_close()
         os._exit(0)
 
-<<<<<<< HEAD
 start_tool_delta()
-=======
-start_tool_delta()
->>>>>>> 7323e2e3ebae0cc8b7d001ff70922de50c94ecae
