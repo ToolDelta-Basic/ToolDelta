@@ -27,8 +27,8 @@ jobs:
       - name: Convert certificate and sign binary
         shell: pwsh
         run: |
-          C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\pvk2pfx.exe -pvk cert/ToolDelta.pvk -spc cert/ToolDelta.spc -pfx cert/ToolDelta.pfx -po 123456
-          C:\Program Files (x86)\Windows Kits\10\bin\x64\10.0.19041.0\signtool.exe sign /f cert/ToolDelta.pfx /p 123456 /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a dist/ToolDelta.exe
+          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\pvk2pfx.exe" -pvk cert/ToolDelta.pvk -spc cert/ToolDelta.spc -pfx cert/ToolDelta.pfx -po 123456
+          & "C:\Program Files (x86)\Windows Kits\10\bin\x64\10.0.19041.0\signtool.exe" sign /f cert/ToolDelta.pfx /p 123456 /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a dist/ToolDelta.exe
   
       - name: Get version
         env:
