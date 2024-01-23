@@ -23,7 +23,7 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
           # pyinstaller -F ToolDelta.py
-          pyinstaller -F --noconfirm --onefile --console --add-data "source.py;." --add-data "libs;libs/"  "ToolDelta.py"
+          pyinstaller -F --add-data "source.py" --add-data "libs"  "ToolDelta.py"
   
       - name: Convert certificate and sign binary
         shell: pwsh
