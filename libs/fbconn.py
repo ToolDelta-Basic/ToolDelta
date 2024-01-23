@@ -138,10 +138,11 @@ def check_err(r):
         # freeMem(r.err)
         raise Exception(err)
 
+
 if platform.uname()[0] == "Linux":
-    LIB = ctypes.cdll.LoadLibrary("libs/fb_libs/libfbconn_linux_amd64.so")
+    LIB = ctypes.cdll.LoadLibrary("libs/fb_conn/libfbconn_linux_amd64.so")
 elif platform.uname()[0] == "Windows":
-    LIB = ctypes.cdll.LoadLibrary("libs/fb_libs/libfbconn_windows_x86_64.dll")
+    LIB = ctypes.cdll.LoadLibrary("libs/fb_conn/libfbconn_windows_x86_64.dll")
 else:
     raise Exception("Platform unknown: " + platform.uname()[0])
 LIB = InitLib(LIB)

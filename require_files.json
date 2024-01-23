@@ -3,13 +3,13 @@
         "https://mirror.ghproxy.com"
     ],
     "Linux": {
-        "libs/fb_libs/libfbconn_linux_amd64.so": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_linux_amd64.so",
-        "libs/fb_libs/libfbconn_linux_arm64.so": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_linux_arm64.so",
-        "libs/fb_libs/fbconn.h": "SuperScript-PRC/ToolDelta/releases/download/binaries/fbconn.h",
+        "libs/fb_conn/libfbconn_linux_amd64.so": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_linux_amd64.so",
+        "libs/fb_conn/libfbconn_linux_arm64.so": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_linux_arm64.so",
+        "libs/fb_conn/fbconn.h": "SuperScript-PRC/ToolDelta/releases/download/binaries/fbconn.h",
         "phoenixbuilder": "rnhws-Team/ToolDelta-PhoenixBuilder/releases/latest/download/phoenixbuilder"
     },
     "Windows": {
-        "libs/fb_libs/libfbconn_windows_x86_64.dll": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_windows_x86_64.dll",
+        "libs/fb_conn/libfbconn_windows_x86_64.dll": "SuperScript-PRC/ToolDelta/releases/download/binaries/libfbconn_windows_x86_64.dll",
         "phoenixbuilder.exe": "rnhws-Team/ToolDelta-PhoenixBuilder/releases/download/latest/phoenixbuilder-windows-executable-x86.exe"
     }
 }
