@@ -22,11 +22,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
-          pyinstaller -F ToolDelta.py
-
-      - name: Install Windows 10 SDK
-        run: |
-          choco install windows-sdk-10-version-2004-all
+          # pyinstaller -F ToolDelta.py
+          pyinstaller -F --noconfirm --onefile --console --add-data "source.py;." --add-data "libs;libs/"  "ToolDelta.py"
   
       - name: Convert certificate and sign binary
         shell: pwsh
