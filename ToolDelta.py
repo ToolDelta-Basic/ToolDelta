@@ -6,7 +6,6 @@ import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
-import libs.color_print
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput, PacketIDS
 from libs.cfg import Cfg as _Cfg
