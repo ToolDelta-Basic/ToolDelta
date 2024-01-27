@@ -1,5 +1,5 @@
 import requests, time, os, platform
-from color_print import Print
+from .color_print import Print
 
 
 def download_file(f_url: str, f_dir: str):

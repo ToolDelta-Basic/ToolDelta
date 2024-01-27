@@ -1,24 +1,22 @@
 # for installing libs in debug mode
-from libs.basic_mods import *
+from .basic_mods import *
 
 # start
-import libs.color_print
-import libs.sys_args
-import libs.old_dotcs_env
-import libs.builtins
-from libs.plugin_load import Plugin, PluginAPI, PluginGroup
-from libs.packets import Packet_CommandOutput, PacketIDS
-from libs.cfg import Cfg as _Cfg
-from libs.logger import publicLogger
-from libs.launch_cli import StandardFrame, FrameFBConn, FrameNeOmg
+from . import old_dotcs_env, sys_args, builtins, color_print
+from .plugin_load import Plugin, PluginAPI, PluginGroup
+from .packets import Packet_CommandOutput, PacketIDS
+from .cfg import Cfg as _Cfg
+from .logger import publicLogger
+from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg
+
 
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""
 ADVANCED = False
-Builtins = libs.builtins.Builtins
+Builtins = builtins.Builtins
 Config = _Cfg()
-Print = libs.color_print.Print
-sys_args_dict = libs.sys_args.SysArgsToDict(sys.argv)
+Print = color_print.Print
+sys_args_dict = sys_args.SysArgsToDict(sys.argv)
 createThread = Builtins.createThread
 
 Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
@@ -59,7 +57,7 @@ class Frame:
     external_port = sys_args_dict.get("external-port")
 
     def check_use_token(self, tok_name="", check_md=""):
-        res = libs.sys_args.SysArgsToDict(sys.argv)
+        res = sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误")
@@ -252,7 +250,7 @@ class Frame:
 
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
-        return libs.old_dotcs_env.get_dotcs_env(self, Print)
+        return old_dotcs_env.get_dotcs_env(self, Print)
 
     def get_console_menus(self):
         # 获取所有控制台命令菜单
@@ -270,7 +268,7 @@ class Frame:
         return self.link_game_ctrl
 
     def safe_close(self):
-        libs.builtins.safe_close()
+        builtins.safe_close()
 
 
 class GameCtrl:
@@ -459,7 +457,7 @@ def start_tool_delta():
         plugins.read_plugin_from_new(globals())
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
-        libs.builtins.tmpjson_save_thread(frame)
+        builtins.tmpjson_save_thread(frame)
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
         raise frame.launcher.launch()
@@ -472,5 +470,3 @@ def start_tool_delta():
     finally:
         frame.safe_close()
         os._exit(0)
-
-start_tool_delta()
