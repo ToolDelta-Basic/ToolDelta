@@ -1,11 +1,11 @@
 # for installing libs in debug mode
 from libs.basic_mods import *
+
 # start
 import libs.color_print
 import libs.sys_args
 import libs.old_dotcs_env
 import libs.builtins
-import libs.color_print
 from libs.plugin_load import Plugin, PluginAPI, PluginGroup
 from libs.packets import Packet_CommandOutput, PacketIDS
 from libs.cfg import Cfg as _Cfg
@@ -24,19 +24,26 @@ createThread = Builtins.createThread
 Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
 
 try:
-    VERSION = tuple(int(v) for v in open("version","r", encoding = "utf-8").read().strip()[1:].split('.'))
+    VERSION = tuple(
+        int(v)
+        for v in open("version", "r", encoding="utf-8").read().strip()[1:].split(".")
+    )
 except:
     # Current version
     VERSION = (0, 2, 0)
 
+
 class Frame:
     # 系统框架
-    class SystemVersionException(OSError):...
+    class SystemVersionException(OSError):
+        ...
+
     class FrameBasic:
         system_version = VERSION
         max_connect_fb_time = 60
         connect_fb_start_time = time.time()
         data_path = "data/"
+
     createThread = ClassicThread = Builtins.createThread
     PRG_NAME = PRG_NAME
     MAX_PACKET_CACHE = 500
@@ -51,18 +58,18 @@ class Frame:
     system_is_win = sys.platform in ["win32", "win64"]
     external_port = sys_args_dict.get("external-port")
 
-    def check_use_token(self, tok_name = "", check_md = ""):
+    def check_use_token(self, tok_name="", check_md=""):
         res = libs.sys_args.SysArgsToDict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误")
             raise SystemExit
-        
+
     def read_cfg(self):
         # 读取启动配置等
         public_launcher = [
             ("FastBuilder External 模式 (经典模式)", FrameFBConn),
-            ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg)
+            ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg),
         ]
         CFG = {
             "服务器号": 0,
@@ -83,7 +90,9 @@ class Frame:
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
-            if self.launchMode != 0 and self.launchMode not in range(1, len(public_launcher) + 1):
+            if self.launchMode != 0 and self.launchMode not in range(
+                1, len(public_launcher) + 1
+            ):
                 raise Config.ConfigError("")
         except Config.ConfigError:
             Print.print_err("ToolDelta基本配置有误， 需要更正")
@@ -92,7 +101,9 @@ class Frame:
             while 1:
                 try:
                     self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
-                    self.serverPasswd = input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                    self.serverPasswd = (
+                        input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                    )
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
@@ -119,27 +130,33 @@ class Frame:
         self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
-        self.launcher: StandardFrame = launcher(self.serverNumber, self.serverPasswd, fbtoken)
+        self.launcher: StandardFrame = launcher(
+            self.serverNumber, self.serverPasswd, fbtoken
+        )
 
     def welcome(self):
         # 欢迎提示
         Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
-        Print.print_with_info(f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 ")
+        Print.print_with_info(
+            f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 "
+        )
         Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
 
     def plugin_load_finished(self, plugins: PluginGroup):
         # 插件成功载入提示
-        Print.print_suc(f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件")
+        Print.print_suc(
+            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
+        )
 
     def basic_operation(self):
         # 初始化文件夹
-        os.makedirs("DotCS兼容插件", exist_ok = True)
-        os.makedirs("插件配置文件", exist_ok = True)
-        os.makedirs(f"{PRG_NAME}插件", exist_ok = True)
-        os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok = True)
-        os.makedirs("status", exist_ok = True)
-        os.makedirs("data/status", exist_ok = True)
-        os.makedirs("data/players", exist_ok = True)
+        os.makedirs("DotCS兼容插件", exist_ok=True)
+        os.makedirs("插件配置文件", exist_ok=True)
+        os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
+        os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
+        os.makedirs("status", exist_ok=True)
+        os.makedirs("data/status", exist_ok=True)
+        os.makedirs("data/players", exist_ok=True)
 
     def fbtokenFix(self):
         # 对异常FbToken的自动修复
@@ -150,7 +167,13 @@ class Frame:
                 with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(token.replace("\n", ""))
 
-    def add_console_cmd_trigger(self, triggers: list[str], arg_hint: str | None, usage: str, func: Callable[[list[str]], None]):
+    def add_console_cmd_trigger(
+        self,
+        triggers: list[str],
+        arg_hint: str | None,
+        usage: str,
+        func: Callable[[list[str]], None],
+    ):
         # 添加控制台菜单触发词
         #   triggers: 触发词组, arg_hint: 菜单命令参数提示句, usage: 命令说明, func: 菜单回调, 传入命令参数
         try:
@@ -170,8 +193,12 @@ class Frame:
 
     def comsole_cmd_start(self):
         def _console_cmd_thread():
-            self.add_console_cmd_trigger(["?", "help", "帮助"], None, "查询可用菜单指令", self.init_basic_help_menu)
-            self.add_console_cmd_trigger(["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit())
+            self.add_console_cmd_trigger(
+                ["?", "help", "帮助"], None, "查询可用菜单指令", self.init_basic_help_menu
+            )
+            self.add_console_cmd_trigger(
+                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
+            )
             try:
                 while 1:
                     rsp = input()
@@ -190,12 +217,13 @@ class Frame:
                                         return
             except EOFError:
                 pass
+
         def _try_execute_console_cmd(func, rsp, mode, arg1):
             try:
                 if mode == 0:
                     rsp_arg = rsp.split()[1:]
                 elif mode == 1:
-                    rsp_arg = rsp[len(arg1):].split()
+                    rsp_arg = rsp[len(arg1) :].split()
             except IndexError:
                 Print.print_err("[控制台执行命令] 指令缺少参数")
                 return
@@ -207,18 +235,21 @@ class Frame:
                     return -1
                 Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
+
         self.createThread(_console_cmd_thread)
 
     def system_exit(self):
         if self.link_game_ctrl.allplayers:
             # kick @s
             try:
-                self.link_game_ctrl.sendcmd(f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)")
+                self.link_game_ctrl.sendcmd(
+                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)"
+                )
             except:
                 pass
         self.safe_close()
         os._exit(0)
-    
+
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
         return libs.old_dotcs_env.get_dotcs_env(self, Print)
@@ -241,6 +272,7 @@ class Frame:
     def safe_close(self):
         libs.builtins.safe_close()
 
+
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
@@ -254,10 +286,12 @@ class GameCtrl:
         self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.requireUUIDPacket = True
-    
+
     def init_funcs(self):
         self.launcher = self.linked_frame.launcher
-        self.launcher.packet_handler = lambda pckType, pck: createThread(self.packet_handler, (pckType, pck))
+        self.launcher.packet_handler = lambda pckType, pck: createThread(
+            self.packet_handler, (pckType, pck)
+        )
         self.sendcmd = self.launcher.sendcmd
         self.sendwscmd = self.launcher.sendwscmd
         self.sendwocmd = self.launcher.sendwocmd
@@ -288,10 +322,14 @@ class GameCtrl:
             playername = player["Username"]
             if isJoining:
                 self.players_uuid[playername] = player["UUID"]
-                self.allplayers.append(playername) if playername not in self.allplayers else None
+                self.allplayers.append(
+                    playername
+                ) if playername not in self.allplayers else None
                 if not self.requireUUIDPacket:
                     Print.print_inf(f"§e{playername} 加入了游戏, UUID: {player['UUID']}")
-                    plugin_group.execute_player_join(playername, self.linked_frame.on_plugin_err)
+                    plugin_group.execute_player_join(
+                        playername, self.linked_frame.on_plugin_err
+                    )
                 else:
                     self.bot_name = pkt["Entries"][0]["Username"]
                     self.requireUUIDPacket = False
@@ -305,38 +343,53 @@ class GameCtrl:
                     continue
                 self.allplayers.remove(playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
-                plugin_group.execute_player_leave(playername, self.linked_frame.on_plugin_err)
+                plugin_group.execute_player_leave(
+                    playername, self.linked_frame.on_plugin_err
+                )
 
     def process_text_packet(self, pkt: dict, plugin_grp: PluginGroup):
         # 处理9号数据包的消息, 因特殊原因将一些插件事件放到此处理
-        match pkt['TextType']:
+        match pkt["TextType"]:
             case 2:
-                if pkt['Message'] == "§e%multiplayer.player.joined":
+                if pkt["Message"] == "§e%multiplayer.player.joined":
                     player = pkt["Parameters"][0]
-                    plugin_grp.execute_player_prejoin(player, self.linked_frame.on_plugin_err)
-                if pkt['Message'] == "§e%multiplayer.player.join":
+                    plugin_grp.execute_player_prejoin(
+                        player, self.linked_frame.on_plugin_err
+                    )
+                if pkt["Message"] == "§e%multiplayer.player.join":
                     player = pkt["Parameters"][0]
-                elif pkt['Message'] == "§e%multiplayer.player.left":
+                elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
-                elif pkt['Message'].startswith("death."):
+                elif pkt["Message"].startswith("death."):
                     Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
                     else:
                         killer = None
-                    plugin_grp.execute_player_death(pkt['Parameters'][0], killer, pkt['Message'], self.linked_frame.on_plugin_err)
+                    plugin_grp.execute_player_death(
+                        pkt["Parameters"][0],
+                        killer,
+                        pkt["Message"],
+                        self.linked_frame.on_plugin_err,
+                    )
             case 1 | 7:
-                player, msg = pkt['SourceName'], pkt['Message']
-                plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
+                player, msg = pkt["SourceName"], pkt["Message"]
+                plugin_grp.execute_player_message(
+                    player, msg, self.linked_frame.on_plugin_err
+                )
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
-                player, msg = pkt['SourceName'], pkt['Message']
+                player, msg = pkt["SourceName"], pkt["Message"]
                 Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
-                plugin_grp.execute_player_message(player, msg, self.linked_frame.on_plugin_err)
+                plugin_grp.execute_player_message(
+                    player, msg, self.linked_frame.on_plugin_err
+                )
             case 9:
-                msg = pkt['Message']
+                msg = pkt["Message"]
                 try:
-                    Print.print_inf(''.join([i["text"] for i in json.loads(msg)['rawtext']]))
+                    Print.print_inf(
+                        "".join([i["text"] for i in json.loads(msg)["rawtext"]])
+                    )
                 except:
                     pass
 
@@ -346,20 +399,32 @@ class GameCtrl:
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
-        self.allplayers = self.sendcmd("/testfor @a", True).OutputMessages[0].Parameters[0].split(", ")
+        self.allplayers = (
+            self.sendcmd("/testfor @a", True)
+            .OutputMessages[0]
+            .Parameters[0]
+            .split(", ")
+        )
         self.linked_frame.comsole_cmd_start()
-        self.linked_frame.link_plugin_group.execute_init(self.linked_frame.on_plugin_err)
+        self.linked_frame.link_plugin_group.execute_init(
+            self.linked_frame.on_plugin_err
+        )
         self.inject_welcome()
 
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语
-        Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name)
+        Print.print_suc(
+            "初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name
+        )
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
-        self.say_to("@a", "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"))
+        self.say_to(
+            "@a",
+            "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"),
+        )
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
-        
+
     def say_to(self, target: str, msg: str):
         # 向玩家发送聊天栏信息
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
@@ -375,6 +440,7 @@ class GameCtrl:
     def player_actionbar(self, target: str, text: str):
         # 向玩家显示行动栏信息
         self.sendwocmd(f"title {target} actionbar {text}")
+
 
 def start_tool_delta():
     # 初始化系统
