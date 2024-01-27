@@ -454,7 +454,13 @@ def start_tool_delta():
         frame.read_cfg()
         game_control.init_funcs()
         plugins.read_plugin_from_old(dotcs_module_env)
-        plugins.read_plugin_from_new(globals())
+        plugins.read_plugin_from_new({
+            "Frame": frame,
+            "plugins": plugins,
+            "Plugin": Plugin,
+            "PluginGroup": PluginGroup,
+            "PluginAPI": PluginAPI
+        })
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread(frame)
