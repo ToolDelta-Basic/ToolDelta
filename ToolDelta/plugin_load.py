@@ -1,12 +1,13 @@
 from typing import Callable, Type, Any
-import os, sys, traceback, zipfile, time, threading, re
+import os, sys, traceback, zipfile, time, threading, re, importlib
 from .color_print import Print
 from .cfg import Cfg
 from .builtins import Builtins
 
 try:
     # you'd like to delete this block
-    from .pluginDec import decPluginAndCMP
+    plugin_dec = importlib.__import__(".pluginDec")
+    decPluginAndCMP = plugin_dec
 except:
     decPluginAndCMP = None
 
@@ -211,6 +212,7 @@ class PluginGroup:
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
+        self.linked_frame.linked_plugin_group = self
 
     def add_broadcast_listener(self, evt_name: str):
         "将下面的方法作为一个广播事件接收器"

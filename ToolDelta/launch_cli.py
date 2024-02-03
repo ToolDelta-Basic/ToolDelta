@@ -334,9 +334,22 @@ class FrameNeOmg(StandardFrame):
         return all_args
 
     def start_neomega_proc(self):
+        machine=platform.machine()
+        if machine=="x86_64":
+            machine="amd64"
+        _sys = platform.uname().system
+        if _sys == "Windows":
+            uname = f"omg_access_point_windows_{machine}.exe"
+        elif _sys == "Linux":
+            uname = f"omg_access_point_linux_{machine}"
+        else:
+            uname = f"omg_access_point_macos_{machine}.app"
+        exec_path = f"ToolDelta/neo_libs/{uname}"
+        os.system("chmod u+x " + exec_path)
+        Print.print_with_info(f"ToolDelta:启动位于 {exec_path} 的 NEOMG 接入点", "§b NEOMG")
         self.neomg_proc = subprocess.Popen(
             [
-                "./ToolDelta/neo_libs/access_point", 
+                f"./" + exec_path, 
                 "-server", self.serverNumber,
                 "-T", self.fbToken
             ] + self.make_selectable_args(), 
@@ -351,12 +364,12 @@ class FrameNeOmg(StandardFrame):
             while 1:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig == "":
-                    Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NEOMG")
+                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NEOMG")
                     return
                 while msg_orig:
                     msg = msg_orig[:str_max_len]
                     msg_orig = msg_orig[str_max_len:]
-                    Print.print_with_info(msg, "§b NEOMG")
+                    Print.print_with_info(msg, "§b NOMG ")
         Builtins.createThread(_msg_show_thread)
 
     def launch(self):
@@ -366,6 +379,7 @@ class FrameNeOmg(StandardFrame):
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
+        # bug expired
         self.omega.listen_player_chat(lambda _, _2: None)
         r = self.omega.wait_disconnect()
         return Exception(r)

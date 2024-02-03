@@ -48,6 +48,7 @@ class Frame:
     sys_data = FrameBasic()
     serverNumber: str = ""
     serverPasswd: int
+    linked_plugin_group: PluginGroup
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
@@ -311,7 +312,7 @@ class GameCtrl:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
-        plugins.processPacketFunc(pkt_type, pkt)
+        self.linked_frame.linked_plugin_group.processPacketFunc(pkt_type, pkt)
 
     def process_player_list(self, pkt, plugin_group: PluginGroup):
         # 处理玩家进出事件
@@ -442,7 +443,6 @@ class GameCtrl:
 
 def start_tool_delta():
     # 初始化系统
-    global frame, game_control, plugins
     try:
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
