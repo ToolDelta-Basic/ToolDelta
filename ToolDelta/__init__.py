@@ -459,7 +459,8 @@ def start_tool_delta():
             "plugins": plugins,
             "Plugin": Plugin,
             "PluginGroup": PluginGroup,
-            "PluginAPI": PluginAPI
+            "PluginAPI": PluginAPI,
+            "Config": Config
         })
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
@@ -476,3 +477,7 @@ def start_tool_delta():
     finally:
         frame.safe_close()
         os._exit(0)
+
+'''一下为快捷导入内容'''
+
+from ToolDelta.builtins import Builtins
