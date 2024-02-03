@@ -314,6 +314,8 @@ class FrameNeOmg(StandardFrame):
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
+        self.start_neomega_proc()
+        self.msg_show()
         self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:" + str(get_free_port(10000)),
@@ -326,13 +328,15 @@ class FrameNeOmg(StandardFrame):
         self.init_all_functions()
 
     def make_selectable_args(self):
-        pwdlist = self.serverPassword if self.serverPassword != "0" else []
-        return pwdlist
+        all_args = []
+        if self.serverPassword != "0":
+            all_args += ["-server-password", str(self.serverPassword)]
+        return all_args
 
     def start_neomega_proc(self):
         self.neomg_proc = subprocess.Popen(
             [
-                "./libs/neo_libs/access_point", 
+                "./ToolDelta/neo_libs/access_point", 
                 "-server", self.serverNumber,
                 "-T", self.fbToken
             ] + self.make_selectable_args(), 
@@ -343,10 +347,16 @@ class FrameNeOmg(StandardFrame):
 
     def msg_show(self):
         def _msg_show_thread():
-            msg = self.neomg_proc.stdout.readline().strip("\n")
-            if msg == "":
-                return
-            Print.print_with_info(msg, "§b NEOMG  ")
+            str_max_len = 50
+            while 1:
+                msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
+                if msg_orig == "":
+                    Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NEOMG")
+                    return
+                while msg_orig:
+                    msg = msg_orig[:str_max_len]
+                    msg_orig = msg_orig[str_max_len:]
+                    Print.print_with_info(msg, "§b NEOMG")
         Builtins.createThread(_msg_show_thread)
 
     def launch(self):
