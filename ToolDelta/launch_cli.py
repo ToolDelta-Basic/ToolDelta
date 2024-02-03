@@ -332,7 +332,7 @@ class FrameNeOmg(StandardFrame):
     def start_neomega_proc(self):
         self.neomg_proc = subprocess.Popen(
             [
-                "./libs/neo_libs/access_point", 
+                "./ToolDelta/neo_libs/access_point", 
                 "-server", self.serverNumber,
                 "-T", self.fbToken
             ] + self.make_selectable_args(), 
