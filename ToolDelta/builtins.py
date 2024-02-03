@@ -1,11 +1,14 @@
-from color_print import Print
+from .color_print import Print
 import ujson, os, time, threading, traceback, copy, ctypes
 
+
 class Builtins:
-    class ThreadExit(SystemExit):...
+    class ThreadExit(SystemExit):
+        ...
+
     class ClassicThread(threading.Thread):
-        def __init__(self, func, args: tuple = (), usage = "", **kwargs):
-            super().__init__(target = func)
+        def __init__(self, func, args: tuple = (), usage="", **kwargs):
+            super().__init__(target=func)
             self.func = func
             self.daemon = True
             self.all_args = [args, kwargs]
@@ -23,16 +26,20 @@ class Builtins:
                     self.all_args[1]["exc_cb"]
 
         def get_id(self):
-            if hasattr(self, '_thread_id'):
+            if hasattr(self, "_thread_id"):
                 return self._thread_id
             for id, thread in threading._active.items():
                 if thread is self:
                     return id
-                
+
         def stop(self):
-            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(self.get_id(), ctypes.py_object(Builtins.ThreadExit))
+            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                self.get_id(), ctypes.py_object(Builtins.ThreadExit)
+            )
             return res
+
     createThread = ClassicThread
+
     class SimpleJsonDataReader:
         @staticmethod
         def SafeJsonDump(obj: str | dict | list, fp):
@@ -43,8 +50,9 @@ class Builtins:
             """
             if isinstance(fp, str):
                 fp = open(fp, "w", encoding="utf-8")
-            fp.write(ujson.dumps(obj, indent = 4, ensure_ascii = False))
+            fp.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
             fp.close()
+
         @staticmethod
         def SafeJsonLoad(fp):
             """
@@ -56,7 +64,10 @@ class Builtins:
             d = ujson.loads(fp.read())
             fp.close()
             return d
-        class DataReadError(ujson.JSONDecodeError):...
+
+        class DataReadError(ujson.JSONDecodeError):
+            ...
+
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
             """
@@ -67,11 +78,18 @@ class Builtins:
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
-                    Builtins.SimpleJsonDataReader.SafeJsonDump(default, open(filepath, "w", encoding='utf-8'))
+                    Builtins.SimpleJsonDataReader.SafeJsonDump(
+                        default, open(filepath, "w", encoding="utf-8")
+                    )
                     return default
-                return Builtins.SimpleJsonDataReader.SafeJsonDump(open(filepath, "r", encoding='utf-8'))
+                return Builtins.SimpleJsonDataReader.SafeJsonDump(
+                    open(filepath, "r", encoding="utf-8")
+                )
             except ujson.JSONDecodeError as err:
-                raise Builtins.SimpleJsonDataReader.DataReadError(err.msg, err.doc, err.pos)
+                raise Builtins.SimpleJsonDataReader.DataReadError(
+                    err.msg, err.doc, err.pos
+                )
+
         @staticmethod
         def writeFileTo(plugin_name: str, file: str, obj):
             """
@@ -79,8 +97,10 @@ class Builtins:
             这个文件应在data/<plugin_name>/<file>文件夹内
             """
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
-            Builtins.SimpleJsonDataReader.SafeJsonDump(obj, open(f"data/{plugin_name}/{file}.json", "w", encoding='utf-8'))
-            
+            Builtins.SimpleJsonDataReader.SafeJsonDump(
+                obj, open(f"data/{plugin_name}/{file}.json", "w", encoding="utf-8")
+            )
+
     @staticmethod
     def SimpleFmt(kw: dict[str, any], __sub: str):
         """
@@ -94,6 +114,7 @@ class Builtins:
             if k in __sub:
                 __sub = __sub.replace(k, str(v))
         return __sub
+
     @staticmethod
     def simpleAssert(cond: any, exc):
         """
@@ -101,14 +122,14 @@ class Builtins:
         """
         if not cond:
             raise exc
-        
+
     @staticmethod
     def try_int(arg):
         try:
             return int(arg)
         except:
             return None
-        
+
     @staticmethod
     def add_in_dialogue_player(player: str):
         "使玩家进入聊天栏对话模式"
@@ -116,7 +137,7 @@ class Builtins:
             in_dialogue_list.append(player)
         else:
             raise Exception("Already in a dialogue!")
-        
+
     @staticmethod
     def remove_in_dialogue_player(player: str):
         "使玩家离开聊天栏对话模式"
@@ -129,23 +150,24 @@ class Builtins:
     def player_in_dialogue(player: str):
         "玩家是否处在一个聊天栏对话中."
         return player in in_dialogue_list
-    
+
     @staticmethod
-    def create_dialogue_threading(player, func, exc_cb = None, args = (), kwargs = {}):
+    def create_dialogue_threading(player, func, exc_cb=None, args=(), kwargs={}):
         "创建一个玩家与聊天栏交互的线程, 若玩家已处于一个对话中, 则向方法exc_cb传参: player(玩家名)"
         threading.Thread(
-            target = _dialogue_thread_run, args = (player, func, exc_cb, args, kwargs)
+            target=_dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
         ).start()
 
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):
             this.kw = kw
+
         def replaceTo(this, __sub: str):
             for k, v in this.kw.items():
                 if k in __sub:
                     __sub = __sub.replace(k, str(v))
             return __sub
-        
+
     class TMPJson:
         @staticmethod
         def loadPathJson(path, needFileExists: bool = True):
@@ -165,6 +187,7 @@ class Builtins:
                 else:
                     raise err from None
             jsonPathTmp[path] = [False, js]
+
         @staticmethod
         def unloadPathJson(path):
             """
@@ -179,6 +202,7 @@ class Builtins:
                 return True
             else:
                 return False
+
         @staticmethod
         def read(path):
             "对缓存区的该虚拟路径的文件进行读操作"
@@ -189,6 +213,7 @@ class Builtins:
                 return val
             else:
                 raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
+
         @staticmethod
         def write(path, obj):
             "对缓存区的该虚拟路径的文件进行写操作"
@@ -196,20 +221,22 @@ class Builtins:
                 jsonPathTmp[path] = [True, obj]
             else:
                 raise Exception(f"json路径未初始化, 不能进行读取和写入操作: " + path)
-            
+
         @staticmethod
         def cancel_change(path):
             jsonPathTmp[path][0] = False
-            
+
         @staticmethod
         def get_tmps():
             "不要调用!"
             return jsonPathTmp.copy()
 
+
 def safe_close():
     for k, (isChanged, dat) in jsonPathTmp.items():
         if isChanged:
             Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
+
 
 def _tmpjson_save_thread():
     while 1:
@@ -219,8 +246,10 @@ def _tmpjson_save_thread():
                 Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
                 jsonPathTmp[k][0] = False
 
+
 def tmpjson_save_thread(frame):
     frame.ClassicThread(_tmpjson_save_thread)
+
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
     if not Builtins.player_in_dialogue(player):
@@ -235,6 +264,7 @@ def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
         Print.print_err(f"玩家{player}的会话线程 出现问题:")
         Print.print_err(traceback.format_exc())
     Builtins.remove_in_dialogue_player(player)
+
 
 jsonPathTmp = {}
 in_dialogue_list = []

@@ -16,4 +16,3 @@ def SysArgsToDict(argv: list):
             d[arg] = val
         i+=1
     return d
-            

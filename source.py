@@ -1,9 +1,9 @@
 from typing import Callable, Type, Any, Tuple, NoReturn
 from ujson import JSONDecodeError
-from libs.packets import Packet_CommandOutput
+from ToolDelta.packets import Packet_CommandOutput
 from io import TextIOWrapper
 import threading
-import libs.fbconn as fbconn
+import ToolDelta.fbconn as fbconn
 
 VERSION = tuple[int, int, int]
 
@@ -50,7 +50,7 @@ class Builtins:
         def write(path: str, obj: Any):"向该json文件路径写入信息并缓存, 一段时间或系统关闭时会将其写入磁盘内"
         @staticmethod
         def cancel_change(path):...
-    @staticmethod 
+    @staticmethod
     def SimpleFmt(kw: dict[str, Any], __sub: str) -> str:...
     @staticmethod
     def simpleAssert(cond: Any, exc):...
@@ -83,15 +83,15 @@ class Frame:
         return GameManager(Frame())
     def getFreePort(self, start = 8080, usage = "none") -> int | None:...
     def add_console_cmd_trigger(
-            self, 
-            triggers: list[str], 
-            arg_hint: str | None, 
-            usage: str, 
+            self,
+            triggers: list[str],
+            arg_hint: str | None,
+            usage: str,
             func: Callable[[list[str]], None]
         ):...
     sys_data: FrameBasic
     createThread = ClassicThread
-    
+
 class GameManager:
     players_uuid = {}
     allplayers = []
