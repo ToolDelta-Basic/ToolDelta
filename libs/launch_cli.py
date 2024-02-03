@@ -315,7 +315,7 @@ class FrameNeOmg(StandardFrame):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
         self.omega = neo_conn.ThreadOmega(
-            connect_type=neo_conn.ConnectType.Local,
+            connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:" + str(get_free_port(10000)),
             accountOption=neo_conn.AccountOptions(
                 UserToken=self.fbToken,
@@ -323,8 +323,31 @@ class FrameNeOmg(StandardFrame):
                 ServerPassword=str(self.serverPassword),
             ),
         )
-        self.omega.start_new(self.omega.wait_disconnect)
         self.init_all_functions()
+
+    def make_selectable_args(self):
+        pwdlist = self.serverPassword if self.serverPassword != "0" else []
+        return pwdlist
+
+    def start_neomega_proc(self):
+        self.neomg_proc = subprocess.Popen(
+            [
+                "./libs/neo_libs/access_point", 
+                "-server", self.serverNumber,
+                "-T", self.fbToken
+            ] + self.make_selectable_args(), 
+            stdin = subprocess.PIPE,
+            stdout = subprocess.PIPE,
+            stderr = subprocess.STDOUT
+        )
+
+    def msg_show(self):
+        def _msg_show_thread():
+            msg = self.neomg_proc.stdout.readline().strip("\n")
+            if msg == "":
+                return
+            Print.print_with_info(msg, "§b NEOMG  ")
+        Builtins.createThread(_msg_show_thread)
 
     def launch(self):
         pcks = [

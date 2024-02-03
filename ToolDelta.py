@@ -461,7 +461,9 @@ def start_tool_delta():
             "plugins": plugins, 
             "Plugin": Plugin,
             "PluginGroup": PluginGroup,
-            "PluginAPI": PluginAPI
+            "PluginAPI": PluginAPI,
+            "Config": Config,
+            "Builtins": Builtins,
         })
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
