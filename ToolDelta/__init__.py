@@ -48,6 +48,7 @@ class Frame:
     sys_data = FrameBasic()
     serverNumber: str = ""
     serverPasswd: int
+    linked_plugin_group: PluginGroup
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
@@ -311,7 +312,7 @@ class GameCtrl:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
-        plugins.processPacketFunc(pkt_type, pkt)
+        self.linked_frame.linked_plugin_group.processPacketFunc(pkt_type, pkt)
 
     def process_player_list(self, pkt, plugin_group: PluginGroup):
         # 处理玩家进出事件
@@ -398,7 +399,7 @@ class GameCtrl:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
         self.allplayers = (
-            self.sendcmd("/testfor @a", True)
+            self.sendwscmd("/testfor @a", True)
             .OutputMessages[0]
             .Parameters[0]
             .split(", ")
@@ -432,7 +433,7 @@ class GameCtrl:
         self.sendwocmd(f"title {target} title {text}")
 
     def player_subtitle(self, target: str, text: str):
-        # 向玩家显示小标题
+        # 向玩家显示小标题 需要大标题
         self.sendwocmd(f"title {target} subtitle {text}")
 
     def player_actionbar(self, target: str, text: str):
@@ -442,7 +443,6 @@ class GameCtrl:
 
 def start_tool_delta():
     # 初始化系统
-    global frame, game_control, plugins
     try:
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
@@ -460,7 +460,9 @@ def start_tool_delta():
             "Plugin": Plugin,
             "PluginGroup": PluginGroup,
             "PluginAPI": PluginAPI,
-            "Config": Config
+            "Config": Config,
+            "Builtins": Builtins,
+            "Print": Print
         })
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
@@ -477,7 +479,3 @@ def start_tool_delta():
     finally:
         frame.safe_close()
         os._exit(0)
-
-'''一下为快捷导入内容'''
-
-from ToolDelta.builtins import Builtins

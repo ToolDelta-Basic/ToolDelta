@@ -1,6 +1,6 @@
 import platform, os, subprocess, time, json, requests, ujson
-
-from . import fbconn, neo_conn
+from . import fbconn
+from .neo_libs import neo_conn
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -314,39 +314,65 @@ class FrameNeOmg(StandardFrame):
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
-        self.omega = neo_conn.ThreadOmega(
-            connect_type=neo_conn.ConnectType.Remote,
-            address="tcp://localhost:" + str(get_free_port(10000)),
-            accountOption=neo_conn.AccountOptions(
-                UserToken=self.fbToken,
-                ServerCode=self.serverNumber,
-                ServerPassword=str(self.serverPassword),
-            ),
-        )
+        openat_port = self.start_neomega_proc()
+        self.msg_show()
+        time.sleep(10)
+        self.set_omega(openat_port)
         self.init_all_functions()
+        Print.print_suc("已开启 NEOMG 进程")
 
-    def make_selectable_args(self):
-        pwdlist = self.serverPassword if self.serverPassword != "0" else []
-        return pwdlist
+    def set_omega(self, openat_port):
+        retries = 0
+        while retries <= 10:
+            try:
+                self.omega = neo_conn.ThreadOmega(
+                    connect_type=neo_conn.ConnectType.Remote,
+                    address=f"tcp://127.0.0.1:{openat_port}",
+                    accountOption=neo_conn.AccountOptions(
+                        UserToken=self.fbToken,
+                        ServerCode=self.serverNumber,
+                        ServerPassword=str(self.serverPassword),
+                    ),
+                )
+                retries = 0
+                break
+            except Exception as err:
+                time.sleep(5)
+                retries += 1
+                Print.print_war(f"OMEGA 连接失败, 重连: 第 {retries} 次: {err}")
+                if retries > 5:
+                    raise
 
     def start_neomega_proc(self):
+        free_port = get_free_port(24016)
+        py_file_path = os.path.join(os.getcwd(), "ToolDelta", "neo_libs", "access.py")
+        Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
-                "./ToolDelta/neo_libs/access_point", 
-                "-server", self.serverNumber,
-                "-T", self.fbToken
-            ] + self.make_selectable_args(), 
+                f"python3", py_file_path, 
+                "--server_code", self.serverNumber,
+                "--token", self.fbToken,
+                "--openat", f"tcp://127.0.0.1:{free_port}",
+                "--server_pwd", str(self.serverPassword)
+            ],
             stdin = subprocess.PIPE,
             stdout = subprocess.PIPE,
             stderr = subprocess.STDOUT
         )
+        return free_port
 
     def msg_show(self):
         def _msg_show_thread():
-            msg = self.neomg_proc.stdout.readline().strip("\n")
-            if msg == "":
-                return
-            Print.print_with_info(msg, "§b NEOMG  ")
+            str_max_len = 50
+            while 1:
+                msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
+                if msg_orig == "":
+                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NEOMG")
+                    return
+                while msg_orig:
+                    msg = msg_orig[:str_max_len]
+                    msg_orig = msg_orig[str_max_len:]
+                    Print.print_with_info(msg, "§b NOMG ")
         Builtins.createThread(_msg_show_thread)
 
     def launch(self):
@@ -356,7 +382,9 @@ class FrameNeOmg(StandardFrame):
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
+        # bug expired
         self.omega.listen_player_chat(lambda _, _2: None)
+        Print.print_suc("NEOMEGA 接入已就绪")
         r = self.omega.wait_disconnect()
         return Exception(r)
 
@@ -378,6 +406,8 @@ class FrameNeOmg(StandardFrame):
         def sendcmd(cmd, waitForResp = False, timeout = 30):
             if waitForResp:
                 res = omg.send_player_command_need_response(cmd, timeout)
+                if res is None:
+                    raise TimeoutError("指令超时")
                 return res
             else:
                 omg.send_player_command_omit_response(cmd)
@@ -385,6 +415,8 @@ class FrameNeOmg(StandardFrame):
         def sendwscmd(cmd, waitForResp = False, timeout = 30):
             if waitForResp:
                 res = omg.send_websocket_command_need_response(cmd, timeout)
+                if res is None:
+                    raise TimeoutError("指令超时")
                 return res
             else:
                 omg.send_websocket_command_omit_response(cmd)
