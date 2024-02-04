@@ -314,6 +314,7 @@ class FrameNeOmg(StandardFrame):
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
+        self.download_libs()
         openat_port = self.start_neomega_proc()
         #openat_port = 24015
         self.msg_show()
@@ -390,17 +391,19 @@ class FrameNeOmg(StandardFrame):
     
     def download_libs(self):
         try:
-            res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"))
-            use_mirror = res["Mirror"]
-        except:
-            pass
+            res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json").text)
+            use_mirror = res["Mirror"][0]
+        except Exception as err:
+            Print.print_err(f"获取依赖库表出现问题: {err}")
+            raise SystemExit
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
             sys_machine = "amd64"
         sys_info_fmt = f"{platform.uname().system}:{sys_machine}"
         source_dict = res[sys_info_fmt]
         for k, v in source_dict.items():
-            pathdir, url = os.path.join(os.getcwd(), k), use_mirror + "/https://raw.githubusercontent.com/" + v
+            pathdir = os.path.join(os.getcwd(), k)
+            url = use_mirror + "/https://raw.githubusercontent.com/" + v
             if not os.path.isfile(pathdir):
                 Print.print_inf(f"正在下载依赖库 {pathdir} ...")
                 raise SystemExit
