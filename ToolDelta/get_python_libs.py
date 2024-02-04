@@ -1,5 +1,5 @@
 from subprocess import Popen, PIPE
-from color_print import Print
+from .color_print import Print
 from os import sep
 from sys import argv
 
@@ -17,7 +17,7 @@ neccessary_libs = {
 
 def try_install_libs():
     if argv[-1].split(sep)[-1] == "ToolDelta.py":
-        install_libs(neccessary_libs.keys())
+        install_libs(neccessary_ToolDelta.keys())
     else:
         raise SystemExit("打包程序内模块未能找到")
 

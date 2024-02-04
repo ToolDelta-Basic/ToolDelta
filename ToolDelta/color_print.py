@@ -1,6 +1,6 @@
 import datetime
 try:
-    from logger import publicLogger
+    from .logger import publicLogger
 except:
     pass
 
@@ -63,7 +63,7 @@ class _Print:
                 "§l": "\033[1m"
             }, text
         ) + "\033[0m"
-    
+
     def _strike(self, text: str):
         text_ok = ""
         strikeMode = False
@@ -129,7 +129,7 @@ class _Print:
         for text_line in str(text).split("\n"):
             output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7) + " " + self.colormode_replace(text_line))
         return "\n".join(output_txts)
-    
+
     def c_log(self, inf, msg):
         for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 失败 ", "FAIL"), ("§4 报错 ", "ERROR")]:
             if inf == _g:
@@ -143,5 +143,5 @@ class _Print:
             inf = inf.replace(col, "")
         inf = inf.replace(" ", "")
         publicLogger.log_in(msg, inf)
-    
+
 Print = _Print()

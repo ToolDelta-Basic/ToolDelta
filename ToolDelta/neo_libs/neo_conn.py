@@ -11,7 +11,7 @@ from threading import Thread
 import subprocess
 from dataclasses import dataclass
 import enum
-try:from libs.color_print import Print
+try:from ToolDelta.color_print import Print
 except:pass
 
 # define basic types and converts
@@ -22,7 +22,7 @@ class byteCSlice(ctypes.Structure):
     _fields_ = [("data", ctypes.POINTER(ctypes.c_char)),
                 ("len", ctypes.c_longlong),
                 ("cap", ctypes.c_longlong)]
-    
+
 
 def toCString(string: str):
     return ctypes.c_char_p(bytes(string, encoding="utf-8"))
@@ -72,7 +72,7 @@ def ConnectOmega(address):
     if r is not None:
         raise Exception(toPyString(r))
 
-@dataclass 
+@dataclass
 class AccountOptions:
     AuthServer:str="https://api.fastbuilder.pro"
     UserToken:str=""
@@ -254,12 +254,12 @@ class Counter:
     def __init__(self,prefix:str) -> None:
         self.current_i=0
         self.prefix=prefix
-    
+
     def __next__(self) -> int:
         self.current_i+=1
         return f"{self.prefix}_{self.current_i}"
 
-@dataclass 
+@dataclass
 class ActionPermissionMap:
     ActionPermissionAttackMobs:bool=False
     ActionPermissionAttackPlayers:bool=False
@@ -271,7 +271,7 @@ class ActionPermissionMap:
     ActionPermissionTeleport:bool=False
     ActionPermissionUnknown:bool=False
 
-@dataclass 
+@dataclass
 class AdventureFlagsMap:
     AdventureFlagAllowFlight:bool=False
     AdventureFlagAutoJump:bool=False
@@ -360,7 +360,7 @@ class CommandBlockPlaceOption:
     ShouldTrackOutput:bool=False
     ExecuteOnFirstTick:bool=False
 
-@dataclass 
+@dataclass
 class QueriedPlayerPos:
     dimension:int=0
     x:float=0
@@ -377,12 +377,12 @@ class PlayerKit:
     @property
     def uuid(self)->str:
         return self._uuid
-    
+
     @property
     def name(self)->str:
         OmegaAvailable()
         return toPyString(LIB.PlayerName(self._c_uuid))
-    
+
     @property
     def entity_unique_id(self) ->int:
         OmegaAvailable()
@@ -392,17 +392,17 @@ class PlayerKit:
     def op(self)->bool:
         OmegaAvailable()
         return LIB.PlayerIsOP(self._c_uuid)==1
-    
+
     @property
     def online(self)->bool:
         OmegaAvailable()
         return LIB.PlayerOnline(self._c_uuid)==1
-    
+
     @property
     def login_time(self)->int:
         OmegaAvailable()
         return int(LIB.PlayerLoginTime(self._c_uuid))
-    
+
     @property
     def platform_chat_id(self)->str:
         OmegaAvailable()
@@ -465,7 +465,7 @@ class PlayerKit:
     def entity_metadata(self)->any:
         OmegaAvailable()
         return json.loads(toPyString(LIB.PlayerEntityMetadata(self._c_uuid)))
-    
+
     def say(self,msg:str):
         OmegaAvailable()
         LIB.PlayerChat(self._c_uuid,toCString(msg))
@@ -492,10 +492,10 @@ class PlayerKit:
             query_str+=","+",".join(conditions)+"]"
         ret= self.parent.send_websocket_command_need_response(query_str)
         return ret
-    
+
     def check_conditions(self,conditions:Union[None,str,List[str]]=None)->bool:
         return self.query(conditions).SuccessCount>0
-    
+
     def get_pos(self)->QueriedPlayerPos:
         pos=self.query().OutputMessages[0].Parameters[0][0]
         return QueriedPlayerPos(dimension=pos["dimension"],yRot=pos["yRot"],x=pos["position"]["x"],y=pos["position"]["y"],z=pos["position"]["z"])
@@ -519,14 +519,14 @@ class ConnectType(enum.Enum):
 
 class ThreadOmega:
     def __init__(self,connect_type:ConnectType,address: str="tcp://localhost:24016",accountOption:AccountOptions=None) -> None:
-        self._thread_counter=Counter("thread")
-        self._running_threads:Dict[str,Thread]={}
         if connect_type==ConnectType.Local:
             StartOmega(address,accountOption)
             print(f"omega is started and an access point is opened in {address}")
         elif connect_type==ConnectType.Remote:
             print(f"connecting to omega access point with {address}")
             ConnectOmega(address)
+        self._thread_counter=Counter("thread")
+        self._running_threads:Dict[str,Thread]={}
 
         # disconnect event
         self._omega_disconnected_lock=threading.Event()
@@ -537,7 +537,7 @@ class ThreadOmega:
         self._cmd_callback_retriever_counter=Counter("cmd_callback")
         self._omega_cmd_callback_events:Dict[str,Callable]={}
 
-        # packet listeners 
+        # packet listeners
         self._packet_listeners:Dict[str,List[Callable[[str,any],None]]]={}
 
         # setup actions
@@ -548,7 +548,7 @@ class ThreadOmega:
         for packet_name,packet_id in self._packet_name_to_id_mapping.items():
             self._packet_id_to_name_mapping[packet_id]=packet_name
             self._packet_listeners[packet_name]=[]
-        
+
         LIB.ListenPlayerChange()
         self._player_change_listeners:[Callable[[PlayerKit,str],None]]=[]
 
@@ -598,8 +598,6 @@ class ThreadOmega:
                 self._omega_cmd_callback_events[retriever](cmdResp)
             elif eventType=="MCPacket":
                 packetTypeName=retriever
-                if packetTypeName == "":
-                    print("'', ignored")
                 # print(f"mc packet {packetTypeName}")
                 listeners=self._packet_listeners[packetTypeName]
                 if len(listeners)==0:
@@ -624,7 +622,7 @@ class ThreadOmega:
             elif eventType=="PlayerInterceptInput":
                 chat=ConsumeChat()
                 self._player_chat_intercept_callback_events[retriever](chat)
-            
+
             elif eventType=="Chat":
                 chat=ConsumeChat()
                 if not self._player_chat_listeners \
@@ -632,7 +630,7 @@ class ThreadOmega:
                 and not self._specific_chat_listeners[chat.RawName]:
                     LIB.OmitEvent()
                 else:
-                    player=self.get_player_by_name(chat.Name)
+                    player=omega.get_player_by_name(chat.Name)
                     if not player:
                         name=chat.Name
                         if name in self._specific_chat_listeners.keys():
@@ -657,12 +655,12 @@ class ThreadOmega:
                     for l in listeners:
                         self.start_new(l,(chat,))
 
-                        
+
     def wait_disconnect(self)->str:
         """return: disconnect reason"""
         self._omega_disconnected_lock.wait()
         return self._omega_disconnected_reason
-    
+
     def _create_lock_and_result_setter(self):
         lock=threading.Lock()
         lock.acquire()
@@ -692,7 +690,7 @@ class ThreadOmega:
         res= getter(timeout=timeout)
         del self._omega_cmd_callback_events[retriever_id]
         return res
-    
+
     def send_settings_command(self,cmd:str):
         SendSettingsCommand(cmd)
 
@@ -709,7 +707,7 @@ class ThreadOmega:
             return {k:self._packet_name_to_id_mapping[k] for k in requires}
         else:
             return self._packet_name_to_id_mapping[requires]
-        
+
     def get_packet_id_to_name_mapping(self,requires:Optional[Union[List[int],int]]=None)->Union[Dict[int,str],str]:
         if requires is None:
             return {k:v for k,v in self._packet_id_to_name_mapping.items()}
@@ -717,7 +715,7 @@ class ThreadOmega:
             return {k:self._packet_id_to_name_mapping[k] for k in requires}
         else:
             return self._packet_id_to_name_mapping[requires]
-    
+
     def listen_packets(self,targets:Union[str,List[str]],callback:Callable[[str,Any],None]):
         if isinstance(targets,str):
             targets=[targets]
@@ -778,10 +776,10 @@ class ThreadOmega:
 
     def get_bot_basic_info(self)->ClientMaintainedBotBasicInfo:
         return self._bot_basic_info
-    
+
     def get_bot_name(self) -> str:
         return self._bot_basic_info.BotName
-    
+
     def get_bot_runtime_id(self) -> int:
         return self._bot_basic_info.BotRuntimeID
 
@@ -793,14 +791,14 @@ class ThreadOmega:
 
     def get_bot_uuid_str(self) -> str:
         return self._bot_basic_info.BotUUIDStr
-    
+
     def get_extend_info(self) ->ClientMaintainedExtendInfo:
         OmegaAvailable()
         return ClientMaintainedExtendInfo(**json.loads(toPyString(LIB.GetClientMaintainedExtendInfo())))
 
     def _get_bind_player(self,uuidStr:str)->Optional[PlayerKit]:
         if uuidStr is None or uuidStr=="":
-            return None 
+            return None
         if uuidStr in self._bind_players.keys():
             return self._bind_players[uuidStr]
         else:
@@ -822,21 +820,21 @@ class ThreadOmega:
         OmegaAvailable()
         playerUUID=toPyString(LIB.GetPlayerByUUID(toCString(uuidStr)))
         return self._get_bind_player(playerUUID)
-    
+
     def listen_player_change(self,callback:Callable[[PlayerKit,str],None]):
-        for player in self.get_all_online_players():
+        for player in omega.get_all_online_players():
             callback(player,"exist")
         self._player_change_listeners.append(callback)
 
     def _intercept_player_just_next_input(self,player_c_uuid:CString,timeout:int=-1)->Chat:
         setter,getter=self._create_lock_and_result_setter()
         retrieverID=next(self._player_chat_intercept_callback_retriever_counter)
-        self._player_chat_intercept_callback_events[retrieverID]=setter 
+        self._player_chat_intercept_callback_events[retrieverID]=setter
         LIB.InterceptPlayerJustNextInput(player_c_uuid,toCString(retrieverID))
         res=getter(timeout=timeout)
         del self._player_chat_intercept_callback_events[retrieverID]
         return res
-    
+
     def listen_player_chat(self,callback:Callable[[Chat,PlayerKit],None]):
         self._player_chat_listeners.append(callback)
 
@@ -857,3 +855,185 @@ class ThreadOmega:
     def __del__(self):
         for t in self._running_threads.values():
             t.join()
+
+
+if __name__ == '__main__':
+    conn_type=ConnectType.Local # ConnectType.Remote
+    if conn_type==ConnectType.Local:
+        # 直接在内部启动一个 neOmega, 不需要 fb,omega 也不需要新进程
+        # 你可以把它当成一个普通函数
+        # 因为是在内部启动的，所以需要账号密码
+        # 为什么明明是在本地，还有address? 这个是为了方便远程连接的, 你可以新开一个远程连接 ConnectType.Remote 它会连接到这个进程
+        omega=ThreadOmega(
+            connect_type=ConnectType.Local,
+            address="tcp://localhost:24015",
+            accountOption=AccountOptions(
+                UserName="SuperScript",
+                UserToken="w9/BeLNV/9VE7diQXIpUipdjyxuiTNotzNm+3yzw5QpdZLNJRVfhozvhFOT+oF1KzO4kMI+ZO24zsetdvBCCCn/1ze1PqMEkjKGuaRu8ijlfIJ7wLa74f6IZeGLdALpInNxyVkNV4Y+DSghyYHOvI41V/46SOFCG",
+                ServerCode="17383329",
+                ServerPassword="713888"
+            )
+        )
+    elif conn_type==ConnectType.Remote:
+        # 远程连接到一个已经启动的 neOmega Access Point
+        # 你需要先运行 python access.py
+        omega=ThreadOmega(
+            connect_type=ConnectType.Remote,
+            address="tcp://localhost:24015",
+            accountOption=None
+        )
+
+    # 演示如何感知链接断开
+    def disconnectNotifyExample():
+        reason=omega.wait_disconnect()
+        print(f"omega disconnected because {reason}")
+
+    omega.start_new(disconnectNotifyExample)
+
+    # 演示如何发送命令（并获得结果）
+    def commandSendAndResponseFetchExample():
+        resp=omega.send_websocket_command_need_response("tp @s ~~~",timeout=-1)
+        print("ws resp: ",resp)
+        resp=omega.send_player_command_need_response("give @a sand",timeout=-1)
+        print("player resp: ",resp)
+
+        omega.send_websocket_command_omit_response("give @a sand")
+        omega.send_player_command_omit_response("give @a sand")
+        omega.send_settings_command("give @a sand")
+
+    omega.start_new(commandSendAndResponseFetchExample)
+
+    # 演示如何生成任意类型的数据包 （使用 JSON 近似方式）
+
+    packet_id,packet_bytes=omega.construct_game_packet_bytes_in_json_as_is("SetTime",{"Time":69221000})
+    print(packet_id,packet_bytes)
+    # 实际上没有效果，因为这个只能是服务器向客户端发送，客户端向服务器发送是没任何意义的
+    omega.send_game_packet_in_json_as_is("SetTime",{"Time":69221000})
+
+    # 演示如何监听数据包
+    all_packet_name_id_mapping=omega.get_packet_name_to_id_mapping()
+    # print(f"所有数据包类型及ID {all_packet_name_id_mapping}") # 有点长，自己解除注释吧
+    all_packet_id_name_mapping=omega.get_packet_id_to_name_mapping()
+    # print(f"所有数据包类型及ID {all_packet_id_name_mapping}") # 有点长，自己解除注释吧
+
+    packet_ids=omega.get_packet_name_to_id_mapping(["SetTime","MoveActorDelta"])
+    print(f"一些特定数据包类型的 ID {packet_ids}")
+    packet_types=omega.get_packet_id_to_name_mapping([v for _,v in packet_ids.items()])
+    print(f"一些特定数据包ID的类型 {packet_types}")
+
+    packet_id=omega.get_packet_name_to_id_mapping("SetTime")
+    print(f"数据包类型 SetTime 的 ID {packet_id}")
+    packet_type=omega.get_packet_id_to_name_mapping(10)
+    print(f"数据包ID 10 的类型 {packet_type}")
+
+    def onSetTimeExample(packet_type:str,packet:any):
+        print(f"收到了 {packet_type} 数据包, {packet}")
+    omega.listen_packets("SetTime",onSetTimeExample)
+
+    # 以下调用形式也 OK
+    # omega.listen_packets(10,onSetTimeExample) # 1  使用 ID 表示需要的数据包类型
+    def onPacketExample(packet_type:str,packet:any):
+        print(f"收到了 {packet_type} 数据包, {packet}")
+    # omega.listen_packets(["SetTime","UpdateBlock"],onPacketExample) # 2 使用列表表示多种需要的数据包
+    # omega.listen_packets([10,"UpdateBlock"],onPacketExample) # 3 使用列表（混合）表示多种需要的数据包
+    # omega.listen_packets(["all","!UpdateBlock","!MoveActorDelta"],onPacketExample) # 4 使用 all 和 ！ 表示除了 xx 以外的所有数据包
+
+    # 获得机器人基本信息
+    print(f"bot info {omega.get_bot_basic_info()}")
+    print(f"bot name {omega.get_bot_name()}")
+    print(f"bot runtime id {omega.get_bot_runtime_id()}")
+    print(f"bot unique id {omega.get_bot_unique_id()}")
+    print(f"bot identity {omega.get_bot_identity()}")
+    print(f"bot uuid str {omega.get_bot_uuid_str()}")
+
+    # 获得其他基本信息
+    print(f"extend info {omega.get_extend_info()}")
+
+    # # 获得玩家信息
+    print(f"current online players {omega.get_all_online_players()}")
+    player0=omega.get_all_online_players()[0]
+    print("name: ",player0.name)
+    print("uuid: ",player0.uuid)
+    print("entity_unique_id: ",player0.entity_unique_id)
+    print("online: ",player0.online)
+    print("op: ",player0.op)
+    print("login time (unix): ",player0.login_time)
+    print("online time: ",time.time()-player0.login_time)
+    print("platform chat id: ",player0.platform_chat_id)
+    print("build platform: ",player0.build_platform)
+    print("skin id: ",player0.skin_id)
+    print("device id: ",player0.device_id)
+    print("properties flag: ",player0.properties_flag)
+    print("command permission level: ",player0.command_permission_level)
+    print("action permission: ",player0.action_permissions)
+    print("op permission level: ",player0.op_permissions_level)
+    print("custom permissions: ",player0.custom_permissions)
+    print("entity runtime id: ",player0.entity_runtime_id)
+    print("entity meta data: ",player0.entity_metadata)
+    action_permission_map,adventure_flags_map=player0.ability_map
+    print("action permission map: ",action_permission_map)
+    print("adventure flags map: ",adventure_flags_map)
+
+    print(omega.get_player_by_name(player0.name))
+    print(omega.get_player_by_uuid(player0.uuid))
+
+    # 监听玩家上线/下线变化 online/offline/exist
+    def on_player_change_example(player:PlayerKit,action):
+        print(f"player: {player.name} {action}")
+    omega.listen_player_change(on_player_change_example)
+
+    # 监听玩家聊天信息并与玩家交互
+    def on_player_chat(chat:Chat,player:PlayerKit):
+        print("chat: ",chat)
+        print(player.query(["m=c","tag=!noc"]))
+        print("is creative: ",player.check_conditions(["m=c","tag=!noc"]))
+        print("pos: ",player.get_pos())
+
+        action_permission_map,adventure_flags_map=player.ability_map
+        print("action permissions: ",action_permission_map)
+        print("adventure flags: ",adventure_flags_map)
+
+        action_permission_map.ActionPermissionAttackPlayers=not action_permission_map.ActionPermissionAttackPlayers
+
+        player.set_ability_map(action_permission_map,adventure_flags_map)
+
+        while True:
+            input=player.ask("请随意输入一些什么，或者输入 取消")
+            print(f"player input: {input}")
+            if input=="取消":
+                break
+            player.say(input)
+            player.title(input,input)
+            player.action_bar(input)
+
+    omega.listen_player_chat(on_player_chat)
+
+    # 监听特定命令块的消息
+    def on_command_block_msg(chat:Chat):
+        print("命令块: ",chat)
+
+    # 在执行之前需要放置一个命令块，名字为 test， 内容为: tell 机器人 消息
+    omega.listen_named_command_block("test",on_command_block_msg)
+
+    # 监听特定物品的消息
+    def on_snow_ball(chat:Chat):
+        print("雪球: ",chat)
+        omega.send_settings_command("kill @e[type=snowball]")
+    # 在执行之前需要放置一个命令块， 内容为: execute @e[type=snowball] ~~~ tell 机器人 @p
+    omega.listen_specific_chat("雪球",on_snow_ball)
+
+    omega.send_websocket_command_need_response("").SuccessCount
+
+    # 演示如何放置一个命令块
+    omega.place_command_block(CommandBlockPlaceOption(
+        X=836,Y=84,Z=889,
+        BlockName="command_block", #repeating_command_block #chain_command_block
+        BockState="1", # 控制方向等
+        NeedRedStone=True,
+        Conditional=False,
+        Command="say hello",
+        Name="hello",
+        TickDelay=10,
+        ShouldTrackOutput=True,
+        ExecuteOnFirstTick=True,
+    ))

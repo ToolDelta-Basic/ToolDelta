@@ -1,6 +1,6 @@
 import platform, os, subprocess, time, json, requests, ujson
-import fbconn
-import neo_conn
+
+from . import fbconn, neo_conn
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -251,7 +251,7 @@ class FrameFBConn(StandardFrame):
             Print.print_err(f"自动检测文件并补全时出现错误: {err}")
             return False
         return True
-    
+
     def init_all_functions(self):
         def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendMCCommand(self.con, cmd)
@@ -332,7 +332,7 @@ class FrameNeOmg(StandardFrame):
     def start_neomega_proc(self):
         self.neomg_proc = subprocess.Popen(
             [
-                "./libs/neo_libs/access_point", 
+                "./ToolDelta/neo_libs/access_point", 
                 "-server", self.serverNumber,
                 "-T", self.fbToken
             ] + self.make_selectable_args(), 
