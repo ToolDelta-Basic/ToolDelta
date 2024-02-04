@@ -387,6 +387,28 @@ class FrameNeOmg(StandardFrame):
         Print.print_suc("NEOMEGA 接入已就绪")
         r = self.omega.wait_disconnect()
         return Exception(r)
+    
+    def download_libs(self):
+        try:
+            res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json"))
+            use_mirror = res["Mirror"]
+        except:
+            pass
+        sys_machine = platform.uname().machine
+        if sys_machine == "x86_64":
+            sys_machine = "amd64"
+        sys_info_fmt = f"{platform.uname().system}:{sys_machine}"
+        source_dict = res[sys_info_fmt]
+        for k, v in source_dict.items():
+            pathdir, url = os.path.join(os.getcwd(), k), use_mirror + "/https://raw.githubusercontent.com/" + v
+            if not os.path.isfile(pathdir):
+                Print.print_inf(f"正在下载依赖库 {pathdir} ...")
+                raise SystemExit
+                try:
+                    download_file(url, pathdir)
+                except Exception as err:
+                    Print.print_err(f"下载依赖库出现问题: {err}")
+                    raise SystemExit
 
     def get_players_and_uuids(self):
         players_uuid = {}

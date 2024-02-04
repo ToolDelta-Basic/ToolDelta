@@ -67,7 +67,7 @@ class Frame:
     def read_cfg(self):
         # 读取启动配置等
         public_launcher = [
-            ("FastBuilder External 模式 (经典模式)", FrameFBConn),
+            ("FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)", FrameFBConn),
             ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg),
         ]
         CFG = {
@@ -284,7 +284,6 @@ class GameCtrl:
         self.pkt_cache: list = []
         self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
-        self.requireUUIDPacket = True
 
     def init_funcs(self):
         self.launcher = self.linked_frame.launcher
@@ -297,6 +296,10 @@ class GameCtrl:
         self.sendPacket = self.launcher.sendPacket
         self.sendPacketJson = self.launcher.sendPacketJson
         self.sendfbcmd = self.launcher.sendfbcmd
+        if isinstance(self.linked_frame.launcher, FrameNeOmg):
+            self.requireUUIDPacket = False
+        else:
+            self.requireUUIDPacket = True
 
     def set_listen_packets(self):
         # 向启动器初始化监听的游戏数据包
@@ -307,7 +310,7 @@ class GameCtrl:
     def add_listen_pkt(self, pkt: int):
         self.require_listen_packets.add(pkt)
 
-    def packet_handler(self, pkt_type: int, pkt: int):
+    def packet_handler(self, pkt_type: int, pkt: dict):
         if pkt_type == PacketIDS.PlayerList:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:

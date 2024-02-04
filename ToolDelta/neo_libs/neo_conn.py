@@ -1,13 +1,12 @@
 import ctypes
 import json
 import os.path
-import time
 import traceback
-from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
 import threading
+import enum
+from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
 from threading import Thread
 from dataclasses import dataclass
-import enum
 # define basic types and converts
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
@@ -522,9 +521,8 @@ class ThreadOmega:
         self._running_threads:Dict[str,Thread]={}
         if connect_type==ConnectType.Local:
             StartOmega(address,accountOption)
-            print(f"omega is started and an access point is opened in {address}")
+            print(f"Omega 接入点已启动, 在 {address} 开放接口")
         elif connect_type==ConnectType.Remote:
-            print(f"connecting to omega access point with {address}")
             ConnectOmega(address)
 
         # disconnect event
