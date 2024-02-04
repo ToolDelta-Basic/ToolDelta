@@ -600,7 +600,7 @@ class ThreadOmega:
                 if packetTypeName == "":
                     print("'', ignored")
                 # print(f"mc packet {packetTypeName}")
-                listeners=self._packet_listeners[packetTypeName]
+                listeners=self._packet_listeners.get(packetTypeName, [])
                 if len(listeners)==0:
                     LIB.OmitEvent()
                 else:

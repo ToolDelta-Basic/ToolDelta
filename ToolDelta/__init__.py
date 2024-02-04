@@ -53,7 +53,7 @@ class Frame:
     link_game_ctrl = None
     link_plugin_group = None
     _old_dotcs_threadinglist = []
-    on_plugin_err = lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
+    on_plugin_err = staticmethod(lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}"))
     system_is_win = sys.platform in ["win32", "win64"]
     external_port = sys_args_dict.get("external-port")
 
@@ -398,12 +398,21 @@ class GameCtrl:
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
-        self.allplayers = (
-            self.sendwscmd("/testfor @a", True)
-            .OutputMessages[0]
-            .Parameters[0]
-            .split(", ")
-        )
+        else:
+            while 1:
+                try:
+                    self.allplayers = (
+                        self.sendwscmd("/testfor @a", True)
+                        .OutputMessages[0]
+                        .Parameters[0]
+                        .split(", ")
+                    )
+                    break
+                except TimeoutError:
+                    Print.print_war("获取全局玩家失败..重试")
+        self.bot_name = self.launcher.get_bot_name()
+        if self.bot_name is None:
+            self.bot_name = self.allplayers[0]
         self.linked_frame.comsole_cmd_start()
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err

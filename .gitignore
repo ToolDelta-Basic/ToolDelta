@@ -155,6 +155,9 @@ ToolDelta基本配置.json
 phoenixbuilder*
 *.bdx
 *.txt
+omg*
+omg*.exe
+omg*.app
 neomg*.so
 neomg*.h
 neomg*.dll

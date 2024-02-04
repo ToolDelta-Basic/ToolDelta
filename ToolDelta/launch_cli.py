@@ -315,8 +315,8 @@ class FrameNeOmg(StandardFrame):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
         openat_port = self.start_neomega_proc()
+        #openat_port = 24015
         self.msg_show()
-        time.sleep(10)
         self.set_omega(openat_port)
         self.init_all_functions()
         Print.print_suc("已开启 NEOMG 进程")
