@@ -155,4 +155,9 @@ ToolDelta基本配置.json
 phoenixbuilder*
 *.bdx
 *.txt
+neomg*.so
+neomg*.h
+neomg*.dll
+neomg*.dylib
 tos.sh
+build_points.sh

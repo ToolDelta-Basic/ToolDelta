@@ -399,7 +399,7 @@ class GameCtrl:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
         self.allplayers = (
-            self.sendcmd("/testfor @a", True)
+            self.sendwscmd("/testfor @a", True)
             .OutputMessages[0]
             .Parameters[0]
             .split(", ")
@@ -460,7 +460,9 @@ def start_tool_delta():
             "Plugin": Plugin,
             "PluginGroup": PluginGroup,
             "PluginAPI": PluginAPI,
-            "Config": Config
+            "Config": Config,
+            "Builtins": Builtins,
+            "Print": Print
         })
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
