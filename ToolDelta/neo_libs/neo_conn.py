@@ -45,15 +45,15 @@ sys_fn = os.path.join(os.getcwd(), "ToolDelta")
 if machine=="x86_64":
     machine="amd64"
 if sys_type == "Windows":
-    lib_path = f"neomg_windows_{machine}.dll"
+    lib_path = f"neomega_windows_{machine}.dll"
     lib_path = os.path.join(sys_fn,"neo_libs", lib_path)
     LIB = ctypes.cdll.LoadLibrary(lib_path)
 elif sys_type == "Linux":
-    lib_path = f"neomg_linux_{machine}.so"
+    lib_path = f"neomega_linux_{machine}.so"
     lib_path = os.path.join(sys_fn,"neo_libs", lib_path)
     LIB = ctypes.CDLL(lib_path)
 else:
-    lib_path = f"neomg_macos_{machine}.dylib"
+    lib_path = f"neomega_macos_{machine}.dylib"
     lib_path = os.path.join(sys_fn,"neo_libs", lib_path)
     LIB = ctypes.CDLL(lib_path)
 

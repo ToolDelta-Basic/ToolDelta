@@ -1,6 +1,5 @@
 import platform, os, subprocess, time, json, requests, ujson
 from . import fbconn
-from .neo_libs import neo_conn
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -315,12 +314,17 @@ class FrameNeOmg(StandardFrame):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
         self.download_libs()
+        self.set_neomg_lib()
         openat_port = self.start_neomega_proc()
         #openat_port = 24015
         self.msg_show()
         self.set_omega(openat_port)
         self.init_all_functions()
         Print.print_suc("已开启 NEOMG 进程")
+
+    def set_neomg_lib(self):
+        global neo_conn
+        from .neo_libs import neo_conn
 
     def set_omega(self, openat_port):
         retries = 0
@@ -406,7 +410,6 @@ class FrameNeOmg(StandardFrame):
             url = use_mirror + "/https://raw.githubusercontent.com/" + v
             if not os.path.isfile(pathdir):
                 Print.print_inf(f"正在下载依赖库 {pathdir} ...")
-                raise SystemExit
                 try:
                     download_file(url, pathdir)
                 except Exception as err:
