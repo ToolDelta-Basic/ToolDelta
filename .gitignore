@@ -158,9 +158,9 @@ phoenixbuilder*
 omg*
 omg*.exe
 omg*.app
-neomg*.so
-neomg*.h
-neomg*.dll
-neomg*.dylib
+*.so
+*.h
+*.dll
+*.dylib
 tos.sh
 build_points.sh
