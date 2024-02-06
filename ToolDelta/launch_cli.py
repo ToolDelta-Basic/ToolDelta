@@ -1,5 +1,4 @@
 import platform, os, subprocess, time, json, requests, ujson
-from . import fbconn
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -63,6 +62,8 @@ class FrameFBConn(StandardFrame):
     cmds_reqs = []
     cmds_resp = {}
     def __init__(self, serverNumber, password, fbToken):
+        global fbconn
+        from . import fbconn
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
         self.init_all_functions()
@@ -405,6 +406,8 @@ class FrameNeOmg(StandardFrame):
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
             sys_machine = "amd64"
+        elif sys_machine == "aarch64":
+            sys_machine = "arm64"
         sys_info_fmt = f"{platform.uname().system}:{sys_machine}"
         source_dict = res[sys_info_fmt]
         for k, v in source_dict.items():

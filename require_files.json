@@ -9,7 +9,7 @@
         "ToolDelta/neo_libs/neomega_linux_arm64.so":"wling-art/ToolDelta-depends/main/neomega_linux_arm64.so"
     },
     "Linux:aarch64": {
-        "ToolDelta/neo_libs/neomega_linux_arm64.so":"wling-art/ToolDelta-depends/main/neomega_linux_aarch.so"
+        "ToolDelta/neo_libs/neomega_linux_aarch64.so":"wling-art/ToolDelta-depends/main/neomega_linux_aarch64.so"
     },
     "Windows:amd64": {
         "ToolDelta/neo_libs/neomega_windows_amd64.dll":"wling-art/ToolDelta-depends/main/neomega_windows_amd64.dll"
