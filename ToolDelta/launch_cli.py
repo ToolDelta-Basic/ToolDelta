@@ -1,5 +1,4 @@
 import platform, os, subprocess, time, json, requests, ujson
-from . import fbconn
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -60,9 +59,11 @@ class StandardFrame:
 
 class FrameFBConn(StandardFrame):
     # 使用原生 FastBuilder External 连接
+    global fbconn
     cmds_reqs = []
     cmds_resp = {}
     def __init__(self, serverNumber, password, fbToken):
+        from . import fbconn
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
         self.init_all_functions()
