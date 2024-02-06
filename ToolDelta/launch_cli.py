@@ -351,7 +351,7 @@ class FrameNeOmg(StandardFrame):
         Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
-                f"python3", py_file_path, 
+                f"python3", py_file_path,
                 "--server_code", self.serverNumber,
                 "--token", self.fbToken,
                 "--openat", f"tcp://127.0.0.1:{free_port}",
@@ -378,9 +378,9 @@ class FrameNeOmg(StandardFrame):
         Builtins.createThread(_msg_show_thread)
 
     def launch(self):
-        #openat_port = self.start_neomega_proc()
-        openat_port = 24016
-        #self.msg_show()
+        openat_port = self.start_neomega_proc()
+        # openat_port = 24016
+        self.msg_show()
         self.set_omega(openat_port)
         Print.print_suc("已开启 NEOMG 进程")
         pcks = [
@@ -394,9 +394,8 @@ class FrameNeOmg(StandardFrame):
         Print.print_suc("NEOMEGA 接入已就绪")
         r = self.omega.wait_disconnect()
         return Exception(r)
-    
+
     def download_libs(self):
-        return
         try:
             res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json").text)
             use_mirror = res["Mirror"][0]
