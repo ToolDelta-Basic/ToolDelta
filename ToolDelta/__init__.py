@@ -9,6 +9,12 @@ from .cfg import Cfg as _Cfg
 from .logger import publicLogger
 from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg
 
+# 整个系统由三个部分组成
+#  Frame: 负责整个 ToolDelta 的基本框架运行
+#  GameCtrl: 负责对接游戏
+#    - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (TLSP, etc.))
+#  PluginGroup: 负责管理和运行插件
+
 
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""

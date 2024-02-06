@@ -313,14 +313,10 @@ class FrameNeOmg(StandardFrame):
     def __init__(self, serverNumber, password, fbToken):
         super().__init__(serverNumber, password, fbToken)
         self.injected = False
+        self.omega = None
         self.download_libs()
         self.set_neomg_lib()
-        openat_port = self.start_neomega_proc()
-        #openat_port = 24015
-        self.msg_show()
-        self.set_omega(openat_port)
         self.init_all_functions()
-        Print.print_suc("已开启 NEOMG 进程")
 
     def set_neomg_lib(self):
         global neo_conn
@@ -346,7 +342,8 @@ class FrameNeOmg(StandardFrame):
                 retries += 1
                 Print.print_war(f"OMEGA 连接失败, 重连: 第 {retries} 次: {err}")
                 if retries > 5:
-                    raise
+                    Print.print_err("最大重试次数已达到")
+                    raise SystemExit
 
     def start_neomega_proc(self):
         free_port = get_free_port(24016)
@@ -381,6 +378,11 @@ class FrameNeOmg(StandardFrame):
         Builtins.createThread(_msg_show_thread)
 
     def launch(self):
+        #openat_port = self.start_neomega_proc()
+        openat_port = 24016
+        #self.msg_show()
+        self.set_omega(openat_port)
+        Print.print_suc("已开启 NEOMG 进程")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
@@ -394,6 +396,7 @@ class FrameNeOmg(StandardFrame):
         return Exception(r)
     
     def download_libs(self):
+        return
         try:
             res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json").text)
             use_mirror = res["Mirror"][0]
@@ -430,32 +433,33 @@ class FrameNeOmg(StandardFrame):
         self.packet_handler(pkt_type, pkt)
 
     def init_all_functions(self):
-        omg = self.omega
         def sendcmd(cmd, waitForResp = False, timeout = 30):
             if waitForResp:
-                res = omg.send_player_command_need_response(cmd, timeout)
+                res = self.omega.send_player_command_need_response(cmd, timeout)
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
             else:
-                omg.send_player_command_omit_response(cmd)
+                self.omega.send_player_command_omit_response(cmd)
                 return b""
         def sendwscmd(cmd, waitForResp = False, timeout = 30):
             if waitForResp:
-                res = omg.send_websocket_command_need_response(cmd, timeout)
+                res = self.omega.send_websocket_command_need_response(cmd, timeout)
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
             else:
-                omg.send_websocket_command_omit_response(cmd)
+                self.omega.send_websocket_command_omit_response(cmd)
                 return b""
-
+        def sendwocmd(cmd: str):
+            self.omega.send_settings_command(cmd)
+        def sendPacket(pktID: int, pkt: str):
+            self.omega.send_game_packet_in_json_as_is(pktID, pkt)
         def sendfbcmd(_):
             raise AttributeError("NeOmg模式无法发送FBCommand")
 
         self.sendcmd = sendcmd
         self.sendwscmd = sendwscmd
-        self.sendwocmd = omg.send_settings_command
-        self.sendPacket = omg.send_game_packet_in_json_as_is
-        self.sendPacketJson = omg.send_game_packet_in_json_as_is
+        self.sendwocmd = sendwocmd
+        self.sendPacket = self.sendPacketJson = sendPacket
         self.sendfbcmd = sendfbcmd
