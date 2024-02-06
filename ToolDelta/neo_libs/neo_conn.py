@@ -39,21 +39,23 @@ def toByteCSlice(bs: bytes):
 
 # define lib path and how to load it
 import platform
-machine=platform.machine()
+sys_machine = platform.machine()
 sys_type = platform.uname().system
 sys_fn = os.path.join(os.getcwd(), "ToolDelta")
-if machine=="x86_64":
-    machine="amd64"
+if sys_machine == "x86_64":
+    sys_machine = "amd64"
+elif sys_machine == "aarch64":
+    sys_machine = "arm64"
 if sys_type == "Windows":
-    lib_path = f"neomega_windows_{machine}.dll"
+    lib_path = f"neomega_windows_{sys_machine}.dll"
     lib_path = os.path.join(sys_fn,"neo_libs", lib_path)
     LIB = ctypes.cdll.LoadLibrary(lib_path)
 elif sys_type == "Linux":
-    lib_path = f"neomega_linux_{machine}.so"
+    lib_path = f"neomega_linux_{sys_machine}.so"
     lib_path = os.path.join(sys_fn,"neo_libs", lib_path)
     LIB = ctypes.CDLL(lib_path)
 else:
-    lib_path = f"neomega_macos_{machine}.dylib"
+    lib_path = f"neomega_macos_{sys_machine}.dylib"
     lib_path = os.path.join(sys_fn,"neo_libs", lib_path)
     LIB = ctypes.CDLL(lib_path)
 
