@@ -37,9 +37,9 @@ def download_file(f_url: str, f_dir: str):
                 nowsize += len(chk)
                 lastime = nowtime
 
-            if chk:
-                dwnf.write(chk)
-                dwnf.flush()
+                if chk:
+                    dwnf.write(chk)
+                    dwnf.flush()
         succ = True
     finally:
         if succ:
