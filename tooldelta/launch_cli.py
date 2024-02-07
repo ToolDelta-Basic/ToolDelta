@@ -348,7 +348,7 @@ class FrameNeOmg(StandardFrame):
 
     def start_neomega_proc(self):
         free_port = get_free_port(24016)
-        py_file_path = os.path.join(os.getcwd(), "ToolDelta", "neo_libs", "access.py")
+        py_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "access.py")
         Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
