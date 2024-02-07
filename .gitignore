@@ -145,6 +145,7 @@ ToolDelta无OP运行组件/
 插件配置文件/
 日志文件/
 data/
+status/
 _Plugin_Data/
 .vscode/
 neo-omega-kernel/
