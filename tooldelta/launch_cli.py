@@ -403,7 +403,7 @@ class FrameNeOmg(StandardFrame):
         except Exception as err:
             Print.print_err(f"获取依赖库表出现问题: {err}")
             raise SystemExit
-        sys_machine = platform.uname().machine
+        sys_machine = platform.uname().machine.lower()
         if sys_machine == "x86_64":
             sys_machine = "amd64"
         elif sys_machine == "aarch64":
