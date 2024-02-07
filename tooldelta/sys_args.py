@@ -1,0 +1,18 @@
+def SysArgsToDict(argv: list):
+    d = {}
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg.startswith("-"):
+            arg = arg.strip("--").strip("-")
+            try:
+                val = argv[i+1]
+                if val.startswith("-"):
+                    val = None
+                else:
+                    i+=1
+            except IndexError:
+                val = None
+            d[arg] = val
+        i+=1
+    return d
