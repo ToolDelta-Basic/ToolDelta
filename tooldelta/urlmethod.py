@@ -19,7 +19,7 @@ def download_file(f_url: str, f_dir: str):
     lastime = time.time()
     try:
         with open(f_dir + ".tmp", "wb") as dwnf:
-            for chk in res.iter_content(chunk_size=1024):
+            for chk in res.iter_content(chunk_size=8192):
                 nowtime = time.time()
                 if nowtime != lastime:
                     useSpeed = 1024 / (nowtime - lastime)
