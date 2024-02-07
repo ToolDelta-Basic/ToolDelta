@@ -408,7 +408,7 @@ class FrameNeOmg(StandardFrame):
             sys_machine = "amd64"
         elif sys_machine == "aarch64":
             sys_machine = "arm64"
-        sys_info_fmt = f"{platform.uname().system}:{sys_machine}"
+        sys_info_fmt = f"{platform.uname().system}:{sys_machine.lower()}"
         source_dict = res[sys_info_fmt]
         for k, v in source_dict.items():
             pathdir = os.path.join(os.getcwd(), k)
