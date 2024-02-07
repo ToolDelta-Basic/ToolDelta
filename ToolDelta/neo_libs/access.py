@@ -25,3 +25,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("用户按键退出..")
         pass
+    finally:
+        print("SIGNAL: exit")
