@@ -35,9 +35,8 @@ jobs:
       run: poetry install
 
     - name: Build and Publish
-      env:
-        POETRY_PYPI_TOKEN_FOO: ${{ secrets.PYPI_API_TOKEN }}
       run: |
+        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
         version=$(cat version)
         poetry version ${version}
         poetry build
