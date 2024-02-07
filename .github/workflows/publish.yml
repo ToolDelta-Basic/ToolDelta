@@ -14,7 +14,30 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Build and publish to pypi
-      uses: JRubics/poetry-publish@v2.0
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        pypi_token: ${{ secrets.PYPI_API_TOKEN }}
+        python-version: '3.10'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+
+    - name: Cache Poetry
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Build and Publish
+      run: |
+        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+        version=$(cat version)
+        poetry version ${version}
+        poetry build
+        poetry publish
