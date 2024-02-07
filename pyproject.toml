@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "Tooldelta"
+version = "0.1.1"
+description = "Plugin Loader for NeteaseRentalServer on Panel"
+authors = ["SuperScript-PRC"]
+license = ""
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+psutil = "^5.9.8"
+requests = "^2.31.0"
+nbt = "^1.5.1"
+qrcode = "^7.4.2"
+orjson = "^3.9.13"
+pymysql = "^1.1.0"
+websockets = "^12.0"
+ujson = "^5.9.0"
+rich = "^13.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
