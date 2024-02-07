@@ -1,9 +1,9 @@
 from typing import Callable, Type, Any, Tuple, NoReturn
 from ujson import JSONDecodeError
-from ToolDelta.packets import Packet_CommandOutput
+from tooldelta.packets import Packet_CommandOutput
 from io import TextIOWrapper
 import threading
-import ToolDelta.fbconn as fbconn
+import tooldelta.fbconn as fbconn
 
 VERSION = tuple[int, int, int]
 
