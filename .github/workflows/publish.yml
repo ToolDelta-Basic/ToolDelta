@@ -39,8 +39,7 @@ jobs:
 
     - name: Publish
       env:
-        PYPI_USERNAME: __token__
-        PYPI_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        POETRY_PYPI_TOKEN_FOO: ${{ secrets.PYPI_API_TOKEN }}
       run: |
         version=$(cat version)
         poetry version ${version}
