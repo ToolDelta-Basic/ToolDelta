@@ -166,6 +166,8 @@ class Frame:
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
         os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
+        os.makedirs("ToolDelta/fb_conn", exist_ok=True)
+        os.makedirs("ToolDelta/neo_libs", exist_ok=True)
         os.makedirs("status", exist_ok=True)
         os.makedirs("data/status", exist_ok=True)
         os.makedirs("data/players", exist_ok=True)
@@ -279,7 +281,8 @@ class Frame:
         self.link_plugin_group = plug_grp
 
     def get_game_control(self):
-        return self.link_game_ctrl
+        gcl: GameCtrl = self.link_game_ctrl
+        return gcl
 
     def safe_close(self):
         builtins.safe_close()
@@ -468,6 +471,7 @@ class GameCtrl:
 
 def start_tool_delta():
     # 初始化系统
+    global frame, game_control, plugins
     try:
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
