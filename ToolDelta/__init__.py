@@ -87,8 +87,15 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
         }
         if not os.path.isfile("fbtoken"):
-            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中")
-            raise SystemExit
+            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken")            # 用户手动输入fbtoken并创建文件
+            fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
+            if fbtoken:
+                with open("fbtoken", "w", encoding="utf-8") as f:
+                    f.write(fbtoken)
+            else:
+                Print.print_err("未输入fbtoken， 无法继续")
+                raise SystemExit
+
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
             cfgs = Config.get_cfg("ToolDelta基本配置.json", CFG_STD)

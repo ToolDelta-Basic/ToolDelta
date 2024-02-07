@@ -16,8 +16,8 @@ neccessary_libs = {
 }
 
 def try_install_libs():
-    if argv[-1].split(sep)[-1] == "ToolDelta.py":
-        install_libs(neccessary_ToolDelta.keys())
+    if argv[-1].split(sep)[-1] == "main.py":
+        install_libs(neccessary_libs.keys())
     else:
         raise SystemExit("打包程序内模块未能找到")
 
