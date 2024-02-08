@@ -1,17 +1,27 @@
-name: Check Poetry
+name: Check Dependencies
+
+
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+    paths:
+      - "pyproject.toml"
+      - "poetry.lock"
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
+    paths:
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch: {}
+
+
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v4.1.1
       - name: Set Up Python
         uses: actions/setup-python@v5
@@ -19,9 +29,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Dependencies
-        run: |
-          pip install poetry
+        run: pip install poetry
 
       - name: Check
-        run: |
-          poetry check
+        run: poetry check
