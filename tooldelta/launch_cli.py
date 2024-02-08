@@ -349,7 +349,12 @@ class FrameNeOmg(StandardFrame):
 
     def start_neomega_proc(self):
         free_port = get_free_port(24016)
-        py_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "access.py")
+        access_point_file = f"neomega_{platform.uname().system.lower()}_access_point_{self.sys_machine}"
+        if platform.system() == "Windows":
+            access_point_file+=".exe"
+        py_file_path = os.path.join(
+            os.getcwd(), "tooldelta", "neo_libs", access_point_file
+        )
         Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
@@ -403,12 +408,12 @@ class FrameNeOmg(StandardFrame):
         except Exception as err:
             Print.print_err(f"获取依赖库表出现问题: {err}")
             raise SystemExit
-        sys_machine = platform.uname().machine.lower()
-        if sys_machine == "x86_64":
-            sys_machine = "amd64"
-        elif sys_machine == "aarch64":
-            sys_machine = "arm64"
-        sys_info_fmt = f"{platform.uname().system}:{sys_machine.lower()}"
+        self.sys_machine = platform.machine().lower()
+        if self.sys_machine == "x86_64":
+            self.sys_machine = "amd64"
+        elif self.sys_machine == "aarch64":
+            self.sys_machine = "arm64"
+        sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
         source_dict = res[sys_info_fmt]
         for k, v in source_dict.items():
             pathdir = os.path.join(os.getcwd(), k)

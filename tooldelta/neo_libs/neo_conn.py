@@ -39,7 +39,7 @@ def toByteCSlice(bs: bytes):
 
 # define lib path and how to load it
 import platform
-sys_machine = platform.machine()
+sys_machine = platform.machine().lower()
 sys_type = platform.uname().system
 sys_fn = os.path.join(os.getcwd(), "ToolDelta")
 if sys_machine == "x86_64":
