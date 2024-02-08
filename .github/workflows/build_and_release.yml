@@ -28,8 +28,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pyinstaller
           pip install poetry
+          poetry add pyinstaller
           poetry update
           poetry install
 
@@ -69,8 +69,8 @@ jobs:
   
       - name: Install Dependencies
         run: |
-          pip install pyinstaller
           pip install poetry
+          poetry add pyinstaller
           poetry update
           poetry install
 
