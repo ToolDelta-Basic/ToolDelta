@@ -24,9 +24,15 @@ class ToolDeltaLogger:
 
     def log_in(self, msg, level = INFO):
         # 写入日志信息. level给定了其等级.
-        if not isinstance(msg, str): raise TypeError
-        if "\n" in msg: msg = msg.replace("\n", "\n    ")
-        if len(msg) > 200: msg = msg[:200] + "..."
+        if not isinstance(msg, str):
+            raise TypeError
+        # 防止信息刷屏
+        if "\r" in msg:
+            pass
+        if "\n" in msg:
+            msg = msg.replace("\n", "\n    ")
+        if len(msg) > 200:
+            msg = msg[:200] + "..."
         self._check_is_another_day()
         self._wrapper.write(time.strftime(self.logging_fmt) + f" [{level}] " + (msg if msg.endswith("\n") else msg + "\n"))
         if time.time() - self.lastLogTime > 10:
