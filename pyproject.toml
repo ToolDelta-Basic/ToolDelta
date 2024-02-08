@@ -21,6 +21,7 @@ pymysql = "1.1.0"
 websockets = "12.0"
 ujson = "5.9.0"
 rich = "13.7.0"
+pygame = "2.5.2"
 
 
 [build-system]
