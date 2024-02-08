@@ -33,15 +33,13 @@ jobs:
           poetry install
 
       - name: Build
-        run: |
-          mv main.py ToolDelta.py
-          pyinstaller -F ToolDelta.py
+        run: pyinstaller -F main.py -n ToolDelta.exe
   
-      - name: Convert certificate and sign binary
-        shell: pwsh
-        run: |
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\pvk2pfx.exe" -pvk cert/ToolDelta.pvk -spc cert/ToolDelta.spc -pfx cert/ToolDelta.pfx -po 123456 -pi 123456
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign /f cert/ToolDelta.pfx /p 123456 /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a dist/ToolDelta.exe
+      # - name: Convert certificate and sign binary
+      #   shell: pwsh
+      #   run: |
+      #     & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\pvk2pfx.exe" -pvk cert/ToolDelta.pvk -spc cert/ToolDelta.spc -pfx cert/ToolDelta.pfx -po 123456 -pi 123456
+      #     & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign /f cert/ToolDelta.pfx /p 123456 /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a dist/ToolDelta.exe
   
       - name: Get version
         env:
@@ -75,9 +73,7 @@ jobs:
           poetry install
 
       - name: Build
-        run: |
-          mv main.py ToolDelta.py
-          pyinstaller -F ToolDelta.py
+        run: pyinstaller -F main.py -n ToolDelta
       
       - name: Get version
         env:
