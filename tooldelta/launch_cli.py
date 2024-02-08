@@ -358,15 +358,19 @@ class FrameNeOmg(StandardFrame):
         Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
-                f"python3", py_file_path,
-                "--server_code", self.serverNumber,
-                "--token", self.fbToken,
-                "--openat", f"tcp://127.0.0.1:{free_port}",
-                "--server_pwd", str(self.serverPassword)
+                py_file_path,
+                "-server",
+                self.serverNumber,
+                "-T",
+                self.fbToken,
+                "-access-point-addr",
+                f"tcp://127.0.0.1:{free_port}",
+                "-server-password",
+                str(self.serverPassword),
             ],
-            stdin = subprocess.PIPE,
-            stdout = subprocess.PIPE,
-            stderr = subprocess.STDOUT
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
         return free_port
 
