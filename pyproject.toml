@@ -11,7 +11,7 @@ repository = "https://github.com/SuperScript-PRC/ToolDelta"
 
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 psutil = "5.9.8"
 requests = "2.31.0"
 nbt = "1.5.1"
