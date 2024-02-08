@@ -75,6 +75,7 @@ class Frame:
         public_launcher = [
             ("FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)", FrameFBConn),
             ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg),
+            ("NeOmega 框架 (NeOmegay连接模式, 需要先启动对应的neOmega接入点)", FrameNeOmg),
         ]
         CFG = {
             "服务器号": 0,
@@ -87,7 +88,8 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
         }
         if not os.path.isfile("fbtoken"):
-            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken")            # 用户手动输入fbtoken并创建文件
+            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken")
+            # 用户手动输入fbtoken并创建文件
             fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
             if fbtoken:
                 with open("fbtoken", "w", encoding="utf-8") as f:

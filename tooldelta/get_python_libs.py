@@ -15,11 +15,11 @@ neccessary_libs = {
     "ujson": None
 }
 
-def try_install_libs():
+def try_install_libs(parent_err):
     if argv[-1].split(sep)[-1] == "main.py":
         install_libs(neccessary_libs.keys())
     else:
-        raise SystemExit("打包程序内模块未能找到")
+        raise ModuleNotFoundError(f"打包程序内模块未能找到: {parent_err}")
 
 def check_pip():
     try:

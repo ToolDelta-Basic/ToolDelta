@@ -5,6 +5,7 @@ from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .urlmethod import get_free_port
+from .sys_args import sys_args_to_dict
 
 class SysStatus:
     LAUNCHING = 0
@@ -380,7 +381,6 @@ class FrameNeOmg(StandardFrame):
 
     def launch(self):
         openat_port = self.start_neomega_proc()
-        # openat_port = 24016
         self.msg_show()
         self.set_omega(openat_port)
         Print.print_suc("已开启 NEOMG 进程")
@@ -465,3 +465,30 @@ class FrameNeOmg(StandardFrame):
         self.sendwocmd = sendwocmd
         self.sendPacket = self.sendPacketJson = sendPacket
         self.sendfbcmd = sendfbcmd
+
+class FrameNeOmgRemote(FrameNeOmg):
+    def launch(self):
+        try:
+            openat_port = int(sys_args_to_dict().get("access-point-port", "0"))
+            assert openat_port in range(65536)
+        except (ValueError, AssertionError):
+            Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
+        if openat_port == 0:
+            Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
+            Print.print_inf("可使用启动参数 -access-point-port=端口 以指定接入点端口.")
+            openat_port = 24015
+        else:
+            Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
+        self.set_omega(openat_port)
+        Print.print_suc("已连接上 NEOMG 接入点进程.")
+        pcks = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        self.omega.listen_packets(pcks, self.packet_handler_parent)
+        self._launcher_listener()
+        # bug expired
+        self.omega.listen_player_chat(lambda _, _2: None)
+        Print.print_suc("NEOMEGA 已就绪")
+        r = self.omega.wait_disconnect()
+        return Exception(r)
