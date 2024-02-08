@@ -9,9 +9,9 @@ readme = "README.md"
 homepage = "https://github.com/SuperScript-PRC/ToolDelta"
 repository = "https://github.com/SuperScript-PRC/ToolDelta"
 
-
+# Please don't change this manually, your changes may invalidate other people's package management, use poetry to make changes!
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 psutil = "5.9.8"
 requests = "2.31.0"
 nbt = "1.5.1"
