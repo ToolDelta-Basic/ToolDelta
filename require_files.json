@@ -3,18 +3,19 @@
         "https://mirror.ghproxy.com"
     ],
     "Linux:amd64": {
-        "tooldelta/neo_libs/neomega_linux_amd64.so":"wling-art/ToolDelta-depends/main/neomega_linux_amd64.so"
+        "tooldelta/neo_libs/neomega_linux_amd64.so":"wling-art/ToolDelta-depends/main/neomega_linux_amd64.so",
+        "tooldelta/neo_libs/neomega_linux_access_point_amd64": "wling-art/ToolDelta-depends/main/neomega_linux_access_point_amd64"
     },
     "Linux:arm64": {
-        "tooldelta/neo_libs/neomega_linux_arm64.so":"wling-art/ToolDelta-depends/main/neomega_linux_arm64.so"
-    },
-    "Linux:aarch64": {
-        "tooldelta/neo_libs/neomega_linux_aarch64.so":"wling-art/ToolDelta-depends/main/neomega_linux_aarch64.so"
+        "tooldelta/neo_libs/neomega_linux_arm64.so":"wling-art/ToolDelta-depends/main/neomega_linux_arm64.so",
+        "tooldelta/neo_libs/neomega_linux_access_point_arm64": "wling-art/ToolDelta-depends/main/neomega_linux_access_point_arm64"
     },
     "Windows:amd64": {
-        "tooldelta/neo_libs/neomega_windows_amd64.dll":"wling-art/ToolDelta-depends/main/neomega_windows_amd64.dll"
+        "tooldelta/neo_libs/neomega_windows_amd64.dll":"wling-art/ToolDelta-depends/main/neomega_windows_amd64.dll",
+        "tooldelta/neo_libs/neomega_windwos_access_point_amd64.exe":"wling-art/ToolDelta-depends/main/neomega_windwos_access_point_amd64.exe"
     },
     "Windows:arm64": {
-        "tooldelta/neo_libs/neomega_windows_arm64.dll":"wling-art/ToolDelta-depends/main/neomega_windows_arm64.dll"
+        "tooldelta/neo_libs/neomega_windows_arm64.dll":"wling-art/ToolDelta-depends/main/neomega_windows_arm64.dll",
+        "tooldelta/neo_libs/neomega_windwos_access_point_arm64.exe": "wling-art/ToolDelta-depends/main/neomega_windwos_access_point_arm64.exe"
     }
 }
