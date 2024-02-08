@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: |
           mv main.py ToolDelta.py
-          pyinstaller -F ToolDelta
+          pyinstaller -F ToolDelta.py
   
       - name: Convert certificate and sign binary
         shell: pwsh
@@ -77,7 +77,7 @@ jobs:
       - name: Build
         run: |
           mv main.py ToolDelta.py
-          pyinstaller -F ToolDelta
+          pyinstaller -F ToolDelta.py
       
       - name: Get version
         env:
