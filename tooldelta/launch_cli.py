@@ -355,6 +355,8 @@ class FrameNeOmg(StandardFrame):
         py_file_path = os.path.join(
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
+        os.system(f"chmod +x {py_file_path}")
+        # 只需要+x即可
         Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
