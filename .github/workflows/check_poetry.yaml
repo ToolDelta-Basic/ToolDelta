@@ -12,17 +12,16 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - uses: actions/checkout@v4.1.1
-    - name: Set Up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Install Dependencies
+        run: |
+          pip install poetry
 
-    - name: Install Dependencies
-      run: |
-        pip install poetry
-
-    - name: Check
-      run: |
-        poetry check
+      - name: Check
+        run: |
+          poetry check
