@@ -165,4 +165,3 @@ omg*.app
 *.dylib
 tos.sh
 build_points.sh
-poetry.lock
