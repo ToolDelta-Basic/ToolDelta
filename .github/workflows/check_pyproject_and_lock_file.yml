@@ -1,0 +1,35 @@
+name: Check PyProject and Lock File
+
+
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "pyproject.toml"
+      - "poetry.lock"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "pyproject.toml"
+      - "poetry.lock"
+  workflow_dispatch: {}
+
+
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4.1.1
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: pip install poetry
+
+      - name: Check
+        run: poetry check
