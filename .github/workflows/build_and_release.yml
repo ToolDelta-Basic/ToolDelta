@@ -1,28 +1,39 @@
 name: Build binaries and Upload to Release
 
+
+
+
+
 on:
   push:
     branches: [ main ]
     paths:
       - "version"
   workflow_dispatch: {}
-  
+
+
+
+
+
 jobs:
-  build_Windows_job:
-    name: build_Windows
+  build_Windows:
+    name: Build Winsows
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-  
-      - name: Install dependencies and ToolDelta Build
+
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          pip install -r requirements.txt
-          pyinstaller -F main.py -n ToolDelta.exe
+          pip install poetry
+          poetry install
+
+      - name: Build
+        run: pyinstaller -F main.py -n ToolDelta.exe
   
       # - name: Convert certificate and sign binary
       #   shell: pwsh
@@ -42,30 +53,37 @@ jobs:
           name: ${{env.VERSION}}
           files: |
             dist/*
+
+
+
   build_Linux_job:
-        name: build_Linux
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v3
-          - uses: actions/setup-python@v4
-            with:
-              python-version: '3.11' 
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
   
-          - name: Install dependencies and ToolDelta Build
-            run: |
-              python -m pip install --upgrade pip
-              pip install pyinstaller
-              pip install -r requirements.txt
-              pyinstaller -F main.py -n ToolDelta
-          - name: Get version
-            env:
-              ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-            run: echo "::set-env name=VERSION::$(cat version)"
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install poetry
+          poetry install
+
+      - name: Build
+        run: pyinstaller -F main.py -n ToolDelta
+      
+      - name: Get version
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: echo "::set-env name=VERSION::$(cat version)"
   
-          - name: Release
-            uses: softprops/action-gh-release@v1
-            with:
-              tag_name: ${{env.VERSION}}
-              name: ${{env.VERSION}}
-              files: |
-                dist/*
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{env.VERSION}}
+          name: ${{env.VERSION}}
+          files: |
+            dist/*
