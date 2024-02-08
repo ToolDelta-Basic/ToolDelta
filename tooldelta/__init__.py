@@ -22,7 +22,7 @@ ADVANCED = False
 Builtins = builtins.Builtins
 Config = _Cfg()
 Print = color_print.Print
-sys_args_dict = sys_args.SysArgsToDict(sys.argv)
+sys_args_dict = sys_args.sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
 
 Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
