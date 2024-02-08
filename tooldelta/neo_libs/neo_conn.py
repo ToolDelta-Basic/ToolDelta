@@ -41,7 +41,7 @@ def toByteCSlice(bs: bytes):
 import platform
 sys_machine = platform.machine().lower()
 sys_type = platform.uname().system
-sys_fn = os.path.join(os.getcwd(), "ToolDelta")
+sys_fn = os.path.join(os.getcwd(), "tooldelta")
 if sys_machine == "x86_64":
     sys_machine = "amd64"
 elif sys_machine == "aarch64":
