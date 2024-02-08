@@ -5,7 +5,7 @@ from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .urlmethod import get_free_port
-from .sys_args import SysArgsToDict
+from .sys_args import sys_args_to_dict
 
 class SysStatus:
     LAUNCHING = 0
@@ -469,7 +469,7 @@ class FrameNeOmg(StandardFrame):
 class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
         try:
-            openat_port = int(SysArgsToDict().get("access-point-port", "0"))
+            openat_port = int(sys_args_to_dict().get("access-point-port", "0"))
             assert openat_port in range(65536)
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")

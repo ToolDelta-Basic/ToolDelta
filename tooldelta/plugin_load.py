@@ -594,9 +594,9 @@ class PluginGroup:
 
     def execute_player_death(
         self,
-        player,
-        killer,
-        msg,
+        player: str,
+        killer: str,
+        msg: str,
         onerr: Callable[[str, Exception, str], None] = NON_FUNC,
     ):
         for name, func in self.plugins_funcs["on_player_death"]:

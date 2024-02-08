@@ -64,7 +64,7 @@ class Frame:
     external_port = sys_args_dict.get("external-port")
 
     def check_use_token(self, tok_name="", check_md=""):
-        res = sys_args.SysArgsToDict(sys.argv)
+        res = sys_args.sys_args_to_dict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err(f"启动参数错误")
