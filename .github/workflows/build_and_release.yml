@@ -34,7 +34,7 @@ jobs:
           poetry install
 
       - name: Build
-        run: pyinstaller -F main.py -n ToolDelta.exe
+        run: poetry run pyinstaller -F main.py -n ToolDelta.exe
   
       # - name: Convert certificate and sign binary
       #   shell: pwsh
@@ -75,7 +75,7 @@ jobs:
           poetry install
 
       - name: Build
-        run: pyinstaller -F main.py -n ToolDelta
+        run: poetry run pyinstaller -F main.py -n ToolDelta
       
       - name: Get version
         env:
