@@ -20,10 +20,11 @@ class StandardFrame:
     # 提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口
     launch_type = "Original"
 
-    def __init__(self, serverNumber, password, fbToken):
+    def __init__(self, serverNumber, password, fbToken, auth_server_url):
         self.serverNumber = serverNumber
         self.serverPassword = password
         self.fbToken = fbToken
+        self.auth_server = auth_server_url
         self.status = SysStatus.LAUNCHING
         self.system_type = platform.uname()[0]
         self.inject_events = []
@@ -62,10 +63,10 @@ class FrameFBConn(StandardFrame):
     # 使用原生 FastBuilder External 连接
     cmds_reqs = []
     cmds_resp = {}
-    def __init__(self, serverNumber, password, fbToken):
+    def __init__(self, serverNumber, password, fbToken, auth_server):
         global fbconn
         from . import fbconn
-        super().__init__(serverNumber, password, fbToken)
+        super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
         self.init_all_functions()
 
@@ -83,11 +84,11 @@ class FrameFBConn(StandardFrame):
         self.downloadMissingFiles()
         if self.system_type == "Linux":
             os.system("chmod +x phoenixbuilder")
-            con_cmd = rf"./phoenixbuilder -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
+            con_cmd = rf"./phoenixbuilder -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
 
         # windows updated "./PRGM" command.
         if self.system_type == "Windows":
-            con_cmd = rf".\phoenixbuilder.exe -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
+            con_cmd = rf".\phoenixbuilder.exe -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
         self.fb_pipe = subprocess.Popen(
             con_cmd,
             stdin=subprocess.PIPE,
@@ -312,8 +313,8 @@ class FrameNeOmg(StandardFrame):
     # 使用 NeOmega 框架连接到游戏
     launch_type = "NeOmega"
 
-    def __init__(self, serverNumber, password, fbToken):
-        super().__init__(serverNumber, password, fbToken)
+    def __init__(self, serverNumber, password, fbToken, auth_server):
+        super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
         self.omega = None
         self.download_libs()
@@ -332,6 +333,7 @@ class FrameNeOmg(StandardFrame):
                     connect_type=neo_conn.ConnectType.Remote,
                     address=f"tcp://localhost:{openat_port}",
                     accountOption=neo_conn.AccountOptions(
+                        AuthServer=self.auth_server,
                         UserToken=self.fbToken,
                         ServerCode=self.serverNumber,
                         ServerPassword=str(self.serverPassword),
@@ -370,6 +372,7 @@ class FrameNeOmg(StandardFrame):
                 f"tcp://localhost:{free_port}",
                 "-server-password",
                 str(self.serverPassword),
+                "-auth-server", self.auth_server
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -391,7 +394,7 @@ class FrameNeOmg(StandardFrame):
                     msg = msg_orig[:str_max_len]
                     msg_orig = msg_orig[str_max_len:]
                     Print.print_with_info(msg, "§b NOMG ")
-        Builtins.createThread(_msg_show_thread)
+        Builtins.createThread(_msg_show_thread, usage = "显示来自NeOmega的信息")
 
     def launch(self):
         self.launch_status = 0

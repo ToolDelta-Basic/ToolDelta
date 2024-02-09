@@ -34,7 +34,7 @@ try:
     )
 except:
     # Current version
-    VERSION = (0, 2, 4)
+    VERSION = (0, 2, 0)
 
 
 class Frame:
@@ -81,11 +81,13 @@ class Frame:
             "服务器号": 0,
             "密码": 0,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
+            "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro"
         }
         CFG_STD = {
             "服务器号": int,
             "密码": int,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
+            "验证服务器地址(更换时记得更改fbtoken)": str
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken")
@@ -104,6 +106,7 @@ class Frame:
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+            auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(public_launcher) + 1
             ):
@@ -145,7 +148,7 @@ class Frame:
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
         self.launcher: StandardFrame = launcher(
-            self.serverNumber, self.serverPasswd, fbtoken
+            self.serverNumber, self.serverPasswd, fbtoken, auth_server
         )
 
     def welcome(self):
