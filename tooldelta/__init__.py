@@ -39,8 +39,7 @@ except:
 
 class Frame:
     # 系统框架
-    class SystemVersionException(OSError):
-        ...
+    class SystemVersionException(OSError): ...
 
     class FrameBasic:
         system_version = VERSION
@@ -59,7 +58,9 @@ class Frame:
     link_game_ctrl = None
     link_plugin_group = None
     _old_dotcs_threadinglist = []
-    on_plugin_err = staticmethod(lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}"))
+    on_plugin_err = staticmethod(
+        lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
+    )
     system_is_win = sys.platform in ["win32", "win64"]
     external_port = sys_args_dict.get("external-port")
 
@@ -73,9 +74,15 @@ class Frame:
     def read_cfg(self):
         # 读取启动配置等
         public_launcher = [
-            ("FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)", FrameFBConn),
+            (
+                "FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)",
+                FrameFBConn,
+            ),
             ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg),
-            ("NeOmega 框架 (NeOmegay连接模式, 需要先启动对应的neOmega接入点)", FrameNeOmgRemote),
+            (
+                "NeOmega 框架 (NeOmegay连接模式, 需要先启动对应的neOmega接入点)",
+                FrameNeOmgRemote,
+            ),
         ]
         CFG = {
             "服务器号": 0,
@@ -90,7 +97,9 @@ class Frame:
             "验证服务器地址(更换时记得更改fbtoken)": str
         }
         if not os.path.isfile("fbtoken"):
-            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken")
+            Print.print_err(
+                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken"
+            )
             # 用户手动输入fbtoken并创建文件
             fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
             if fbtoken:
@@ -117,9 +126,16 @@ class Frame:
         if self.serverNumber == "0":
             while 1:
                 try:
-                    self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
+                    self.serverNumber = input(
+                        Print.fmt_info("请输入租赁服号: ", "§b 输入 ")
+                    )
                     self.serverPasswd = (
-                        input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                        input(
+                            Print.fmt_info(
+                                "请输入租赁服密码(没有请直接回车): ", "§b 输入 "
+                            )
+                        )
+                        or "0"
                     )
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
@@ -143,7 +159,9 @@ class Frame:
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        launcher = public_launcher[cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1][1]
+        launcher = public_launcher[
+            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+        ][1]
         self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
@@ -213,7 +231,10 @@ class Frame:
     def comsole_cmd_start(self):
         def _console_cmd_thread():
             self.add_console_cmd_trigger(
-                ["?", "help", "帮助"], None, "查询可用菜单指令", self.init_basic_help_menu
+                ["?", "help", "帮助"],
+                None,
+                "查询可用菜单指令",
+                self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
                 ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
@@ -345,11 +366,15 @@ class GameCtrl:
             playername = player["Username"]
             if isJoining:
                 self.players_uuid[playername] = player["UUID"]
-                self.allplayers.append(
-                    playername
-                ) if playername not in self.allplayers else None
+                (
+                    self.allplayers.append(playername)
+                    if playername not in self.allplayers
+                    else None
+                )
                 if not self.requireUUIDPacket:
-                    Print.print_inf(f"§e{playername} 加入了游戏, UUID: {player['UUID']}")
+                    Print.print_inf(
+                        f"§e{playername} 加入了游戏, UUID: {player['UUID']}"
+                    )
                     plugin_group.execute_player_join(
                         playername, self.linked_frame.on_plugin_err
                     )
@@ -446,13 +471,17 @@ class GameCtrl:
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语
         Print.print_suc(
-            "初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name
+            "初始化完成, 在线玩家: "
+            + ", ".join(self.allplayers)
+            + ", 机器人ID: "
+            + self.bot_name
         )
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to(
             "@a",
-            "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"),
+            "§l§7[§f!§7] §r§f北京时间 "
+            + datetime.datetime.now().strftime("§a%H§f : §a%M"),
         )
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
@@ -488,16 +517,18 @@ def start_tool_delta():
         frame.read_cfg()
         game_control.init_funcs()
         plugins.read_plugin_from_old(dotcs_module_env)
-        plugins.read_plugin_from_new({
-            "Frame": frame,
-            "plugins": plugins,
-            "Plugin": Plugin,
-            "PluginGroup": PluginGroup,
-            "PluginAPI": PluginAPI,
-            "Config": Config,
-            "Builtins": Builtins,
-            "Print": Print
-        })
+        plugins.read_plugin_from_new(
+            {
+                "Frame": frame,
+                "plugins": plugins,
+                "Plugin": Plugin,
+                "PluginGroup": PluginGroup,
+                "PluginAPI": PluginAPI,
+                "Config": Config,
+                "Builtins": Builtins,
+                "Print": Print,
+            }
+        )
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread(frame)
