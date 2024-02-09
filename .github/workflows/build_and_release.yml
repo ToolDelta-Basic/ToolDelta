@@ -44,9 +44,9 @@ jobs:
       - name: Build
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
-            poetry run pyinstaller -F main.py -n ToolDelta.exe -i logo.png
+            poetry run pyinstaller -F main.py -n ToolDelta.exe -i logo.ico
           else
-            poetry run pyinstaller -F main.py -n ToolDelta -i logo.png
+            poetry run pyinstaller -F main.py -n ToolDelta -i logo.ico
           fi
 
       - name: Get version
