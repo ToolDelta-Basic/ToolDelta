@@ -330,7 +330,7 @@ class FrameNeOmg(StandardFrame):
             try:
                 self.omega = neo_conn.ThreadOmega(
                     connect_type=neo_conn.ConnectType.Remote,
-                    address=f"tcp://127.0.0.1:{openat_port}",
+                    address=f"tcp://localhost:{openat_port}",
                     accountOption=neo_conn.AccountOptions(
                         UserToken=self.fbToken,
                         ServerCode=self.serverNumber,
@@ -355,9 +355,10 @@ class FrameNeOmg(StandardFrame):
         py_file_path = os.path.join(
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
-        os.system(f"chmod +x {py_file_path}")
+        if platform.uname().system.lower() == "linux":
+            os.system(f"chmod +x {py_file_path}")
         # 只需要+x即可
-        Print.print_inf(f"DEBUG: PythonLIB Omega 启动路径: {py_file_path}")
+        Print.print_inf(f"DEBUG: 将使用端口 {free_port}")
         self.neomg_proc = subprocess.Popen(
             [
                 py_file_path,
@@ -366,7 +367,7 @@ class FrameNeOmg(StandardFrame):
                 "-T",
                 self.fbToken,
                 "-access-point-addr",
-                f"tcp://127.0.0.1:{free_port}",
+                f"tcp://localhost:{free_port}",
                 "-server-password",
                 str(self.serverPassword),
             ],
@@ -383,7 +384,9 @@ class FrameNeOmg(StandardFrame):
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig == "" or msg_orig == "SIGNAL: exit":
                     Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NEOMG")
-                    return
+                    raise SystemExit
+                elif "[neOmega 接入点]: 就绪" in msg_orig:
+                    self.launch_status = 1
                 while msg_orig:
                     msg = msg_orig[:str_max_len]
                     msg_orig = msg_orig[str_max_len:]
@@ -391,8 +394,11 @@ class FrameNeOmg(StandardFrame):
         Builtins.createThread(_msg_show_thread)
 
     def launch(self):
+        self.launch_status = 0
         openat_port = self.start_neomega_proc()
         self.msg_show()
+        while self.launch_status != 1:
+            pass
         self.set_omega(openat_port)
         Print.print_suc("已开启 NEOMG 进程")
         pcks = [
@@ -488,6 +494,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
             Print.print_inf("可使用启动参数 -access-point-port=端口 以指定接入点端口.")
             openat_port = 24015
+            os._exit(0)
         else:
             Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
         self.set_omega(openat_port)

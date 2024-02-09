@@ -7,7 +7,7 @@ from .plugin_load import Plugin, PluginAPI, PluginGroup
 from .packets import Packet_CommandOutput, PacketIDS
 from .cfg import Cfg as _Cfg
 from .logger import publicLogger
-from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg
+from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -75,7 +75,7 @@ class Frame:
         public_launcher = [
             ("FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)", FrameFBConn),
             ("NeOmega 框架 (NeOmega模式, 租赁服适应性强)", FrameNeOmg),
-            ("NeOmega 框架 (NeOmegay连接模式, 需要先启动对应的neOmega接入点)", FrameNeOmg),
+            ("NeOmega 框架 (NeOmegay连接模式, 需要先启动对应的neOmega接入点)", FrameNeOmgRemote),
         ]
         CFG = {
             "服务器号": 0,

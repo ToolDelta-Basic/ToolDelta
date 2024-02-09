@@ -37,6 +37,9 @@ class _Print:
             ["g", "#DDD605"],
             ["r", "/"]
         ]
+    
+    def __call__(self, text: str):
+        self.print_inf(text)
 
     def colormode_replace(self, text: str, showmode = 0):
         # 1 = bg_color

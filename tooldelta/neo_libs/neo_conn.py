@@ -7,6 +7,7 @@ import enum
 from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
 from threading import Thread
 from dataclasses import dataclass
+from ..color_print import Print
 
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
@@ -523,7 +524,7 @@ class ThreadOmega:
         self._running_threads:Dict[str,Thread]={}
         if connect_type==ConnectType.Local:
             StartOmega(address,accountOption)
-            print(f"Omega 接入点已启动, 在 {address} 开放接口")
+            Print.print_inf(f"Omega 接入点已启动, 在 {address} 开放接口")
         elif connect_type==ConnectType.Remote:
             ConnectOmega(address)
 
