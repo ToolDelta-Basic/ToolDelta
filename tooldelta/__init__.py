@@ -128,6 +128,14 @@ class Frame:
                 cfgs["验证服务器地址(更换时记得更改fbtoken)"] = (
                     "https://api.fastbuilder.pro"
                 )
+                self.serverNumber = str(cfgs["服务器号"])
+                self.serverPasswd = cfgs["密码"]
+                self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+                auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
+                if self.launchMode != 0 and self.launchMode not in range(
+                    1, len(public_launcher) + 1
+                ):
+                    raise Config.ConfigError("")
                 Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
 
             else:
