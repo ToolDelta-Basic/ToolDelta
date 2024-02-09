@@ -34,7 +34,7 @@ try:
     )
 except:
     # Current version
-    VERSION = (0, 2, 0)
+    VERSION = (0, 2, 4)
 
 
 class Frame:
