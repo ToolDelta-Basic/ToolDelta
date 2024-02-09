@@ -53,6 +53,7 @@ class Frame:
     sys_data = FrameBasic()
     serverNumber: str = ""
     serverPasswd: int
+    launchMode:int = 0
     linked_plugin_group: PluginGroup
     consoleMenu = []
     link_game_ctrl = None
@@ -88,13 +89,13 @@ class Frame:
             "服务器号": 0,
             "密码": 0,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
-            "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro"
+            "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro",
         }
         CFG_STD = {
             "服务器号": int,
             "密码": int,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
-            "验证服务器地址(更换时记得更改fbtoken)": str
+            "验证服务器地址(更换时记得更改fbtoken)": str,
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err(
@@ -121,8 +122,17 @@ class Frame:
             ):
                 raise Config.ConfigError("")
         except Config.ConfigError:
-            Print.print_err("ToolDelta基本配置有误， 需要更正")
-            exit()
+            with open("ToolDelta基本配置.json","r", encoding="utf-8") as f:
+                cfgs = ujson.load(f)
+            if "验证服务器地址(更换时记得更改fbtoken)" not in cfgs:
+                cfgs["验证服务器地址(更换时记得更改fbtoken)"] = (
+                    "https://api.fastbuilder.pro"
+                )
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+
+            else:
+                Print.print_err("ToolDelta基本配置有误， 需要更正")
+                exit()
         if self.serverNumber == "0":
             while 1:
                 try:
