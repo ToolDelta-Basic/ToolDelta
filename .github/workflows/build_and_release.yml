@@ -32,8 +32,8 @@ jobs:
 
       - name: Build
         run: |
-        poetry add pyinstaller
-        poetry run pyinstaller -F -n ToolDelta-$(<version)-${{ matrix.os == 'windows-latest' && 'windows.exe' || 'linux' }} -i logo.ico main.py
+          poetry add pyinstaller
+          poetry run pyinstaller -F -n ToolDelta-$(<version)-${{ matrix.os == 'windows-latest' && 'windows.exe' || 'linux' }} -i logo.ico main.py
 
       - name: Get version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
