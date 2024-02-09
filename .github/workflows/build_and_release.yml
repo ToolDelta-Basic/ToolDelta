@@ -2,52 +2,36 @@ name: Build binaries and Upload to Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "version"
   workflow_dispatch: {}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
-    name: Build and Release
+    name: Build and Release for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
-        python-version: ['3.11']
+        python-version: ["3.12"]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - name: "Setup Python, Poetry and Dependencies"
+        uses: packetcoders/action-setup-cache-python-poetry@main
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.poetry/cache
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-
-      - name: Install Dependencies
-        run: |
-          pip install poetry
-          poetry add pyinstaller
-          poetry config virtualenvs.create true
-          poetry install --no-root
+          python-version: ${{matrix.python-version}}
 
       - name: Build
-        run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            poetry run pyinstaller -F main.py -n ToolDelta.exe -i logo.ico
-          else
-            poetry run pyinstaller -F main.py -n ToolDelta -i logo.ico
-          fi
+        run: poetry run pyinstaller -F -n ToolDelta${{ matrix.os == 'windows-latest' && '.exe' || '' }} -i logo.ico main.py
 
       - name: Get version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
