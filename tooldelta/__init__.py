@@ -30,7 +30,7 @@ Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
 try:
     VERSION = tuple(
         int(v)
-        for v in open("/version", "r", encoding="utf-8").read().strip()[1:].split(".")
+        for v in open("version", "r", encoding="utf-8").read().strip()[1:].split(".")
     )
 except:
     # Current version
