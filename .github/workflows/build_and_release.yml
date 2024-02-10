@@ -5,10 +5,10 @@ name: Build binaries and Upload to Release
 
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "version"
+  workflow_run:
+    workflows: ["Sync Version"]
+    types:
+      - completed
   workflow_dispatch: {}
 
 
