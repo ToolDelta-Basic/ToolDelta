@@ -46,7 +46,6 @@ class Frame:
     serverNumber: str = ""
     serverPasswd: int
     launchMode: int = 0
-    linked_plugin_group: PluginGroup
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
@@ -96,7 +95,7 @@ class Frame:
             # 用户手动输入fbtoken并创建文件
             fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
             if fbtoken:
-                with open("fbtoken", "w", encoding = "utf-8") as f:
+                with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(fbtoken)
             else:
                 Print.print_err("未输入fbtoken, 无法继续")
@@ -113,7 +112,9 @@ class Frame:
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(public_launcher) + 1
             ):
-                raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
+                raise Config.ConfigError(
+                    "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
+                )
         except Config.ConfigError as err:
             Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
             raise SystemExit
@@ -321,6 +322,7 @@ class Frame:
         builtins.safe_close()
         publicLogger._exit()
 
+
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
@@ -382,6 +384,7 @@ class GameCtrl:
                     Print.print_inf(
                         f"§e{playername} 加入了游戏, UUID: {player['UUID']}"
                     )
+                    asyncio.run(execute_player_join(playername))
                     plugin_group.execute_player_join(
                         playername, self.linked_frame.on_plugin_err
                     )
@@ -398,6 +401,7 @@ class GameCtrl:
                     continue
                 self.allplayers.remove(playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
+                asyncio.run(execute_player_left(playername))
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
@@ -429,13 +433,16 @@ class GameCtrl:
                     )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
+                asyncio.run(execute_player_message(player, msg))
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
+
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
+                asyncio.run(execute_player_message(player, msg))
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
@@ -510,6 +517,14 @@ class GameCtrl:
         self.sendwocmd(f"title {target} actionbar {text}")
 
 
+from .plugin import (
+    load_plugin,
+    execute_player_message,
+    execute_player_join,
+    execute_player_left,
+)
+
+
 def start_tool_delta():
     # 初始化系统
     global frame, game_control, plugins
@@ -537,6 +552,7 @@ def start_tool_delta():
             }
         )
         frame.plugin_load_finished(plugins)
+        asyncio.run(load_plugin(frame, game_control))
         plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread(frame)
         frame.launcher.listen_launched(game_control.Inject)
