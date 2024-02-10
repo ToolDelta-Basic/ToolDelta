@@ -33,7 +33,7 @@ try:
         for v in open("version", "r", encoding="utf-8").read().strip()[1:].split(".")
     )
 except:
-    # Current version
+    # 当前版本
     VERSION = (0, 2, 5)
 
 
@@ -49,7 +49,6 @@ class Frame:
 
     createThread = ClassicThread = Builtins.createThread
     PRG_NAME = PRG_NAME
-    MAX_PACKET_CACHE = 500
     sys_data = FrameBasic()
     serverNumber: str = ""
     serverPasswd: int
@@ -62,8 +61,6 @@ class Frame:
     on_plugin_err = staticmethod(
         lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     )
-    system_is_win = sys.platform in ["win32", "win64"]
-    external_port = sys_args_dict.get("external-port")
 
     def check_use_token(self, tok_name="", check_md=""):
         res = sys_args.sys_args_to_dict(sys.argv)
@@ -90,24 +87,26 @@ class Frame:
             "密码": 0,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
             "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro",
+            "是否记录日志": True,
         }
         CFG_STD = {
             "服务器号": int,
             "密码": int,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
             "验证服务器地址(更换时记得更改fbtoken)": str,
+            "是否记录日志": bool,
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err(
-                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中，或者在下面输入fbtoken"
+                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
             )
             # 用户手动输入fbtoken并创建文件
             fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
             if fbtoken:
-                with open("fbtoken", "w", encoding="utf-8") as f:
+                with open("fbtoken", "w", encoding = "utf-8") as f:
                     f.write(fbtoken)
             else:
-                Print.print_err("未输入fbtoken， 无法继续")
+                Print.print_err("未输入fbtoken, 无法继续")
                 raise SystemExit
 
         Config.default_cfg("ToolDelta基本配置.json", CFG)
@@ -117,30 +116,14 @@ class Frame:
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
+            publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(public_launcher) + 1
             ):
-                raise Config.ConfigError("")
-        except Config.ConfigError:
-            with open("ToolDelta基本配置.json","r", encoding="utf-8") as f:
-                cfgs = ujson.load(f)
-            if "验证服务器地址(更换时记得更改fbtoken)" not in cfgs:
-                cfgs["验证服务器地址(更换时记得更改fbtoken)"] = (
-                    "https://api.fastbuilder.pro"
-                )
-                self.serverNumber = str(cfgs["服务器号"])
-                self.serverPasswd = cfgs["密码"]
-                self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
-                auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
-                if self.launchMode != 0 and self.launchMode not in range(
-                    1, len(public_launcher) + 1
-                ):
-                    raise Config.ConfigError("")
-                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-
-            else:
-                Print.print_err("ToolDelta基本配置有误， 需要更正")
-                exit()
+                raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
+        except Config.ConfigError as err:
+            Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
+            raise SystemExit
         if self.serverNumber == "0":
             while 1:
                 try:
@@ -166,8 +149,8 @@ class Frame:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式(之后可在ToolDelta启动配置更改):")
-            for i, (nm, _) in enumerate(public_launcher):
-                Print.print_inf(f" {i + 1} - {nm}")
+            for i, (launcher_name, _) in enumerate(public_launcher):
+                Print.print_inf(f" {i + 1} - {launcher_name}")
             while 1:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "输入")))
@@ -186,6 +169,20 @@ class Frame:
         self.launcher: StandardFrame = launcher(
             self.serverNumber, self.serverPasswd, fbtoken, auth_server
         )
+
+    def upgrade_cfg(self, old_cfg):
+        # 升级本地的配置文件
+        need_upgrade_cfg = False
+        if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg:
+            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = (
+                "https://api.fastbuilder.pro"
+            )
+            need_upgrade_cfg = True
+        if "是否记录日志" not in old_cfg:
+            old_cfg["是否记录日志"] = False
+            need_upgrade_cfg = True
+        if need_upgrade_cfg:
+            Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
 
     def welcome(self):
         # 欢迎提示
@@ -239,7 +236,7 @@ class Frame:
 
     def init_basic_help_menu(self, _):
         menu = self.get_console_menus()
-        Print.print_inf("§a以下是可选的菜单指令项：")
+        Print.print_inf("§a以下是可选的菜单指令项: ")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
                 Print.print_inf(f" §e{' 或 '.join(triggers)} {arg_hint}  §f->  {usage}")
@@ -273,7 +270,7 @@ class Frame:
                                     res = _try_execute_console_cmd(func, rsp, 1, tri)
                                     if res == -1:
                                         return
-            except EOFError:
+            except (EOFError, KeyboardInterrupt):
                 pass
 
         def _try_execute_console_cmd(func, rsp, mode, arg1):
@@ -288,9 +285,7 @@ class Frame:
             try:
                 func(rsp_arg)
                 return 1
-            except Exception as err:
-                if "id 0 out of range 0" in str(err):
-                    return -1
+            except:
                 Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
 
@@ -305,6 +300,7 @@ class Frame:
                 )
             except:
                 pass
+        time.sleep(0.5)
         self.safe_close()
         os._exit(0)
 
@@ -318,11 +314,11 @@ class Frame:
 
     def set_game_control(self, game_ctrl):
         "使用外源GameControl..."
-        self.link_game_ctrl = game_ctrl
+        self.link_game_ctrl: GameCtrl = game_ctrl
 
     def set_plugin_group(self, plug_grp):
         "使用外源PluginGroup..."
-        self.link_plugin_group = plug_grp
+        self.link_plugin_group: PluginGroup = plug_grp
 
     def get_game_control(self):
         gcl: GameCtrl = self.link_game_ctrl
@@ -330,7 +326,7 @@ class Frame:
 
     def safe_close(self):
         builtins.safe_close()
-
+        publicLogger._exit()
 
 class GameCtrl:
     # 游戏连接和交互部分

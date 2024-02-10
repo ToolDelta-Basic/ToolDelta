@@ -4,7 +4,7 @@ import ujson, os, time, threading, traceback, copy, ctypes
 
 class Builtins:
     class ThreadExit(SystemExit):
-        ...
+        "线程退出."
 
     class ClassicThread(threading.Thread):
         def __init__(self, func, args: tuple = (), usage="", **kwargs):
@@ -192,7 +192,7 @@ class Builtins:
         def unloadPathJson(path):
             """
             将json文件从缓存区卸载(保存内容到磁盘), 之后不能再在缓存区对这个文件进行读写.
-            在缓存文件已卸载的情况下, 再使用一次该方法不会有任何作用.
+            在缓存文件已卸载的情况下, 再使用一次该方法不会有任何作用, 但是可以通过其返回的值来知道存盘有没有成功.
             """
             if jsonPathTmp.get(path) is not None:
                 isChanged, dat = jsonPathTmp[path]
@@ -224,6 +224,7 @@ class Builtins:
 
         @staticmethod
         def cancel_change(path):
+            "取消缓存json所做的更改, 非必要情况请勿调用, 你不知道什么时候会自动保存所做更改"
             jsonPathTmp[path][0] = False
 
         @staticmethod

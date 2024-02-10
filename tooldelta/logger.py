@@ -13,19 +13,25 @@ class ToolDeltaLogger:
         self.logging_fmt = "[%H-%M-%S]"
         self.lastLogTime = time.time()
         self.open_wrapper_io(log_path)
+        self.enable_logger = False
+
+    def switch_logger(self, isopen: bool):
+        self.enable_logger = isopen
 
     def open_wrapper_io(self, log_path: str):
         self._wrapper = open(
             log_path + os.sep + time.strftime(self.name_fmt) + ".log", 
             "a",
             encoding = "utf-8",
-            buffering = 1024
+            buffering = 4096
         )
 
     def log_in(self, msg, level = INFO):
         # 写入日志信息. level给定了其等级.
         if not isinstance(msg, str):
-            raise TypeError
+            raise TypeError("only allows string")
+        if not self.enable_logger:
+            return
         # 防止信息刷屏
         if "\r" in msg:
             pass
@@ -35,7 +41,7 @@ class ToolDeltaLogger:
             msg = msg[:200] + "..."
         self._check_is_another_day()
         self._wrapper.write(time.strftime(self.logging_fmt) + f" [{level}] " + (msg if msg.endswith("\n") else msg + "\n"))
-        if time.time() - self.lastLogTime > 10:
+        if time.time() - self.lastLogTime > 15:
             self._save_log()
             self.lastLogTime = time.time()
 

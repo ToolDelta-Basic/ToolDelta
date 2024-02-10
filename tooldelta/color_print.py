@@ -133,7 +133,7 @@ class _Print:
             output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7) + " " + self.colormode_replace(text_line))
         return "\n".join(output_txts)
 
-    def c_log(self, inf, msg):
+    def c_log(self, inf: str, msg: str):
         for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 失败 ", "FAIL"), ("§4 报错 ", "ERROR")]:
             if inf == _g:
                 inf = _s
