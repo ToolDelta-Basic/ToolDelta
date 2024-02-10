@@ -122,6 +122,18 @@ class Builtins:
         """
         if not cond:
             raise exc
+        
+    @staticmethod
+    def run_as_new_thread(func):
+        """
+        在事件方法可能执行较久会造成堵塞时使用, 方便快捷地创建一个新线程, 例如:
+        @Builtins.run_as_new_thread
+        def on_inject(self):
+            ...
+        """
+        def thread_fun(*args, **kwargs):
+            Builtins.createThread(func, args = args, **kwargs)
+        return thread_fun
 
     @staticmethod
     def try_int(arg):
@@ -249,7 +261,7 @@ def _tmpjson_save_thread():
 
 
 def tmpjson_save_thread(frame):
-    frame.ClassicThread(_tmpjson_save_thread)
+    frame.createThread(_tmpjson_save_thread)
 
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
