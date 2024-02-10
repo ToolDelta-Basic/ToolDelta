@@ -8,12 +8,13 @@ from .urlmethod import get_free_port
 from .sys_args import sys_args_to_dict
 
 class SysStatus:
-    LAUNCHING = 0
-    RUNNING = 1
-    NORMAL_EXIT = 2
-    FB_LAUNCH_EXC = 3
-    FB_CRASHED = 4
-    NEED_RESTART = 5
+    LOADING = 100
+    LAUNCHING = 101
+    RUNNING = 102
+    NORMAL_EXIT = 103
+    FB_LAUNCH_EXC = 104
+    FB_CRASHED = 105
+    NEED_RESTART = 106
     launch_type = "None"
 
 class StandardFrame:
@@ -320,6 +321,7 @@ class FrameNeOmg(StandardFrame):
         self.download_libs()
         self.set_neomg_lib()
         self.init_all_functions()
+        self.status = SysStatus.LOADING
 
     def set_neomg_lib(self):
         global neo_conn
@@ -398,11 +400,13 @@ class FrameNeOmg(StandardFrame):
 
     def launch(self):
         self.launch_status = 0
+        self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         self.msg_show()
         while self.launch_status != 1:
             pass
         self.set_omega(openat_port)
+        self.status = SysStatus.RUNNING
         Print.print_suc("已开启 NEOMG 进程")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
@@ -414,6 +418,7 @@ class FrameNeOmg(StandardFrame):
         self.omega.listen_player_chat(lambda _, _2: None)
         Print.print_suc("NEOMEGA 接入已就绪")
         r = self.omega.wait_disconnect()
+        self.status = SysStatus.FB_CRASHED
         return Exception(r)
 
     def download_libs(self):

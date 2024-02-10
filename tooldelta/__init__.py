@@ -45,7 +45,7 @@ class Frame:
     sys_data = FrameBasic()
     serverNumber: str = ""
     serverPasswd: int
-    launchMode:int = 0
+    launchMode: int = 0
     linked_plugin_group: PluginGroup
     consoleMenu = []
     link_game_ctrl = None
