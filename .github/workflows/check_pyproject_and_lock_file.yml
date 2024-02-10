@@ -18,11 +18,13 @@ on:
 
 
 jobs:
-  check:
+  Checker:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v4.1.1
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:

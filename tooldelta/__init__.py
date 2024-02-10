@@ -3,6 +3,7 @@ from .basic_mods import *
 
 # start
 from . import old_dotcs_env, sys_args, builtins, color_print
+from .get_tool_delta_version import get_tool_delta_version
 from .plugin_load import Plugin, PluginAPI, PluginGroup
 from .packets import Packet_CommandOutput, PacketIDS
 from .cfg import Cfg as _Cfg
@@ -19,6 +20,7 @@ from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 PRG_NAME = "ToolDelta"
 UPDATE_NOTE = ""
 ADVANCED = False
+VERSION = get_tool_delta_version()
 Builtins = builtins.Builtins
 Config = _Cfg()
 Print = color_print.Print
@@ -26,15 +28,6 @@ sys_args_dict = sys_args.sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
 
 Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
-
-try:
-    VERSION = tuple(
-        int(v)
-        for v in open("version", "r", encoding="utf-8").read().strip()[1:].split(".")
-    )
-except:
-    # 当前版本
-    VERSION = (0, 2, 5)
 
 
 class Frame:

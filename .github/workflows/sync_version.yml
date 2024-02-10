@@ -1,0 +1,40 @@
+name: Sync Version
+
+
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "version"
+  workflow_dispatch: {}
+
+
+
+jobs:
+  Synchronizer:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get and Set Version
+      run: |
+        echo "VERSION=$(<version)" >> $GITHUB_ENV
+        sed -i "/return (/c\        return ($(sed -e 's/\./, /g' version))" tooldelta/get_tool_delta_version.py
+
+    - name: Set Up Python
+      uses: actions/setup-python@v5
+      with:
+          python-version: "3.11"
+    
+    - name: Check Modified Code
+      run: python tooldelta/get_tool_delta_version.py
+
+    - name: Submit Changes
+      uses: EndBug/add-and-commit@v9
+      with:
+        default_author: github_actions
+        message: '[AUTO] sync version to `${{ env.VERSION }}`'
+        add: 'tooldelta/get_tool_delta_version.py'
