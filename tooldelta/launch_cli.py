@@ -389,7 +389,8 @@ class FrameNeOmg(StandardFrame):
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig == "" or msg_orig == "SIGNAL: exit":
                     Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NEOMG")
-                    raise SystemExit
+                    self.status = SysStatus.NORMAL_EXIT
+                    return
                 elif "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_status = 1
                 while msg_orig:
@@ -417,9 +418,12 @@ class FrameNeOmg(StandardFrame):
         # bug expired
         self.omega.listen_player_chat(lambda _, _2: None)
         Print.print_suc("NEOMEGA 接入已就绪")
-        r = self.omega.wait_disconnect()
-        self.status = SysStatus.FB_CRASHED
-        return Exception(r)
+        while self.status == SysStatus.RUNNING:
+            pass
+        if self.status == SysStatus.NORMAL_EXIT:
+            return SystemExit("正常退出.")
+        elif self.status == SysStatus.FB_CRASHED:
+            return Exception("NeOmega 已崩溃")
 
     def download_libs(self):
         try:
