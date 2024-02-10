@@ -1,8 +1,4 @@
-# ToolDelta 的插件文件结构: ToolDelta插件/(插件名文件夹)/__init__.py
-# 假导入, 可能可以避免IDE出现的黄色变量未定义波浪线(仅VSCode)
-if 0:
-    # ...source即为与ToolDelta可执行文件同目录的source.py(主分支的根文件夹可以找到)
-    from ...source import Plugin, Frame, plugins, Config, Print, Builtins
+from tooldelta import *
     # Builtins 里有许多实用的方法
 
 import json

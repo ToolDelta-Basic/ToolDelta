@@ -550,7 +550,7 @@ class ThreadOmega:
             self._packet_listeners[packet_name]=[]
 
         LIB.ListenPlayerChange()
-        self._player_change_listeners:[Callable[[PlayerKit,str],None]]=[]
+        self._player_change_listeners:List[Callable[[PlayerKit,str],None]]=[]
 
         # get bot basic info (this info will not change so we need to get it only once)
         self._bot_basic_info=ClientMaintainedBotBasicInfo(**json.loads(toPyString(LIB.GetClientMaintainedBotBasicInfo())))
