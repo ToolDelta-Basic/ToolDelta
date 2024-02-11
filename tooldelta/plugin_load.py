@@ -1,5 +1,9 @@
-from typing import Callable, Type, Any
+from hmac import new
+import asyncio
 import os, sys, traceback, zipfile, time, threading, re, importlib
+from typing import Callable, Type, Any
+
+from tooldelta import injected_plugin
 from .color_print import Print
 from .cfg import Cfg
 from .builtins import Builtins
@@ -12,8 +16,7 @@ except:
     decPluginAndCMP = None
 
 
-class PluginSkip(EOFError):
-    ...
+class PluginSkip(EOFError): ...
 
 
 NON_FUNC = lambda *_: None
@@ -209,6 +212,7 @@ class PluginGroup:
         self._broadcast_evts = {}
         self.dotcs_plugin_loaded_num = 0
         self.normal_plugin_loaded_num = 0
+        self.injected_plugin = 0
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
@@ -368,7 +372,9 @@ class PluginGroup:
                     ):
                         if decPluginAndCMP is not None:
                             with open(
-                                f"{self.PRG_NAME}插件/" + plugin_dir + "/__MAIN__.tdenc",
+                                f"{self.PRG_NAME}插件/"
+                                + plugin_dir
+                                + "/__MAIN__.tdenc",
                                 "rb",
                             ) as f:
                                 compiled_pcode = decPluginAndCMP(f.read())
@@ -377,7 +383,9 @@ class PluginGroup:
                                 if not isinstance(compiled_pcode, int):
                                     exec(compiled_pcode, root_env)
                         else:
-                            Print.print_err(f"该条件下无法加载加密插件{plugin_dir}, 跳过加载")
+                            Print.print_err(
+                                f"该条件下无法加载加密插件{plugin_dir}, 跳过加载"
+                            )
                             continue
                     else:
                         Print.print_war(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
@@ -439,7 +447,9 @@ class PluginGroup:
                         )
                         raise SystemExit
                     elif err.args[0] == 3:
-                        Print.print_err(f"加密插件: {plugin_dir} 加载失败 ERR={err.args[1]}")
+                        Print.print_err(
+                            f"加密插件: {plugin_dir} 加载失败 ERR={err.args[1]}"
+                        )
                         raise SystemExit
                     if len(err.args[0]) == 2:
                         Print.print_err(f"插件 {plugin_dir} 不合法: {err.args[0][1]}")
@@ -448,15 +458,21 @@ class PluginGroup:
                         raise
                 except Cfg.ConfigError as err:
                     Print.print_err(f"插件 {plugin_dir} 配置文件报错：{err}")
-                    Print.print_err(f"你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
+                    Print.print_err(
+                        f"你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件"
+                    )
                     raise SystemExit
                 except Builtins.SimpleJsonDataReader.DataReadError as err:
                     Print.print_err(f"插件 {plugin_dir} 读取数据失败: {err}")
                 except self.linked_frame.SystemVersionException:
-                    Print.print_err(f"插件 {plugin_dir} 需要更高版本的ToolDelta加载: {err}")
+                    Print.print_err(
+                        f"插件 {plugin_dir} 需要更高版本的ToolDelta加载: {err}"
+                    )
                 except Exception as err:
                     if "() takes no arguments" in str(err):
-                        Print.print_err(f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
+                        Print.print_err(
+                            f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame"
+                        )
                     else:
                         Print.print_err(f"加载插件 {plugin_dir} 出现问题, 报错如下: ")
                         Print.print_err("§c" + traceback.format_exc())
@@ -474,6 +490,25 @@ class PluginGroup:
                     code = f.read()
                     # This function should only be avaliable on ToolDelta Advanced Version.
 
+    async def load_plugin(self):
+        tasks = []
+
+        # 读取本目录下的文件夹名字
+
+        for file in os.listdir("plugins"):
+            if os.path.isdir(os.path.join("plugins", file)):
+                self.injected_plugin += 1
+                task = asyncio.create_task(injected_plugin.load_plugin_file(file))
+                tasks.append(task)
+
+    # 并发地加载插件并收集插件元数据
+        all_plugin_metadata = await asyncio.gather(*tasks)
+
+        # 打印所有插件的元数据
+        for metadata in all_plugin_metadata:
+            Print.print_suc(
+                    f"成功载入插件 {metadata.name} 版本:{metadata.version}  作者:{metadata.author}"
+                )
     def __add_plugin(self, plugin: Plugin):
         self.plugins.append(plugin)
 
@@ -509,21 +544,27 @@ class PluginGroup:
                         # A strong desire to remove "try" block !!
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}"
+                        )
                 lastTime1m = nowTime
             if nowTime - lastTime30s > 30:
                 for fname, func in self._dotcs_repeat_threadings["30s"]:
                     try:
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}"
+                        )
                 lastTime30s = nowTime
             if nowTime - lastTime10s > 10:
                 for fname, func in self._dotcs_repeat_threadings["10s"]:
                     try:
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}"
+                        )
                 lastTime10s = nowTime
             for fname, func in self._dotcs_repeat_threadings["1s"]:
                 try:
@@ -577,6 +618,7 @@ class PluginGroup:
         pat = f"[{player}] "
         if msg.startswith(pat):
             msg = msg.strip(pat)
+
         for name, func in self.plugins_funcs["on_player_message"]:
             try:
                 func(player, msg)

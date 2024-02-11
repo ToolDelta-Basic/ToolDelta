@@ -2,13 +2,21 @@
 from .basic_mods import *
 
 # start
+# NOTE: 建议为两种插件加载方式单独开一个文件夹: plugin_load/normal.py, plugin_load/injected.py 类似这样
 from . import old_dotcs_env, sys_args, builtins, color_print
+from .injected_plugin import movent
 from .get_tool_delta_version import get_tool_delta_version
 from .plugin_load import Plugin, PluginAPI, PluginGroup
 from .packets import Packet_CommandOutput, PacketIDS
 from .cfg import Cfg as _Cfg
 from .logger import publicLogger
 from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
+
+from .injected_plugin import (
+    execute_player_message,
+    execute_player_join,
+    execute_player_left,
+)
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -27,8 +35,6 @@ Print = color_print.Print
 sys_args_dict = sys_args.sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
 
-Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
-
 
 class Frame:
     # 系统框架
@@ -46,7 +52,6 @@ class Frame:
     serverNumber: str = ""
     serverPasswd: int
     launchMode: int = 0
-    linked_plugin_group: PluginGroup
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
@@ -96,7 +101,7 @@ class Frame:
             # 用户手动输入fbtoken并创建文件
             fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
             if fbtoken:
-                with open("fbtoken", "w", encoding = "utf-8") as f:
+                with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(fbtoken)
             else:
                 Print.print_err("未输入fbtoken, 无法继续")
@@ -113,7 +118,9 @@ class Frame:
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(public_launcher) + 1
             ):
-                raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
+                raise Config.ConfigError(
+                    "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
+                )
         except Config.ConfigError as err:
             Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
             raise SystemExit
@@ -188,13 +195,14 @@ class Frame:
     def plugin_load_finished(self, plugins: PluginGroup):
         # 插件成功载入提示
         Print.print_suc(
-            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
+            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin}§a 个注入式插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
         )
 
     def basic_operation(self):
         # 初始化文件夹
         os.makedirs("DotCS兼容插件", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
+        os.makedirs("plugins", exist_ok=True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
         os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
@@ -321,6 +329,7 @@ class Frame:
         builtins.safe_close()
         publicLogger._exit()
 
+
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
@@ -382,6 +391,7 @@ class GameCtrl:
                     Print.print_inf(
                         f"§e{playername} 加入了游戏, UUID: {player['UUID']}"
                     )
+                    asyncio.run(execute_player_join(playername))
                     plugin_group.execute_player_join(
                         playername, self.linked_frame.on_plugin_err
                     )
@@ -398,6 +408,7 @@ class GameCtrl:
                     continue
                 self.allplayers.remove(playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
+                asyncio.run(execute_player_left(playername))
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
@@ -429,13 +440,16 @@ class GameCtrl:
                     )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
+                asyncio.run(execute_player_message(player, msg))
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
+
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
+                asyncio.run(execute_player_message(player, msg))
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
@@ -514,11 +528,13 @@ def start_tool_delta():
     # 初始化系统
     global frame, game_control, plugins
     try:
+        Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
         game_control = GameCtrl(frame)
         frame.set_game_control(game_control)
         frame.set_plugin_group(plugins)
+        movent.set_frame(frame)
         frame.welcome()
         frame.basic_operation()
         frame.read_cfg()
@@ -536,6 +552,7 @@ def start_tool_delta():
                 "Print": Print,
             }
         )
+        asyncio.run(plugins.load_plugin())
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread(frame)
