@@ -624,3 +624,15 @@ class PluginGroup:
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
 
+    def processPacketFunc(self, pktID: int, pkt: dict):
+        d = self.packet_funcs.get(str(pktID), None)
+        if d:
+            for func in d:
+                try:
+                    res = func(pkt)
+                    if res:
+                        return True
+                except:
+                    Print.print_err(f"插件方法 {func.__name__} 出错：")
+                    Print.print_err(traceback.format_exc())
+        return False

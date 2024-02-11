@@ -1,3 +1,5 @@
+from tooldelta.color_print import Print
+
 
 frame = None
 game_control = None
@@ -63,3 +65,8 @@ def tellrawText(playername: str, title: str | None = None, text: str = ""):
                 text,
             )
         )
+
+def get_all_player():
+    check_avaliable(game_control)
+    Print.print_suc(game_control.allplayers)
+    return game_control.allplayers

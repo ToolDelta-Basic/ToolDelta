@@ -74,7 +74,9 @@ async def execute_repeat():
 
 
 # 处理玩家消息并执行插件
-async def execute_player_message(message, playername):
+async def execute_player_message(
+    playername,message
+):
     tasks = [func(message, playername) for func in player_message_funcs]
     await asyncio.gather(*tasks)
 
@@ -129,47 +131,5 @@ async def load_plugin(frame2, game_control2):
     # 并发加载插件
     await asyncio.gather(*tasks)
 
-
-def sendcmd(*arg):
-    game_control.sendcmd(*arg)
-
-
-def sendwscmd(*arg):
-    game_control.sendwscmd(*arg)
-
-
-def sendwocmd(*arg):
-    game_control.sendwocmd(*arg)
-
-
-def sendPacket(*arg):
-    game_control.sendPacket(*arg)
-
-
-def sendPacketJson(*arg):
-    game_control.sendPacketJson(*arg)
-
-
-def sendfbcmd(*arg):
-    game_control.sendfbcmd(*arg)
-
-
-def tellrawText(playername: str, title: str | None = None, text: str = ""):
-    """
-    发送tellraw消息
-    ---
-    playername:str 玩家名.
-    title:str 说话人.
-    text:str 内容.
-    """
-    if title is None:
-        sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
-    else:
-        sendcmd(
-            r"""/tellraw %s {"rawtext":[{"text":"<%s> §r%s"}]}"""
-            % (
-                playername,
-                title,
-                text,
-            )
-        )
+# 快捷导入插件函数
+from .movent import sendcmd,sendfbcmd,sendPacket,sendPacketJson,sendwocmd,sendwscmd,tellrawText,get_all_player

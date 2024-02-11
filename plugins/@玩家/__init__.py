@@ -1,5 +1,9 @@
-from tooldelta.injected_plugin import player_message, sendcmd, tellrawText
-
+from tooldelta.injected_plugin import (
+    player_message,
+    sendcmd,
+    tellrawText,
+    get_all_player,
+)
 
 def find_mentions(text, player_list):
     return [player for player in player_list if f"@{player}" in text]
@@ -9,7 +13,7 @@ def find_mentions(text, player_list):
 async def _(message, playername):
     # 如果文字包含@
     if "@" in message:
-        mentioned_players = find_mentions(message, globals.allplayer)
+        mentioned_players = find_mentions(message, get_all_player())
         for i in mentioned_players:
             tellrawText(i, "§awling§eBot§r", "§l§a有人提及了你！")
             sendcmd(f"""/title {i} title §b§l有人提及了你""")
