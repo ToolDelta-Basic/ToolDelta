@@ -3,7 +3,6 @@ import os
 import importlib
 from re import A
 import ujson as json
-from tooldelta import Frame
 
 from tooldelta.color_print import Print
 
@@ -111,7 +110,7 @@ async def load_plugin_file(file):
             await value(event)
 
 
-async def load_plugin(frame2:Frame, game_control2):
+async def load_plugin(frame2, game_control2):
     global game_control, frame
     game_control = game_control2
     frame = frame2

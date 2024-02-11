@@ -1,4 +1,3 @@
-from tooldelta import Frame
 
 frame = None
 game_control = None
@@ -7,7 +6,7 @@ def check_avaliable(sth):
     if sth is None:
         raise AttributeError(f"无法使用 {sth.__class__.__name__}, 因为其还未被初始化")
 
-def set_frame(my_frame: Frame):
+def set_frame(my_frame):
     # 只有在系统启动后才能获得有效的 frame
     global frame, game_control
     frame = my_frame
