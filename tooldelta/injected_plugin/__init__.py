@@ -1,4 +1,5 @@
 import asyncio
+from distutils.core import setup_keywords
 import os
 import importlib
 from re import A
@@ -64,7 +65,6 @@ def repeat_task(func, time):
         except Exception as e:
             Print.print_err(f"repeat_task error: {e}")
 
-
 async def execute_repeat():
     # 为字典每一个函数创建一个循环特定时间的任务
     for func, time in repeat_funcs.items():
@@ -74,9 +74,7 @@ async def execute_repeat():
 
 
 # 处理玩家消息并执行插件
-async def execute_player_message(
-    playername,message
-):
+async def execute_player_message(playername, message):
     tasks = [func(message, playername) for func in player_message_funcs]
     await asyncio.gather(*tasks)
 
@@ -91,45 +89,58 @@ async def execute_player_left(playername):
     await asyncio.gather(*tasks)
 
 
-async def execute_init():
-    task = [func() for func in init_plugin_funcs]
-    await asyncio.gather(*task)
-
-
-# 处理te并执行插件
-
-
 async def load_plugin_file(file):
     # 导入插件模块
     module_name = file
     plugin_module = importlib.import_module(f"plugins.{module_name}")
+    # 获取插件元数据
+    return getattr(plugin_module, "__plugin_meta__", None)
+class PluginMetadata:
+    def __init__(
+        self,
+        name,
+        author,
+        description,
+        version,
+        usage,
+        homepage,
+    ):
+        self.name = name
+        self.author = author
+        self.description = description
+        self.usage = usage
+        self.version = version
+        self.homepage = homepage
 
-    # 查找插件处理函数
-    for value in plugin_module.__dict__.values():
-        if callable(value) and hasattr(value, "__plugin_handler__"):
-            # 执行插件处理函数
-            event = getattr(value, "__plugin_handler__")
-            await value(event)
 
+def create_plugin_metadata(metadata_dict: dict):
+    """
+    创建插件元数据。
 
-async def load_plugin(frame2, game_control2):
-    global game_control, frame
-    game_control = game_control2
-    frame = frame2
-    tasks = []
-    # 检查插件目录是否存在
-    if not os.path.exists("plugins"):
-        os.mkdir("plugins")
+    参数:
+        - metadata_dict (dict): 包含插件元数据的字典.
 
-    # 读取本目录下的文件夹名字
+    返回:
+        PluginMetadata: 插件元数据对象.
+    """
+    name = metadata_dict.get("name","未命名插件")
+    version = metadata_dict.get("version","1.0")
+    description = metadata_dict.get("description","未知插件")
+    usage = metadata_dict.get("usage", "")
+    author = metadata_dict.get("author", "未知")
+    homepage = metadata_dict.get("homepage","")
 
-    for file in os.listdir("plugins"):
-        if os.path.isdir(os.path.join("plugins", file)):
-            task = asyncio.create_task(load_plugin_file(file))
-            tasks.append(task)
+    return PluginMetadata(name, author, description, version, usage, homepage)
 
-    # 并发加载插件
-    await asyncio.gather(*tasks)
 
 # 快捷导入插件函数
-from .movent import sendcmd,sendfbcmd,sendPacket,sendPacketJson,sendwocmd,sendwscmd,tellrawText,get_all_player
+from .movent import (
+    sendcmd,
+    sendfbcmd,
+    sendPacket,
+    sendPacketJson,
+    sendwocmd,
+    sendwscmd,
+    tellrawText,
+    get_all_player,
+)

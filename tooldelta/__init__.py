@@ -13,7 +13,6 @@ from .logger import publicLogger
 from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 
 from .injected_plugin import (
-    load_plugin,
     execute_player_message,
     execute_player_join,
     execute_player_left,
@@ -35,8 +34,6 @@ Config = _Cfg()
 Print = color_print.Print
 sys_args_dict = sys_args.sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
-
-Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
 
 
 class Frame:
@@ -198,13 +195,14 @@ class Frame:
     def plugin_load_finished(self, plugins: PluginGroup):
         # 插件成功载入提示
         Print.print_suc(
-            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个普通插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
+            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin}§a 个注入式插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
         )
 
     def basic_operation(self):
         # 初始化文件夹
         os.makedirs("DotCS兼容插件", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
+        os.makedirs("plugins", exist_ok=True)
         os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
         os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
@@ -530,6 +528,7 @@ def start_tool_delta():
     # 初始化系统
     global frame, game_control, plugins
     try:
+        Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
         game_control = GameCtrl(frame)
@@ -553,8 +552,8 @@ def start_tool_delta():
                 "Print": Print,
             }
         )
+        asyncio.run(plugins.load_plugin())
         frame.plugin_load_finished(plugins)
-        asyncio.run(load_plugin(frame, game_control))
         plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread(frame)
         frame.launcher.listen_launched(game_control.Inject)

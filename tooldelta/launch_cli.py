@@ -427,7 +427,7 @@ class FrameNeOmg(StandardFrame):
 
     def download_libs(self):
         try:
-            res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json").text)
+            res = json.loads(requests.get("https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/require_files.json",timeout=5).text)
             use_mirror = res["Mirror"][0]
         except Exception as err:
             Print.print_err(f"获取依赖库表出现问题: {err}")

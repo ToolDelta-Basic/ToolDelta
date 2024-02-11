@@ -1,6 +1,9 @@
 from hmac import new
+import asyncio
 import os, sys, traceback, zipfile, time, threading, re, importlib
 from typing import Callable, Type, Any
+
+from tooldelta import injected_plugin
 from .color_print import Print
 from .cfg import Cfg
 from .builtins import Builtins
@@ -209,6 +212,7 @@ class PluginGroup:
         self._broadcast_evts = {}
         self.dotcs_plugin_loaded_num = 0
         self.normal_plugin_loaded_num = 0
+        self.injected_plugin = 0
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
@@ -486,6 +490,25 @@ class PluginGroup:
                     code = f.read()
                     # This function should only be avaliable on ToolDelta Advanced Version.
 
+    async def load_plugin(self):
+        tasks = []
+
+        # 读取本目录下的文件夹名字
+
+        for file in os.listdir("plugins"):
+            if os.path.isdir(os.path.join("plugins", file)):
+                self.injected_plugin += 1
+                task = asyncio.create_task(injected_plugin.load_plugin_file(file))
+                tasks.append(task)
+
+    # 并发地加载插件并收集插件元数据
+        all_plugin_metadata = await asyncio.gather(*tasks)
+
+        # 打印所有插件的元数据
+        for metadata in all_plugin_metadata:
+            Print.print_suc(
+                    f"成功载入插件 {metadata.name} 版本:{metadata.version}  作者:{metadata.author}"
+                )
     def __add_plugin(self, plugin: Plugin):
         self.plugins.append(plugin)
 
