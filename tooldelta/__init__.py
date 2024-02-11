@@ -4,7 +4,6 @@ from .basic_mods import *
 # start
 # NOTE: 建议为两种插件加载方式单独开一个文件夹: plugin_load/normal.py, plugin_load/injected.py 类似这样
 from . import old_dotcs_env, sys_args, builtins, color_print
-from .injected_plugin import movent
 from .get_tool_delta_version import get_tool_delta_version
 from .plugin_load import Plugin, PluginAPI, PluginGroup
 from .packets import Packet_CommandOutput, PacketIDS
@@ -12,12 +11,6 @@ from .cfg import Cfg as _Cfg
 from .logger import publicLogger
 from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 
-from .injected_plugin import (
-    load_plugin,
-    execute_player_message,
-    execute_player_join,
-    execute_player_left,
-)
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -331,6 +324,12 @@ class Frame:
         builtins.safe_close()
         publicLogger._exit()
 
+from .injected_plugin import movent, load_plugin
+from .injected_plugin import (
+    execute_player_message,
+    execute_player_join,
+    execute_player_left,
+)
 
 class GameCtrl:
     # 游戏连接和交互部分

@@ -1,4 +1,5 @@
-from tooldelta.plugin import player_message, sendcmd, tellrawText
+from tooldelta.injected_plugin import player_message
+from tooldelta.injected_plugin.movent import sendcmd, tellrawText
 
 
 def find_mentions(text, player_list):
