@@ -1,12 +1,17 @@
-import requests, json, os
+import requests, json, os, traceback, platform
 from . import urlmethod
 from .builtins import Builtins
 from .color_print import Print
 
+if platform.system().lower() == "Windows":
+    CLS_CMD = "cls"
+else:
+    CLS_CMD = "clear"
+
 class PluginMaketPluginData:
     def __init__(self, name: str, plugin_data: dict):
         self.name: str = name
-        self.version: str = tuple(int(i) for i in plugin_data["version"].strip("."))
+        self.version: str = tuple(int(i) for i in plugin_data["version"].split("."))
         self.author: str = plugin_data["author"]
         self.plugin_type: str = plugin_data["plugin-type"]
         self.description: str = plugin_data["description"]
@@ -19,23 +24,28 @@ class PluginMaketPluginData:
     @property
     def plugin_type_str(self):
         return {
-            "classic": "组合式插件",
-            "injected": "注入式插件",
-            "dotcs": "DotCS插件",
-            "unknown": "未知插件类型"
+            "classic": "组合式",
+            "injected": "注入式",
+            "dotcs": "DotCS",
+            "unknown": "未知类型"
         }.get(self.plugin_type, "unknown")
 
 class PluginMarket:
     def list_and_find_url(self):
+        test_mode = True
         try:
-            res = json.loads(requests.get(
-                "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/market_tree.json"
-            ).text)
-            plugins_list: list = list(res["MarketPlugins"].values())
+            if not test_mode:
+                market_datas = json.loads(requests.get(
+                    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/market_tree.json"
+                ).text)
+            else:
+                with open("plugin_market/market_tree.json", "r", encoding="utf-8") as f:
+                    market_datas = json.load(f)
+            plugins_list: list = list(market_datas["MarketPlugins"].items())
             all_indexes = len(plugins_list)
             now_index = 0
             while 1:
-                os.system("cls")
+                os.system(CLS_CMD)
                 res = ""
                 for i in range(now_index, now_index + 8):
                     if i in range(all_indexes):
@@ -54,7 +64,7 @@ class PluginMarket:
                 res = Builtins.try_int(res)
                 if res:
                     if res in range(1, all_indexes + 1):
-                        self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), res["MarketPlugins"])
+                        self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
                     else:
                         Print.print_err("超出序号范围")
                 if i > all_indexes:
@@ -64,10 +74,11 @@ class PluginMarket:
 
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
+            Print.print_err(traceback.format_exc())
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = ', '.join([f'{k}:{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
-        os.system("cls")
+        os.system(CLS_CMD)
         Print.print_inf(f"{plugin_data.name} v{plugin_data.version}", need_log = False)
         Print.print_inf(f"§7作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}", need_log = False)
         Print.print_inf(f"前置插件: {pre_plugins_str}", need_log = False)
@@ -109,3 +120,4 @@ class PluginMarket:
                 os.makedirs(download_path)
         Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
             
+market = PluginMarket()

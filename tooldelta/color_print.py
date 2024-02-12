@@ -90,8 +90,9 @@ class _Print:
             i += 1
         return text_ok
 
-    def print_with_info(self, text: str, info: str = INFO_NORMAL, **print_kwargs):
-        self.c_log(info, text)
+    def print_with_info(self, text: str, info: str = INFO_NORMAL, need_log = True, **print_kwargs):
+        if need_log:
+            self.c_log(info, text)
         setNextColor = "§r"
         if "\n" in text:
             output_txts = []

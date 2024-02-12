@@ -6,7 +6,8 @@
             "description": "所有使用到聊天栏菜单的组件的前置组件",
             "limit_launcher": null,
             "pre-plugins": {},
-            "plugin-type": "classic"
+            "plugin-type": "classic",
+            "dirs": {}
         },
         "控制台执行MCFB指令": {
             "author": "SuperScript",
@@ -14,7 +15,8 @@
             "description": "可以在控制台让机器人执行指令, 特殊指令等",
             "limit_launcher": null,
             "pre-plugins": {},
-            "plugin-type": "classic"
+            "plugin-type": "classic",
+            "dirs": {}
         }
     },
     "MarketVersion": "0.0.1"

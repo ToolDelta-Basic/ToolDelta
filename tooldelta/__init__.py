@@ -3,7 +3,7 @@ from .basic_mods import *
 
 # start
 # NOTE: 建议为两种插件加载方式单独开一个文件夹: plugin_load/normal.py, plugin_load/injected.py 类似这样
-from . import old_dotcs_env, sys_args, builtins, color_print
+from . import old_dotcs_env, sys_args, builtins, color_print, plugin_market
 from .plugin_load.injected_plugin import movent
 from .get_tool_delta_version import get_tool_delta_version
 from .plugin_load import Plugin, PluginAPI, PluginGroup
@@ -529,6 +529,8 @@ def start_tool_delta():
     try:
         Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
         frame = Frame()
+        plugin_market.market.list_and_find_url()
+        raise SystemExit
         plugins = PluginGroup(frame, PRG_NAME)
         game_control = GameCtrl(frame)
         frame.set_game_control(game_control)
