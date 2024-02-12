@@ -8,6 +8,12 @@ if platform.system().lower() == "Windows":
 else:
     CLS_CMD = "clear"
 
+def _path_dir(path: str):
+    if "/" not in path:
+        return None
+    else:
+        return "/".join(path.split("/")[:-1])
+
 class PluginMaketPluginData:
     def __init__(self, name: str, plugin_data: dict):
         self.name: str = name
@@ -32,7 +38,7 @@ class PluginMaketPluginData:
 
 class PluginMarket:
     def list_and_find_url(self):
-        test_mode = True
+        test_mode = False
         try:
             if not test_mode:
                 market_datas = json.loads(requests.get(
@@ -112,12 +118,10 @@ class PluginMarket:
                     download_path = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
                 case _:
                     raise Exception(f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决")
-            if "." in path.split("/")[-1]:
-                # 这应该是个文件了, 有文件后缀名
-                urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path))
-            else:
-                # 管你是什么文件, 一律当文件夹处理
-                os.makedirs(download_path)
+            path_last = _path_dir(path)
+            if path_last is not None:
+                os.makedirs(os.path.join(download_path, plugin_data.name, path_last))
+            urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path))
         Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
             
 market = PluginMarket()

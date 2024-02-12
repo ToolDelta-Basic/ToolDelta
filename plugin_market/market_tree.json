@@ -7,7 +7,7 @@
             "limit_launcher": null,
             "pre-plugins": {},
             "plugin-type": "classic",
-            "dirs": {}
+            "dirs": []
         },
         "控制台执行MCFB指令": {
             "author": "SuperScript",
@@ -16,7 +16,21 @@
             "limit_launcher": null,
             "pre-plugins": {},
             "plugin-type": "classic",
-            "dirs": {}
+            "dirs": []
+        },
+        "示例插件1": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "用于插件市场测试",
+            "limit_launcher": null,
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.1"
+            },
+            "plugin-type": "classic",
+            "dirs": [
+                "test_download_py_file.py",
+                "test_download_folder/test_download_pyfile.py"
+            ]
         }
     },
     "MarketVersion": "0.0.1"
