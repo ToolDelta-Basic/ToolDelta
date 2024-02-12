@@ -92,10 +92,9 @@ async def execute_player_left(playername):
 async def load_plugin_file(file):
     # 导入插件模块
     module_name = file
-    plugin_module = importlib.import_module(f"插件文件.ToolDelta注入式插件.{module_name}")
+    plugin_module = importlib.import_module(f"plugins.{module_name}")
     # 获取插件元数据
     return getattr(plugin_module, "__plugin_meta__", None)
-
 class PluginMetadata:
     def __init__(
         self,
@@ -124,34 +123,14 @@ def create_plugin_metadata(metadata_dict: dict):
     返回:
         PluginMetadata: 插件元数据对象.
     """
-    name = metadata_dict.get("name", "未命名插件")
-    version = metadata_dict.get("version", "1.0")
-    description = metadata_dict.get("description", "未知插件")
+    name = metadata_dict.get("name","未命名插件")
+    version = metadata_dict.get("version","1.0")
+    description = metadata_dict.get("description","未知插件")
     usage = metadata_dict.get("usage", "")
     author = metadata_dict.get("author", "未知")
-    homepage = metadata_dict.get("homepage", "")
+    homepage = metadata_dict.get("homepage","")
 
     return PluginMetadata(name, author, description, version, usage, homepage)
-
-async def load_plugin(plugin_grp):
-    tasks = []
-
-    # 读取本目录下的文件夹名字
-    PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
-    for file in os.listdir(PLUGIN_PATH):
-        if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
-            plugin_grp.injected_plugin_loaded_num += 1
-            task = asyncio.create_task(load_plugin_file(file))
-            tasks.append(task)
-
-    # 并发地加载插件并收集插件元数据
-    all_plugin_metadata = await asyncio.gather(*tasks)
-
-    # 打印所有插件的元数据
-    for metadata in all_plugin_metadata:
-        Print.print_suc(
-                f"成功载入插件 {metadata.name} 版本:{metadata.version} 作者:{metadata.author}"
-        )
 
 
 # 快捷导入插件函数
