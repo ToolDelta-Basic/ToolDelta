@@ -55,6 +55,11 @@ def init():
     return decorator
 
 
+# 并发初始化插件
+async def execute_init():
+    tasks = [func() for func in init_plugin_funcs]
+    await asyncio.gather(*tasks)
+
 # repeat_task
 def repeat_task(func, time):
     while True:
@@ -94,7 +99,8 @@ async def load_plugin_file(file):
     module_name = file
     plugin_module = importlib.import_module(f"插件文件.ToolDelta注入式插件.{module_name}")
     # 获取插件元数据
-    return getattr(plugin_module, "__plugin_meta__", create_plugin_metadata({"name":module_name}))
+
+    return create_plugin_metadata(getattr(plugin_module, "__plugin_meta__", {"name": module_name}))
 
 class PluginMetadata:
     def __init__(
@@ -152,5 +158,3 @@ async def load_plugin(plugin_grp):
         Print.print_suc(
                 f"成功载入插件 {metadata.name} 版本:{metadata.version} 作者:{metadata.author}"
         )
-
-

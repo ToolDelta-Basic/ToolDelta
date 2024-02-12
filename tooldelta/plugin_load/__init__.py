@@ -64,7 +64,10 @@ class PluginGroup:
         Print.print_suc(
             f"§a共加载 §l§b{self.normal_plugin_loaded_num} §r§a个 组合式插件, §l§b{self.injected_plugin_loaded_num} §r§a个 注入插件 和 §l§b{self.dotcs_plugin_loaded_num} §r§a个 原DotCS插件"
         )
+        Print.print_inf("正在执行初始化函数init任务")
+        asyncio.run(injected_plugin.execute_init())
 
+        Print.print_suc("初始化函数init任务执行完毕")
     def add_broadcast_listener(self, evt_name: str):
         "将下面的方法作为一个广播事件接收器"
 
@@ -286,7 +289,8 @@ class PluginGroup:
                     Print.print_err(traceback.format_exc())
         return False
 
-#NOTE 快捷导入插件函数(待增加)
+
+# NOTE 快捷导入插件函数(待增加)
 from .injected_plugin.movent import (
     sendcmd,
     sendfbcmd,
@@ -295,10 +299,8 @@ from .injected_plugin.movent import (
     sendwocmd,
     sendwscmd,
     tellrawText,
-    get_all_player
+    get_all_player,
+    getTarget,
 )
 
-from .injected_plugin import(
-    player_message,player_join,player_left,repeat,init
-
-)
+from .injected_plugin import player_message, player_join, player_left, repeat, init
