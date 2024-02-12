@@ -295,5 +295,10 @@ from .injected_plugin.movent import (
     sendwocmd,
     sendwscmd,
     tellrawText,
-    get_all_player,
+    get_all_player
+)
+
+from .injected_plugin import(
+    player_message,player_join,player_left,repeat,init
+
 )
