@@ -4,7 +4,7 @@ from .basic_mods import *
 # start
 # NOTE: 建议为两种插件加载方式单独开一个文件夹: plugin_load/normal.py, plugin_load/injected.py 类似这样
 from . import old_dotcs_env, sys_args, builtins, color_print
-from .injected_plugin import movent
+from .plugin_load.injected_plugin import movent
 from .get_tool_delta_version import get_tool_delta_version
 from .plugin_load import Plugin, PluginAPI, PluginGroup
 from .packets import Packet_CommandOutput, PacketIDS
@@ -12,7 +12,7 @@ from .cfg import Cfg as _Cfg
 from .logger import publicLogger
 from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 
-from .injected_plugin import (
+from .plugin_load.injected_plugin import (
     execute_player_message,
     execute_player_join,
     execute_player_left,
@@ -195,16 +195,15 @@ class Frame:
     def plugin_load_finished(self, plugins: PluginGroup):
         # 插件成功载入提示
         Print.print_suc(
-            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin}§a 个注入式插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
+            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin_loaded_num}§a 个注入式插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
         )
 
     def basic_operation(self):
         # 初始化文件夹
-        os.makedirs("DotCS兼容插件", exist_ok=True)
+        os.makedirs("插件文件/原DotCS插件", exist_ok=True)
+        os.makedirs("插件文件/ToolDelta注入式插件", exist_ok=True)
+        os.makedirs("插件文件/ToolDelta组合式插件", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
-        os.makedirs("plugins", exist_ok=True)
-        os.makedirs(f"{PRG_NAME}插件", exist_ok=True)
-        os.makedirs(f"{PRG_NAME}无OP运行组件", exist_ok=True)
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
         os.makedirs("status", exist_ok=True)
@@ -539,20 +538,7 @@ def start_tool_delta():
         frame.basic_operation()
         frame.read_cfg()
         game_control.init_funcs()
-        plugins.read_plugin_from_old(dotcs_module_env)
-        plugins.read_plugin_from_new(
-            {
-                "Frame": frame,
-                "plugins": plugins,
-                "Plugin": Plugin,
-                "PluginGroup": PluginGroup,
-                "PluginAPI": PluginAPI,
-                "Config": Config,
-                "Builtins": Builtins,
-                "Print": Print,
-            }
-        )
-        asyncio.run(plugins.load_plugin())
+        plugins.read_all_plugins()
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread(frame)

@@ -1,6 +1,5 @@
 from tooldelta.color_print import Print
 
-
 frame = None
 game_control = None
 

@@ -1,13 +1,13 @@
 {
-    "MarketPlugins": [
-        {
-            "聊天栏菜单": {
-                "author": "SuperScript",
-                "version": "0.0.4",
-                "description": "所有使用到聊天栏菜单的组件的前置组件",
-                "limit_launcher": null
-            }
+    "MarketPlugins": {
+        "聊天栏菜单": {
+            "author": "SuperScript",
+            "version": "0.0.4",
+            "description": "所有使用到聊天栏菜单的组件的前置组件",
+            "limit_launcher": null,
+            "pre-plugins": {},
+            "plugin-type": "classic"
         }
-    ],
+    },
     "MarketVersion": "0.0.1"
 }

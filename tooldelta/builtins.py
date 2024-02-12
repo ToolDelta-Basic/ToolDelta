@@ -83,6 +83,7 @@ class Builtins:
                     )
                     return default
                 return Builtins.SimpleJsonDataReader.SafeJsonDump(
+                    default, 
                     open(filepath, "r", encoding="utf-8")
                 )
             except ujson.JSONDecodeError as err:
