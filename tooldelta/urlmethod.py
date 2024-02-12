@@ -12,8 +12,10 @@ def _pretty_kb(n):
 def download_file(f_url: str, f_dir: str):
     res = requests.get(f_url, stream=True, timeout=10)
     filesize = int(res.headers["content-length"])
-    if filesize < 1024:
-        Print.print_err(f"下载 {f_url} 的文件失败: 文件大小异常, 不到 1KB")
+    if filesize < 256:
+        if "404" in res.text:
+            raise requests.RequestException("下载失败: 返回 404")
+        Print.print_war(f"下载 {f_url} 的文件警告: 文件大小异常, 不到 0.256KB")
     nowsize = 0
     succ = False
     lastime = time.time()
@@ -34,7 +36,7 @@ def download_file(f_url: str, f_dir: str):
                     f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB ({_pretty_kb(useSpeed)}B/s)    ",
                     "§a 下载 §r",
                     end = "\r",
-                    need_print = False
+                    need_log = False
                 )
                 nowsize += len(chk)
                 lastime = nowtime

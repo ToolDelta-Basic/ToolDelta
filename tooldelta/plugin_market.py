@@ -3,7 +3,7 @@ from . import urlmethod
 from .builtins import Builtins
 from .color_print import Print
 
-if platform.system().lower() == "Windows":
+if platform.system().lower() == "windows":
     CLS_CMD = "cls"
 else:
     CLS_CMD = "clear"
@@ -17,11 +17,12 @@ def _path_dir(path: str):
 class PluginMaketPluginData:
     def __init__(self, name: str, plugin_data: dict):
         self.name: str = name
-        self.version: str = tuple(int(i) for i in plugin_data["version"].split("."))
+        self.version: tuple = tuple(int(i) for i in plugin_data["version"].split("."))
         self.author: str = plugin_data["author"]
         self.plugin_type: str = plugin_data["plugin-type"]
         self.description: str = plugin_data["description"]
         self.pre_plugins: dict[str, str] = plugin_data["pre-plugins"]
+        self.dirs: list[str] = plugin_data["dirs"]
 
     @property
     def version_str(self):
@@ -70,7 +71,11 @@ class PluginMarket:
                 res = Builtins.try_int(res)
                 if res:
                     if res in range(1, all_indexes + 1):
-                        self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
+                        r = self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
+                        if r:
+                            r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
+                            if r.lower() == "q":
+                                break
                     else:
                         Print.print_err("超出序号范围")
                 if i > all_indexes:
@@ -91,20 +96,21 @@ class PluginMarket:
         Print.print_inf(f"介绍: {plugin_data.description}", need_log = False)
         res = input(Print.fmt_info("§f下载=§aY§f, 取消=§cN§f, 请输入:","输入")).lower().strip()
         if res == "y":
-            self.download_plugin(all_plugins_dict[plugin_data.name], all_plugins_dict)
+            self.download_plugin(plugin_data, all_plugins_dict)
+            return True
         else:
-            return
+            return False
         
     def download_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict):
-        download_paths = plugin_data["dirs"] + ["__init__.py"]
+        download_paths = plugin_data.dirs + ["__init__.py"]
         for path in download_paths:
             if not path.strip():
                 # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
                 continue
-            for plugin_name, _ in plugin_data.pre_plugins:
+            for plugin_name, _ in plugin_data.pre_plugins.items():
                 # 下载前置插件
-                self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]))
+                self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
             url = (
                 "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/"
                  + plugin_data.name + "/" + path
@@ -118,10 +124,16 @@ class PluginMarket:
                     download_path = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
                 case _:
                     raise Exception(f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决")
+            os.makedirs(os.path.join(download_path, plugin_data.name), exist_ok=True)
             path_last = _path_dir(path)
             if path_last is not None:
-                os.makedirs(os.path.join(download_path, plugin_data.name, path_last))
+                folder_path = os.path.join(download_path, plugin_data.name, path_last)
+                print(folder_path)
+                os.makedirs(folder_path, exist_ok=True)
+            else:
+                print("糟了!", path)
             urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path))
         Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
+        
             
 market = PluginMarket()
