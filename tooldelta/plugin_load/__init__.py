@@ -10,10 +10,11 @@ from ..builtins import Builtins
 from ..basic_mods import dotcs_module_env
 
 
-class PluginSkip(EOFError):
-    ...
+class PluginSkip(EOFError): ...
+
 
 NON_FUNC = lambda *_: None
+
 
 class PluginGroup:
     class PluginAPINotFoundError(ModuleNotFoundError):
@@ -60,10 +61,13 @@ class PluginGroup:
         dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)
         classic_plugin.read_plugin_from_new(self, {})
         asyncio.run(injected_plugin.load_plugin(self))
-        Print.print_suc(f"§a共加载 §l§b{self.normal_plugin_loaded_num} §r§a个 组合式插件, §l§b{self.injected_plugin_loaded_num} §r§a个 注入插件 和 §l§b{self.dotcs_plugin_loaded_num} §r§a个 原DotCS插件")
+        Print.print_suc(
+            f"§a共加载 §l§b{self.normal_plugin_loaded_num} §r§a个 组合式插件, §l§b{self.injected_plugin_loaded_num} §r§a个 注入插件 和 §l§b{self.dotcs_plugin_loaded_num} §r§a个 原DotCS插件"
+        )
 
     def add_broadcast_listener(self, evt_name: str):
         "将下面的方法作为一个广播事件接收器"
+
         def deco(func: Callable[[Any], bool]):
             if self._broadcast_evts.get(evt_name, None):
                 self._broadcast_evts[evt_name].append(func)
@@ -167,21 +171,27 @@ class PluginGroup:
                         # A strong desire to remove "try" block !!
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}"
+                        )
                 lastTime1m = nowTime
             if nowTime - lastTime30s > 30:
                 for fname, func in self._dotcs_repeat_threadings["30s"]:
                     try:
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}"
+                        )
                 lastTime30s = nowTime
             if nowTime - lastTime10s > 10:
                 for fname, func in self._dotcs_repeat_threadings["10s"]:
                     try:
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}"
+                        )
                 lastTime10s = nowTime
             for fname, func in self._dotcs_repeat_threadings["1s"]:
                 try:
@@ -275,3 +285,20 @@ class PluginGroup:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False
+
+#NOTE 快捷导入插件函数(待增加)
+from .injected_plugin.movent import (
+    sendcmd,
+    sendfbcmd,
+    sendPacket,
+    sendPacketJson,
+    sendwocmd,
+    sendwscmd,
+    tellrawText,
+    get_all_player
+)
+
+from .injected_plugin import(
+    player_message,player_join,player_left,repeat,init
+
+)

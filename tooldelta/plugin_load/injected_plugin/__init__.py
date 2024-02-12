@@ -154,14 +154,3 @@ async def load_plugin(plugin_grp):
         )
 
 
-# 快捷导入插件函数
-from .movent import (
-    sendcmd,
-    sendfbcmd,
-    sendPacket,
-    sendPacketJson,
-    sendwocmd,
-    sendwscmd,
-    tellrawText,
-    get_all_player,
-)
