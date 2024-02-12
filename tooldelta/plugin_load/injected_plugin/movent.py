@@ -69,3 +69,19 @@ def get_all_player():
     check_avaliable(game_control)
     Print.print_suc(game_control.allplayers)
     return game_control.allplayers
+
+def getTarget(sth: str, timeout: bool | int = 5) -> list:
+    check_avaliable(game_control)
+    "获取符合目标选择器实体的列表"
+    if not sth.startswith("@"):
+        raise Exception("Minecraft Target Selector is not correct.")
+    result = (
+        game_control.sendwscmd("/testfor %s" % sth, True, timeout)
+        .OutputMessages[0]
+        .Parameters
+    )
+    if result:
+        result = result[0]
+        return result.split(", ")
+    else:
+        return []
