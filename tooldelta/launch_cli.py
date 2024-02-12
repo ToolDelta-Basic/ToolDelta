@@ -6,6 +6,7 @@ from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .urlmethod import get_free_port
 from .sys_args import sys_args_to_dict
+import threading
 
 class SysStatus:
     LOADING = 100
@@ -316,6 +317,8 @@ class FrameNeOmg(StandardFrame):
 
     def __init__(self, serverNumber, password, fbToken, auth_server):
         super().__init__(serverNumber, password, fbToken, auth_server)
+        self.status = None
+        self.exit_event = threading.Event()
         self.injected = False
         self.omega = None
         self.download_libs()
@@ -399,6 +402,11 @@ class FrameNeOmg(StandardFrame):
                     Print.print_with_info(msg, "§b NOMG ")
         Builtins.createThread(_msg_show_thread, usage = "显示来自NeOmega的信息")
 
+
+    def update_status(self, new_status):
+        self.status = new_status
+        self.exit_event.set()  # 设置事件，触发等待结束
+
     def launch(self):
         self.launch_status = 0
         self.status = SysStatus.LAUNCHING
@@ -418,8 +426,7 @@ class FrameNeOmg(StandardFrame):
         # bug expired
         self.omega.listen_player_chat(lambda _, _2: None)
         Print.print_suc("NEOMEGA 接入已就绪")
-        while self.status == SysStatus.RUNNING:
-            pass
+        self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")
         elif self.status == SysStatus.FB_CRASHED:
