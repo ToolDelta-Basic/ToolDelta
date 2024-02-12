@@ -82,6 +82,7 @@ class PluginMarket:
         download_paths = plugin_data["dirs"] + ["__init__.py"]
         for path in download_paths:
             if not path.strip():
+                # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
                 continue
             for plugin_name, _ in plugin_data.pre_plugins:
@@ -104,4 +105,7 @@ class PluginMarket:
                 # 这应该是个文件了, 有文件后缀名
                 urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path))
             else:
+                # 管你是什么文件, 一律当文件夹处理
                 os.makedirs(download_path)
+        Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
+            

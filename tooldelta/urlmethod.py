@@ -33,7 +33,8 @@ def download_file(f_url: str, f_dir: str):
                 Print.print_with_info(
                     f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB ({_pretty_kb(useSpeed)}B/s)    ",
                     "§a 下载 §r",
-                    end="\r",
+                    end = "\r",
+                    need_print = False
                 )
                 nowsize += len(chk)
                 lastime = nowtime

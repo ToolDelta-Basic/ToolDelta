@@ -92,7 +92,7 @@ async def execute_player_left(playername):
 async def load_plugin_file(file):
     # 导入插件模块
     module_name = file
-    plugin_module = importlib.import_module(f"plugins.{module_name}")
+    plugin_module = importlib.import_module(f"插件文件.ToolDelta注入式插件.{module_name}")
     # 获取插件元数据
     return getattr(plugin_module, "__plugin_meta__", None)
 
@@ -140,7 +140,7 @@ async def load_plugin(plugin_grp):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
     for file in os.listdir(PLUGIN_PATH):
         if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
-            plugin_grp.injected_plugin += 1
+            plugin_grp.injected_plugin_loaded_num += 1
             task = asyncio.create_task(load_plugin_file(file))
             tasks.append(task)
 
