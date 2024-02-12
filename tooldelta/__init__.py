@@ -529,8 +529,8 @@ def start_tool_delta():
     try:
         Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
         frame = Frame()
-        plugin_market.market.list_and_find_url()
-        raise SystemExit
+        # plugin_market.market.list_and_find_url()
+        # raise SystemExit
         plugins = PluginGroup(frame, PRG_NAME)
         game_control = GameCtrl(frame)
         frame.set_game_control(game_control)
