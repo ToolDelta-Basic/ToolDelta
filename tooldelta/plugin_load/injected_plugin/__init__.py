@@ -8,32 +8,40 @@ import ujson as json
 from tooldelta.color_print import Print
 
 # 定义插件处理函数列表
-player_message_funcs = []
-player_join_funcs = []
-player_left_funcs = []
+player_message_funcs = {}
+player_join_funcs = {}
+player_left_funcs = {}
 repeat_funcs = {}
-init_plugin_funcs = []
+init_plugin_funcs = {}
 
 
-def player_message():
+def player_message(priority=None):
     def decorator(func):
-        player_message_funcs.append(func)
+        player_message_funcs[func] = priority
         return func
 
     return decorator
 
 
-def player_join():
+def player_join(priority=None):
     def decorator(func):
-        player_join_funcs.append(func)
+        player_join_funcs[func] = priority
         return func
 
     return decorator
 
 
-def player_left():
+def player_left(priority=None):
     def decorator(func):
-        player_left_funcs.append(func)
+        player_left_funcs[func] = priority
+        return func
+
+    return decorator
+
+
+def init(priority=None):
+    def decorator(func):
+        init_plugin_funcs[func] = priority
         return func
 
     return decorator
@@ -47,19 +55,6 @@ def repeat(*args):
     return decorator
 
 
-def init():
-    def decorator(func):
-        init_plugin_funcs.append(func)
-        return func
-
-    return decorator
-
-
-# 并发初始化插件
-async def execute_init():
-    tasks = [func() for func in init_plugin_funcs]
-    await asyncio.gather(*tasks)
-
 # repeat_task
 def repeat_task(func, time):
     while True:
@@ -70,6 +65,31 @@ def repeat_task(func, time):
         except Exception as e:
             Print.print_err(f"repeat_task error: {e}")
 
+async def execute_asyncio_task(func_dict: dict, *args, **kwargs):
+    tasks = []
+    none_tasks = []
+
+    # 将任务添加到 tasks 列表或 none_tasks 列表中
+    for func, priority in func_dict.items():
+        if priority is not None:
+            tasks.append((priority, func( *args, **kwargs)))
+        else:
+            none_tasks.append((priority, func( *args, **kwargs)))
+
+    # 按优先级对非 None 任务排序
+    tasks.sort(key=lambda x: x[0])
+
+    # 将 none_tasks 列表附加到已排序的任务列表的末尾
+    tasks += none_tasks
+
+    await asyncio.gather(*[task[1] for task in tasks])
+
+
+# 并发初始化插件
+async def execute_init():
+    await execute_asyncio_task(init_plugin_funcs)
+
+
 async def execute_repeat():
     # 为字典每一个函数创建一个循环特定时间的任务
     for func, time in repeat_funcs.items():
@@ -77,22 +97,16 @@ async def execute_repeat():
     # 并发执行所有任务
     await asyncio.gather(*asyncio.all_tasks())
 
-
 # 处理玩家消息并执行插件
 async def execute_player_message(playername, message):
-    tasks = [func(message, playername) for func in player_message_funcs]
-    await asyncio.gather(*tasks)
-
+    await execute_asyncio_task(player_message_funcs, playername, message)
 
 async def execute_player_join(playername):
-    tasks = [func(playername) for func in player_join_funcs]
-    await asyncio.gather(*tasks)
+    await execute_asyncio_task(player_join_funcs, playername)
 
 
 async def execute_player_left(playername):
-    tasks = [func(playername) for func in player_left_funcs]
-    await asyncio.gather(*tasks)
-
+    await execute_asyncio_task(player_left_funcs, playername)
 
 async def load_plugin_file(file):
     # 导入插件模块
@@ -150,8 +164,11 @@ async def load_plugin(plugin_grp):
             task = asyncio.create_task(load_plugin_file(file))
             tasks.append(task)
 
-    # 并发地加载插件并收集插件元数据
-    all_plugin_metadata = await asyncio.gather(*tasks)
+    # 顺序加载插件并收集插件元数据
+    all_plugin_metadata = []
+    for task in tasks:
+        plugin_metadata = await task
+        all_plugin_metadata.append(plugin_metadata)
 
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:

@@ -16,6 +16,7 @@ from .plugin_load.injected_plugin import (
     execute_player_message,
     execute_player_join,
     execute_player_left,
+    execute_repeat,
 )
 
 # 整个系统由三个部分组成
@@ -86,7 +87,7 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
             "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro",
             "是否记录日志": True,
-            "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/market_tree.json"
+            "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/market_tree.json",
         }
         CFG_STD = {
             "服务器号": int,
@@ -94,7 +95,7 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
             "验证服务器地址(更换时记得更改fbtoken)": str,
             "是否记录日志": bool,
-            "插件市场源": str
+            "插件市场源": str,
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err(
@@ -268,8 +269,12 @@ class Frame:
                 ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
             )
             self.add_console_cmd_trigger(
-                ["插件市场"], None, "进入插件市场", 
-                lambda _: plugin_market.market.enter_plugin_market(self.plugin_market_url)
+                ["插件市场"],
+                None,
+                "进入插件市场",
+                lambda _: plugin_market.market.enter_plugin_market(
+                    self.plugin_market_url
+                ),
             )
             try:
                 while 1:
@@ -505,6 +510,8 @@ class GameCtrl:
             self.linked_frame.on_plugin_err
         )
         self.inject_welcome()
+        # 启动插件的异步任务（不阻塞此函数）
+        asyncio.run(execute_repeat())
 
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语
