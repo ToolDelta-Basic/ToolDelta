@@ -44,6 +44,10 @@ class NewPlugin(Plugin):
     },
     ```
     - "聊天栏菜单" 键: 插件的名字, 创建插件文件夹的时候也将使用这个名字
+    - "plugin-type" 键:
+        - 如果是 原DotCS 插件: "dotcs"
+        - 如果是 ToolDelta 组合式插件: "classic"
+        - 如果是 ToolDelta 注入式插件: "injected"
     - "description" 值: 插件的简介(功能摘要)
     - "limited-launcher" 值: 限制插件只能在哪种启动器框架运行, 通用即null
     - "pre-plugins" 值: 前置插件的名称与最低需求版本的键值对, 都为string.
