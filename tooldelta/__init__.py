@@ -344,6 +344,7 @@ class Frame:
     def safe_close(self):
         builtins.safe_close()
         publicLogger._exit()
+        Print.print_inf("已保存数据与日志等信息.")
 
 
 class GameCtrl:

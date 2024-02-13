@@ -391,8 +391,8 @@ class FrameNeOmg(StandardFrame):
             while 1:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig == "" or msg_orig == "SIGNAL: exit":
-                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NEOMG")
-                    self.status = SysStatus.NORMAL_EXIT
+                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                    self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 elif "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_status = 1
@@ -402,10 +402,10 @@ class FrameNeOmg(StandardFrame):
                     Print.print_with_info(msg, "§b NOMG ")
         Builtins.createThread(_msg_show_thread, usage = "显示来自NeOmega的信息")
 
-
     def update_status(self, new_status):
         self.status = new_status
-        self.exit_event.set()  # 设置事件，触发等待结束
+        if new_status != SysStatus.RUNNING:
+            self.exit_event.set()  # 设置事件，触发等待结束
 
     def launch(self):
         self.launch_status = 0

@@ -14,6 +14,7 @@ def _path_dir(path: str):
     else:
         return "/".join(path.split("/")[:-1])
 
+
 class PluginMaketPluginData:
     def __init__(self, name: str, plugin_data: dict):
         self.name: str = name
@@ -54,6 +55,7 @@ class PluginMarket:
                 with open("plugin_market/market_tree.json", "r", encoding="utf-8") as f:
                     market_datas = json.load(f)
             plugins_list: list = list(market_datas["MarketPlugins"].items())
+            self.plugins_download_url = market_datas["DownloadRefURL"]
             all_indexes = len(plugins_list)
             now_index = 0
             while 1:
@@ -72,7 +74,7 @@ class PluginMarket:
                 elif res == "-":
                     i -= 8
                 elif res == "q":
-                    return
+                    break
                 res = Builtins.try_int(res)
                 if res:
                     if res in range(1, all_indexes + 1):
@@ -88,9 +90,14 @@ class PluginMarket:
                     i = 0
                 elif i < 0:
                     i = all_indexes
+        except KeyError as err:
+            Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
-            Print.print_err(traceback.format_exc())
+            Print.print_err(err)
+            return
+        os.system(CLS_CMD)
+        Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = ', '.join([f'{k}v{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
@@ -116,10 +123,7 @@ class PluginMarket:
                 # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
                 continue
-            url = (
-                "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/"
-                 + plugin_data.name + "/" + path
-            )
+            url = self.plugins_download_url + plugin_data.name + "/" + path
             match plugin_data.plugin_type:
                 case "classic":
                     download_path = os.path.join(os.getcwd(), "插件文件", "ToolDelta组合式插件")
