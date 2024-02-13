@@ -1,9 +1,5 @@
 name: Build binaries and Upload to Release
 
-
-
-
-
 on:
   workflow_run:
     workflows: ["Sync Version"]
@@ -11,17 +7,9 @@ on:
       - completed
   workflow_dispatch: {}
 
-
-
-
-
 defaults:
   run:
     shell: bash
-
-
-
-
 
 jobs:
   build:
@@ -31,8 +19,6 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
         python-version: ["3.12"]
-
-
 
     steps:
       - name: Checkout Code
