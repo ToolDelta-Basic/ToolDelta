@@ -27,18 +27,56 @@
             "version": "0.0.1",
             "description": "所有使用世界交互的插件的前置",
             "limit_launcher": null,
-            "pre-plugins": {},
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.1"
+            },
             "plugin-type": "classic",
             "dirs": []
         },
         "@玩家": {
             "author": "wling",
-            "version": "0.0.1",
+            "version": "0.0.2",
             "description": "让@更有效果！",
             "limit_launcher": null,
             "pre-plugins": {
-                "聊天栏菜单": "0.0.1"
             },
+            "plugin-type": "injected",
+            "dirs": []
+        },
+        "SuperSoundMixer": {
+            "author": "SuperScript/wling",
+            "version": "0.0.1",
+            "description": "midi播放前置",
+            "limit_launcher": null,
+            "pre-plugins": {},
+            "plugin-type": "injected",
+            "dirs": []
+        },
+        "井字棋": {
+            "author": "SuperScript/wling",
+            "version": "0.0.1",
+            "description": "娱乐小游戏3x3井字棋",
+            "limit_launcher": null,
+            "pre-plugins": {"SuperSoundMixer": "0.0.1"},
+            "plugin-type": "injected",
+            "dirs": []
+        },
+        "清空末影箱": {
+            "author": "wling",
+            "version": "0.0.1",
+            "description": "还在担心玩家在末影箱藏小东西吗？直接清空末影箱！",
+            "limit_launcher": null,
+            "pre-plugins": {"oplist":"0.0.1"
+            },
+            "plugin-type": "injected",
+            "dirs": []
+        },
+        "oplist": {
+            "author": "wling",
+            "version": "0.0.1",
+            "description": "还在担心玩家在末影箱藏小东西吗？直接清空末影箱！",
+            "limit_launcher": null,
+            "pre-plugins": {},
             "plugin-type": "injected",
             "dirs": []
         },

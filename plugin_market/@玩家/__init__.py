@@ -1,14 +1,10 @@
 from tooldelta.plugin_load import player_message, sendcmd,tellrawText,get_all_player
-from tooldelta import Print
 
-try:
-    import ujson as json
-except Exception:
-    import json
+
 
 __plugin_meta__ = {
     "name": "玩家提及",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "当有人提及你时，会收到提醒",
     "author": "wling",
 }
@@ -16,6 +12,7 @@ __plugin_meta__ = {
 
 def find_mentions(text, player_list):
     return [player for player in player_list if f'@{player}' in text]
+
 
 
 @player_message()

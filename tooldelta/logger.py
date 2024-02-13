@@ -20,7 +20,7 @@ class ToolDeltaLogger:
 
     def open_wrapper_io(self, log_path: str):
         self._wrapper = open(
-            log_path + os.sep + time.strftime(self.name_fmt) + ".log", 
+            log_path + os.sep + time.strftime(self.name_fmt) + ".log",
             "a",
             encoding = "utf-8",
             buffering = 4096
