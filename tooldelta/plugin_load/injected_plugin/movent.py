@@ -79,6 +79,11 @@ def get_all_player():
     Print.print_suc(game_control.allplayers)
     return game_control.allplayers
 
+def is_op(playername: str) ->bool:
+    check_avaliable(game_control)
+    return frame.launcher.is_op(playername)
+
+
 def getTarget(sth: str, timeout: bool | int = 5) -> list:
     check_avaliable(game_control)
     "获取符合目标选择器实体的列表"

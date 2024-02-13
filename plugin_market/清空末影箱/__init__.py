@@ -1,5 +1,4 @@
-from tooldelta.plugin_load import sendcmd,tellrawText,player_message,getTarget
-from ..oplist import global_values
+from tooldelta.plugin_load import sendcmd,tellrawText,player_message,getTarget,is_op
 
 __plugin_meta__ = {
     "name": "清空玩家末影箱",
@@ -7,12 +6,13 @@ __plugin_meta__ = {
     "author": "wling",
 }
 
+
 @player_message()
-async def _(message, playername):
+async def _(playername, message):
     if ".encl " not in message:
         return
     sendcmd(f"/tellraw {playername} §l§4ERROR§r §c指令不存在！")
-    if playername in global_values['op']:
+    if is_op(playername):
         player_entity_clear = message.split(".encl ")[1]
         for i in getTarget("@a"):
             if player_entity_clear == i:
