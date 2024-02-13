@@ -60,6 +60,7 @@ class PluginMarket:
             now_index = 0
             while 1:
                 os.system(CLS_CMD)
+                Print.print_inf(market_datas["SourceName"] + ": " + "Greetings")
                 res = ""
                 for i in range(now_index, now_index + 8):
                     if i in range(all_indexes):
