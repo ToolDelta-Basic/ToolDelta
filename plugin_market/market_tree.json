@@ -35,6 +35,17 @@
                 "test_download_py_file.py",
                 "test_download_folder/test_download_pyfile.py"
             ]
+        },
+        "库-世界交互": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "所有使用世界交互的插件的前置",
+            "limit_launcher": null,
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.1"
+            },
+            "plugin-type": "classic",
+            "dirs": []
         }
     }
 }
