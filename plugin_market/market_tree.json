@@ -74,7 +74,7 @@
         "oplist": {
             "author": "wling",
             "version": "0.0.1",
-            "description": "还在担心玩家在末影箱藏小东西吗？直接清空末影箱！",
+            "description": "op列表（临时）",
             "limit_launcher": null,
             "pre-plugins": {},
             "plugin-type": "injected",
