@@ -46,6 +46,17 @@
             },
             "plugin-type": "classic",
             "dirs": []
+        },
+        "@玩家": {
+            "author": "wling",
+            "version": "0.0.1",
+            "description": "让@更有效果！",
+            "limit_launcher": null,
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.1"
+            },
+            "plugin-type": "injected",
+            "dirs": []
         }
     }
 }
