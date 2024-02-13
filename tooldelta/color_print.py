@@ -128,11 +128,27 @@ class _Print:
     def print_war(self, text: str, **print_kwargs):
         self.print_with_info(f"§6{text}", self.INFO_WARN, **print_kwargs)
 
-    def fmt_info(self, text: str, info: str):
-        output_txts = []
-        for text_line in str(text).split("\n"):
-            output_txts.append(datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7) + " " + self.colormode_replace(text_line))
-        return "\n".join(output_txts)
+    def fmt_info(self, text: str, info: str = "§f 信息 "):
+        setNextColor = "§r"
+        if "\n" in text:
+            output_txts = []
+            for text_line in str(text).split("\n"):
+                if "§" in text_line:
+                    try:
+                        n = text_line.rfind("§")
+                        _setNextCol = text_line[n:n+2]
+                        assert setNextColor != -1
+                        setNextColor = _setNextCol
+                    except:
+                        pass
+                output_txts.append(
+                    datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
+                      + " " + self.colormode_replace(setNextColor + text_line)
+                    )
+            return "\n".join(output_txts)
+        else:
+            return (datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
+                + " " + self.colormode_replace(text))
 
     def c_log(self, inf: str, msg: str):
         for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 失败 ", "FAIL"), ("§4 报错 ", "ERROR")]:

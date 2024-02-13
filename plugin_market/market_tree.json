@@ -1,4 +1,7 @@
 {
+    "MarketVersion": "0.0.1",
+    "SourceName": "ToolDelta插件市场 Official",
+    "DownloadRefURL": "https://mirror.ghproxy.com/github.com/SuperScript-PRC/ToolDelta/main/plugin_market/",
     "MarketPlugins": {
         "聊天栏菜单": {
             "author": "SuperScript",
@@ -32,6 +35,5 @@
                 "test_download_folder/test_download_pyfile.py"
             ]
         }
-    },
-    "MarketVersion": "0.0.1"
+    }
 }

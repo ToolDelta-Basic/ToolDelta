@@ -38,13 +38,18 @@ class PluginMaketPluginData:
         }.get(self.plugin_type, "unknown")
 
 class PluginMarket:
-    def list_and_find_url(self):
+    def enter_plugin_market(self, source_url: str):
         test_mode = False
         try:
             if not test_mode:
-                market_datas = json.loads(requests.get(
-                    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/market_tree.json"
-                ).text)
+                try:
+                    resp = requests.get(source_url + "/market_tree.json").text
+                except requests.RequestException:
+                    raise Exception("请求失败, 无法从插件市场源获取信息")
+                try:
+                    market_datas = json.loads(resp)
+                except json.JSONDecodeError:
+                    raise Exception(f"插件市场源返回了不正确的答复: {resp}")
             else:
                 with open("plugin_market/market_tree.json", "r", encoding="utf-8") as f:
                     market_datas = json.load(f)
@@ -59,7 +64,7 @@ class PluginMarket:
                         plugin_data = PluginMaketPluginData(plugins_list[i][0], plugins_list[i][1])
                         Print.print_inf(f" {i + 1}. {plugin_data.name} v{plugin_data.version_str} @{plugin_data.author} §b{plugin_data.plugin_type_str}插件", need_log = False)
                     else:
-                        print()
+                        Print.print_inf("", need_log = False)
                 Print.print_inf("§f输入 §b+§f/§b- §f翻页, 输入插件序号选择插件", need_log = False)
                 res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "输入")).lower().strip() or res
                 if res == "+":
@@ -73,6 +78,7 @@ class PluginMarket:
                     if res in range(1, all_indexes + 1):
                         r = self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
                         if r:
+                            Print.print_inf("下载插件后重启ToolDelta才能生效", need_log = False)
                             r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
                             if r.lower() == "q":
                                 break
@@ -82,19 +88,18 @@ class PluginMarket:
                     i = 0
                 elif i < 0:
                     i = all_indexes
-
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             Print.print_err(traceback.format_exc())
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
-        pre_plugins_str = ', '.join([f'{k}:{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
+        pre_plugins_str = ', '.join([f'{k}v{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
         os.system(CLS_CMD)
-        Print.print_inf(f"{plugin_data.name} v{plugin_data.version}", need_log = False)
+        Print.print_inf(f"{plugin_data.name} v{plugin_data.version_str}", need_log = False)
         Print.print_inf(f"§7作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}", need_log = False)
         Print.print_inf(f"前置插件: {pre_plugins_str}", need_log = False)
         Print.print_inf(f"介绍: {plugin_data.description}", need_log = False)
-        res = input(Print.fmt_info("§f下载=§aY§f, 取消=§cN§f, 请输入:","输入")).lower().strip()
+        res = input(Print.fmt_info("§f下载=§aY§f, 取消=§cN§f, 请输入:")).lower().strip()
         if res == "y":
             self.download_plugin(plugin_data, all_plugins_dict)
             return True
@@ -103,14 +108,14 @@ class PluginMarket:
         
     def download_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict):
         download_paths = plugin_data.dirs + ["__init__.py"]
+        for plugin_name, _ in plugin_data.pre_plugins.items():
+            Print.print_inf(f"插件 {plugin_data.name} 需要下载前置插件: {plugin_name}")
+            self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
         for path in download_paths:
             if not path.strip():
                 # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
                 continue
-            for plugin_name, _ in plugin_data.pre_plugins.items():
-                # 下载前置插件
-                self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
             url = (
                 "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/"
                  + plugin_data.name + "/" + path
@@ -128,12 +133,9 @@ class PluginMarket:
             path_last = _path_dir(path)
             if path_last is not None:
                 folder_path = os.path.join(download_path, plugin_data.name, path_last)
-                print(folder_path)
                 os.makedirs(folder_path, exist_ok=True)
-            else:
-                print("糟了!", path)
-            urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path))
-        Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
+            urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path), True)
+        Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹      ")
         
             
 market = PluginMarket()

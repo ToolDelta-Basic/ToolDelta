@@ -86,6 +86,7 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
             "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro",
             "是否记录日志": True,
+            "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/SuperScript-PRC/ToolDelta/main/plugin_market/market_tree.json"
         }
         CFG_STD = {
             "服务器号": int,
@@ -93,6 +94,7 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
             "验证服务器地址(更换时记得更改fbtoken)": str,
             "是否记录日志": bool,
+            "插件市场源": str
         }
         if not os.path.isfile("fbtoken"):
             Print.print_err(
@@ -113,6 +115,7 @@ class Frame:
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+            self.plugin_market_url = cfgs["插件市场源"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
@@ -122,7 +125,11 @@ class Frame:
                     "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
                 )
         except Config.ConfigError as err:
-            Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
+            r = self.upgrade_cfg(CFG)
+            if r:
+                Print.print_war("配置文件未升级, 已自动升级, 请重启 ToolDelta")
+            else:
+                Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
             raise SystemExit
         if self.serverNumber == "0":
             while 1:
@@ -170,19 +177,25 @@ class Frame:
             self.serverNumber, self.serverPasswd, fbtoken, auth_server
         )
 
-    def upgrade_cfg(self, old_cfg):
+    def upgrade_cfg(self, cfg_std):
         # 升级本地的配置文件
+        old_cfg = Config.get_cfg("ToolDelta基本配置.json", {})
+        old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
-        if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg:
+        if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg_keys:
             old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = (
                 "https://api.fastbuilder.pro"
             )
             need_upgrade_cfg = True
-        if "是否记录日志" not in old_cfg:
+        if "是否记录日志" not in old_cfg_keys:
             old_cfg["是否记录日志"] = False
+            need_upgrade_cfg = True
+        if "插件市场源" not in old_cfg_keys:
+            old_cfg["插件市场源"] = cfg_std["插件市场源"]
             need_upgrade_cfg = True
         if need_upgrade_cfg:
             Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
+        return need_upgrade_cfg
 
     def welcome(self):
         # 欢迎提示
@@ -253,6 +266,10 @@ class Frame:
             )
             self.add_console_cmd_trigger(
                 ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
+            )
+            self.add_console_cmd_trigger(
+                ["插件市场"], None, "进入插件市场", 
+                lambda _: plugin_market.market.enter_plugin_market(self.plugin_market_url)
             )
             try:
                 while 1:
@@ -529,8 +546,6 @@ def start_tool_delta():
     try:
         Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
         frame = Frame()
-        # plugin_market.market.list_and_find_url()
-        # raise SystemExit
         plugins = PluginGroup(frame, PRG_NAME)
         game_control = GameCtrl(frame)
         frame.set_game_control(game_control)
@@ -548,11 +563,11 @@ def start_tool_delta():
         game_control.set_listen_packets()
         raise frame.launcher.launch()
     except KeyboardInterrupt:
-        frame.safe_close()
+        Print.print_suc("已退出.")
     except SystemExit:
         pass
     except:
-        print(traceback.format_exc())
+        Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
     finally:
         frame.safe_close()
         os._exit(0)

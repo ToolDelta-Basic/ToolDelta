@@ -94,7 +94,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                         [plugin_body.name, plugin_body.on_player_leave]
                     )
                 Print.print_suc(
-                    f"成功载入插件 {plugin_body.name} 版本: {_v0}.{_v1}.{_v2}  作者：{plugin_body.author}"
+                    f"成功载入插件 {plugin_body.name} 版本: {_v0}.{_v1}.{_v2} 作者：{plugin_body.author}"
                 )
                 plugin_grp.normal_plugin_loaded_num += 1
                 if plugin_grp.plugin_added_cache["packets"] != []:
