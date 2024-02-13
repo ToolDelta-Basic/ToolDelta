@@ -2,6 +2,7 @@
     "": [
         "README.md",
         "get_directory.py",
+        "directory.json",
         "market_tree.json"
     ],
     "@玩家": [
