@@ -1,54 +1,59 @@
 import requests, time, os, platform
 from .color_print import Print
+import shutil
 
 def _pretty_kb(n):
-        if n >= 1048576:
-            return f"{round(n / 1048576, 2)}M"
-        elif n >= 1024:
-            return f"{round(n / 1024, 2)}K"
-        else:
-            return f"{round(n, 1)}"
+    if n >= 1048576:
+        return f"{round(n / 1048576, 2)}M"
+    elif n >= 1024:
+        return f"{round(n / 1024, 2)}K"
+    else:
+        return f"{round(n, 1)}"
 
-def download_file(f_url: str, f_dir: str, ignore_warnings = False):
-    res = requests.get(f_url, stream=True, timeout=10)
-    filesize = int(res.headers["content-length"])
-    if filesize < 256:
-        if "404" in res.text:
+
+def download_file(f_url: str, f_dir: str, ignore_warnings=False):
+    with requests.get(f_url, stream=True, timeout=10) as res:
+        res.raise_for_status()
+        filesize = int(res.headers["content-length"])
+
+        if filesize < 256 and "404" in res.text:
             raise requests.RequestException("下载失败: 返回 404")
-        elif not ignore_warnings:
+        elif filesize < 256 and not ignore_warnings:
             Print.print_war(f"下载 {f_url} 的文件警告: 文件大小异常, 不到 0.256KB")
-    nowsize = 0
-    succ = False
-    lastime = time.time()
-    useSpeed = 0
-    try:
+
+        nowsize = 0
+        succ = False
+        lastime = time.time()
+        useSpeed = 0
+
         with open(f_dir + ".tmp", "wb") as dwnf:
             for chk in res.iter_content(chunk_size=8192):
                 nowtime = time.time()
+
                 if nowtime != lastime:
                     useSpeed = 1024 / (nowtime - lastime)
+                    lastime = nowtime
 
-                prgs = nowsize / filesize
-                _tmp = int(prgs * 20)
-                bar = Print.colormode_replace(
-                    "§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r ", 7
-                )
-                Print.print_with_info(
-                    f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB ({_pretty_kb(useSpeed)}B/s)    ",
-                    "§a 下载 §r",
-                    end = "\r",
-                    need_log = False
-                )
                 nowsize += len(chk)
-                lastime = nowtime
+                dwnf.write(chk)
 
-                if chk:
-                    dwnf.write(chk)
-                    dwnf.flush()
+                if nowsize % 81920 == 0:  # 每下载 10 个数据块更新一次进度
+                    prgs = nowsize / filesize
+                    _tmp = int(prgs * 20)
+                    bar = Print.colormode_replace(
+                        "§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r ", 7
+                    )
+                    Print.print_with_info(
+                        f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB ({_pretty_kb(useSpeed)}B/s)    ",
+                        "§a 下载 §r",
+                        end="\r",
+                        need_log=False,
+                    )
+
         succ = True
-    finally:
+
         if succ:
-            os.rename(f_dir + ".tmp", f_dir)
+            shutil.move(f_dir + ".tmp", f_dir)
         else:
             os.remove(f_dir + ".tmp")
 
