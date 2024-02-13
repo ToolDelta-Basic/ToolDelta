@@ -28,7 +28,7 @@ class PluginMaketPluginData:
     @property
     def version_str(self):
         return ".".join(str(i) for i in self.version)
-    
+
     @property
     def plugin_type_str(self):
         return {
@@ -45,7 +45,7 @@ class PluginMarket:
         try:
             if not test_mode:
                 try:
-                    resp = requests.get(source_url + "/market_tree.json").text
+                    resp = requests.get(source_url).text
                 except requests.RequestException:
                     raise Exception("请求失败, 无法从插件市场源获取信息")
                 try:
@@ -114,7 +114,7 @@ class PluginMarket:
             return True
         else:
             return False
-        
+
     def download_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict):
         if plugin_data.plugin_type != "dotcs":
             download_paths = plugin_data.dirs + ["__init__.py"]
@@ -145,6 +145,6 @@ class PluginMarket:
                 os.makedirs(folder_path, exist_ok=True)
             urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path), True)
         Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹      ")
-        
-            
+
+
 market = PluginMarket()
