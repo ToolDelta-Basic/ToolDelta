@@ -116,7 +116,10 @@ class PluginMarket:
             return False
         
     def download_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict):
-        download_paths = plugin_data.dirs + ["__init__.py"]
+        if plugin_data.plugin_type != "dotcs":
+            download_paths = plugin_data.dirs + ["__init__.py"]
+        else:
+            download_paths = plugin_data.dirs + [plugin_data.name + ".py"]
         for plugin_name, _ in plugin_data.pre_plugins.items():
             Print.print_inf(f"插件 {plugin_data.name} 需要下载前置插件: {plugin_name}")
             self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
