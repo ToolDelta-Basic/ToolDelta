@@ -41,6 +41,7 @@ class PluginMaketPluginData:
 class PluginMarket:
     def enter_plugin_market(self, source_url: str):
         test_mode = False
+        Print.print_inf("正在连接到插件市场..")
         try:
             if not test_mode:
                 try:
