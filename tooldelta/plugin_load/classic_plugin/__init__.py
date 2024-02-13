@@ -9,15 +9,6 @@ class Plugin:
     version = (0, 0, 1)
     author = "?"
 
-    def __init__(self):
-        self.require_listen_packets = []
-        self.dotcs_old_type = False
-
-    def _add_req_listen_packet(self, pktID):
-        if not pktID in self.require_listen_packets:
-            self.require_listen_packets.append(pktID)
-
-
 class PluginAPI:
     name = "<未命名插件api>"
     version = (0, 0, 1)

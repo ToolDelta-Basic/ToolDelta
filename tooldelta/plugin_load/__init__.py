@@ -124,7 +124,7 @@ class PluginGroup:
 
         return _add_plugin_2_api
 
-    def get_plugin_api(self, apiName: str, min_version: tuple | None = None):
+    def get_plugin_api(self, apiName: str, min_version: tuple | None = None) -> PluginAPI:
         api = self.plugins_api.get(apiName, None)
         if api:
             if min_version and api.version < min_version:

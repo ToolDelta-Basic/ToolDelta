@@ -22,20 +22,6 @@
             "plugin-type": "classic",
             "dirs": []
         },
-        "示例插件1": {
-            "author": "SuperScript",
-            "version": "0.0.1",
-            "description": "用于插件市场测试",
-            "limit_launcher": null,
-            "pre-plugins": {
-                "聊天栏菜单": "0.0.1"
-            },
-            "plugin-type": "classic",
-            "dirs": [
-                "test_download_py_file.py",
-                "test_download_folder/test_download_pyfile.py"
-            ]
-        },
         "库-世界交互": {
             "author": "SuperScript",
             "version": "0.0.1",
@@ -56,6 +42,18 @@
                 "聊天栏菜单": "0.0.1"
             },
             "plugin-type": "injected",
+            "dirs": []
+        },
+        "简易建造": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "使用一些更简便的方法建造服务器",
+            "limit_launcher": null,
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.4",
+                "库-基本组件API": "0.0.1"
+            },
+            "plugin-type": "classic",
             "dirs": []
         }
     }
