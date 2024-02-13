@@ -56,12 +56,12 @@ def repeat(*args):
 
 
 # repeat_task
-def repeat_task(func, time):
+async def repeat_task(func, time):
     while True:
-        asyncio.sleep(time)
+        await asyncio.sleep(time)
         # 防止出错
         try:
-            func()
+            await func()
         except Exception as e:
             Print.print_err(f"repeat_task error: {e}")
 

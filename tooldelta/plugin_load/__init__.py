@@ -300,7 +300,7 @@ from .injected_plugin.movent import (
     sendwscmd,
     tellrawText,
     get_all_player,
-    getTarget,
+    getTarget,rawText
 )
 
 from .injected_plugin import player_message, player_join, player_left, repeat, init

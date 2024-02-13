@@ -44,6 +44,15 @@ def sendfbcmd(*arg):
     check_avaliable(game_control)
     game_control.sendfbcmd(*arg)
 
+def rawText(playername: str, text: str):
+    """
+    发送原始文本消息
+    ---
+    playername:str 玩家名.
+    text:str 内容.
+    """
+    sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
+
 
 def tellrawText(playername: str, title: str | None = None, text: str = ""):
     """
