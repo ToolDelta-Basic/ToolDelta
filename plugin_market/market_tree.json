@@ -50,7 +50,7 @@
             "limit_launcher": null,
             "pre-plugins": {},
             "plugin-type": "injected",
-            "dirs": []
+            "dirs": ["bdx_work_shop"]
         },
         "井字棋": {
             "author": "SuperScript/wling",
