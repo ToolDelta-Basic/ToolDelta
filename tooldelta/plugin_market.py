@@ -122,7 +122,6 @@ class PluginMarket:
             if not path.strip():
                 # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
-                
                 continue
             url = self.plugins_download_url + plugin_data.name + "/" + path
             match plugin_data.plugin_type:
