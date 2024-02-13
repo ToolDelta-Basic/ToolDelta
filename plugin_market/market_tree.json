@@ -27,9 +27,7 @@
             "version": "0.0.1",
             "description": "所有使用世界交互的插件的前置",
             "limit_launcher": null,
-            "pre-plugins": {
-                "聊天栏菜单": "0.0.1"
-            },
+            "pre-plugins": {},
             "plugin-type": "classic",
             "dirs": []
         },

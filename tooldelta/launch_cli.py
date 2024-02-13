@@ -499,12 +499,15 @@ class FrameNeOmg(StandardFrame):
             self.omega.send_game_packet_in_json_as_is(pktID, pkt)
         def sendfbcmd(_):
             raise AttributeError("NeOmg模式无法发送FBCommand")
+        def is_op(player: str):
+            return self.omega.get_player_by_name(player).command_permission_level > 2
 
         self.sendcmd = sendcmd
         self.sendwscmd = sendwscmd
         self.sendwocmd = sendwocmd
         self.sendPacket = self.sendPacketJson = sendPacket
         self.sendfbcmd = sendfbcmd
+        self.is_op = is_op
 
 class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
