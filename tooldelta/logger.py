@@ -14,6 +14,7 @@ class ToolDeltaLogger:
         self.lastLogTime = time.time()
         self.open_wrapper_io(log_path)
         self.enable_logger = False
+        self.writable = True
 
     def switch_logger(self, isopen: bool):
         self.enable_logger = isopen
@@ -28,10 +29,10 @@ class ToolDeltaLogger:
 
     def log_in(self, msg, level = INFO):
         # 写入日志信息. level给定了其等级.
+        if not self.writable or not self.enable_logger:
+            return
         if not isinstance(msg, str):
             raise TypeError("only allows string")
-        if not self.enable_logger:
-            return
         # 防止信息刷屏
         if "\r" in msg:
             pass
@@ -55,8 +56,10 @@ class ToolDeltaLogger:
             self.open_wrapper_io(self.path)
 
     def _exit(self):
-        self._save_log()
-        self._wrapper.close()
+        if self.writable:
+            self.writable = False
+            self._save_log()
+            self._wrapper.close()
 
 def new_logger(log_path: str):
     os.makedirs(log_path, exist_ok = True)
