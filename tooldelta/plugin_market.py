@@ -67,39 +67,36 @@ class PluginMarket:
             self.plugins_download_url = market_datas["DownloadRefURL"]
             all_indexes = len(plugins_list)
             now_index = 0
-            while 1:
+            while True:
                 os.system(CLS_CMD)
                 Print.print_inf(market_datas["SourceName"] + ": " + market_datas["Greetings"])
-                res = ""
-                for i in range(now_index, now_index + 8):
-                    if i in range(all_indexes):
-                        plugin_data = PluginMaketPluginData(plugins_list[i][0], plugins_list[i][1])
-                        Print.print_inf(f" {i + 1}. {plugin_data.name} v{plugin_data.version_str} @{plugin_data.author} §b{plugin_data.plugin_type_str}插件", need_log = False)
-                    else:
-                        Print.print_inf("", need_log = False)
-                Print.print_inf("§f输入 §b+§f/§b- §f翻页, 输入插件序号选择插件", need_log = False)
-                res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "输入")).lower().strip() or res
+                for i in range(now_index, min(now_index + 8, all_indexes)):
+                    plugin_data = PluginMaketPluginData(plugins_list[i][0], plugins_list[i][1])
+                    Print.print_inf(f" {i + 1}. {plugin_data.name} v{plugin_data.version_str} @{plugin_data.author} §b{plugin_data.plugin_type_str}插件", need_log=False)
+                Print.print_inf("§f输入 §b+§f/§b- §f翻页, 输入插件序号选择插件", need_log=False)
+                res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "输入")).lower().strip()
                 if res == "+":
-                    i += 8
+                    now_index += 8
                 elif res == "-":
-                    i -= 8
+                    now_index -= 8
                 elif res == "q":
                     break
-                res = Builtins.try_int(res)
-                if res:
-                    if res in range(1, all_indexes + 1):
-                        r = self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
-                        if r:
-                            Print.print_inf("下载插件后重启ToolDelta才能生效", need_log = False)
-                            r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
-                            if r.lower() == "q":
-                                break
-                    else:
-                        Print.print_err("超出序号范围")
-                if i > all_indexes:
-                    i = 0
-                elif i < 0:
-                    i = all_indexes
+                else:
+                    res = Builtins.try_int(res)
+                    if res:
+                        if res in range(1, all_indexes + 1):
+                            r = self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
+                            if r:
+                                Print.print_inf("下载插件后重启ToolDelta才能生效", need_log=False)
+                                r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
+                                if r.lower() == "q":
+                                    break
+                        else:
+                            Print.print_err("超出序号范围")
+                if now_index >= all_indexes:
+                    now_index = 0
+                elif now_index < 0:
+                    now_index = max(all_indexes - 8, 0)
         except KeyError as err:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
             return
@@ -108,6 +105,7 @@ class PluginMarket:
             return
         os.system(CLS_CMD)
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
+
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = ', '.join([f'{k}v{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
