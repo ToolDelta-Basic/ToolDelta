@@ -48,20 +48,12 @@
             },
             "plugin-type": "injected"
         },
-        "SuperSoundMixer": {
-            "author": "SuperScript/wling",
-            "version": "0.0.1",
-            "description": "midi播放前置",
-            "limit_launcher": null,
-            "pre-plugins": {},
-            "plugin-type": "injected"
-        },
         "井字棋": {
             "author": "SuperScript/wling",
             "version": "0.0.1",
             "description": "娱乐小游戏3x3井字棋",
             "limit_launcher": null,
-            "pre-plugins": {"SuperSoundMixer": "0.0.1"},
+            "pre-plugins": {},
             "plugin-type": "injected"
         },
         "清空末影箱": {

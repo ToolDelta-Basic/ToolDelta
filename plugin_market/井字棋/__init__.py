@@ -1,7 +1,5 @@
-from ..SuperSoundMixer import SuperSoundMixer
 from tooldelta.plugin_load import player_message, sendcmd, get_all_player, rawText,repeat
 
-chess_group = SuperSoundMixer()
 __plugin_meta__ = {
     "name": "井字棋",
     "version": "1.0",
@@ -84,7 +82,6 @@ class JZQStage:
         ]
         if done:
             self.turn = 0
-            chess_group.del_sound_thread("fc中国象棋")
 
     def Timer(self, time=None):
         if time:
@@ -123,8 +120,6 @@ async def _(playername: str, msg: str):
             if to_who in get_all_player():
                 JZQ_Rooms.append([playername, to_who])
                 rawText(playername, "§a井字棋§f>> §a成功开启游戏.")
-                chess_group.mixer_sound("fc中国象棋", playername, loop=True)
-                chess_group.mixer_sound("fc中国象棋", to_who, loop=True)
             else:
                 rawText(playername, "§a井字棋§f>> §c玩家未找到!.")
         else:
@@ -160,13 +155,11 @@ async def _(playername: str, msg: str):
                                 Game_JZQ.stage_display(i, playername)
                                 sendcmd("/title %s title §e井字棋" % playername)
                                 sendcmd("/title %s subtitle §a祝贺!你赢了!" % playername)
-                                chess_group.mixer_sound("井字棋胜利", playername)
 
                                 nexPlayer = i[Game_JZQ.轮流()]
                                 Game_JZQ.stage_display(i, nexPlayer)
                                 sendcmd("/title %s title §e井字棋" % nexPlayer)
                                 sendcmd("/title %s subtitle §7惜败.." % nexPlayer)
-                                chess_group.mixer_sound("井字棋失败", nexPlayer)
                                 JZQ_Rooms.remove(i)
                                 Game_JZQ.重置(True)
                                 continue
