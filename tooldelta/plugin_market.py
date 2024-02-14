@@ -1,9 +1,9 @@
-import requests, json, os, traceback, platform
-
-import urllib3
+import requests, json, os, platform, shutil
+import tempfile
 from . import urlmethod
 from .builtins import Builtins
 from .color_print import Print
+from typing import Dict
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"
@@ -102,6 +102,7 @@ class PluginMarket:
                     i = all_indexes
         except KeyError as err:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
+            return
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             return
@@ -122,35 +123,65 @@ class PluginMarket:
         else:
             return False
 
-    def download_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict):
+    def download_plugin(
+        self,
+        plugin_data: PluginMaketPluginData,
+        all_plugins_dict: Dict[str, PluginMaketPluginData],
+    ):
         download_paths = self.find_dirs(plugin_data)
         for plugin_name, _ in plugin_data.pre_plugins.items():
             Print.print_inf(f"插件 {plugin_data.name} 需要下载前置插件: {plugin_name}")
-            self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
-        for paths in download_paths:
-            if not paths.strip():
-                # 不可能出现的状况, 出现了证明是你的问题
-                Print.print_war("下载路径为空, 跳过")
-                continue
-            url = _url_join(self.plugins_download_url, paths)
-            match plugin_data.plugin_type:
-                case "classic":
-                    download_path = os.path.join(
-                        os.getcwd(), "插件文件", "ToolDelta组合式插件"
+            self.download_plugin(
+                PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]),
+                all_plugins_dict,
+            )
+        cache_dir = tempfile.mkdtemp()
+        try:
+            for paths in download_paths:
+                if not paths.strip():
+                    # 不可能出现的状况, 出现了证明是你的问题
+                    Print.print_war("下载路径为空, 跳过")
+                    continue
+                url = _url_join(self.plugins_download_url, paths)
+                # Determine download path based on plugin type
+                match plugin_data.plugin_type:
+                    case "classic":
+                        download_path = os.path.join(
+                            os.getcwd(), "插件文件", "ToolDelta组合式插件"
+                        )
+                    case "dotcs":
+                        download_path = os.path.join(
+                            os.getcwd(), "插件文件", "原DotCS插件"
+                        )
+                    case "injected":
+                        download_path = os.path.join(
+                            os.getcwd(), "插件文件", "ToolDelta注入式插件"
+                        )
+                    case _:
+                        raise Exception(
+                            f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决"
+                        )
+                os.makedirs(os.path.join(cache_dir, plugin_data.name), exist_ok=True)
+                path_last = _path_dir(paths)
+                if path_last is not None:
+                    folder_path = os.path.join(cache_dir, path_last)
+                    os.makedirs(folder_path, exist_ok=True)
+                urlmethod.download_file(url, os.path.join(cache_dir, paths), True)
+            # Move downloaded files to target download path
+            target_path = os.path.join(download_path, plugin_data.name)
+            os.makedirs(target_path, exist_ok=True)
+            for root, dirs, files in os.walk(cache_dir):
+                for filename in files:
+                    source_file = os.path.join(root, filename)
+                    target_file = os.path.join(
+                        target_path, os.path.relpath(source_file, cache_dir)
                     )
-                case "dotcs":
-                    download_path = os.path.join(os.getcwd(), "插件文件", "原DotCS插件")
-                case "injected":
-                    download_path = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
-                case _:
-                    raise Exception(f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决")
-            os.makedirs(os.path.join(download_path, plugin_data.name), exist_ok=True)
-            path_last = _path_dir(paths)
-            if path_last is not None:
-                folder_path = os.path.join(download_path, path_last)
-                os.makedirs(folder_path, exist_ok=True)
-            urlmethod.download_file(url, os.path.join(download_path, paths), True)
-        Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹        ")
+                    os.makedirs(os.path.dirname(target_file), exist_ok=True)
+                    shutil.move(source_file, target_file)
+            Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
+        finally:
+            # Clean up cache directory
+            shutil.rmtree(cache_dir)
 
     def find_dirs(self, plugin_data: PluginMaketPluginData):
         try:
@@ -170,5 +201,6 @@ class PluginMarket:
         except Exception as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
             return
+
 
 market = PluginMarket()

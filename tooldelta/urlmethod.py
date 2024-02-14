@@ -11,10 +11,19 @@ def _pretty_kb(n):
         return f"{round(n, 1)}"
 
 
+def get_file_size(url):
+    response = requests.head(url)
+    if "Content-Length" in response.headers:
+        file_size = int(response.headers["Content-Length"])
+        return file_size
+    else:
+        return None
+
+
 def download_file(f_url: str, f_dir: str, ignore_warnings=False):
     with requests.get(f_url, stream=True, timeout=10) as res:
         res.raise_for_status()
-        filesize = int(res.headers["content-length"])
+        filesize = get_file_size(f_url)
 
         if filesize < 256 and "404" in res.text:
             raise requests.RequestException("下载失败: 返回 404")
