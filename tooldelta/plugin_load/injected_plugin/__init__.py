@@ -159,7 +159,7 @@ async def load_plugin(plugin_grp):
 
     # 读取本目录下的文件夹名字
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
-    sys.path.append(os.path.join(os.getcwd(), "插件文件"))
+    sys.path.append("插件文件")
     for file in os.listdir(PLUGIN_PATH):
         if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
             plugin_grp.injected_plugin_loaded_num += 1
