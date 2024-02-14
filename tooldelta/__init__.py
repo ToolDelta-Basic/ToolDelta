@@ -391,6 +391,7 @@ class GameCtrl:
     def add_listen_pkt(self, pkt: int):
         self.require_listen_packets.add(pkt)
 
+    @Builtins.run_as_new_thread
     def packet_handler(self, pkt_type: int, pkt: dict):
         if pkt_type == PacketIDS.PlayerList:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
