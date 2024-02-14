@@ -21,24 +21,6 @@
             "pre-plugins": {},
             "plugin-type": "classic"
         },
-        "库-基本组件API": {
-            "author": "SuperScript",
-            "version": "0.0.1",
-            "description": "所有使用基本组件API的插件的前置",
-            "limit_launcher": null,
-            "pre-plugins": {},
-            "plugin-type": "classic"
-        },
-        "库-世界交互": {
-            "author": "SuperScript",
-            "version": "0.0.1",
-            "description": "所有使用世界交互的插件的前置",
-            "limit_launcher": null,
-            "pre-plugins": {
-                "聊天栏菜单": "0.0.1"
-            },
-            "plugin-type": "classic"
-        },
         "@玩家": {
             "author": "wling",
             "version": "0.0.2",
@@ -73,6 +55,34 @@
             "pre-plugins": {
                 "聊天栏菜单": "0.0.4",
                 "库-基本组件API": "0.0.1"
+            },
+            "plugin-type": "classic"
+        },
+        "封禁系统": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "服内有大哥或者熊孩子? 更方便地ban掉! 同时也是一个前置插件.",
+            "limit_launcher": null,
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.4"
+            },
+            "plugin-type": "classic"
+        },
+        "库-基本组件API": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "所有使用基本组件API的插件的前置",
+            "limit_launcher": null,
+            "pre-plugins": {},
+            "plugin-type": "classic"
+        },
+        "库-世界交互": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "所有使用世界交互的插件的前置",
+            "limit_launcher": null,
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.1"
             },
             "plugin-type": "classic"
         }

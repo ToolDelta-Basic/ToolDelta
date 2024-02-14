@@ -67,16 +67,20 @@ class PluginMarket:
             self.plugins_download_url = market_datas["DownloadRefURL"]
             all_indexes = len(plugins_list)
             now_index = 0
+            sum_pages = int((all_indexes - 1) / 8) + 1
+            now_page = 0
             while True:
                 os.system(CLS_CMD)
                 Print.print_inf(market_datas["SourceName"] + ": " + market_datas["Greetings"])
+                now_page = int(now_index / 8) + 1
                 for i in range(now_index, now_index + 8):
                     if i in range(all_indexes):
                         plugin_data = PluginMaketPluginData(plugins_list[i][0], plugins_list[i][1])
                         Print.print_inf(f" {i + 1}. §e{plugin_data.name} §av{plugin_data.version_str} §b@{plugin_data.author} §d{plugin_data.plugin_type_str}插件", need_log=False)
                     else:
                         Print.print_inf("")
-                Print.print_inf("§f输入 §b+§f/§b- §f翻页, 输入插件序号选择插件", need_log=False)
+                Print.print_inf(f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页")
+                Print.print_inf("§f输入插件序号选择插件, 以查看详情", need_log=False)
                 res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 ")).lower().strip()
                 if res == "+":
                     now_index += 8
