@@ -1,6 +1,6 @@
 import asyncio
 from distutils.core import setup_keywords
-import os, sys
+import os
 import importlib
 from re import A
 import ujson as json
@@ -112,10 +112,10 @@ async def execute_player_left(playername):
 async def load_plugin_file(file):
     # 导入插件模块
     module_name = file
-    plugin_module = importlib.import_module(f"插件文件.ToolDelta注入式插件.{module_name}")
+    plugin_module = {}
+    exec(open(os.path.join(os.getcwd(),f"插件文件/ToolDelta注入式插件/{module_name}/__init__.py"), "r", encoding="utf-8").read(), plugin_module)
     # 获取插件元数据
-
-    return create_plugin_metadata(getattr(plugin_module, "__plugin_meta__", {"name": module_name}))
+    return create_plugin_metadata(plugin_module.get("__plugin_meta__",{"name": module_name}))
 
 class PluginMetadata:
     def __init__(
@@ -159,7 +159,6 @@ async def load_plugin(plugin_grp):
 
     # 读取本目录下的文件夹名字
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
-    sys.path.append("插件文件")
     for file in os.listdir(PLUGIN_PATH):
         if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
             plugin_grp.injected_plugin_loaded_num += 1
