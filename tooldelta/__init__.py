@@ -314,11 +314,12 @@ class Frame:
         self.createThread(_console_cmd_thread)
 
     def system_exit(self):
+        exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
         if self.link_game_ctrl.allplayers:
             # kick @s
             try:
                 self.link_game_ctrl.sendwscmd(
-                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)"
+                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)\nSTATUS CODE: {exit_status_code}"
                 )
             except:
                 pass
@@ -509,9 +510,10 @@ class GameCtrl:
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
-        self.inject_welcome()
         # 启动插件的异步任务（不阻塞此函数）
+        # TODO
         asyncio.run(execute_repeat())
+        self.inject_welcome()
 
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语
@@ -530,6 +532,7 @@ class GameCtrl:
         )
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
+        Print.print_inf("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
     def say_to(self, target: str, msg: str):
         # 向玩家发送聊天栏信息

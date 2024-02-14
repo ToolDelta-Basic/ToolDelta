@@ -1,4 +1,4 @@
-import platform, os, subprocess, time, json, requests, ujson
+import platform, os, subprocess, time, json, requests, ujson, random
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -318,6 +318,7 @@ class FrameNeOmg(StandardFrame):
     def __init__(self, serverNumber, password, fbToken, auth_server):
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.status = None
+        self.launch_event = threading.Event()
         self.exit_event = threading.Event()
         self.injected = False
         self.omega = None
@@ -325,6 +326,7 @@ class FrameNeOmg(StandardFrame):
         self.set_neomg_lib()
         self.init_all_functions()
         self.status = SysStatus.LOADING
+        self.secret_exit_key = ""
 
     def set_neomg_lib(self):
         global neo_conn
@@ -395,7 +397,10 @@ class FrameNeOmg(StandardFrame):
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 elif "[neOmega 接入点]: 就绪" in msg_orig:
-                    self.launch_status = 1
+                    self.launch_event.set()
+                elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
+                    Print.print_with_info("§a机器人已退出", "§b NOMG ")
+                    continue
                 while msg_orig:
                     msg = msg_orig[:str_max_len]
                     msg_orig = msg_orig[str_max_len:]
@@ -407,13 +412,15 @@ class FrameNeOmg(StandardFrame):
         if new_status != SysStatus.RUNNING:
             self.exit_event.set()  # 设置事件，触发等待结束
 
+    def make_secret_key(self):
+        self.secret_exit_key = hex(random.randint(10000, 99999))
+
     def launch(self):
-        self.launch_status = 0
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         self.msg_show()
-        while self.launch_status != 1:
-            pass
+        self.launch_event.wait()
+        self.make_secret_key()
         self.set_omega(openat_port)
         self.status = SysStatus.RUNNING
         Print.print_suc("已开启 NEOMG 进程")
