@@ -160,7 +160,7 @@ class PluginMarket:
             )
             data_list=[]
             for folder, files in data.items():
-                if plugin_data.name in folder:
+                if plugin_data.name == folder.split("/")[0]:
                     # 展开
                     for file in files:
                         data_list.append(folder+r"/"+file)
