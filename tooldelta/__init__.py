@@ -200,13 +200,19 @@ class Frame:
 
     def welcome(self):
         # 欢迎提示
-        Print.print_with_info(f"§d{PRG_NAME} Panel Embed By SuperScript", "§d 加载 ")
-        Print.print_with_info(f"§d{PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", "§d 加载 ")
-        Print.print_with_info(f"§d{PRG_NAME} 项目地址: https://github.com/ToolDelta", "§d 加载 ")
         Print.print_with_info(
-            f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 "
+            f"§d{PRG_NAME} Panel Embed By SuperScript", Print.INFO_LOAD
         )
-        Print.print_with_info(f"§d{PRG_NAME} Panel 已启动", "§d 加载 ")
+        Print.print_with_info(
+            f"§d{PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+        )
+        Print.print_with_info(
+            f"§d{PRG_NAME} 项目地址: https://github.com/ToolDelta", Print.INFO_LOAD
+        )
+        Print.print_with_info(
+            f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
+        )
+        Print.print_with_info(f"§d{PRG_NAME} Panel 已启动", Print.INFO_LOAD)
 
     def plugin_load_finished(self, plugins: PluginGroup):
         # 插件成功载入提示
@@ -533,7 +539,7 @@ class GameCtrl:
         )
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
-        Print.print_inf("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
+        Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
     def say_to(self, target: str, msg: str):
         # 向玩家发送聊天栏信息
