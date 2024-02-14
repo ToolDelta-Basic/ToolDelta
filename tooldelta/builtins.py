@@ -142,15 +142,15 @@ class Builtins:
             os.makedirs(os.path.join("data", plugin_name), exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
-                    Builtins.SimpleJsonDataReader.SafeJsonDump(
-                        default, open(filepath, "w", encoding="utf-8")
-                    )
+                    with open(filepath, "w", encoding="utf-8") as f:
+                        Builtins.SimpleJsonDataReader.SafeJsonDump(
+                            default, f
+                        )
                     return default
-                Builtins.SimpleJsonDataReader.SafeJsonDump(
-                    default, 
-                    open(filepath, "w", encoding="utf-8")
-                )
-                return default
+                else:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
+                    return res
             except ujson.JSONDecodeError as err:
                 raise Builtins.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
@@ -166,9 +166,8 @@ class Builtins:
             这个文件应在data/<plugin_name>/<file>文件夹内
             """
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
-            Builtins.SimpleJsonDataReader.SafeJsonDump(
-                obj, open(f"data/{plugin_name}/{file}.json", "w", encoding="utf-8")
-            )
+            with open(f"data/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
+                Builtins.SimpleJsonDataReader.SafeJsonDump(obj, f)
 
     @staticmethod
     def SimpleFmt(kw: dict[str, any], __sub: str):

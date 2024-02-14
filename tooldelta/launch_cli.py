@@ -525,7 +525,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
         if openat_port == 0:
             Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
-            Print.print_inf("可使用启动参数 -access-point-port=端口 以指定接入点端口.")
+            Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             os._exit(0)
         else:
@@ -543,3 +543,6 @@ class FrameNeOmgRemote(FrameNeOmg):
         Print.print_suc("NEOMEGA 已就绪")
         r = self.omega.wait_disconnect()
         return Exception(r)
+
+    def download_libs(self):
+        Print.print_inf("以 Remote 启动, 将不会检查库完整性")
