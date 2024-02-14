@@ -510,9 +510,7 @@ class GameCtrl:
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
-        # 启动插件的异步任务（不阻塞此函数）
-        # TODO
-        asyncio.run(execute_repeat())
+        Builtins.createThread(asyncio.run, (execute_repeat(),))
         self.inject_welcome()
 
     def inject_welcome(self):
