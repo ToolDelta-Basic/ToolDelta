@@ -1,4 +1,6 @@
 import requests, json, os, traceback, platform
+
+import urllib3
 from . import urlmethod
 from .builtins import Builtins
 from .color_print import Print
@@ -19,7 +21,7 @@ def _url_join(*urls):
 
 def _get_json_from_url(url: str):
     try:
-        resp = requests.get(_url_join(url, "market_tree.json")).text
+        resp = requests.get(url).text
     except requests.RequestException:
         raise Exception("URL请求失败")
     try:
@@ -56,7 +58,9 @@ class PluginMarket:
         Print.print_inf("正在连接到插件市场..")
         try:
             if not test_mode:
-                market_datas = _get_json_from_url(source_url)
+                market_datas = _get_json_from_url(
+                    _url_join(source_url, "market_tree.json")
+                )
             else:
                 with open("plugin_market/market_tree.json", "r", encoding="utf-8") as f:
                     market_datas = json.load(f)
@@ -124,15 +128,17 @@ class PluginMarket:
         for plugin_name, _ in plugin_data.pre_plugins.items():
             Print.print_inf(f"插件 {plugin_data.name} 需要下载前置插件: {plugin_name}")
             self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
-        for path in download_paths: 
-            if not path.strip():
+        for paths in download_paths:
+            if not paths.strip():
                 # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
                 continue
-            url = _url_join(self.plugins_download_url, plugin_data.name, path)
+            url = _url_join(self.plugins_download_url, paths)
             match plugin_data.plugin_type:
                 case "classic":
-                    download_path = os.path.join(os.getcwd(), "插件文件", "ToolDelta组合式插件")
+                    download_path = os.path.join(
+                        os.getcwd(), "插件文件", "ToolDelta组合式插件"
+                    )
                 case "dotcs":
                     download_path = os.path.join(os.getcwd(), "插件文件", "原DotCS插件")
                 case "injected":
@@ -140,31 +146,31 @@ class PluginMarket:
                 case _:
                     raise Exception(f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决")
             os.makedirs(os.path.join(download_path, plugin_data.name), exist_ok=True)
-            path_last = _path_dir(path)
+            path_last = _path_dir(paths)
             if path_last is not None:
-                folder_path = os.path.join(download_path, plugin_data.name, path_last)
+                folder_path = os.path.join(download_path, path_last)
                 os.makedirs(folder_path, exist_ok=True)
-            urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path), True)
+            urlmethod.download_file(url, os.path.join(download_path, paths), True)
         Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹        ")
 
     def find_dirs(self, plugin_data: PluginMaketPluginData):
-        def unfold_url_dirs(parent_dir: str, val):
-            # 展开文件目录
-            if not isinstance(val, dict):
-                super_dirs.append(_url_join(parent_dir, val))
-            else:
-                for k, v in val:
-                    unfold_url_dirs(_url_join(parent_dir, k), v)
         try:
-            super_dirs = []
-            dirs = _get_json_from_url(_url_join(self.plugins_download_url, "directory.json"))[plugin_data.name]
-            unfold_url_dirs(dirs)
-            return super_dirs
+            data = _get_json_from_url(
+                _url_join(self.plugins_download_url, "directory.json")
+            )
+            data_list=[]
+            for folder, files in data.items():
+                if plugin_data.name in folder:
+                    # 展开
+                    for file in files:
+                        data_list.append(folder+r"/"+file)
+
+            return data_list
         except KeyError as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录")
             return
         except Exception as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
             return
-        
+
 market = PluginMarket()
