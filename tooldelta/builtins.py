@@ -244,7 +244,7 @@ class Builtins:
         "模糊匹配列表内的字符串"
         res = []
         for i in lst:
-            if sub in res:
+            if sub in i:
                 res.append(i)
         return res
 
