@@ -70,11 +70,14 @@ class PluginMarket:
             while True:
                 os.system(CLS_CMD)
                 Print.print_inf(market_datas["SourceName"] + ": " + market_datas["Greetings"])
-                for i in range(now_index, min(now_index + 8, all_indexes)):
-                    plugin_data = PluginMaketPluginData(plugins_list[i][0], plugins_list[i][1])
-                    Print.print_inf(f" {i + 1}. {plugin_data.name} v{plugin_data.version_str} @{plugin_data.author} §b{plugin_data.plugin_type_str}插件", need_log=False)
+                for i in range(now_index, now_index + 8):
+                    if i in range(all_indexes):
+                        plugin_data = PluginMaketPluginData(plugins_list[i][0], plugins_list[i][1])
+                        Print.print_inf(f" {i + 1}. §e{plugin_data.name} §av{plugin_data.version_str} §b@{plugin_data.author} §d{plugin_data.plugin_type_str}插件", need_log=False)
+                    else:
+                        Print.print_inf("")
                 Print.print_inf("§f输入 §b+§f/§b- §f翻页, 输入插件序号选择插件", need_log=False)
-                res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "输入")).lower().strip()
+                res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 ")).lower().strip()
                 if res == "+":
                     now_index += 8
                 elif res == "-":
@@ -114,6 +117,7 @@ class PluginMarket:
         Print.print_inf(f"§7作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}", need_log = False)
         Print.print_inf(f"前置插件: {pre_plugins_str}", need_log = False)
         Print.print_inf(f"介绍: {plugin_data.description}", need_log = False)
+        Print.print_inf("", need_log = False)
         res = input(Print.fmt_info("§f下载=§aY§f, 取消=§cN§f, 请输入:")).lower().strip()
         if res == "y":
             self.download_plugin(plugin_data, all_plugins_dict)
