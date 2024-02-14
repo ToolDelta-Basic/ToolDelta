@@ -14,6 +14,18 @@ def _path_dir(path: str):
     else:
         return "/".join(path.split("/")[:-1])
 
+def _url_join(*urls):
+    return "/".join(urls)
+
+def _get_json_from_url(url: str):
+    try:
+        resp = requests.get(_url_join(url, "market_tree.json")).text
+    except requests.RequestException:
+        raise Exception("URL请求失败")
+    try:
+        return json.loads(resp)
+    except json.JSONDecodeError:
+        raise Exception(f"服务器返回了不正确的答复: {resp}")
 
 class PluginMaketPluginData:
     def __init__(self, name: str, plugin_data: dict):
@@ -44,14 +56,7 @@ class PluginMarket:
         Print.print_inf("正在连接到插件市场..")
         try:
             if not test_mode:
-                try:
-                    resp = requests.get(source_url).text
-                except requests.RequestException:
-                    raise Exception("请求失败, 无法从插件市场源获取信息")
-                try:
-                    market_datas = json.loads(resp)
-                except json.JSONDecodeError:
-                    raise Exception(f"插件市场源返回了不正确的答复: {resp}")
+                market_datas = _get_json_from_url(source_url)
             else:
                 with open("plugin_market/market_tree.json", "r", encoding="utf-8") as f:
                     market_datas = json.load(f)
@@ -96,7 +101,6 @@ class PluginMarket:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
-            Print.print_err(err)
             return
         os.system(CLS_CMD)
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
@@ -116,19 +120,16 @@ class PluginMarket:
             return False
 
     def download_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict):
-        if plugin_data.plugin_type != "dotcs":
-            download_paths = plugin_data.dirs + ["__init__.py"]
-        else:
-            download_paths = plugin_data.dirs + [plugin_data.name + ".py"]
+        download_paths = self.find_dirs(plugin_data)
         for plugin_name, _ in plugin_data.pre_plugins.items():
             Print.print_inf(f"插件 {plugin_data.name} 需要下载前置插件: {plugin_name}")
             self.download_plugin(PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]), all_plugins_dict)
-        for path in download_paths:
+        for path in download_paths: 
             if not path.strip():
                 # 不可能出现的状况, 出现了证明是你的问题
                 Print.print_war("下载路径为空, 跳过")
                 continue
-            url = self.plugins_download_url + plugin_data.name + "/" + path
+            url = _url_join(self.plugins_download_url, plugin_data.name, path)
             match plugin_data.plugin_type:
                 case "classic":
                     download_path = os.path.join(os.getcwd(), "插件文件", "ToolDelta组合式插件")
@@ -144,7 +145,26 @@ class PluginMarket:
                 folder_path = os.path.join(download_path, plugin_data.name, path_last)
                 os.makedirs(folder_path, exist_ok=True)
             urlmethod.download_file(url, os.path.join(download_path, plugin_data.name, path), True)
-        Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹      ")
+        Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹        ")
 
-
+    def find_dirs(self, plugin_data: PluginMaketPluginData):
+        def unfold_url_dirs(parent_dir: str, val):
+            # 展开文件目录
+            if not isinstance(val, dict):
+                super_dirs.append(_url_join(parent_dir, val))
+            else:
+                for k, v in val:
+                    unfold_url_dirs(_url_join(parent_dir, k), v)
+        try:
+            super_dirs = []
+            dirs = _get_json_from_url(_url_join(self.plugins_download_url, "directory.json"))[plugin_data.name]
+            unfold_url_dirs(dirs)
+            return super_dirs
+        except KeyError as err:
+            Print.print_err(f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录")
+            return
+        except Exception as err:
+            Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
+            return
+        
 market = PluginMarket()

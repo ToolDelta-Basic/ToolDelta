@@ -87,7 +87,7 @@ class Frame:
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
             "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro",
             "是否记录日志": True,
-            "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market/market_tree.json",
+            "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market",
         }
         CFG_STD = {
             "服务器号": int,

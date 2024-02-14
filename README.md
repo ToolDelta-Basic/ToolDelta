@@ -1,4 +1,4 @@
-<h1 align="center">ToolDelta - Linux/Windows Edition</h1>
+<h1 align="center">ToolDelta - Multi Platform Edition</h1>
 <p align="center">
   <a href="https://github.com/SuperScript-PRC/ToolDelta/releases"><img src="https://img.shields.io/github/v/release/SuperScript-PRC/ToolDelta?display_name=tag&sort=semver" alt="Releases"></a>
   <img src="https://img.shields.io/github/stars/SuperScript-PRC/ToolDelta.svg?style=falt" alt="Stars">
@@ -18,22 +18,15 @@
 
 
 
-
-
-
 # 目录
 - [目录](#目录)
 - [注意事项](#注意事项)
 - [更新日志](#更新日志)
 
 
-
-
-
 # 注意事项
-- 项目目前可完全在 `Ubuntu` 平台上流畅部署， 可在 `Ubuntu / Windows / MacOS / Termux` 上运行， 遇到平台不兼容的情况请尽快提交 `Issue`
-
-
+- 遇到平台不兼容的情况请尽快提交 `Issue`
+- 由于环境问题, ToolDelta 无法在 `Termux` 平台上部署, 见谅.
 
 # 更新日志
 - `0.1.6`
@@ -47,3 +40,8 @@
   * 新增缺失部分文件自动补全功能
   * Beta - 重写了 `cfg.py` 的代码使之更具人类可读性
   * Sigma - 兼容了 `NeOmega` 系统， 可在其上运行
+- `0.2.8`
+  * 由于 `FastBuilder External` 停止更新, ToolDelta 不再对其进行进一步的支持.
+  * 更新了 `插件市场` 功能
+  * 新增 `注入式插件` 加载方法
+  * 重整文件目录结构 并上传到 `PyPi` 使 ToolDelta 可以作为一个库运行
