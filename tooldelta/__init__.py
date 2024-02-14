@@ -556,15 +556,14 @@ def start_tool_delta():
     # 初始化系统
     global frame, game_control, plugins
     try:
-        Print.print_with_info(f"§d{PRG_NAME} 正在启动..", "§d 加载 ")
         frame = Frame()
         plugins = PluginGroup(frame, PRG_NAME)
         game_control = GameCtrl(frame)
+        frame.welcome()
+        frame.basic_operation()
         frame.set_game_control(game_control)
         frame.set_plugin_group(plugins)
         movent.set_frame(frame)
-        frame.welcome()
-        frame.basic_operation()
         frame.read_cfg()
         game_control.init_funcs()
         plugins.read_all_plugins()
