@@ -66,9 +66,6 @@ class PluginGroup:
         dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)
         classic_plugin.read_plugin_from_new(self, {})
         asyncio.run(injected_plugin.load_plugin(self))
-        Print.print_suc(
-            f"§a共加载 §l§b{self.normal_plugin_loaded_num} §r§a个 组合式插件, §l§b{self.injected_plugin_loaded_num} §r§a个 注入插件 和 §l§b{self.dotcs_plugin_loaded_num} §r§a个 原DotCS插件"
-        )
         Print.print_inf("正在执行初始化函数init任务")
         asyncio.run(injected_plugin.execute_init())
 
