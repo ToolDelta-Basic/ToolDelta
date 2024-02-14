@@ -8,13 +8,12 @@ from ..color_print import Print
 from ..cfg import Cfg
 from ..builtins import Builtins
 from ..basic_mods import dotcs_module_env
+from ..get_python_libs import get_single_lib
 
 
 class PluginSkip(EOFError): ...
 
-
 NON_FUNC = lambda *_: None
-
 
 class PluginGroup:
     class PluginAPINotFoundError(ModuleNotFoundError):
@@ -56,6 +55,12 @@ class PluginGroup:
         self.PRG_NAME = PRG_NAME
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
         self.linked_frame.linked_plugin_group = self
+
+    def require(self, module_name: str, pip_name = ""):
+        try:
+            importlib.import_module(module_name)
+        except (ModuleNotFoundError, ImportError):
+            get_single_lib(pip_name if pip_name else module_name)
 
     def read_all_plugins(self):
         dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)

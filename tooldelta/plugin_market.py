@@ -37,7 +37,6 @@ class PluginMaketPluginData:
         self.plugin_type: str = plugin_data["plugin-type"]
         self.description: str = plugin_data["description"]
         self.pre_plugins: dict[str, str] = plugin_data["pre-plugins"]
-        self.dirs: list[str] = plugin_data["dirs"]
 
     @property
     def version_str(self):

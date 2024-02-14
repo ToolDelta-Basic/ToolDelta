@@ -11,8 +11,7 @@
             "description": "所有使用到聊天栏菜单的组件的前置组件",
             "limit_launcher": null,
             "pre-plugins": {},
-            "plugin-type": "classic",
-            "dirs": []
+            "plugin-type": "classic"
         },
         "控制台执行MCFB指令": {
             "author": "SuperScript",
@@ -20,8 +19,15 @@
             "description": "可以在控制台让机器人执行指令, 特殊指令等",
             "limit_launcher": null,
             "pre-plugins": {},
-            "plugin-type": "classic",
-            "dirs": []
+            "plugin-type": "classic"
+        },
+        "库-基本组件API": {
+            "author": "SuperScript",
+            "version": "0.0.1",
+            "description": "所有使用基本组件API的插件的前置",
+            "limit_launcher": null,
+            "pre-plugins": {},
+            "plugin-type": "classic"
         },
         "库-世界交互": {
             "author": "SuperScript",
@@ -31,8 +37,7 @@
             "pre-plugins": {
                 "聊天栏菜单": "0.0.1"
             },
-            "plugin-type": "classic",
-            "dirs": []
+            "plugin-type": "classic"
         },
         "@玩家": {
             "author": "wling",
@@ -41,8 +46,7 @@
             "limit_launcher": null,
             "pre-plugins": {
             },
-            "plugin-type": "injected",
-            "dirs": []
+            "plugin-type": "injected"
         },
         "SuperSoundMixer": {
             "author": "SuperScript/wling",
@@ -50,8 +54,7 @@
             "description": "midi播放前置",
             "limit_launcher": null,
             "pre-plugins": {},
-            "plugin-type": "injected",
-            "dirs": ["bdx_work_shop"]
+            "plugin-type": "injected"
         },
         "井字棋": {
             "author": "SuperScript/wling",
@@ -59,8 +62,7 @@
             "description": "娱乐小游戏3x3井字棋",
             "limit_launcher": null,
             "pre-plugins": {"SuperSoundMixer": "0.0.1"},
-            "plugin-type": "injected",
-            "dirs": []
+            "plugin-type": "injected"
         },
         "清空末影箱": {
             "author": "wling",
@@ -69,8 +71,7 @@
             "limit_launcher": null,
             "pre-plugins": {
             },
-            "plugin-type": "injected",
-            "dirs": []
+            "plugin-type": "injected"
         },
         "简易建造": {
             "author": "SuperScript",
@@ -81,8 +82,7 @@
                 "聊天栏菜单": "0.0.4",
                 "库-基本组件API": "0.0.1"
             },
-            "plugin-type": "classic",
-            "dirs": []
+            "plugin-type": "classic"
         }
     }
 }

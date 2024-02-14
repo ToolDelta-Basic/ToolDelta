@@ -2,6 +2,12 @@
 # Description: SuperSoundMixer
 # PLUGIN TYPE: def
 # if 1 == 0: from dotcs_editor import *  # 不可能加载成功的库! 仅供VSCode编辑时看着顺眼, 不要出现这么多未定义波浪线
+
+from tooldelta import Print, plugins
+from tooldelta.plugin_load import tellrawText, sendcmd, player_message
+
+plugins.require("brotli")
+
 import threading
 import time
 import os, traceback
@@ -11,8 +17,6 @@ from .bdx_work_shop.canvas import Canvas
 from .bdx_work_shop.canvas import irio
 from collections import defaultdict
 from .bdx_work_shop.artists.cmd_midi_music import Artist as MidiDo
-from tooldelta import Print
-from tooldelta.plugin_load import tellrawText, sendcmd, player_message
 
 __plugin_meta__ = {
     "name": "音效器",
