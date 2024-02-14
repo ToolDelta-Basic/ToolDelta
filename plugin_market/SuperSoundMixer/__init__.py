@@ -88,7 +88,7 @@ class SuperSoundMixer:
         self.SuperSoundMixer_threadings_num += 1
         self.SuperSoundMixer_ThreadMusic.append(sound_name)
         with open(
-            "插件配置文件\\SuperSoundMixer\\SoundCmds\\%s.txt" % sound_name,
+            "插件配置文件/SuperSoundMixer/SoundCmds/%s.txt" % sound_name,
             "r",
             encoding="utf-8",
         ) as music_txt:
@@ -130,9 +130,9 @@ class SuperSoundMixer:
 
 
 def updateMidifile():
-    for i in os.listdir("插件配置文件\\SuperSoundMixer"):
+    for i in os.listdir("插件配置文件/SuperSoundMixer"):
         if i.endswith(".mid"):
-            midi_input = "插件配置文件\\SuperSoundMixer\\" + i
+            midi_input = "插件配置文件/SuperSoundMixer/" + i
             canvas = Canvas()
             p = canvas
             artist = MidiDo(canvas=canvas, y=p.y + 10)
@@ -143,7 +143,7 @@ def updateMidifile():
                 ),
             )
             with open(
-                "插件配置文件\\SuperSoundMixer\\SoundCmds\\%s.txt"
+                "插件配置文件/SuperSoundMixer/SoundCmds/%s.txt"
                 % i.replace(".mid", ""),
                 "w",
                 encoding="utf-8",
@@ -153,7 +153,7 @@ def updateMidifile():
                         """({}, "{}", {}, {})""".format(tip, _ins, note, vol) + "\n"
                     )
             musicfile.close()
-            os.remove("插件配置文件\\SuperSoundMixer\\" + i)
+            os.remove("插件配置文件/SuperSoundMixer/" + i)
 
 
 updateMidifile()
@@ -184,7 +184,7 @@ async def _(playername, msg):
             del exception
         try:
             if os.path.exists(
-                "插件配置文件\\SuperSoundMixer\\SoundCmds\\%s.txt"
+                "插件配置文件/SuperSoundMixer/SoundCmds/%s.txt"
                 % get_sound_data["name"]
             ):
                 try:
@@ -210,7 +210,7 @@ async def _(playername, msg):
                     # 音乐文件名(无mid后缀)   播放的对象         乐器                      忽略高音                   速度
             else:
                 if os.path.exists(
-                    "插件配置文件\\SuperSoundMixer\\%s.mid" % get_sound_data[2]
+                    "插件配置文件/SuperSoundMixer/%s.mid" % get_sound_data[2]
                 ):
                     updateMidifile()
                     tellrawText("@a", "§cSuperSoundMixer§f>> §6文件正在初始化")

@@ -19,7 +19,7 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
         if filesize < 256 and "404" in res.text:
             raise requests.RequestException("下载失败: 返回 404")
         elif filesize < 256 and not ignore_warnings:
-            Print.print_war(f"下载 {f_url} 的文件警告: 文件大小异常, 不到 0.256KB")
+            Print.print_war(f"下载 {f_url} 的文件警告: 文件大小异常, 不到 0.25KB")
 
         nowsize = 0
         succ = False
@@ -27,7 +27,7 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
         useSpeed = 0
 
         with open(f_dir + ".tmp", "wb") as dwnf:
-            for chk in res.iter_content(chunk_size=8192):
+            for chk in res.iter_content(chunk_size = 8192):
                 nowtime = time.time()
 
                 if nowtime != lastime:
@@ -44,11 +44,14 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
                         "§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r ", 7
                     )
                     Print.print_with_info(
-                        f"{bar} {round(nowsize / 1024, 2)}KB / {round(filesize / 1024, 2)}KB ({_pretty_kb(useSpeed)}B/s)    ",
+                        f"{bar} {_pretty_kb(nowsize)}B / {_pretty_kb(filesize)}B ({_pretty_kb(useSpeed)}B/s)    ",
                         "§a 下载 §r",
                         end="\r",
                         need_log=False,
                     )
+
+                if nowsize / filesize > 1:
+                    Print.print_war(f"下载: 实际大小已超出文件大小 {round(nowsize / filesize, 2)} 倍")
 
         succ = True
 
