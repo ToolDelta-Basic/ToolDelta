@@ -40,6 +40,70 @@ class Builtins:
 
     createThread = ClassicThread
 
+    class TMPJson:
+        @staticmethod
+        def loadPathJson(path, needFileExists: bool = True):
+            """
+            将json文件加载到缓存区, 以便快速读写.
+            needFileExists = False 时, 若文件路径不存在, 就会自动创建一个文件.
+            在缓存文件已加载的情况下, 再使用一次该方法不会有任何作用.
+            path: 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
+            """
+            if path in jsonPathTmp.keys():
+                return
+            try:
+                js = Builtins.SimpleJsonDataReader.SafeJsonLoad(path)
+            except FileNotFoundError as err:
+                if not needFileExists:
+                    js = None
+                else:
+                    raise err from None
+            jsonPathTmp[path] = [False, js]
+
+        @staticmethod
+        def unloadPathJson(path):
+            """
+            将json文件从缓存区卸载(保存内容到磁盘), 之后不能再在缓存区对这个文件进行读写.
+            在缓存文件已卸载的情况下, 再使用一次该方法不会有任何作用, 但是可以通过其返回的值来知道存盘有没有成功.
+            """
+            if jsonPathTmp.get(path) is not None:
+                isChanged, dat = jsonPathTmp[path]
+                if isChanged:
+                    Builtins.SimpleJsonDataReader.SafeJsonDump(dat, path)
+                del jsonPathTmp[path]
+                return True
+            else:
+                return False
+
+        @staticmethod
+        def read(path):
+            "对缓存区的该虚拟路径的文件进行读操作"
+            if path in jsonPathTmp.keys():
+                val = jsonPathTmp.get(path)[1]
+                if isinstance(val, (list, dict)):
+                    val = copy.deepcopy(val)
+                return val
+            else:
+                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
+
+        @staticmethod
+        def write(path, obj):
+            "对缓存区的该虚拟路径的文件进行写操作"
+            if path in jsonPathTmp.keys():
+                jsonPathTmp[path] = [True, obj]
+            else:
+                raise Exception(f"json路径未初始化, 不能进行读取和写入操作: " + path)
+
+        @staticmethod
+        def cancel_change(path):
+            "取消缓存json所做的更改, 非必要情况请勿调用, 你不知道什么时候会自动保存所做更改"
+            jsonPathTmp[path][0] = False
+
+        @staticmethod
+        def get_tmps():
+            "不要调用!"
+            return jsonPathTmp.copy()
+
     class SimpleJsonDataReader:
         @staticmethod
         def SafeJsonDump(obj: str | dict | list, fp):
@@ -74,18 +138,19 @@ class Builtins:
             使用插件便捷地读取一个json文件, 当文件不存在则创建一个空文件, 使用default给出的json默认值写入文件.
             这个文件应在data/<plugin_name>/<file>文件夹内
             """
-            filepath = f"data/{plugin_name}/{file}.json"
-            os.makedirs(f"data/{plugin_name}", exist_ok=True)
+            filepath = os.path.join("data", plugin_name, f"{file}.json")
+            os.makedirs(os.path.join("data", plugin_name), exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
                     Builtins.SimpleJsonDataReader.SafeJsonDump(
                         default, open(filepath, "w", encoding="utf-8")
                     )
                     return default
-                return Builtins.SimpleJsonDataReader.SafeJsonDump(
+                Builtins.SimpleJsonDataReader.SafeJsonDump(
                     default, 
                     open(filepath, "r", encoding="utf-8")
                 )
+                return default
             except ujson.JSONDecodeError as err:
                 raise Builtins.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
@@ -171,6 +236,15 @@ class Builtins:
             target=_dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
         ).start()
 
+    @staticmethod
+    def fuzzy_match(lst: list, sub: str):
+        "模糊匹配列表内的字符串"
+        res = []
+        for i in lst:
+            if sub in res:
+                res.append(i)
+        return res
+
     class ArgsReplacement:
         def __init__(this, kw: dict[str, any]):
             this.kw = kw
@@ -180,70 +254,6 @@ class Builtins:
                 if k in __sub:
                     __sub = __sub.replace(k, str(v))
             return __sub
-
-    class TMPJson:
-        @staticmethod
-        def loadPathJson(path, needFileExists: bool = True):
-            """
-            将json文件加载到缓存区, 以便快速读写.
-            needFileExists = False 时, 若文件路径不存在, 就会自动创建一个文件.
-            在缓存文件已加载的情况下, 再使用一次该方法不会有任何作用.
-            path: 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
-            """
-            if path in jsonPathTmp.keys():
-                return
-            try:
-                js = Builtins.SimpleJsonDataReader.SafeJsonLoad(path)
-            except FileNotFoundError as err:
-                if not needFileExists:
-                    js = None
-                else:
-                    raise err from None
-            jsonPathTmp[path] = [False, js]
-
-        @staticmethod
-        def unloadPathJson(path):
-            """
-            将json文件从缓存区卸载(保存内容到磁盘), 之后不能再在缓存区对这个文件进行读写.
-            在缓存文件已卸载的情况下, 再使用一次该方法不会有任何作用, 但是可以通过其返回的值来知道存盘有没有成功.
-            """
-            if jsonPathTmp.get(path) is not None:
-                isChanged, dat = jsonPathTmp[path]
-                if isChanged:
-                    Builtins.SimpleJsonDataReader.SafeJsonDump(dat, path)
-                del jsonPathTmp[path]
-                return True
-            else:
-                return False
-
-        @staticmethod
-        def read(path):
-            "对缓存区的该虚拟路径的文件进行读操作"
-            if path in jsonPathTmp.keys():
-                val = jsonPathTmp.get(path)[1]
-                if isinstance(val, (list, dict)):
-                    val = copy.deepcopy(val)
-                return val
-            else:
-                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
-
-        @staticmethod
-        def write(path, obj):
-            "对缓存区的该虚拟路径的文件进行写操作"
-            if path in jsonPathTmp.keys():
-                jsonPathTmp[path] = [True, obj]
-            else:
-                raise Exception(f"json路径未初始化, 不能进行读取和写入操作: " + path)
-
-        @staticmethod
-        def cancel_change(path):
-            "取消缓存json所做的更改, 非必要情况请勿调用, 你不知道什么时候会自动保存所做更改"
-            jsonPathTmp[path][0] = False
-
-        @staticmethod
-        def get_tmps():
-            "不要调用!"
-            return jsonPathTmp.copy()
 
 
 def safe_close():
