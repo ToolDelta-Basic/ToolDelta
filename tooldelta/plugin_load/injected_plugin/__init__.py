@@ -91,11 +91,12 @@ async def execute_init():
 
 
 async def execute_repeat():
-    # 为字典每一个函数创建一个循环特定时间的任务
+    # 为字典中的每一个函数创建一个循环特定时间的任务
+    tasks = []
     for func, time in repeat_funcs.items():
-        asyncio.create_task(repeat_task(func, time))  # 创建任务
+        tasks.append(repeat_task(func, time))
     # 并发执行所有任务
-    await asyncio.gather(*asyncio.all_tasks())
+    await asyncio.gather(*tasks)
 
 # 处理玩家消息并执行插件
 async def execute_player_message(playername, message):
