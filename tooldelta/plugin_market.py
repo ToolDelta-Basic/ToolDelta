@@ -158,13 +158,12 @@ class PluginMarket:
             data = _get_json_from_url(
                 _url_join(self.plugins_download_url, "directory.json")
             )
-            data_list=[]
+            data_list = []
             for folder, files in data.items():
                 if plugin_data.name == folder.split("/")[0]:
                     # 展开
                     for file in files:
                         data_list.append(folder+r"/"+file)
-
             return data_list
         except KeyError as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录")
