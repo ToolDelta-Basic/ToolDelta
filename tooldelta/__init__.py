@@ -1,3 +1,6 @@
+from colorama import init
+# 初始化 colorama 库
+init(autoreset=True)
 # for installing libs in debug mode
 from .basic_mods import *
 
@@ -11,6 +14,7 @@ from .packets import Packet_CommandOutput, PacketIDS
 from .cfg import Cfg as _Cfg
 from .logger import publicLogger
 from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
+
 
 from .plugin_load.injected_plugin import (
     execute_player_message,
