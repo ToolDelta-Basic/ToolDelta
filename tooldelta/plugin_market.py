@@ -168,7 +168,7 @@ class PluginMarket:
             # Move downloaded files to target download path
             target_path = os.path.join(download_path, plugin_data.name)
             os.makedirs(target_path, exist_ok=True)
-            for root, dirs, files in os.walk(cache_dir):
+            for root, _, files in os.walk(cache_dir):
                 for filename in files:
                     source_file = os.path.join(root, filename)
                     target_file = os.path.join(

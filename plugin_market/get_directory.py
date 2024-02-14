@@ -12,7 +12,7 @@ def generate_json(directory):
         return data
 
     # 获取目录下所有文件
-    for root, dirs, files in os.walk(target_directory):
+    for root, _, files in os.walk(target_directory):
         relative_path = os.path.relpath(root, target_directory)
         if relative_path == ".":
             relative_path = ""
