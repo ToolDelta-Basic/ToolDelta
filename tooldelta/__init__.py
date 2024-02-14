@@ -200,11 +200,13 @@ class Frame:
 
     def welcome(self):
         # 欢迎提示
-        Print.print_with_info(f"§d{PRG_NAME} - Panel Embed By SuperScript", "§d 加载 ")
+        Print.print_with_info(f"§d{PRG_NAME} Panel Embed By SuperScript", "§d 加载 ")
+        Print.print_with_info(f"§d{PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", "§d 加载 ")
+        Print.print_with_info(f"§d{PRG_NAME} 项目地址: https://github.com/ToolDelta", "§d 加载 ")
         Print.print_with_info(
             f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", "§d 加载 "
         )
-        Print.print_with_info(f"§d{PRG_NAME} - Panel 已启动", "§d 加载 ")
+        Print.print_with_info(f"§d{PRG_NAME} Panel 已启动", "§d 加载 ")
 
     def plugin_load_finished(self, plugins: PluginGroup):
         # 插件成功载入提示
