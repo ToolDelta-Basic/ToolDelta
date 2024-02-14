@@ -148,13 +148,16 @@ class Builtins:
                     return default
                 Builtins.SimpleJsonDataReader.SafeJsonDump(
                     default, 
-                    open(filepath, "r", encoding="utf-8")
+                    open(filepath, "w", encoding="utf-8")
                 )
                 return default
             except ujson.JSONDecodeError as err:
                 raise Builtins.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
                 )
+            except Exception as err:
+                Print.print_err(f"读文件路径 {filepath} 发生错误")
+                raise err
 
         @staticmethod
         def writeFileTo(plugin_name: str, file: str, obj):
