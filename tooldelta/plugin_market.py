@@ -109,7 +109,6 @@ class PluginMarket:
         os.system(CLS_CMD)
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
 
-
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = ', '.join([f'{k}v{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
         os.system(CLS_CMD)
@@ -170,7 +169,7 @@ class PluginMarket:
                     os.makedirs(folder_path, exist_ok=True)
                 urlmethod.download_file(url, os.path.join(cache_dir, paths), True)
             # Move downloaded files to target download path
-            target_path = os.path.join(download_path, plugin_data.name)
+            target_path = download_path
             os.makedirs(target_path, exist_ok=True)
             for root, _, files in os.walk(cache_dir):
                 for filename in files:
