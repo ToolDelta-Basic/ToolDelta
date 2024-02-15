@@ -39,8 +39,7 @@ class NewPlugin(Plugin):
         "description": "所有使用到聊天栏菜单的组件的前置组件",
         "limit_launcher": null,
         "pre-plugins": {},
-        "plugin-type": "classic",
-        "dirs": []
+        "plugin-type": "classic"
     },
     ```
     - "聊天栏菜单" 键: 插件的名字, 创建插件文件夹的时候也将使用这个名字
@@ -49,10 +48,8 @@ class NewPlugin(Plugin):
         - 如果是 ToolDelta 组合式插件: "classic"
         - 如果是 ToolDelta 注入式插件: "injected"
     - "description" 值: 插件的简介(功能摘要)
-    - "limited-launcher" 值: 限制插件只能在哪种启动器框架运行, 通用即null
-    - "pre-plugins" 值: 前置插件的名称与最低需求版本的键值对, 都为string.
-    - "dirs" 值: 除了插件本体的__init__.py外, 其他插件内带文件相对于插件文件夹的相对目录的列表.
-        - tips: 不存在的文件夹会被自动创建.
+    - "limited-launcher" 值: 限制插件只能在哪种启动器框架运行, 通用即null  
+    - "pre-plugins" 值: 前置插件的名称与最低需求版本的键值对, 都为string  
  - 上传内容若会对用户的设备造成损害, 或会盗窃用户信息的插件, <b>将不予通过审核。</b>
 
 <b>如何上传你的插件？</b>
