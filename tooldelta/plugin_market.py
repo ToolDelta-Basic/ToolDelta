@@ -69,6 +69,7 @@ class PluginMarket:
             now_index = 0
             sum_pages = int((all_indexes - 1) / 8) + 1
             now_page = 0
+            last_operation = ""
             while True:
                 os.system(CLS_CMD)
                 Print.print_inf(market_datas["SourceName"] + ": " + market_datas["Greetings"])
@@ -81,15 +82,15 @@ class PluginMarket:
                         Print.print_inf("")
                 Print.print_inf(f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页")
                 Print.print_inf("§f输入插件序号选择插件, 以查看详情", need_log=False)
-                res = input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 ")).lower().strip()
-                if res == "+":
+                last_operation = (input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 ")) or last_operation).lower().strip()
+                if last_operation == "+":
                     now_index += 8
-                elif res == "-":
+                elif last_operation == "-":
                     now_index -= 8
-                elif res == "q":
+                elif last_operation == "q":
                     break
                 else:
-                    res = Builtins.try_int(res)
+                    res = Builtins.try_int(last_operation)
                     if res:
                         if res in range(1, all_indexes + 1):
                             r = self.choice_plugin(PluginMaketPluginData(plugins_list[res - 1][0], plugins_list[res - 1][1]), market_datas["MarketPlugins"])
@@ -114,11 +115,11 @@ class PluginMarket:
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
-        pre_plugins_str = ', '.join([f'{k}v{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
+        pre_plugins_str = ', '.join([f'{k}§7v{v}' for k, v in plugin_data.pre_plugins.items()]) or "无"
         os.system(CLS_CMD)
         Print.print_inf(f"{plugin_data.name} v{plugin_data.version_str}", need_log = False)
-        Print.print_inf(f"§7作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}", need_log = False)
-        Print.print_inf(f"前置插件: {pre_plugins_str}", need_log = False)
+        Print.print_inf(f"作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}", need_log = False)
+        Print.print_inf(f"前置插件: §f{pre_plugins_str}", need_log = False)
         Print.print_inf(f"介绍: {plugin_data.description}", need_log = False)
         Print.print_inf("", need_log = False)
         res = input(Print.fmt_info("§f下载=§aY§f, 取消=§cN§f, 请输入:")).lower().strip()

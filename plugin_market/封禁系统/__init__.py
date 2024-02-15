@@ -86,10 +86,10 @@ class BanSystem(Plugin, PluginAPI):
         ban_data = self.get_ban_data(player)
         ban_to, reason = ban_data["BanTo"], ban_data["Reason"]
         if ban_to > time.time():
-            #self.game_ctrl.sendwocmd(f"/kick {player} {self.format_msg(player, ban_to, reason, '踢出玩家提示格式')}")
+            self.game_ctrl.sendwocmd(f"/kick {player} {self.format_msg(player, ban_to, reason, '踢出玩家提示格式')}")
             self.game_ctrl.say_to("@a", self.format_msg(player, ban_to, reason, "玩家被封禁的广播提示"))
             # 防止出现无法执行的指令
-            #self.game_ctrl.sendwocmd(f"/kick {player}")
+            self.game_ctrl.sendwocmd(f"/kick {player}")
 
     def format_msg(self, player: str, ban_to_sec: int, ban_reason: str, cfg_key: str):
         struct_time = time.gmtime(ban_to_sec)

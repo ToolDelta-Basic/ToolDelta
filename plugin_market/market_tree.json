@@ -5,12 +5,14 @@
     "DownloadRefURL": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market",
     "DirectoryFileURL": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market/directory.json",
     "MarketPlugins": {
-        "聊天栏菜单": {
+        "自定义聊天栏菜单": {
             "author": "SuperScript",
-            "version": "0.0.4",
-            "description": "所有使用到聊天栏菜单的组件的前置组件",
+            "version": "0.0.1",
+            "description": "自定义聊天栏菜单触发词触发的指令, 方便简洁",
             "limit_launcher": null,
-            "pre-plugins": {},
+            "pre-plugins": {
+                "聊天栏菜单": "0.0.3"
+            },
             "plugin-type": "classic"
         },
         "控制台执行MCFB指令": {
@@ -33,7 +35,7 @@
         "井字棋": {
             "author": "SuperScript/wling",
             "version": "0.0.1",
-            "description": "娱乐小游戏3x3井字棋",
+            "description": "娱乐小游戏: 3x3井字棋",
             "limit_launcher": null,
             "pre-plugins": {},
             "plugin-type": "injected"
@@ -85,6 +87,13 @@
                 "聊天栏菜单": "0.0.1"
             },
             "plugin-type": "classic"
+        },
+        "聊天栏菜单": {
+            "author": "SuperScript",
+            "version": "0.0.4",
+            "description": "所有使用到聊天栏菜单的组件的前置组件",
+            "limit_launcher": null,
+            "pre-plugins": {}
         }
     }
 }
