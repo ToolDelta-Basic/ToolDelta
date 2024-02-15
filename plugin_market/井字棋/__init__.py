@@ -2,8 +2,8 @@ from tooldelta.plugin_load import player_message, sendcmd, get_all_player, rawTe
 
 __plugin_meta__ = {
     "name": "井字棋",
-    "version": "1.0",
-    "author": "SuperScript",
+    "version": "0.0.2",
+    "author": "SuperScript/wling",
 }
 class JZQStage:
     def __init__(self):
