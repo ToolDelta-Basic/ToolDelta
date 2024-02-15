@@ -93,7 +93,8 @@
             "version": "0.0.4",
             "description": "所有使用到聊天栏菜单的组件的前置组件",
             "limit_launcher": null,
-            "pre-plugins": {}
+            "pre-plugins": {},
+            "plugin-type": "classic"
         }
     }
 }
