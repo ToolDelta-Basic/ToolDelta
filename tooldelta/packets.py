@@ -188,21 +188,21 @@ class SubPacket_CmdOutputMsg:
     Success: bool
     Message: str
     Parameters: list[str]
-    def __init__(this, pkt: dict):
-        this.Success = pkt["Success"]
-        this.Parameters = pkt["Parameters"]
-        this.Message = pkt["Message"]
+    def __init__(self, pkt: dict):
+        self.Success = pkt["Success"]
+        self.Parameters = pkt["Parameters"]
+        self.Message = pkt["Message"]
 
 class SubPacket_CmdOrigin:
     Origin: int
     UUID: str
     RequestID: str
     PlayerUniqueID: int
-    def __init__(this, pkt: dict):
-        this.Origin = pkt["Origin"]
-        this.UUID = pkt["UUID"]
-        this.RequestID = pkt["RequestID"]
-        this.PlayerUniqueID = pkt["PlayerUniqueID"]
+    def __init__(self, pkt: dict):
+        self.Origin = pkt["Origin"]
+        self.UUID = pkt["UUID"]
+        self.RequestID = pkt["RequestID"]
+        self.PlayerUniqueID = pkt["PlayerUniqueID"]
 
 class Packet_CommandOutput:
     CommandOrigin: SubPacket_CmdOrigin
@@ -210,9 +210,9 @@ class Packet_CommandOutput:
     SuccessCount: int
     OutputMessages: list[SubPacket_CmdOutputMsg]
     as_dict: dict
-    def __init__(this, pkt: dict):
-        this.as_dict = pkt
-        this.CommandOrigin = SubPacket_CmdOrigin(pkt["CommandOrigin"])
-        this.OutputMessages = [SubPacket_CmdOutputMsg(imsg) for imsg in pkt["OutputMessages"]]
-        this.SuccessCount = pkt["SuccessCount"]
-        this.OutputType = pkt["OutputType"]
+    def __init__(self, pkt: dict):
+        self.as_dict = pkt
+        self.CommandOrigin = SubPacket_CmdOrigin(pkt["CommandOrigin"])
+        self.OutputMessages = [SubPacket_CmdOutputMsg(imsg) for imsg in pkt["OutputMessages"]]
+        self.SuccessCount = pkt["SuccessCount"]
+        self.OutputType = pkt["OutputType"]

@@ -482,7 +482,8 @@ class FrameNeOmg(StandardFrame):
         self.packet_handler(pkt_type, pkt)
 
     def init_all_functions(self):
-        def sendcmd(cmd, waitForResp = False, timeout = 30):
+
+        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
                 res = self.omega.send_player_command_need_response(cmd, timeout)
                 if res is None:
@@ -491,7 +492,8 @@ class FrameNeOmg(StandardFrame):
             else:
                 self.omega.send_player_command_omit_response(cmd)
                 return b""
-        def sendwscmd(cmd, waitForResp = False, timeout = 30):
+
+        def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
                 res = self.omega.send_websocket_command_need_response(cmd, timeout)
                 if res is None:
@@ -500,6 +502,7 @@ class FrameNeOmg(StandardFrame):
             else:
                 self.omega.send_websocket_command_omit_response(cmd)
                 return b""
+
         def sendwocmd(cmd: str):
             self.omega.send_settings_command(cmd)
         def sendPacket(pktID: int, pkt: str):

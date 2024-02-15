@@ -11,6 +11,7 @@ from tooldelta.color_print import Print
 player_message_funcs = {}
 player_join_funcs = {}
 player_left_funcs = {}
+player_death_funcs = {}
 repeat_funcs = {}
 init_plugin_funcs = {}
 
@@ -38,6 +39,13 @@ def player_left(priority=None):
 
     return decorator
 
+def player_death(priority=None):
+
+    def decorator(func):
+        player_death_funcs[func] = priority
+        return func
+
+    return decorator
 
 def init(priority=None):
     def decorator(func):
@@ -98,9 +106,15 @@ async def execute_repeat():
     # 并发执行所有任务
     await asyncio.gather(*tasks)
 
+
 # 处理玩家消息并执行插件
 async def execute_player_message(playername, message):
     await execute_asyncio_task(player_message_funcs, playername, message)
+
+
+async def execute_death_message(playername,killer):
+    await execute_asyncio_task(player_death_funcs, playername, killer)
+
 
 async def execute_player_join(playername):
     await execute_asyncio_task(player_join_funcs, playername)
