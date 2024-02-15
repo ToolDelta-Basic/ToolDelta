@@ -1,6 +1,5 @@
-from tooldelta import Plugin, PluginAPI, plugins, Frame
-
 import json, time
+from tooldelta import Plugin, PluginAPI, plugins, Frame
 
 def find_key_from_value(dic, val):
     # A bad method!
@@ -55,7 +54,7 @@ class BasicFunctionLib(PluginAPI):
                     return result[targetNameToGet][scoreboardNameToGet]
         except KeyError as err:
             raise Exception("Failed to get score: %s" % str(err))
-        
+
     def getPos(self, targetNameToGet: str, timeout: float | int = 1) -> dict:
         """
         获取租赁服内玩家坐标的函数
@@ -93,7 +92,7 @@ class BasicFunctionLib(PluginAPI):
                 return list(result.values())[0]
             else:
                 return result[targetNameToGet]
-            
+
     def getItem(self, targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
         "获取玩家背包内物品数量: 目标选择器, 物品ID, 特殊值 = 所有"
         if (targetName not in self.game_ctrl.allplayers) and (targetName != self.game_ctrl.bot_name) and (not targetName.startswith("@a")):
@@ -105,7 +104,7 @@ class BasicFunctionLib(PluginAPI):
             return 0
         else:
             return int(result.OutputMessages[0].Parameters[1])
-            
+
     def getTarget(self, sth: str, timeout: bool | int = 5) -> list:
         "获取符合目标选择器实体的列表"
         if not sth.startswith("@"):
@@ -124,7 +123,7 @@ class BasicFunctionLib(PluginAPI):
             return "air"
         else:
             return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
-        
+
     def waitMsg(self, who: str, timeout: int  = 30, exc = None):
         active_basic_api: ActivatePluginAPI = active_basic_apis[0]
         """
@@ -152,12 +151,12 @@ class BasicFunctionLib(PluginAPI):
                     raise exc
                 else:
                     return None
-                
+
     def getPosXYZ(self, player, timeout = 30) -> tuple[float, float, float]:
         "获取玩家坐标的X, Y, Z值"
         res = self.getPos(player, timeout  = timeout)["position"]
         return res["x"], res["y"], res["z"]
-    
+
     def sendresultcmd(self, cmd, timeout = 30):
         "返回命令执行是否成功"
         res = self.game_ctrl.sendwscmd(cmd, True, timeout).SuccessCount
@@ -182,7 +181,7 @@ class ActivatePluginAPI(Plugin):
         if player in self.waitmsg_req:
             self.waitmsg_result[player] = msg
             self.waitmsg_req.remove(player)
-    
+
     def on_player_leave(self, player: str):
         if player in self.waitmsg_req:
             self.waitmsg_result[player] = EXC_PLAYER_LEAVE
