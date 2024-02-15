@@ -32,7 +32,17 @@ jobs:
         run: python plugin_market/get_directory.py
 
       - name: Submit Changes
+        if: ${{ github.event_name == 'pull_request' }}  # 仅在 Pull Request 事件中运行
         uses: EndBug/add-and-commit@v9
+        with:
+            default_author: github_actions
+            message: '[AUTO] Generate Directory JSON'
+            add: 'plugin_market/directory.json'
+            branch: ${{ github.head_ref }}  # 使用 PR 的源分支作为目标分支
+
+      - name: Submit Changes
+        uses: EndBug/add-and-commit@v9
+        if: ${{ github.event_name == 'push' }}
         with:
             default_author: github_actions
             message: '[AUTO] Generate Directory JSON'
