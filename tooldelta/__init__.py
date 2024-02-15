@@ -1,4 +1,5 @@
 from colorama import init
+
 # 初始化 colorama 库
 init(autoreset=True)
 # for installing libs in debug mode
@@ -21,6 +22,8 @@ from .plugin_load.injected_plugin import (
     execute_player_join,
     execute_player_left,
     execute_repeat,
+    execute_init,
+    execute_death_message,
 )
 
 # 整个系统由三个部分组成
@@ -468,6 +471,7 @@ class GameCtrl:
                         killer = pkt["Parameters"][1]
                     else:
                         killer = None
+                    asyncio.run(execute_death_message(pkt["Parameters"][0],killer))
                     plugin_grp.execute_player_death(
                         pkt["Parameters"][0],
                         killer,
@@ -524,6 +528,9 @@ class GameCtrl:
             self.linked_frame.on_plugin_err
         )
         Builtins.createThread(asyncio.run, (execute_repeat(),))
+        Print.print_inf("正在执行初始化注入式函数init任务")
+        asyncio.run(execute_init())
+        Print.print_suc("初始化注入式函数init任务执行完毕")
         self.inject_welcome()
 
     def inject_welcome(self):

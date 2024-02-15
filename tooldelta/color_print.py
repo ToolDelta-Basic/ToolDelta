@@ -37,7 +37,7 @@ class _Print:
             ["g", "#DDD605"],
             ["r", "/"]
         ]
-    
+
     def __call__(self, text: str):
         self.print_inf(text)
 
@@ -127,6 +127,9 @@ class _Print:
 
     def print_war(self, text: str, **print_kwargs):
         self.print_with_info(f"§6{text}", self.INFO_WARN, **print_kwargs)
+
+    def print_load(self, text: str, **print_kwargs):
+        self.print_with_info(f"§d{text}", self.INFO_LOAD, **print_kwargs)
 
     def fmt_info(self, text: str, info: str = "§f 信息 "):
         setNextColor = "§r"

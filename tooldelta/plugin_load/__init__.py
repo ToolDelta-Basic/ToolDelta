@@ -66,10 +66,7 @@ class PluginGroup:
         dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)
         classic_plugin.read_plugin_from_new(self, {})
         asyncio.run(injected_plugin.load_plugin(self))
-        Print.print_inf("正在执行初始化函数init任务")
-        asyncio.run(injected_plugin.execute_init())
 
-        Print.print_suc("初始化函数init任务执行完毕")
     def add_broadcast_listener(self, evt_name: str):
         "将下面的方法作为一个广播事件接收器"
 
@@ -293,6 +290,7 @@ class PluginGroup:
 
 
 # NOTE 快捷导入插件函数(待增加)
+
 from .injected_plugin.movent import (
     sendcmd,
     sendfbcmd,
@@ -304,7 +302,12 @@ from .injected_plugin.movent import (
     get_all_player,
     getTarget,
     rawText,
-    is_op
+    is_op,
+    getPos,
+    get_robotname,
+    countdown,
+    getBlockTile,
+    getTickingAreaList,
 )
 
 from .injected_plugin import player_message, player_join, player_left, repeat, init
