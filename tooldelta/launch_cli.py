@@ -358,7 +358,11 @@ class FrameNeOmg(StandardFrame):
 
     def start_neomega_proc(self):
         free_port = get_free_port(24016)
-        access_point_file = f"neomega_{platform.uname().system.lower()}_access_point_{self.sys_machine}"
+        access_point_file = (
+            f"neomega_{platform.uname().system.lower()}_access_point_{self.sys_machine}"
+        )
+        if 'TERMUX_VERSION' in os.environ:
+            access_point_file = f"neomega_android_access_point_{self.sys_machine}"
         if platform.system() == "Windows":
             access_point_file+=".exe"
         py_file_path = os.path.join(
@@ -455,7 +459,10 @@ class FrameNeOmg(StandardFrame):
             self.sys_machine = "amd64"
         elif self.sys_machine == "aarch64":
             self.sys_machine = "arm64"
-        sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
+        if 'TERMUX_VERSION' in os.environ:
+            sys_info_fmt = f"Android:{self.sys_machine.lower()}"
+        else:
+            sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
         source_dict = res[sys_info_fmt]
         for k, v in source_dict.items():
             pathdir = os.path.join(os.getcwd(), k)
@@ -482,7 +489,8 @@ class FrameNeOmg(StandardFrame):
         self.packet_handler(pkt_type, pkt)
 
     def init_all_functions(self):
-        def sendcmd(cmd, waitForResp = False, timeout = 30):
+
+        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
                 res = self.omega.send_player_command_need_response(cmd, timeout)
                 if res is None:
@@ -491,7 +499,8 @@ class FrameNeOmg(StandardFrame):
             else:
                 self.omega.send_player_command_omit_response(cmd)
                 return b""
-        def sendwscmd(cmd, waitForResp = False, timeout = 30):
+
+        def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
                 res = self.omega.send_websocket_command_need_response(cmd, timeout)
                 if res is None:
@@ -500,6 +509,7 @@ class FrameNeOmg(StandardFrame):
             else:
                 self.omega.send_websocket_command_omit_response(cmd)
                 return b""
+
         def sendwocmd(cmd: str):
             self.omega.send_settings_command(cmd)
         def sendPacket(pktID: int, pkt: str):

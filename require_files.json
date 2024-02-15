@@ -1,21 +1,23 @@
 {
-    "Mirror": [
-        "https://mirror.ghproxy.com"
-    ],
-    "Linux:amd64": {
-        "tooldelta/neo_libs/neomega_linux_amd64.so":"ToolDelta/ToolDelta-depends/main/neomega_linux_amd64.so",
-        "tooldelta/neo_libs/neomega_linux_access_point_amd64": "ToolDelta/ToolDelta-depends/main/neomega_linux_access_point_amd64"
-    },
-    "Linux:arm64": {
-        "tooldelta/neo_libs/neomega_linux_arm64.so":"ToolDelta/ToolDelta-depends/main/neomega_linux_arm64.so",
-        "tooldelta/neo_libs/neomega_linux_access_point_arm64": "ToolDelta/ToolDelta-depends/main/neomega_linux_access_point_arm64"
-    },
-    "Windows:amd64": {
-        "tooldelta/neo_libs/neomega_windows_amd64.dll":"ToolDelta/ToolDelta-depends/main/neomega_windows_amd64.dll",
-        "tooldelta/neo_libs/neomega_windows_access_point_amd64.exe":"ToolDelta/ToolDelta-depends/main/neomega_windows_access_point_amd64.exe"
-    },
-    "Windows:arm64": {
-        "tooldelta/neo_libs/neomega_windows_arm64.dll":"ToolDelta/ToolDelta-depends/main/neomega_windows_arm64.dll",
-        "tooldelta/neo_libs/neomega_windows_access_point_arm64.exe": "ToolDelta/ToolDelta-depends/main/neomega_windows_access_point_arm64.exe"
-    }
+  "Mirror": ["https://mirror.ghproxy.com"],
+  "Linux:amd64": {
+    "tooldelta/neo_libs/neomega_linux_amd64.so": "ToolDelta/ToolDelta-depends/main/neomega_linux_amd64.so",
+    "tooldelta/neo_libs/neomega_linux_access_point_amd64": "ToolDelta/ToolDelta-depends/main/neomega_linux_access_point_amd64"
+  },
+  "Android:arm64": {
+  "tooldelta/neo_libs/neomega_android_arm64.so": "ToolDelta/ToolDelta-depends/main/neomega_android_arm64.so",
+    "tooldelta/neo_libs/neomega_android_access_point_arm64": "ToolDelta/ToolDelta-depends/main/neomega_android_access_point_arm64"
+  },
+  "Linux:arm64": {
+    "tooldelta/neo_libs/neomega_linux_arm64.so": "ToolDelta/ToolDelta-depends/main/neomega_linux_arm64.so",
+    "tooldelta/neo_libs/neomega_linux_access_point_arm64": "ToolDelta/ToolDelta-depends/main/neomega_linux_access_point_arm64"
+  },
+  "Windows:amd64": {
+    "tooldelta/neo_libs/neomega_windows_amd64.dll": "ToolDelta/ToolDelta-depends/main/neomega_windows_amd64.dll",
+    "tooldelta/neo_libs/neomega_windows_access_point_amd64.exe": "ToolDelta/ToolDelta-depends/main/neomega_windows_access_point_amd64.exe"
+  },
+  "Windows:arm64": {
+    "tooldelta/neo_libs/neomega_windows_arm64.dll": "ToolDelta/ToolDelta-depends/main/neomega_windows_arm64.dll",
+    "tooldelta/neo_libs/neomega_windows_access_point_arm64.exe": "ToolDelta/ToolDelta-depends/main/neomega_windows_access_point_arm64.exe"
+  }
 }
