@@ -31,17 +31,27 @@ else
 fi
 
 # 权限
-chmod +x "$app_name"
-# 创建符号链接
-if ln -s "$install_dir/start.sh" "/usr/local/bin/$shortcut_command"; then
+case ${PLANTFORM} in
+    "Linux_x86_64")
+    executable="/usr/local/bin/$shortcut_command"
+    ;;
+    "Andorid_armv8")
+    executable="/data/data/com.termux/files/usr/bin/$shortcut_command"
+    ;;
+    *)
+    echo "不支持的平台${PLANTFORM}"
+    EXIT_FAILURE
+    ;;
+esac
+
+if ln -s "$install_dir/start.sh" $executable; then
     echo "快捷指令 '$shortcut_command' 创建成功。"
 else
     echo "创建快捷指令 '$shortcut_command' 失败。请检查权限或手动创建快捷指令。"
 fi
-
 # 生成start.sh脚本
 echo "pushd $install_dir && ./$app_name && popd " >  "$install_dir/start.sh"
-chmod +x "$install_dir/start.sh"
+chmod 777 "$install_dir/start.sh"
 
 popd
 }
@@ -68,11 +78,10 @@ elif [[ $(uname -o) == "Android" ]]; then
     fi
     if [ -x "/sdcard/Download" ]; then
         echo -e ""
-        # green_line "太好了，omega将被保存到downloads文件夹下，你可以从任何文件管理器中找到它了"
         # working_dir="/sdcard/Download"
         # executable="/sdcard/Download/fastbuilder"
     else
-        red_line "不行啊，没给权限"
+        red_line "拜托你很逊欸，没权限"
         EXIT_FAILURE
     fi
 else
