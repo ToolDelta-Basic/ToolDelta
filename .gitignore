@@ -151,15 +151,14 @@ py_test.py
 fbtoken
 ToolDelta基本配置.json
 phoenixbuilder*
+*.bat
 *.bdx
 *.txt
-omg*
-omg*.exe
-omg*.app
 *.so
 *.h
 *.dll
 *.dylib
+*.cmd
 tos.sh
 build_points.sh
 neomega_*_access_point_*

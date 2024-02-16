@@ -140,11 +140,11 @@ def check_err(r):
 
 
 if platform.uname()[0] == "Linux":
-    LIB = ctypes.cdll.LoadLibrary("ToolDelta/fb_conn/libfbconn_linux_amd64.so")
+    LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_linux_amd64.so")
 elif platform.uname()[0] == "Windows":
-    LIB = ctypes.cdll.LoadLibrary("ToolDelta/fb_conn/libfbconn_windows_x86_64.dll")
+    LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_windows_x86_64.dll")
 else:
-    raise Exception("Platform unknown: " + platform.uname()[0])
+    raise Exception("未知的运行平台: " + platform.uname()[0])
 LIB = InitLib(LIB)
 
 
@@ -170,7 +170,7 @@ def RecvGamePacket(connID: int):
         raise StopIteration
 
 
-def RecvGamePacketIt(connID: int) -> bytes:
+def RecvGamePacketIt(connID: int):
     while 1:
         r = LIB.RecvGamePacket(to_GoInt(connID))
         check_err_in_struct(r)

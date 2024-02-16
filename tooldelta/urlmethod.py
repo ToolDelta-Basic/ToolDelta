@@ -9,7 +9,18 @@ def _pretty_kb(n):
         return f"{round(n / 1024, 2)}K"
     else:
         return f"{round(n, 1)}"
-
+    
+def _path_get_filename(path: str):
+    if "/" not in path:
+        return None
+    else:
+        return path.split("/")[-1]
+    
+def _is_common_text_file(url_path: str):
+    for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]:
+        if url_path.endswith(i):
+            return True
+    return False
 
 def get_file_size(url):
     response = requests.head(url)
@@ -19,17 +30,15 @@ def get_file_size(url):
     else:
         return None
 
-
 def download_file(f_url: str, f_dir: str, ignore_warnings=False):
     with requests.get(f_url, stream=True, timeout=10) as res:
         res.raise_for_status()
         filesize = get_file_size(f_url)
 
-        if filesize < 256 and "404" in res.text:
-            raise requests.RequestException("下载失败: 返回 404")
-        elif filesize < 256 and not ignore_warnings:
+        if filesize < 256 and not ignore_warnings:
             Print.print_war(f"下载 {f_url} 的文件警告: 文件大小异常, 不到 0.25KB")
 
+        chunk_size = 8192
         nowsize = 0
         succ = False
         lastime = time.time()
@@ -40,7 +49,7 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
                 nowtime = time.time()
 
                 if nowtime != lastime:
-                    useSpeed = 1024 / (nowtime - lastime)
+                    useSpeed = chunk_size / (nowtime - lastime)
                     lastime = nowtime
 
                 nowsize += len(chk)
@@ -58,16 +67,24 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
                         end="\r",
                         need_log=False,
                     )
-
-                if nowsize / filesize > 1:
-                    Print.print_war(f"下载: 实际大小已超出文件大小 {round(nowsize / filesize, 2)} 倍")
-
         succ = True
+        Print.print_inf(f"下载总文件大小: {filesize}, 已获取大小: {nowsize}")
 
         if succ:
             shutil.move(f_dir + ".tmp", f_dir)
         else:
             os.remove(f_dir + ".tmp")
+
+def download_unknown_file(url: str, save_dir: str):
+    # 鉴于 Content-Length 不一定表示文件原始大小, 二进制文件与文本文件需要分开下载
+    if (_is_common_text_file(url) or
+        _path_get_filename(url) in ("LICENSE",)):
+        resp = requests.get(url)
+        resp.raise_for_status()
+        with open(save_dir, "w", encoding = "utf-8") as f:
+            f.write(resp.text)
+    else:
+        download_file(url, save_dir)
 
 
 def get_free_port(start=8080, end=65535):

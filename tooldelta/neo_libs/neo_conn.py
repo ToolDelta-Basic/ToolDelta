@@ -569,7 +569,7 @@ class ThreadOmega:
 
         # chat
         LIB.ListenChat()
-        self._player_chat_listeners:[Callable[[Chat,PlayerKit],None]]=[]
+        self._player_chat_listeners:List[Callable[[Chat,PlayerKit],None]]=[]
         self._specific_chat_listeners:Dict[str,List[Callable[[Chat,PlayerKit],None]]]={}
 
         # named command block msg

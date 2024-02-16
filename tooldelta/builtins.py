@@ -1,6 +1,12 @@
 from .color_print import Print
 import ujson, os, time, threading, traceback, copy, ctypes
 
+event_pool = {
+    "tmpjson_save": threading.Event()
+}
+event_flags_pool = {
+    "tmpjson_save": True
+}
 
 class Builtins:
     class ThreadExit(SystemExit):
@@ -259,22 +265,24 @@ class Builtins:
 
 
 def safe_close():
-    for k, (isChanged, dat) in jsonPathTmp.items():
-        if isChanged:
-            Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
+    event_pool["tmpjson_save"].set()
+    event_flags_pool["tmpjson_save"] = False
 
 
 def _tmpjson_save_thread():
+    evt = event_pool["tmpjson_save"]
     while 1:
-        time.sleep(60)
+        evt.wait(60)
         for k, (isChanged, dat) in jsonPathTmp.copy().items():
             if isChanged:
                 Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
                 jsonPathTmp[k][0] = False
+        if not event_flags_pool["tmpjson_save"]:
+            return
 
 
-def tmpjson_save_thread(frame):
-    frame.createThread(_tmpjson_save_thread)
+def tmpjson_save_thread():
+    Builtins.createThread(_tmpjson_save_thread)
 
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):

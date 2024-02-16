@@ -14,7 +14,7 @@ from .plugin_load import Plugin, PluginAPI, PluginGroup
 from .packets import Packet_CommandOutput, PacketIDS
 from .cfg import Cfg as _Cfg
 from .logger import publicLogger
-from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote
+from .launch_cli import StandardFrame, FrameFBConn, FrameNeOmg, FrameNeOmgRemote, SysStatus
 
 
 from .plugin_load.injected_plugin import (
@@ -308,7 +308,8 @@ class Frame:
                                     if res == -1:
                                         return
             except (EOFError, KeyboardInterrupt):
-                pass
+                Print.print_inf("使用 Ctrl+C 退出中...")
+                self.system_exit()
 
         def _try_execute_console_cmd(func, rsp, mode, arg1):
             try:
@@ -320,17 +321,16 @@ class Frame:
                 Print.print_err("[控制台执行命令] 指令缺少参数")
                 return
             try:
-                func(rsp_arg)
-                return 1
+                return func(rsp_arg) or 0
             except:
                 Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
 
-        self.createThread(_console_cmd_thread)
+        self.createThread(_console_cmd_thread, usage = "控制台指令")
 
     def system_exit(self):
         exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
-        if self.link_game_ctrl.allplayers:
+        if self.link_game_ctrl.allplayers and not isinstance(self.launcher, (FrameNeOmgRemote,)):
             # kick @s
             try:
                 self.link_game_ctrl.sendwscmd(
@@ -339,8 +339,9 @@ class Frame:
             except:
                 pass
         time.sleep(0.5)
-        self.safe_close()
-        os._exit(0)
+        self.launcher.status = SysStatus.NORMAL_EXIT
+        self.launcher.exit_event.set()
+        return -1
 
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
@@ -569,7 +570,7 @@ class GameCtrl:
         self.sendwocmd(f"title {target} actionbar {text}")
 
 
-def start_tool_delta():
+def start_tool_delta(exit_directly = False):
     # 初始化系统
     global frame, game_control, plugins
     try:
@@ -586,16 +587,16 @@ def start_tool_delta():
         plugins.read_all_plugins()
         frame.plugin_load_finished(plugins)
         plugins.execute_def(frame.on_plugin_err)
-        builtins.tmpjson_save_thread(frame)
+        builtins.tmpjson_save_thread()
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
         raise frame.launcher.launch()
-    except KeyboardInterrupt:
-        Print.print_suc("已退出.")
-    except SystemExit:
+    except (KeyboardInterrupt, SystemExit):
         pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
     finally:
         frame.safe_close()
-        os._exit(0)
+        Print.print_suc("ToolDelta 已退出.")
+        if exit_directly:
+            os._exit(0)

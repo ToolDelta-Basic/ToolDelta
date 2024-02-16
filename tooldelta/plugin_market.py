@@ -170,12 +170,13 @@ class PluginMarket:
                 os.makedirs(os.path.join(cache_dir, plugin_data.name), exist_ok=True)
                 path_last = _path_dir(paths)
                 if path_last is not None:
+                    # 自动创建文件夹
                     folder_path = os.path.join(cache_dir, path_last)
                     os.makedirs(folder_path, exist_ok=True)
-                urlmethod.download_file(url, os.path.join(cache_dir, paths), True)
+                urlmethod.download_unknown_file(url, os.path.join(cache_dir, paths))
             # Move downloaded files to target download path
             target_path = download_path
-            os.makedirs(target_path, exist_ok=True)
+            os.makedirs(target_path, exist_ok = True)
             for root, _, files in os.walk(cache_dir):
                 for filename in files:
                     source_file = os.path.join(root, filename)
@@ -199,7 +200,7 @@ class PluginMarket:
                 if plugin_data.name == folder.split("/")[0]:
                     # 展开
                     for file in files:
-                        data_list.append(folder+r"/"+file)
+                        data_list.append(folder + r"/"+file)
             return data_list
         except KeyError as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录")

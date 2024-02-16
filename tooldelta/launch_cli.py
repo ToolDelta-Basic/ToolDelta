@@ -27,12 +27,13 @@ class StandardFrame:
         self.serverPassword = password
         self.fbToken = fbToken
         self.auth_server = auth_server_url
-        self.status = SysStatus.LAUNCHING
-        self.system_type = platform.uname()[0]
+        self.status = SysStatus.LOADING
+        self.system_type = platform.uname().system
         self.inject_events = []
         self.packet_handler = None
         self.need_listen_packets = {9, 63, 79}
         self._launcher_listener = None
+        self.exit_event = threading.Event()
 
     def add_listen_packets(self, *pcks: int):
         for i in pcks:
@@ -111,11 +112,11 @@ class FrameFBConn(StandardFrame):
                 if time.time() - connect_fb_start_time > max_con_time:
                     Print.print_err(f"§4{max_con_time}秒内未连接上FB，已退出")
                     self.close_fb()
-                    os._exit(0)
+                    raise SystemExit
                 elif self.status == SysStatus.FB_LAUNCH_EXC:
                     Print.print_err(f"§4连接FB时出现问题，已退出")
                     self.close_fb()
-                    os._exit(0)
+                    raise SystemExit
 
     def output_fb_msgs_thread(self):
         while 1:
@@ -162,7 +163,7 @@ class FrameFBConn(StandardFrame):
                     self.status = SysStatus.NORMAL_EXIT
                 elif "Press ENTER to exit." in tmp:
                     Print.print_err("§c程序退出")
-                    os._exit(0)
+                    self.status = SysStatus.NORMAL_EXIT
                 else:
                     Print.print_with_info(tmp, "§b  FB  §r")
 
@@ -319,7 +320,6 @@ class FrameNeOmg(StandardFrame):
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.status = None
         self.launch_event = threading.Event()
-        self.exit_event = threading.Event()
         self.injected = False
         self.omega = None
         self.download_libs()
@@ -436,12 +436,14 @@ class FrameNeOmg(StandardFrame):
         self._launcher_listener()
         # bug expired
         self.omega.listen_player_chat(lambda _, _2: None)
-        Print.print_suc("NEOMEGA 接入已就绪")
+        Print.print_suc("NEOMEGA 接入已就绪!")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")
         elif self.status == SysStatus.FB_CRASHED:
             return Exception("NeOmega 已崩溃")
+        else:
+            return SystemError("未知的退出状态")
 
     def download_libs(self):
         try:
@@ -529,7 +531,7 @@ class FrameNeOmg(StandardFrame):
 class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
         try:
-            openat_port = int(sys_args_to_dict().get("access-point-port", "0"))
+            openat_port = int(sys_args_to_dict().get("access-point-port", "24020"))
             assert openat_port in range(65536)
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
@@ -537,7 +539,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
-            os._exit(0)
+            return SystemExit
         else:
             Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
         self.set_omega(openat_port)
@@ -551,8 +553,8 @@ class FrameNeOmgRemote(FrameNeOmg):
         # bug expired
         self.omega.listen_player_chat(lambda _, _2: None)
         Print.print_suc("NEOMEGA 已就绪")
-        r = self.omega.wait_disconnect()
-        return Exception(r)
+        self.exit_event.wait()
+        return SystemExit()
 
     def download_libs(self):
         Print.print_inf("以 Remote 启动, 将不会检查库完整性")

@@ -1,4 +1,4 @@
-def get_tool_delta_version()->tuple[int,...]:
+def get_tool_delta_version() -> tuple[int, ...]:
     try:
         return tuple(
             int(v)
