@@ -25,10 +25,10 @@ jobs:
         sed -i "/return (/c\        return ($(sed -e 's/\./, /g' version))" tooldelta/get_tool_delta_version.py
 
     - name: Copy template script to temporary file
-      run: cp .github/template.sh start.sh
+      run: cp .github/template.sh install.sh
 
     - name: Replace version in temporary file
-      run: sed -i "s/{{VERSION}}/${{ env.VERSION }}/g" start.sh
+      run: sed -i "s/{{VERSION}}/${{ env.VERSION }}/g" install.sh
 
     - name: Set Up Python
       uses: actions/setup-python@v5
