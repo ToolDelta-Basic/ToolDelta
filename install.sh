@@ -25,7 +25,6 @@ echo "安装tooldelta库..."
 pip install tooldelta
 # 生成main.py文件
 echo "生成main.py文件..."
-chmod 777 "$app_name"
 case ${PLANTFORM} in
     "Linux_x86_64")
     executable="/usr/local/bin/$shortcut_command"
