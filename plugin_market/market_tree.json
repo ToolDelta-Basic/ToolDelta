@@ -76,7 +76,7 @@
         "plugin-type": "injected"
       },
       "维度传送": {
-        "author": "SuperScript",
+        "author": "wling/7912",
         "version": "0.0.1",
         "description": "作用如其名，跨纬度传送，谁都爱",
         "limit_launcher": null,
