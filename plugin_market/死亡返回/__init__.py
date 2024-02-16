@@ -67,7 +67,7 @@ async def _(playername, msg):
 
 
 @player_death()
-async def _(playername):
+async def _(playername,killer):
     deathTime = int(time.time())
     with open(config, "r", encoding="utf-8") as f:
         data = json.loads(f)
