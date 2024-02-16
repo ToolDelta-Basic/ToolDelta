@@ -16,18 +16,28 @@ function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
 chown -R $(whoami):$(whoami) "$install_dir"
-# 使用pkg安装Python
-echo "正在更新pkg"
-pkg -y update
-pkg -y upgrade
-echo "使用pkg安装Python..."
-pkg -y install python
+# 使用apt安装Python
+echo "使用apt安装Python..."
+apt-get install python3 -y
 
 # 安装tooldelta库
 echo "安装tooldelta库..."
 pip install tooldelta
 # 生成main.py文件
 echo "生成main.py文件..."
+chmod 777 "$app_name"
+case ${PLANTFORM} in
+    "Linux_x86_64")
+    executable="/usr/local/bin/$shortcut_command"
+    ;;
+    "Andorid_armv8")
+    executable="/data/data/com.termux/files/usr/bin/$shortcut_command"
+    ;;
+    *)
+    echo "不支持的平台${PLANTFORM}"
+    EXIT_FAILURE
+    ;;
+esac
 cat > $install_dir/main.py << EOF
 from tooldelta import start_tool_delta
 start_tool_delta(exit_directly=True)
