@@ -68,7 +68,6 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
                         need_log=False,
                     )
         succ = True
-        Print.print_inf(f"下载总文件大小: {filesize}, 已获取大小: {nowsize}")
 
         if succ:
             shutil.move(f_dir + ".tmp", f_dir)

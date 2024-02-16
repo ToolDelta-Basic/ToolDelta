@@ -122,7 +122,7 @@ class PluginMarket:
         Print.print_inf(f"前置插件: §f{pre_plugins_str}", need_log = False)
         Print.print_inf(f"介绍: {plugin_data.description}", need_log = False)
         Print.print_inf("", need_log = False)
-        res = input(Print.fmt_info("§f下载=§aY§f, 取消=§cN§f, 请输入:")).lower().strip()
+        res = input(Print.fmt_info("§f下载 = §aY§f, 取消 = §cN§f, 请输入:")).lower().strip()
         if res == "y":
             self.download_plugin(plugin_data, all_plugins_dict)
             return True
@@ -136,7 +136,7 @@ class PluginMarket:
     ):
         download_paths = self.find_dirs(plugin_data)
         for plugin_name, _ in plugin_data.pre_plugins.items():
-            Print.print_inf(f"插件 {plugin_data.name} 需要下载前置插件: {plugin_name}")
+            Print.print_inf(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
             self.download_plugin(
                 PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]),
                 all_plugins_dict,

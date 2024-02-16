@@ -67,6 +67,21 @@
           "聊天栏菜单": "0.0.4"
         },
         "plugin-type": "classic"
+      },"死亡返回": {
+        "author": "wling/7912",
+        "version": "0.0.1",
+        "description": "死了啊？没事，哥们给你记着，让我帮你返回吧！",
+        "limit_launcher": null,
+        "pre-plugins": { "维度传送": "0.0.1" },
+        "plugin-type": "injected"
+      },
+      "维度传送": {
+        "author": "SuperScript",
+        "version": "0.0.1",
+        "description": "作用如其名，跨纬度传送，谁都爱",
+        "limit_launcher": null,
+        "pre-plugins": {},
+        "plugin-type": "injected"
       },
       "库-基本组件API": {
         "author": "SuperScript",
@@ -74,6 +89,16 @@
         "description": "所有使用基本组件API的插件的前置",
         "limit_launcher": null,
         "pre-plugins": {},
+        "plugin-type": "classic"
+      },
+      "地图画导入": {
+        "author": "SuperScript",
+        "version": "0.0.1",
+        "description": "导入像素画, 支持多种图片格式, 还可以自定义地图画大小",
+        "limit_launcher": null,
+        "pre-plugins": {
+          "聊天栏菜单": "0.0.1"
+        },
         "plugin-type": "classic"
       },
       "库-世界交互": {
@@ -93,22 +118,6 @@
         "limit_launcher": null,
         "pre-plugins": {},
         "plugin-type": "classic"
-      },
-      "死亡返回": {
-        "author": "wling/7912",
-        "version": "0.0.1",
-        "description": "死了啊？没事，哥们给你记着，让我帮你返回吧！",
-        "limit_launcher": null,
-        "pre-plugins": { "维度传送": "0.0.1" },
-        "plugin-type": "injected"
-      },
-      "维度传送": {
-        "author": "SuperScript",
-        "version": "0.0.1",
-        "description": "作用如其名，跨纬度传送，谁都爱",
-        "limit_launcher": null,
-        "pre-plugins": {},
-        "plugin-type": "injected"
       }
     }
 }
