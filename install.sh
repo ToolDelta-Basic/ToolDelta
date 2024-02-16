@@ -18,7 +18,7 @@ mkdir -p "$install_dir"
 chown -R $(whoami):$(whoami) "$install_dir"
 # 使用pkg安装Python
 echo "使用pkg安装Python..."
-pkg update
+pkg update -y
 pkg install python
 
 # 安装tooldelta库
@@ -102,6 +102,7 @@ elif [[ $(uname -o) == "Android" ]]; then
         echo "请给予 termux 文件权限 ~"
         sleep 2
         termux-setup-storage
+        EXIT_FAILURE
     fi
     if [ -x "/sdcard/Download" ]; then
         echo -e ""
