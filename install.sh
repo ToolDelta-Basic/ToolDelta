@@ -13,8 +13,12 @@ function EXIT_FAILURE(){
 }
 
 function download_exec_for_termux(){
+# 权限
+mkdir -p "$install_dir"
+chown -R $(whoami):$(whoami) "$install_dir"
 # 使用pkg安装Python
 echo "使用pkg安装Python..."
+pkg update
 pkg install python
 
 # 安装tooldelta库
@@ -22,7 +26,7 @@ echo "安装tooldelta库..."
 pip install tooldelta
 # 生成main.py文件
 echo "生成main.py文件..."
-cat > main.py << EOF
+cat > $install_dir/main.py << EOF
 from tooldelta import start_tool_delta
 start_tool_delta(exit_directly=True)
 EOF
