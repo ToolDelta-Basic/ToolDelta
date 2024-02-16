@@ -35,6 +35,15 @@ jobs:
           poetry add pyinstaller
           poetry run pyinstaller -F -n ToolDelta-${{ matrix.os == 'windows-latest' && 'windows.exe' || 'linux' }} -i logo.ico main.py
 
+      - name: Build for arm64
+        uses: pguyot/arm-runner-action@v2
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        with:
+          commands: |
+            curl -sSL https://install.python-poetry.org | python3 -
+            bash poetry run pyinstaller -F -n ToolDelta-linux-arm64 -i logo.ico main.py
+
+
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
