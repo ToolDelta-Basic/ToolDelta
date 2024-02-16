@@ -19,7 +19,8 @@ chown -R $(whoami):$(whoami) "$install_dir"
 # 使用pkg安装Python
 echo "使用pkg安装Python..."
 pkg update -y
-pkg install python
+pkg upgrade -y
+pkg install python -y
 
 # 安装tooldelta库
 echo "安装tooldelta库..."
