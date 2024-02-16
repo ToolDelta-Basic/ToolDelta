@@ -1,7 +1,6 @@
 #!/bin/bash
 # 设置安装目录
 install_dir="/opt/tooldelta"
-rm -rf /usr/local/bin/td $install_dir
 # 设置应用程序名称
 app_name="ToolDelta"
 # 设置快捷指令
