@@ -31,6 +31,7 @@ else
 fi
 
 # 权限
+chmod 777 "$app_name"
 case ${PLANTFORM} in
     "Linux_x86_64")
     executable="/usr/local/bin/$shortcut_command"
