@@ -23,17 +23,12 @@ jobs:
       run: |
         echo "VERSION=$(<version)" >> $GITHUB_ENV
         sed -i "/return (/c\        return ($(sed -e 's/\./, /g' version))" tooldelta/get_tool_delta_version.py
-    - name: Copy template script to temporary file
-      run: cp .github/template.sh start.sh
-
-    - name: Replace version in temporary file
-      run: sed -i "s/{{VERSION}}/${{ env.VERSION }}/g" start.sh
 
     - name: Set Up Python
       uses: actions/setup-python@v5
       with:
           python-version: "3.11"
-
+    
     - name: Check Modified Code
       run: python tooldelta/get_tool_delta_version.py
 
