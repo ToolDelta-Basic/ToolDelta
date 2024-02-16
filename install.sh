@@ -12,7 +12,31 @@ function EXIT_FAILURE(){
     exit -1
 }
 
+function download_exec_for_termux(){
+# 使用pkg安装Python
+echo "使用pkg安装Python..."
+pkg install python
 
+# 安装tooldelta库
+echo "安装tooldelta库..."
+pip install tooldelta
+# 生成main.py文件
+echo "生成main.py文件..."
+cat > main.py << EOF
+from tooldelta import start_tool_delta
+start_tool_delta(exit_directly=True)
+EOF
+if ln -s "$install_dir/start.sh" $executable; then
+    echo "快捷指令 '$shortcut_command' 创建成功。"
+else
+    echo "创建快捷指令 '$shortcut_command' 失败。请检查权限或手动创建快捷指令。"
+fi
+# 生成start.sh脚本
+echo "pushd $install_dir && python main.py && popd " >  "$install_dir/start.sh"
+chmod 777 "$install_dir/start.sh"
+echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
+
+}
 
 function download_exec(){
 # 权限
@@ -53,18 +77,16 @@ fi
 # 生成start.sh脚本
 echo "pushd $install_dir && ./$app_name && popd " >  "$install_dir/start.sh"
 chmod 777 "$install_dir/start.sh"
-
-popd
+echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
 }
 
-if [[ $(uname) == "Darwin" ]]; then
-    PLANTFORM="Macos_x86_64"
-elif [[ $(uname -o) == "GNU/Linux" ]] || [[ $(uname -o) == "GNU/Linux" ]]; then
+if [[ $(uname -o) == "GNU/Linux" ]] || [[ $(uname -o) == "GNU/Linux" ]]; then
     PLANTFORM="Linux_x86_64"
     if [[ $(uname -m) != "x86_64" ]]; then
         echo "不支持非64位的Linux系统"
         EXIT_FAILURE
     fi
+    download_exec
 elif [[ $(uname -o) == "Android" ]]; then
     PLANTFORM="Andorid_armv8"
     if [[ $(uname -m) == "armv7" ]]; then
@@ -85,13 +107,14 @@ elif [[ $(uname -o) == "Android" ]]; then
         red_line "拜托你很逊欸，没权限"
         EXIT_FAILURE
     fi
+    download_exec_for_termux
+
 else
     echo "不支持该系统，你的系统是"
     uname -a
 fi
 
 
+popd
 
 
-download_exec
-echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
