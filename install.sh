@@ -17,10 +17,11 @@ function download_exec_for_termux(){
 mkdir -p "$install_dir"
 chown -R $(whoami):$(whoami) "$install_dir"
 # 使用pkg安装Python
+echo "正在更新pkg"
+pkg -y update
+pkg -y upgrade
 echo "使用pkg安装Python..."
-pkg update -y
-pkg upgrade -y
-pkg install python -y
+pkg -y install python
 
 # 安装tooldelta库
 echo "安装tooldelta库..."
