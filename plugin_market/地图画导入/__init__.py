@@ -32,7 +32,7 @@ class MapArtImporter(Plugin):
                 (b - bvalue) ** 2 
             )
             if weight < max_weight_reversed:
-                max_matches = r, g, b
+                max_matches = color_map[i][0]
                 max_weight_reversed = weight
         self.color_cache[(rvalue, gvalue, bvalue)] = max_matches
         return max_matches
@@ -40,7 +40,6 @@ class MapArtImporter(Plugin):
     def imp_map(self, bmap_path: str, size: tuple[int, int], baseXP: int, baseYP: int, baseZP: int, owner: str):
         self.game_ctrl.say_to(owner, "§7读取并分析图片...")
         img = Image.open(bmap_path).convert("RGB").resize(size)
-        img.save("new.png", bitmap_format="png")
         xsize, ysize = size
         scmd = self.game_ctrl.sendwocmd
         self.game_ctrl.say_to(owner, "§7开始导入像素画...")
@@ -51,9 +50,10 @@ class MapArtImporter(Plugin):
         if not sname:
             raise
         # /w @s .像素画 a1.png 10048 154 10048 3x2
+        # /w @s .像素画 a1.jpg 10048 154 10048 2x2
         zchunk = 0
         for xchunk in range(xsize // 16):
-            cmdd = f"/tp {sname} {baseXP + xchunk * 16 + 8} {baseYP + 10} {baseZP + zchunk * 16 + 8}"
+            cmdd = f"/tp {sname} {baseXP + xchunk * 16 + 8} {baseYP + 10} {baseZP + 8}"
             scmd(cmdd)
             time.sleep(0.5)
             for zchunk in range(ysize // 16):
@@ -72,8 +72,8 @@ class MapArtImporter(Plugin):
                         image_pixel_x = re_xpos + limx - baseXP
                         image_pixel_y = re_zpos + limz - baseZP
                         rget, gget, bget = img.getpixel((image_pixel_x, image_pixel_y))
-                        neBlock = self.get_nearest_color_block(rget, gget, bget)
-                        scmd(f"/setblock {re_xpos + limx} {baseYP} {re_zpos + limz} {neBlock[0]} {neBlock[1]}")
+                        neBlock, neBlock_spec = self.get_nearest_color_block(rget, gget, bget)
+                        scmd(f"/setblock {re_xpos + limx} {baseYP} {re_zpos + limz} {neBlock} {neBlock_spec}")
         Print.print_suc("像素画导入成功")
         self.color_cache.clear()
 
