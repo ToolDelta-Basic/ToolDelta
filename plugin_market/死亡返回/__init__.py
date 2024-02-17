@@ -9,7 +9,7 @@ import ujson as json
 
 __plugin_meta__ = {
     "name": "死亡返回",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "wling/7912",
 }
 
@@ -18,10 +18,9 @@ LOG_DEATH_TIME = 30  # 记录最小频率 (秒)
 plugin_path = r"插件配置文件/死亡返回"
 config_path = plugin_path + r"/死亡位置.json"
 os.makedirs(plugin_path, exist_ok=True)
-if os.path.isfile(config_path):
-    os.makedirs(config_path, exist_ok=True)
+if not os.path.isfile(config_path):
     with open(config_path, "w", encoding="utf-8") as f:
-        json.dump("{}", f, indent=4, ensure_ascii=False)
+        json.dump({}, f, indent=4, ensure_ascii=False)
 
 
 def translateDim(dimension):
@@ -34,11 +33,11 @@ def translateDim(dimension):
     raise ValueError("维度只能是0, 1或2.")
 
 
-@player_message
+@player_message()
 async def _(playername, msg):
     if msg == ".backdeath":
-        with open(config, "r", encoding="utf-8") as f:
-            data = json.loads(f)
+        with open(config_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
         if playername not in data:
             tellrawText('@a[name="%s"]' % playername, "§l§4ERROR§r", "§c未找到记录.")
             return
@@ -67,10 +66,10 @@ async def _(playername, msg):
 
 
 @player_death()
-async def _(playername,killer):
+async def _(playername, killer):
     deathTime = int(time.time())
-    with open(config, "r", encoding="utf-8") as f:
-        data = json.loads(f)
+    with open(config_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
     if playername not in data:
         data[playername] = {}
     deathData_old = data[playername]
