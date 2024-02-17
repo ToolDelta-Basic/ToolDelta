@@ -144,7 +144,7 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         and (not targetNameToGet.startswith("@a"))
     ):
         raise Exception("Player not found.")
-    result = game_control.sendwscmd("/querytarget " + targetNameToGet, True, timeout)
+    result = sendwscmd("/querytarget " + targetNameToGet, True, timeout)
     if result.OutputMessages[0].Success == False:
         raise Exception(
             f"Failed to get the position: {result.OutputMessages[0]}"
