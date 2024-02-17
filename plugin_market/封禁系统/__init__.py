@@ -32,10 +32,10 @@ class BanSystem(Plugin, PluginAPI):
     @Builtins.run_as_new_thread
     def on_inject(self):
         self.chatbar.add_trigger(
-            ["ban", "封禁"], 
-            "[玩家名] [年]/[月]/[日] [时]:[分] [原因, 不填为未知原因]", 
-            "封禁玩家", 
-            self.ban_who, 
+            ["ban", "封禁"],
+            "[玩家名] [年]/[月]/[日] [时]:[分] [原因, 不填为未知原因]",
+            "封禁玩家",
+            self.ban_who,
             lambda x: x==3 or x==4,
             True
         )
@@ -81,7 +81,7 @@ class BanSystem(Plugin, PluginAPI):
                 return
             self.ban(all_matches[0], time.mktime(struct_time), reason)
             self.game_ctrl.say_to(caller, "§c封禁系统: §f设置封禁成功.")
-        
+
     def test_ban(self, player):
         ban_data = self.get_ban_data(player)
         ban_to, reason = ban_data["BanTo"], ban_data["Reason"]
@@ -108,7 +108,7 @@ class BanSystem(Plugin, PluginAPI):
             "封禁系统", player, data
         )
 
-    def get_ban_data(self, player: str): 
+    def get_ban_data(self, player: str):
         return Builtins.SimpleJsonDataReader.readFileFrom(
             "封禁系统", player,
             self.BAN_DATA_DEFAULT

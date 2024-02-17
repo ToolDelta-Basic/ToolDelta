@@ -4,5 +4,4 @@
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.languageServer": "Pylance",
-  "python.analysis.typeCheckingMode": "off"
 }

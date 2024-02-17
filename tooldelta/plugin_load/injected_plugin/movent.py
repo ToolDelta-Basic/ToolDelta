@@ -2,6 +2,7 @@ from typing import Any
 from tooldelta.color_print import Print
 import ujson as json
 import time
+from tooldelta import Frame
 from tooldelta.packets import Packet_CommandOutput, PacketIDS
 from typing import Callable
 
@@ -9,12 +10,12 @@ frame = None
 game_control = None
 
 
-def check_avaliable(sth) -> None:
+def check_avaliable(sth: Frame) -> None:
     if sth is None:
         raise AttributeError(f"无法使用 {sth.__class__.__name__}, 因为其还未被初始化")
 
 
-def set_frame(my_frame: object) -> Callable[[object], None]:
+def set_frame(my_frame: Frame) -> Callable[[object], None]:
     # 只有在系统启动后才能获得有效的 frame
     global frame, game_control
     frame = my_frame
@@ -25,11 +26,15 @@ def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> Callable[[str, bool, int], bytes | Packet_CommandOutput]:
     check_avaliable(game_control)
+    if game_control.sendcmd is None:
+        raise AttributeError(
+            f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化"
+        )
     return game_control.sendcmd(cmd=cmd, waitForResp=waitForResp, timeout=timeout)
 
 
 def sendwscmd(
-    cmd: str, waitForResp: bool = False, timeout: int = 30
+    cmd: str, waitForResp: bool = False, timeout: int | float = 30
 ) -> Callable[[str, bool, int], bytes | Packet_CommandOutput]:
     check_avaliable(game_control)
     return game_control.sendwscmd(cmd=cmd, waitForResp=waitForResp, timeout=timeout)
@@ -58,23 +63,12 @@ def sendfbcmd(cmd: str) -> Callable[[str], None]:
 
 
 def rawText(playername: str, text: str):
-    """
-    发送原始文本消息
-    ---
-    playername:str 玩家名.
-    text:str 内容.
-    """
+
     sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
 
 
-def tellrawText(playername: str, title: str | None = None, text: str = ""):
-    """
-    发送tellraw消息
-    ---
-    playername:str 玩家名.
-    title:str 说话人.
-    text:str 内容.
-    """
+def tellrawText(playername: str, title: str | None = None, text: str = "")-> None:
+
     if title is None:
         sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
     else:
@@ -131,13 +125,7 @@ def get_robotname() -> str:
 
 def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     check_avaliable(game_control)
-    """
-    获取租赁服内玩家坐标的函数
-    参数:
-        targetNameToGet: str -> 玩家名称
-    返回: dict -> 获取结果
-    包含了["x"], ["y"], ["z"]: float, ["dimension"](维度): int 和["yRot"]: float
-    """
+
     if (
         (targetNameToGet not in get_all_player())
         and (targetNameToGet != game_control.bot_name)
@@ -156,6 +144,8 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         resultList = parameter
     result = {}
     for i in resultList:
+        if game_control.players_uuid is None:
+            raise Exception("Failed to get the players_uuid.")
         targetName = find_key_from_value(game_control.players_uuid, i["uniqueId"])
         x = i["position"]["x"] if i["position"]["x"] >= 0 else i["position"]["x"] - 1
         y = i["position"]["y"] - 1.6200103759765
@@ -183,15 +173,8 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
             return result[targetNameToGet]
 
 
-def countdown(delay: int | float, msg: str = None) -> None:
-    """
-    控制台显示倒计时的函数
+def countdown(delay: int | float, msg: str | None = None) -> None:
 
-    参数:
-        delay: int | float -> 倒计时时间(秒)
-        msg: str -> 倒计时运行时显示的说明
-    返回: 无返回值
-    """
     if msg is None:
         msg = "Countdown"
     delayStart = time.time()

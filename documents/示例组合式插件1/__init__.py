@@ -3,6 +3,8 @@ from tooldelta import *
 
 import json
 
+from tooldelta.Frame import Builtins, Config, Frame
+
 # 注册插件主类
 @plugins.add_plugin
 # 创建一个插件主类, 其一定要继承Plugin类
@@ -60,7 +62,7 @@ class MyPluginExample(Plugin):
         if msg == "我的钻石":
             # 创建一个专门的玩家会话线程, 防止玩家同时处在两个会话中
             Builtins.create_dialogue_threading(
-                player, self.check_my_diamond_count, 
+                player, self.check_my_diamond_count,
                 exc_cb = lambda player: self.game_ctrl.say_to(player, "§c你已经在一个对话中了, 请先退出对话"),
                 args = (player,)
             )
@@ -120,7 +122,7 @@ class MyPluginExample(Plugin):
                 # Key12是对以上方法的综合运用
                 "Key12": {
                     r"%any": [
-                        type(None), 
+                        type(None),
                         {
                             "sub_key1": Config.PFloat,
                             Config.UnneccessaryKey("sub_key2"): [r"%list", {"sub2_key1": str}],

@@ -139,13 +139,13 @@ def check_err(r):
         raise Exception(err)
 
 
-if platform.uname()[0] == "Linux":
-    LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_linux_amd64.so")
-elif platform.uname()[0] == "Windows":
-    LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_windows_x86_64.dll")
-else:
-    raise Exception("未知的运行平台: " + platform.uname()[0])
-LIB = InitLib(LIB)
+# if platform.uname()[0] == "Linux":
+#     LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_linux_amd64.so")
+# elif platform.uname()[0] == "Windows":
+#     LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_windows_x86_64.dll")
+# else:
+#     raise Exception("未知的运行平台: " + platform.uname()[0])
+# LIB = InitLib(LIB)
 
 
 def ConnectFB(address: str) -> int:
