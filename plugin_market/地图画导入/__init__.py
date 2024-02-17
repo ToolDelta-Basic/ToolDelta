@@ -1,4 +1,4 @@
-from tooldelta import Frame, Plugin, plugins, Print, Builtins
+from tooldelta import Frame, Plugin, plugins, Print
 
 import PIL.Image as Image, time
 
@@ -16,25 +16,26 @@ class MapArtImporter(Plugin):
         self.menu.add_trigger(
             ["像素画"], 
             "导入像素画", "<文件名> <x坐标> <y坐标> <z坐标>, <尺寸(默认为1x1, 格式: ?x?)>", 
-            lambda player, args: self.menu_imp(player, args), lambda x:x in (4, 5), True
+            lambda player, args: self.frame.ClassicThread(self.menu_imp, (player, args))
         )
 
     def get_nearest_color_block(self, rvalue, gvalue, bvalue):
         if self.color_cache.get((rvalue, gvalue, bvalue), None):
             return self.color_cache.get((rvalue, gvalue, bvalue))
-        weights = []
+        max_weight_reversed = 10000000
+        max_matches = (0, 0, 0)
         for i in range(len(color_map)):
             _, (r, g, b) = color_map[i]
-            weights.append(
-               ((r - rvalue) ** 2 +
-               (g - gvalue) ** 2 +
-               (b - bvalue) ** 2 ,
-               i)
+            weight = (
+                (r - rvalue) ** 2 +
+                (g - gvalue) ** 2 +
+                (b - bvalue) ** 2 
             )
-        weights.sort(key = lambda x: x[0])
-        res = color_map[weights[0][1]]
-        self.color_cache[(rvalue, gvalue, bvalue)] = res[0]
-        return res[0]
+            if weight < max_weight_reversed:
+                max_matches = r, g, b
+                max_weight_reversed = weight
+        self.color_cache[(rvalue, gvalue, bvalue)] = max_matches
+        return max_matches
 
     def imp_map(self, bmap_path: str, size: tuple[int, int], baseXP: int, baseYP: int, baseZP: int, owner: str):
         self.game_ctrl.say_to(owner, "§7读取并分析图片...")
@@ -42,23 +43,31 @@ class MapArtImporter(Plugin):
         img.save("new.png", bitmap_format="png")
         xsize, ysize = size
         scmd = self.game_ctrl.sendwocmd
-        scmd2 = self.game_ctrl.sendcmd
         self.game_ctrl.say_to(owner, "§7开始导入像素画...")
         TOTAL = xsize * ysize
         BPS = 800
         progress = 0
+        sname = self.game_ctrl.bot_name
+        if not sname:
+            raise
+        # /w @s .像素画 a1.png 10048 154 10048 3x2
+        zchunk = 0
         for xchunk in range(xsize // 16):
+            cmdd = f"/tp {sname} {baseXP + xchunk * 16 + 8} {baseYP + 10} {baseZP + zchunk * 16 + 8}"
+            scmd(cmdd)
+            time.sleep(0.5)
             for zchunk in range(ysize // 16):
                 re_xpos = baseXP + xchunk * 16
                 re_zpos = baseZP + zchunk * 16
-                scmd2(f"/tp {re_xpos + 8} {baseYP + 2} {re_zpos + 8}")
+                progress += 256
+                nowprogresspcent = int(progress / TOTAL * 100)
+                _prgs = int(progress / TOTAL * 20)
+                nowprogresstext = Print.colormode_replace("§e" + " " * _prgs + "§c" + " " * (20 - _prgs) + "§r", 7)
+                Print.print_with_info(f"§b像素画导入进度:  {nowprogresstext}   §a{nowprogresspcent}% {progress}/{TOTAL}", end="\r")
+                cmdd = f"/tp {sname} {re_xpos + 8} {baseYP + 10} {re_zpos + 8}"
+                scmd(cmdd)
                 for limx in range(16):
                     time.sleep(16 / BPS)
-                    progress += 16
-                    nowprogresspcent = int(progress / TOTAL * 100)
-                    _prgs = int(progress / TOTAL * 20)
-                    nowprogresstext = Print.colormode_replace("§e" + " " * _prgs + "§c" + " " * (20 - _prgs) + "§r", 7)
-                    Print.print_with_info(f"§b像素画导入进度:  {nowprogresstext}   §a{nowprogresspcent}% ", end="\r")
                     for limz in range(16):
                         image_pixel_x = re_xpos + limx - baseXP
                         image_pixel_y = re_zpos + limz - baseZP
@@ -68,7 +77,6 @@ class MapArtImporter(Plugin):
         Print.print_suc("像素画导入成功")
         self.color_cache.clear()
 
-    @Builtins.run_as_new_thread
     def menu_imp(self, player, args):
         if len(args) not in (4, 5):
             self.game_ctrl.say_to(player, "§c参数数量错误")
