@@ -21,6 +21,7 @@ websockets = "12.0"
 ujson = "5.9.0"
 rich = "13.7.0"
 colorama = "^0.4.6"
+pillow = "^10.2.0"
 
 
 [build-system]
