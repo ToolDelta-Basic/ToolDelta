@@ -145,7 +145,7 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     result = game_control.sendwscmd("/querytarget " + targetNameToGet, True, timeout)
     if result.OutputMessages[0].Success == False:
         raise Exception(
-            f"Failed to get the position: {result.OutputMessages[0].Parameters[0]}"
+            f"Failed to get the position: {result.OutputMessages[0]}"
         )
     parameter = result.OutputMessages[0].Parameters[0]
     if isinstance(parameter, str):

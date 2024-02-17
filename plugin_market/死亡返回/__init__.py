@@ -9,7 +9,7 @@ import ujson as json
 
 __plugin_meta__ = {
     "name": "死亡返回",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "author": "wling/7912",
 }
 
@@ -84,7 +84,7 @@ async def _(playername, killer):
             )
             return
 
-    deathData = getPos(f'@a[name="{playername}"]')
+    deathData = getPos(playername)
     deathData["time"] = deathTime
     data[playername] = deathData
     with open(config_path, "w", encoding="utf-8") as f:
