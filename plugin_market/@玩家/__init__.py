@@ -1,5 +1,5 @@
-from tooldelta.plugin_load import player_message, sendcmd,tellrawText,get_all_player
-
+from tooldelta.plugin_load.injected_plugin import player_message
+from tooldelta.plugin_load.injected_plugin.movent import sendcmd, tellrawText, get_all_player
 
 
 __plugin_meta__ = {
@@ -12,7 +12,6 @@ __plugin_meta__ = {
 
 def find_mentions(text, player_list):
     return [player for player in player_list if f'@{player}' in text]
-
 
 
 @player_message()

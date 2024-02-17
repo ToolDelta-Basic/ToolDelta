@@ -1,13 +1,15 @@
 import asyncio
-from tooldelta.plugin_load import init, sendcmd, countdown, getTickingAreaList
+from tooldelta.plugin_load.injected_plugin import init
 from tooldelta import Print
 from tooldelta.plugin_load.injected_plugin.movent import (
     get_robotname,
     getBlockTile,
     getPos,
     getTarget,
+    sendcmd,
+    countdown,
+    getTickingAreaList,
 )
-
 __plugin_meta__ = {
     "name": "维度传送",
     "version": "0.0.1",

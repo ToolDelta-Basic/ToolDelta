@@ -1,6 +1,8 @@
 import time
-from tooldelta.plugin_load import player_left, player_message, get_all_player, is_op
-from tooldelta import plugins, Config
+from tooldelta.Frame import Config
+from tooldelta.plugin_load.injected_plugin import player_left, player_message
+from tooldelta.plugin_load.injected_plugin.movent import get_all_player, is_op
+from tooldelta import plugins
 
 
 __plugin_meta__ = {
