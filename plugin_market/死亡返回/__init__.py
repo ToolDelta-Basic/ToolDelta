@@ -1,11 +1,12 @@
 import os, time
-from genericpath import isfile
+import ujson as json
+from 维度传送 import tp
 from logging import config
 from traceback import print_tb
-from tooldelta.plugin_load.injected_plugin import player_death
-from 维度传送 import tp
-from tooldelta.plugin_load import player_message, tellrawText, getPos
-import ujson as json
+from genericpath import isfile
+from tooldelta.plugin_load.injected_plugin import player_message, player_death
+from tooldelta.plugin_load.injected_plugin.movent import tellrawText, getPos
+
 
 __plugin_meta__ = {
     "name": "死亡返回",

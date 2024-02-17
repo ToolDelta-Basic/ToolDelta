@@ -1,10 +1,17 @@
-from tooldelta.plugin_load import player_message, sendcmd, get_all_player, rawText,repeat
+from tooldelta.plugin_load.injected_plugin.movent import (
+    sendcmd,
+    get_all_player,
+    rawText
+)
+from tooldelta.plugin_load.injected_plugin import player_message, repeat
 
 __plugin_meta__ = {
     "name": "井字棋",
     "version": "0.0.2",
     "author": "SuperScript/wling",
 }
+
+
 class JZQStage:
     def __init__(self):
         self.Stage = [
@@ -108,6 +115,7 @@ class JZQStage:
 Game_JZQ = JZQStage()
 JZQ_Rooms = []
 
+
 @player_message()
 async def _(playername: str, msg: str):
     if msg.startswith(".井字棋 "):
@@ -154,7 +162,9 @@ async def _(playername: str, msg: str):
                             if Game_JZQ.判定():
                                 Game_JZQ.stage_display(i, playername)
                                 sendcmd("/title %s title §e井字棋" % playername)
-                                sendcmd("/title %s subtitle §a祝贺!你赢了!" % playername)
+                                sendcmd(
+                                    "/title %s subtitle §a祝贺!你赢了!" % playername
+                                )
 
                                 nexPlayer = i[Game_JZQ.轮流()]
                                 Game_JZQ.stage_display(i, nexPlayer)
@@ -169,6 +179,7 @@ async def _(playername: str, msg: str):
                             rawText(playername, "§a井字棋§f>> §c这个地方不能下子")
         except:
             return
+
 
 @repeat(1)
 async def _():

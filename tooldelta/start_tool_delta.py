@@ -1,4 +1,3 @@
-import tooldelta.Frame
 from tooldelta import builtins
 from tooldelta.Frame import PRG_NAME, Frame
 from tooldelta.Frame import GameCtrl

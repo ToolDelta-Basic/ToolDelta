@@ -1,21 +1,20 @@
-from typing import Any
-from tooldelta.color_print import Print
-import ujson as json
 import time
-from tooldelta import Frame
-from tooldelta.packets import Packet_CommandOutput, PacketIDS
-from typing import Callable
+import ujson as json
+from typing import Any
+from tooldelta.Frame import Frame,GameCtrl
+from typing import Callable, Optional
+from tooldelta.color_print import Print
+from tooldelta.packets import Packet_CommandOutput
 
-frame = None
-game_control = None
 
-
-def check_avaliable(sth: Frame) -> None:
+def check_avaliable(sth: Frame) -> Optional[AttributeError]:
     if sth is None:
         raise AttributeError(f"无法使用 {sth.__class__.__name__}, 因为其还未被初始化")
 
 
-def set_frame(my_frame: Frame) -> Callable[[object], None]:
+game_control: GameCtrl | None = None
+
+def set_frame(my_frame: Frame) -> None:
     # 只有在系统启动后才能获得有效的 frame
     global frame, game_control
     frame = my_frame
@@ -45,12 +44,12 @@ def sendwocmd(cmd: str) -> Callable[[str], None]:
     game_control.sendwocmd(cmd=cmd)
 
 
-def sendPacket(pktID: int, pkt: str) -> Callable[[int,str], None]:
+def sendPacket(pktID: int, pkt: str) -> Callable[[int, str], None]:
     check_avaliable(game_control)
     game_control.sendPacket(pktID=pktID, pkt=pkt)
 
 
-def sendPacketJson(pktID: int, pkt: str) -> Callable[[int ,str], None]:
+def sendPacketJson(pktID: int, pkt: str) -> Callable[[int, str], None]:
     # tip: 和sendPacket已经是同一个东西了
     check_avaliable(game_control)
     game_control.sendPacketJson(pktID=pktID, pkt=pkt)
@@ -64,13 +63,15 @@ def sendfbcmd(cmd: str) -> Callable[[str], None]:
 
 def rawText(playername: str, text: str):
 
-    sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
+    sendcmd(
+        r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
 
 
-def tellrawText(playername: str, title: str | None = None, text: str = "")-> None:
+def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
 
     if title is None:
-        sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
+        sendcmd(
+            r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
     else:
         sendcmd(
             r"""/tellraw %s {"rawtext":[{"text":"<%s> §r%s"}]}"""
@@ -146,7 +147,8 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     for i in resultList:
         if game_control.players_uuid is None:
             raise Exception("Failed to get the players_uuid.")
-        targetName = find_key_from_value(game_control.players_uuid, i["uniqueId"])
+        targetName = find_key_from_value(
+            game_control.players_uuid, i["uniqueId"])
         x = i["position"]["x"] if i["position"]["x"] >= 0 else i["position"]["x"] - 1
         y = i["position"]["y"] - 1.6200103759765
         z = i["position"]["z"] if i["position"]["z"] >= 0 else i["position"]["z"] - 1
@@ -186,7 +188,7 @@ def countdown(delay: int | float, msg: str | None = None) -> None:
             delay = 0
         Print.print_inf("%s: %.2fs" % (msg, delay), end="\r")
         time.sleep(0.01)
-    print("",end="\n")
+    print("", end="\n")
 
 
 def getBlockTile(x: int, y: int, z: int) -> str:
@@ -201,7 +203,8 @@ def getBlockTile(x: int, y: int, z: int) -> str:
 
 def getTickingAreaList() -> dict:
     result = {}
-    resultList = sendcmd("/tickingarea list all-dimensions", True).OutputMessages
+    resultList = sendcmd(
+        "/tickingarea list all-dimensions", True).OutputMessages
     if resultList[0].Success == False:
         return result
     for tickareaData in resultList[1].Message.split("%dimension.dimensionName")[1:]:

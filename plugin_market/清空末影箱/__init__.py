@@ -1,4 +1,10 @@
-from tooldelta.plugin_load import sendcmd,tellrawText,player_message,getTarget,is_op
+from tooldelta.plugin_load.injected_plugin import player_message
+from tooldelta.plugin_load.injected_plugin.movent import (
+    tellrawText,
+    sendcmd,
+    getTarget,
+    is_op,
+)
 
 __plugin_meta__ = {
     "name": "清空玩家末影箱",
