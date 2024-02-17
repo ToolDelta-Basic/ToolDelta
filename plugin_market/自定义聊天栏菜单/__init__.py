@@ -40,7 +40,7 @@ class CustomChatbarMenu(Plugin):
             ]
         }
         self.cfg, _ = Config.getPluginConfigAndVersion(self.name, STD_CFG, DEFAULT_CFG, self.version)
-        
+
     def on_def(self):
         self.chatbar = plugins.get_plugin_api("聊天栏菜单")
 
@@ -75,7 +75,7 @@ class CustomChatbarMenu(Plugin):
                 self.game_ctrl.say_to("@a", "聊天栏菜单: 菜单的参数项提供异常， 请联系管理员以修复")
                 raise SystemExit
         return sub
-    
+
     def check_args_len(self, player, args, need_len):
         if len(args) < need_len:
             self.game_ctrl.say_to(player, f"§c菜单参数太少， 需要 {need_len} 个")

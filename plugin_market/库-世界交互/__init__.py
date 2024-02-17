@@ -29,13 +29,13 @@ class GameInteractive(PluginAPI, Plugin):
             "MinecartEntityRuntimeID": 0,
             "Command": command,
             "LastOutput": "",
-            "Name": name, 
+            "Name": name,
             "ShouldTrackOutput": should_track_output,
             "TickDelay": tick_delay,
             "ExecuteOnFirstTick": execute_on_first_tick
         }
         return 78, myPacket
-    
+
     def place_command_block(self, command_block_update_packet):
         # 传入参数: 为 make_packet_command_block_update 方法的返回的第二个值
         self.game_ctrl.sendcmd("/setblock " + " ".join([str(i) for i in command_block_update_packet["Position"]]) + " command_block")

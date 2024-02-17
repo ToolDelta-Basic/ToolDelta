@@ -151,15 +151,7 @@ class PluginMetadata:
 
 
 def create_plugin_metadata(metadata_dict: dict):
-    """
-    创建插件元数据。
 
-    参数:
-        - metadata_dict (dict): 包含插件元数据的字典.
-
-    返回:
-        PluginMetadata: 插件元数据对象.
-    """
     name = metadata_dict.get("name", "未命名插件")
     version = metadata_dict.get("version", "1.0")
     description = metadata_dict.get("description", "未知插件")
@@ -191,3 +183,5 @@ async def load_plugin(plugin_grp):
         Print.print_suc(
             f"成功载入插件 {metadata.name} 版本: {metadata.version} 作者: {metadata.author}"
         )
+
+

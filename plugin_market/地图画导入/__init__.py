@@ -1,6 +1,9 @@
-from tooldelta import Frame, Plugin, plugins, Print
+from tooldelta import Plugin, plugins, Print
 
-import PIL.Image as Image, time
+from PIL import Image
+import time
+
+from tooldelta.Frame import Frame
 
 @plugins.add_plugin
 class MapArtImporter(Plugin):
@@ -14,8 +17,8 @@ class MapArtImporter(Plugin):
     def on_inject(self):
         self.menu = plugins.get_plugin_api("聊天栏菜单", (0, 0, 1))
         self.menu.add_trigger(
-            ["像素画"], 
-            "导入像素画", "<文件名> <x坐标> <y坐标> <z坐标>, <尺寸(默认为1x1, 格式: ?x?)>", 
+            ["像素画"],
+            "导入像素画", "<文件名> <x坐标> <y坐标> <z坐标>, <尺寸(默认为1x1, 格式: ?x?)>",
             lambda player, args: self.frame.ClassicThread(self.menu_imp, (player, args))
         )
 
@@ -29,7 +32,7 @@ class MapArtImporter(Plugin):
             weight = (
                 (r - rvalue) ** 2 +
                 (g - gvalue) ** 2 +
-                (b - bvalue) ** 2 
+                (b - bvalue) ** 2
             )
             if weight < max_weight_reversed:
                 max_matches = color_map[i][0]
