@@ -119,6 +119,14 @@
       "limit_launcher": null,
       "pre-plugins": {},
       "plugin-type": "classic"
+    },
+    "发言频率": {
+      "author": "wling/7912",
+      "version": "0.0.1",
+      "description": "整治天天刷屏的罪犯吧！",
+      "limit_launcher": null,
+      "pre-plugins": { "封禁系统": "0.0.1" },
+      "plugin-type": "injected"
     }
   }
 }

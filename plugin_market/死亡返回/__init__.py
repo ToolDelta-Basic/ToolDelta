@@ -15,7 +15,7 @@ __plugin_meta__ = {
 
 
 LOG_DEATH_TIME = 30  # 记录最小频率 (秒)
-plugin_path = r"插件配置文件/死亡返回"
+plugin_path = r"data/死亡返回"
 config_path = plugin_path + r"/死亡位置.json"
 os.makedirs(plugin_path, exist_ok=True)
 if not os.path.isfile(config_path):

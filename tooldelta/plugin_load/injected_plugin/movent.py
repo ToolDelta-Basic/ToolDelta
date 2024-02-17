@@ -95,6 +95,8 @@ def get_all_player() -> list:
 
 def is_op(playername: str) -> bool:
     check_avaliable(game_control)
+    if playername not in get_all_player():
+        return False
     return frame.launcher.is_op(playername)
 
 
