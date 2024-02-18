@@ -18,6 +18,7 @@ from .launch_cli import (
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
 from .sys_args import sys_args_to_dict
+from typing import List
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -65,7 +66,11 @@ class Frame:
 
     def read_cfg(self):
         # 读取启动配置等
-        public_launcher = [
+        public_launcher: List[
+            tuple[
+                str, type[FrameFBConn | FrameNeOmg | FrameNeOmgRemote]
+            ]
+        ] = [
             (
                 "FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)",
                 FrameFBConn,
@@ -76,7 +81,7 @@ class Frame:
                 FrameNeOmgRemote,
             ),
         ]
-        CFG = {
+        CFG: dict = {
             "服务器号": 0,
             "密码": 0,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
@@ -84,7 +89,7 @@ class Frame:
             "是否记录日志": True,
             "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market",
         }
-        CFG_STD = {
+        CFG_STD: dict = {
             "服务器号": int,
             "密码": int,
             "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
@@ -163,14 +168,14 @@ class Frame:
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        launcher = public_launcher[
+        launcher: Callable= public_launcher[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]
         self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
-        self.launcher: StandardFrame = launcher(
-            self.serverNumber, self.serverPasswd, fbtoken, auth_server
+        self.launcher: FrameFBConn | FrameNeOmg | FrameNeOmgRemote = (
+            launcher(self.serverNumber, self.serverPasswd, fbtoken, auth_server)
         )
 
     def upgrade_cfg(self, cfg_std):

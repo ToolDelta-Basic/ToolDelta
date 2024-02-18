@@ -55,12 +55,13 @@ class StandardFrame:
         return None
 
     get_all_players = None
-    sendcmd: Callable[[str, bool, int], bytes | Packet_CommandOutput] = None
-    sendwscmd: Callable[[str, bool, int], bytes | Packet_CommandOutput] = None
-    sendwocmd: Callable[[str], None] = None
-    sendfbcmd = None
-    sendPacket = None
-    sendPacketJson = None
+    sendcmd: Callable[[str, bool, int | float], None | Packet_CommandOutput]
+    sendwscmd: Callable[[str, bool, int | float], Packet_CommandOutput]
+    sendwocmd: Callable[[str], None]
+    sendfbcmd: Callable[[str], None | AttributeError]
+    sendPacket: Callable[[int, str], None]
+    sendPacketJson: Callable[[int, str], None]
+    is_op: Callable[[str], None | bool] | None
 
 class FrameFBConn(StandardFrame):
     # 使用原生 FastBuilder External 连接
@@ -277,8 +278,6 @@ class FrameFBConn(StandardFrame):
                             return self.sendwscmd(cmd, True, timeout)
                         except TimeoutError:
                             raise
-            else:
-                return uuid
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendWSCommand(self.con, cmd)
             if waitForResp:
@@ -310,6 +309,7 @@ class FrameFBConn(StandardFrame):
             )
         )
         self.sendfbcmd = staticmethod(lambda cmd: fbconn.SendFBCommand(self.con, cmd))
+        self.is_op = None
 
 
 class FrameNeOmg(StandardFrame):
@@ -500,7 +500,7 @@ class FrameNeOmg(StandardFrame):
                 return res
             else:
                 self.omega.send_player_command_omit_response(cmd)
-                return b""
+                return
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
@@ -510,7 +510,7 @@ class FrameNeOmg(StandardFrame):
                 return res
             else:
                 self.omega.send_websocket_command_omit_response(cmd)
-                return b""
+                return
 
         def sendwocmd(cmd: str):
             self.omega.send_settings_command(cmd)
