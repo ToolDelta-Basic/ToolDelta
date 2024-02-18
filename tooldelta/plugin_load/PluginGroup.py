@@ -263,7 +263,7 @@ class PluginGroup:
     def execute_player_death(
         self,
         player: str,
-        killer: str,
+        killer: str | None,
         msg: str,
         onerr: Callable[[str, Exception, str], None] = NON_FUNC,
     ):
