@@ -3,7 +3,7 @@
   <a href="https://github.com/SuperScript-PRC/ToolDelta/releases"><img src="https://img.shields.io/github/v/release/SuperScript-PRC/ToolDelta?display_name=tag&sort=semver" alt="Releases"></a>
   <img src="https://img.shields.io/github/stars/SuperScript-PRC/ToolDelta.svg?style=falt" alt="Stars">
 </p>
-  
+
 <p align="center">
   <a href="https://github.com/SuperScript-PRC/ToolDelta/issues"><img src="https://img.shields.io/github/issues/SuperScript-PRC/ToolDelta.svg?style=flat" alt="opissues"></a>
   <a href="https://github.com/SuperScript-PRC/ToolDelta/issues?q=is%3Aissue+is%3Aclosed"><img src="https://img.shields.io/github/issues-closed/SuperScript-PRC/ToolDelta.svg?style=flat&color=success" alt="clissues"></a>
@@ -15,33 +15,90 @@
   <code>TooldDelta</code> 是依赖于 <code>PhoenixBuilder | NeOmega</code> 的多功能扩展组件，可以加载各种各样有趣的插件。
 </p>
 
-
-
-
 # 目录
+
 - [目录](#目录)
 - [注意事项](#注意事项)
 - [更新日志](#更新日志)
 
-
 # 注意事项
+
 - 遇到平台不兼容的情况请尽快提交 `Issue`
 - 已支持 `Termux`
 
 # 更新日志
+
 - `0.1.6`
-  * 兼容了 dotcs 插件的加载
+
+  * 📦 兼容了 dotcs 插件的加载
 - `0.1.7`
-  * 更新了 [PhoenixBuilder](https://github.com/LNSSPsd/PhoenixBuilder) 下载
-  * 新增了一种输出方式 `rich(0.1.3)`
-    * 支持了 `§r` 重置字体及颜色(默认: `#FFFFFF`)
-  * 支持了视窗系统 `Windows` 中自动检测 `fbtoken` 并启动
+
+  * 📦 更新了 [PhoenixBuilder](https://github.com/LNSSPsd/PhoenixBuilder) 下载
+  * ✨ 新增了一种输出方式 `rich(0.1.3)`
+  * 支持了 `§r` 重置字体及颜色(默认: `#FFFFFF`)
+  * ✨ 支持了视窗系统 `Windows` 中自动检测 `fbtoken` 并启动
 - `0.1.8`
-  * 新增缺失部分文件自动补全功能
+
+  * ✨ 新增缺失部分文件自动补全功能
   * Beta - 重写了 `cfg.py` 的代码使之更具人类可读性
   * Sigma - 兼容了 `NeOmega` 系统， 可在其上运行
 - `0.2.8`
+
   * 由于 `FastBuilder External` 停止更新, ToolDelta 不再对其进行进一步的支持.
-  * 更新了 `插件市场` 功能
-  * 新增 `注入式插件` 加载方法
-  * 重整文件目录结构 并上传到 `PyPi` 使 ToolDelta 可以作为一个库运行
+  * 📦 更新了 `插件市场` 功能
+  * ✨ 新增 `注入式插件` 加载方法
+  * 重整文件目录结构 并上传到 `PyPi` 使 ToolDelta
+- `0.2.9`
+- `0.3.0`
+- `0.3.1`
+
+* `0.3.2`
+
+  * ✨ 加入`项目地址`， 更新`插件市场最终样式`
+* `0.3.3`
+
+  * 📦 更新欢迎提示和打印信息
+  * 🐛 修复下载文件名重复问题
+  * 🐛 修复颜色问题
+* `0.3.4`
+
+  * 🐛 修复严重错误 在`SafeJsonDump`方法上只读 & 新增方法
+* `0.3.5`
+
+  * 🐛 修复`readFrom`的严重恶性Bug
+  * `Remote NeOmg`模式下不再检测文件完整性
+* `0.3.6`
+
+  * 📦 更新插件加载代码，导入了`sys`模块以及修改了插件文件路径
+* `0.3.7`
+
+  * 🐛 更新插件 -> 插件市场小修复: 回车键无法自动回溯上次的操作
+* `0.3.8`
+
+  * 🚑 更新插件类型为经典
+  * ✨ 新增接口和注入式接入死亡时间和类型注释
+  * ✨ 新增死亡返回与更新作者信息与版本号
+* `0.3.9`
+
+  * 🐛 修复参数给的不到位的原因
+  * 📦 更新依赖库版本和内容哈希值
+  * ✨ 新增安装脚本
+* `0.3.10`
+
+  * 📦 更新`pyproject.toml`文件中的依赖库版本
+* `0.3.11`
+
+  * 📦 优化安装脚本，支持Termux平台
+* `0.3.12`
+* `0.3.13`
+
+  * 📦 更新同步版本工作流程文件
+* `0.3.14`
+
+  * 🐛 修复不是插件配置的bug
+  * 📦 地图画导入 优化
+  * 📦 更新发言频率插件
+  * ✨ 添加地图画所需库PIL的支持
+  * 📦 对未来类型注释提供必要性的帮助
+  * 📦 更新了代码中的导入语句
+  * ✨📖 添加函数文档
