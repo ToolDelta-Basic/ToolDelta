@@ -38,6 +38,11 @@ jobs:
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
+      - name: Build ToolDeltaDocker
+        run: |
+              docker build -t tooldelta-docker:${{ env.VERSION }} .
+              docker save -o dist/tooldelta-docker-${{ matrix.os == 'windows-latest' && 'windows.exe' || 'linux' }}.zip tooldelta-docker:${{ env.VERSION }}
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
