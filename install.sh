@@ -6,7 +6,7 @@ app_name="ToolDelta"
 # 设置快捷指令
 shortcut_command="td"
 # 设置 GitHub release URL
-github_release_url="https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/0.3.14/ToolDelta-linux"
+github_release_url="https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/0.3.15/ToolDelta-linux"
 
 function EXIT_FAILURE(){
     exit -1
