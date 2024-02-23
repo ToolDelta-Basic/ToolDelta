@@ -478,13 +478,17 @@ class FrameNeOmg(StandardFrame):
         else:
             sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
         source_dict = res[sys_info_fmt]
-        commit_file_path, commit_url = res["Commit"].items()
-        commit_url = use_mirror + "/https://raw.githubusercontent.com/" + commit_url
-        commit_remote = requests.get(commit_url).text
-        with open(
-            os.path.join(os.getcwd(), commit_file_path), "w", encoding="utf-8"
-        ) as f:
-            commit_local = f.read()
+        commit_file_path, commit_url = list(res["Commit"].items())[0]
+        commit_remote = requests.get(
+            use_mirror + "/raw.githubusercontent.com/" + commit_url
+        ).text
+        commit_local = ""
+        commit_file_path = os.path.join(os.getcwd(), commit_file_path)
+        if not os.path.isfile(commit_file_path):
+            replace_file = True
+        else:
+            with open(commit_file_path, "r", encoding="utf-8") as f:
+                commit_local = f.read()
         replace_file = False
         if commit_local != commit_remote:
             Print.print_war("依赖库版本过期, 将重新下载")
