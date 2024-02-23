@@ -1,11 +1,12 @@
 {
   "Mirror": ["https://mirror.ghproxy.com"],
+  "Commit": {"tooldelta/neo_libs/commit":"ToolDelta/ToolDelta-depends/main/commit"},
   "Linux:amd64": {
     "tooldelta/neo_libs/neomega_linux_amd64.so": "ToolDelta/ToolDelta-depends/main/neomega_linux_amd64.so",
     "tooldelta/neo_libs/neomega_linux_access_point_amd64": "ToolDelta/ToolDelta-depends/main/neomega_linux_access_point_amd64"
   },
   "Android:arm64": {
-  "tooldelta/neo_libs/neomega_android_arm64.so": "ToolDelta/ToolDelta-depends/main/neomega_android_arm64.so",
+    "tooldelta/neo_libs/neomega_android_arm64.so": "ToolDelta/ToolDelta-depends/main/neomega_android_arm64.so",
     "tooldelta/neo_libs/neomega_android_access_point_arm64": "ToolDelta/ToolDelta-depends/main/neomega_android_access_point_arm64"
   },
   "Linux:arm64": {
