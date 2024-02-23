@@ -1,4 +1,5 @@
 import platform, os, subprocess, time, json, requests, ujson, random
+from click import command
 from typing import Callable
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
@@ -7,6 +8,7 @@ from .packets import Packet_CommandOutput, PacketIDS
 from .urlmethod import get_free_port
 from .sys_args import sys_args_to_dict
 import threading
+
 
 class SysStatus:
     LOADING = 100
@@ -17,6 +19,7 @@ class SysStatus:
     FB_CRASHED = 105
     NEED_RESTART = 106
     launch_type = "None"
+
 
 class StandardFrame:
     # 提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口
@@ -45,8 +48,7 @@ class StandardFrame:
     def listen_launched(self, cb):
         self._launcher_listener = cb
 
-    def close_fb(self):
-        ...
+    def close_fb(self): ...
 
     def get_players_and_uuids(self):
         return None
@@ -63,13 +65,16 @@ class StandardFrame:
     sendPacketJson: Callable[[int, str], None]
     is_op: Callable[[str], None | bool] | None
 
+
 class FrameFBConn(StandardFrame):
     # 使用原生 FastBuilder External 连接
     cmds_reqs = []
     cmds_resp = {}
+
     def __init__(self, serverNumber, password, fbToken, auth_server):
         global fbconn
         from . import fbconn
+
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
         self.init_all_functions()
@@ -77,8 +82,8 @@ class FrameFBConn(StandardFrame):
     def launch(self):
         try:
             free_port = get_free_port(10000)
-            self.runFB(port = free_port)
-            self.run_conn(port = free_port)
+            self.runFB(port=free_port)
+            self.run_conn(port=free_port)
             Builtins.createThread(self.output_fb_msgs_thread)
             self.process_game_packets()
         except Exception as err:
@@ -144,11 +149,15 @@ class FrameFBConn(StandardFrame):
                     )
                     self.status = SysStatus.NORMAL_EXIT
                 elif "Failed to contact with API" in tmp:
-                    Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
+                    Print.print_err(
+                        "§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中"
+                    )
                     try:
                         Print.print_war("尝试连接到 FastBuilder 验证服务器")
                         requests.get("http://user.fastbuilder.pro", timeout=10)
-                        Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
+                        Print.print_err(
+                            "??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃"
+                        )
                     except:
                         Print.print_err(
                             "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)"
@@ -278,6 +287,7 @@ class FrameFBConn(StandardFrame):
                             return self.sendwscmd(cmd, True, timeout)
                         except TimeoutError:
                             raise
+
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendWSCommand(self.con, cmd)
             if waitForResp:
@@ -361,10 +371,10 @@ class FrameNeOmg(StandardFrame):
         access_point_file = (
             f"neomega_{platform.uname().system.lower()}_access_point_{self.sys_machine}"
         )
-        if 'TERMUX_VERSION' in os.environ:
+        if "TERMUX_VERSION" in os.environ:
             access_point_file = f"neomega_android_access_point_{self.sys_machine}"
         if platform.system() == "Windows":
-            access_point_file+=".exe"
+            access_point_file += ".exe"
         py_file_path = os.path.join(
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
@@ -383,7 +393,8 @@ class FrameNeOmg(StandardFrame):
                 f"tcp://localhost:{free_port}",
                 "-server-password",
                 str(self.serverPassword),
-                "-auth-server", self.auth_server
+                "-auth-server",
+                self.auth_server,
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -409,7 +420,8 @@ class FrameNeOmg(StandardFrame):
                     msg = msg_orig[:str_max_len]
                     msg_orig = msg_orig[str_max_len:]
                     Print.print_with_info(msg, "§b NOMG ")
-        Builtins.createThread(_msg_show_thread, usage = "显示来自NeOmega的信息")
+
+        Builtins.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
 
     def update_status(self, new_status):
         self.status = new_status
@@ -461,21 +473,38 @@ class FrameNeOmg(StandardFrame):
             self.sys_machine = "amd64"
         elif self.sys_machine == "aarch64":
             self.sys_machine = "arm64"
-        if 'TERMUX_VERSION' in os.environ:
+        if "TERMUX_VERSION" in os.environ:
             sys_info_fmt = f"Android:{self.sys_machine.lower()}"
         else:
             sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
         source_dict = res[sys_info_fmt]
+        commit_file_path, commit_url = res["Commit"].items()
+        commit_url = use_mirror + "/https://raw.githubusercontent.com/" + commit_url
+        commit_remote = requests.get(commit_url).text
+        with open(
+            os.path.join(os.getcwd(), commit_file_path), "w", encoding="utf-8"
+        ) as f:
+            commit_local = f.read()
+        replace_file = False
+        if commit_local != commit_remote:
+            Print.print_war("依赖库版本过期, 将重新下载")
+            replace_file = True
         for k, v in source_dict.items():
             pathdir = os.path.join(os.getcwd(), k)
             url = use_mirror + "/https://raw.githubusercontent.com/" + v
-            if not os.path.isfile(pathdir):
+            if not os.path.isfile(pathdir) or replace_file:
                 Print.print_inf(f"正在下载依赖库 {pathdir} ...")
                 try:
                     download_file(url, pathdir)
                 except Exception as err:
                     Print.print_err(f"下载依赖库出现问题: {err}")
                     raise SystemExit
+        if replace_file:
+            with open(
+                os.path.join(os.getcwd(), commit_file_path), "w", encoding="utf-8"
+            ) as f:
+                f.write(commit_remote)
+            Print.print_suc("已完成依赖更新！")
 
     def get_players_and_uuids(self):
         players_uuid = {}
@@ -514,10 +543,13 @@ class FrameNeOmg(StandardFrame):
 
         def sendwocmd(cmd: str):
             self.omega.send_settings_command(cmd)
+
         def sendPacket(pktID: int, pkt: str):
             self.omega.send_game_packet_in_json_as_is(pktID, pkt)
+
         def sendfbcmd(_):
             raise AttributeError("NeOmg模式无法发送FBCommand")
+
         def is_op(player: str):
             return self.omega.get_player_by_name(player).command_permission_level > 2
 
@@ -528,6 +560,7 @@ class FrameNeOmg(StandardFrame):
         self.sendfbcmd = sendfbcmd
         self.is_op = is_op
 
+
 class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
         try:
@@ -536,7 +569,9 @@ class FrameNeOmgRemote(FrameNeOmg):
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
         if openat_port == 0:
-            Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
+            Print.print_war(
+                "未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015"
+            )
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             return SystemExit
