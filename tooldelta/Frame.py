@@ -296,21 +296,6 @@ class Frame:
                 Print.print_inf("使用 Ctrl+C 退出中...")
                 self.system_exit()
 
-        def _try_execute_console_cmd(func, rsp, mode, arg1):
-            try:
-                if mode == 0:
-                    rsp_arg = rsp.split()[1:]
-                elif mode == 1:
-                    rsp_arg = rsp[len(arg1) :].split()
-            except IndexError:
-                Print.print_err("[控制台执行命令] 指令缺少参数")
-                return
-            try:
-                return func(rsp_arg) or 0
-            except:
-                Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
-                return 0
-
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
     def system_exit(self):
