@@ -170,7 +170,7 @@ class SuperScript_GobangBasic(Plugin):
                             except:
                                 raise AssertionError("§c落子格式不正确； 下子/xiazi/xz <纵坐标> <横坐标>")
                             assert inRoom.stage.onchess(int(posl), int(posw), inRoom.PID(player))
-                            (player, "§l§7> §r§a成功下子.")
+                            gc.say_to(player, "§l§7> §r§a成功下子.")
                             inRoom.resetTimer()
                             is_win = inRoom.stage.get_win()
                             if is_win:
