@@ -170,7 +170,7 @@ async def _(playername: str, msg: str):
                                 JZQ_Rooms.remove(i)
                                 Game_JZQ.重置(True)
                                 continue
-                            elif Game_JZQ.判死():
+                            if Game_JZQ.判死():
                                 Game_JZQ.重置()
                         else:
                             rawText(playername, "§a井字棋§f>> §c这个地方不能下子")

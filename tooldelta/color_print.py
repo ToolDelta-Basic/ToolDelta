@@ -87,7 +87,7 @@ class _Print:
                         strikeMode = True
                         i += 2
                         continue
-                    elif text[i + 1] == "r":
+                    if text[i + 1] == "r":
                         strikeMode = False
             except IndexError:
                 pass

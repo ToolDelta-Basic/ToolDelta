@@ -143,7 +143,7 @@ class FrameFBConn(StandardFrame):
             tmp: str = self.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
             if not tmp:
                 continue
-            elif " 简体中文" in tmp:
+            if " 简体中文" in tmp:
                 # seems will be unable forever because it's no longer supported.
                 try:
                     self.fb_pipe.stdin.write(f"{tmp[1]}\n".encode("utf-8"))

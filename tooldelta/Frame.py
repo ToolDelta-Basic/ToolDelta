@@ -282,7 +282,7 @@ class Frame:
                     for _, _, func, triggers in self.consoleMenu:
                         if not rsp:
                             continue
-                        elif rsp.split()[0] in triggers:
+                        if rsp.split()[0] in triggers:
                             res = _try_execute_console_cmd(func, rsp, 0, None)
                             if res == -1:
                                 return

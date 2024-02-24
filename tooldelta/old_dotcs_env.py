@@ -110,7 +110,7 @@ def get_dotcs_env(__F, print_ins):
             Message = i["Message"]
             if Message == r"commands.scoreboard.players.list.player.empty":
                 continue
-            elif Message == r"§a%commands.scoreboard.players.list.player.count":
+            if Message == r"§a%commands.scoreboard.players.list.player.count":
                 targetName = i["Parameters"][1][1:]
             elif Message == "commands.scoreboard.players.list.player.entry":
                 if targetName == "commands.scoreboard.players.offlinePlayerName":
