@@ -23,10 +23,7 @@ def _path_get_filename(path: str):
 
 
 def _is_common_text_file(url_path: str):
-    for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]:
-        if url_path.endswith(i):
-            return True
-    return False
+    return any(url_path.endswith(i) for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"])
 
 
 def get_file_size(url):
