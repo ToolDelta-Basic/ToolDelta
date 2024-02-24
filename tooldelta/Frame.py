@@ -1,3 +1,14 @@
+from .plugin_load.injected_plugin import (
+    execute_death_message,
+    execute_init,
+    execute_player_join,
+    execute_player_left,
+    execute_player_message,
+    execute_repeat,
+)
+from .packets import PacketIDS
+from .basic_mods import asyncio, datetime, json
+from .builtins import Builtins
 from . import (
     builtins,
     old_dotcs_env,
@@ -35,7 +46,8 @@ Config = _Cfg()
 
 class Frame:
     # 系统框架
-    class SystemVersionException(OSError): ...
+    class SystemVersionException(OSError):
+        ...
 
     class FrameBasic:
         system_version = VERSION
@@ -266,7 +278,8 @@ class Frame:
         Print.print_inf("§a以下是可选的菜单指令项: ")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
-                Print.print_inf(f" §e{' 或 '.join(triggers)} {arg_hint}  §f->  {usage}")
+                Print.print_inf(
+                    f" §e{' 或 '.join(triggers)} {arg_hint}  §f->  {usage}")
             else:
                 Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
@@ -279,7 +292,8 @@ class Frame:
                 self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
-                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
+                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit(
+                )
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -302,7 +316,8 @@ class Frame:
                         else:
                             for tri in triggers:
                                 if rsp.startswith(tri):
-                                    res = _try_execute_console_cmd(func, rsp, 1, tri)
+                                    res = _try_execute_console_cmd(
+                                        func, rsp, 1, tri)
                                     if res == -1:
                                         return
             except (EOFError, KeyboardInterrupt):
@@ -314,7 +329,7 @@ class Frame:
                 if mode == 0:
                     rsp_arg = rsp.split()[1:]
                 elif mode == 1:
-                    rsp_arg = rsp[len(arg1) :].split()
+                    rsp_arg = rsp[len(arg1):].split()
             except IndexError:
                 Print.print_err("[控制台执行命令] 指令缺少参数")
                 return
@@ -374,19 +389,6 @@ UPDATE_NOTE = ""
 ADVANCED = False
 sys_args_dict = sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
-
-
-from .builtins import Builtins
-from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS
-from .plugin_load.injected_plugin import (
-    execute_death_message,
-    execute_init,
-    execute_player_join,
-    execute_player_left,
-    execute_player_message,
-    execute_repeat,
-)
 
 
 class GameCtrl:
@@ -466,7 +468,8 @@ class GameCtrl:
                 else:
                     Print.print_war("无法获取PlayerList中玩家名字")
                     continue
-                self.allplayers.remove(playername) if playername != "???" else None
+                self.allplayers.remove(
+                    playername) if playername != "???" else None
                 Print.print_inf(f"§e{playername} 退出了游戏")
                 asyncio.run(execute_player_left(playername))
                 plugin_group.execute_player_leave(
@@ -487,12 +490,14 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
+                    Print.print_inf(
+                        f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
                     else:
                         killer = None
-                    asyncio.run(execute_death_message(pkt["Parameters"][0], killer))
+                    asyncio.run(execute_death_message(
+                        pkt["Parameters"][0], killer))
                     plugin_grp.execute_player_death(
                         pkt["Parameters"][0],
                         killer,
@@ -518,7 +523,8 @@ class GameCtrl:
                 msg = pkt["Message"]
                 try:
                     Print.print_inf(
-                        "".join([i["text"] for i in json.loads(msg)["rawtext"]])
+                        "".join([i["text"]
+                                for i in json.loads(msg)["rawtext"]])
                     )
                 except:
                     pass
@@ -575,7 +581,8 @@ class GameCtrl:
 
     def say_to(self, target: str, msg: str):
         # 向玩家发送聊天栏信息
-        self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
+        self.sendwocmd("tellraw " + target +
+                       ' {"rawtext":[{"text":"' + msg + '"}]}')
 
     def player_title(self, target: str, text: str):
         # 向玩家显示大标题

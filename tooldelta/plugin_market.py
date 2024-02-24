@@ -1,4 +1,8 @@
-import requests, json, os, platform, shutil
+import requests
+import json
+import os
+import platform
+import shutil
 import tempfile
 from . import urlmethod
 from .builtins import Builtins
@@ -36,7 +40,8 @@ def _get_json_from_url(url: str):
 class PluginMaketPluginData:
     def __init__(self, name: str, plugin_data: dict):
         self.name: str = name
-        self.version: tuple = tuple(int(i) for i in plugin_data["version"].split("."))
+        self.version: tuple = tuple(int(i)
+                                    for i in plugin_data["version"].split("."))
         self.author: str = plugin_data["author"]
         self.plugin_type: str = plugin_data["plugin-type"]
         self.description: str = plugin_data["description"]
@@ -78,7 +83,8 @@ class PluginMarket:
             while True:
                 os.system(CLS_CMD)
                 Print.print_inf(
-                    market_datas["SourceName"] + ": " + market_datas["Greetings"]
+                    market_datas["SourceName"] +
+                    ": " + market_datas["Greetings"]
                 )
                 now_page = int(now_index / 8) + 1
                 for i in range(now_index, now_index + 8):
@@ -120,7 +126,8 @@ class PluginMarket:
                         if res in range(1, all_indexes + 1):
                             r = self.choice_plugin(
                                 PluginMaketPluginData(
-                                    plugins_list[res - 1][0], plugins_list[res - 1][1]
+                                    plugins_list[res -
+                                                 1][0], plugins_list[res - 1][1]
                                 ),
                                 market_datas["MarketPlugins"],
                             )
@@ -152,7 +159,8 @@ class PluginMarket:
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = (
-            ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()])
+            ", ".join(
+                [f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()])
             or "无"
         )
         os.system(CLS_CMD)
@@ -186,7 +194,8 @@ class PluginMarket:
         for plugin_name, _ in plugin_data.pre_plugins.items():
             Print.print_inf(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
             self.download_plugin(
-                PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]),
+                PluginMaketPluginData(
+                    plugin_name, all_plugins_dict[plugin_name]),
                 all_plugins_dict,
             )
         cache_dir = tempfile.mkdtemp()
@@ -215,13 +224,15 @@ class PluginMarket:
                         raise Exception(
                             f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决"
                         )
-                os.makedirs(os.path.join(cache_dir, plugin_data.name), exist_ok=True)
+                os.makedirs(os.path.join(
+                    cache_dir, plugin_data.name), exist_ok=True)
                 path_last = _path_dir(paths)
                 if path_last is not None:
                     # 自动创建文件夹
                     folder_path = os.path.join(cache_dir, path_last)
                     os.makedirs(folder_path, exist_ok=True)
-                urlmethod.download_unknown_file(url, os.path.join(cache_dir, paths))
+                urlmethod.download_unknown_file(
+                    url, os.path.join(cache_dir, paths))
             # Move downloaded files to target download path
             target_path = download_path
             os.makedirs(target_path, exist_ok=True)

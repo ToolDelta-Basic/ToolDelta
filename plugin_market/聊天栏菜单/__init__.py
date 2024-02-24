@@ -5,6 +5,7 @@ from typing import Callable
 
 plugins.checkSystemVersion((0, 1, 8))
 
+
 @dataclass
 class ChatbarTriggers:
     triggers: list
@@ -15,6 +16,8 @@ class ChatbarTriggers:
     op_only: bool
 
 # 使用 api = plugins.get_plugin_api("聊天栏菜单") 来获取到这个api
+
+
 @plugins.add_plugin_as_api("聊天栏菜单")
 class ChatbarMenu(Plugin, PluginAPI):
     """
@@ -50,11 +53,14 @@ class ChatbarMenu(Plugin, PluginAPI):
     }
     version = (0, 0, 3)
     chatbar_triggers: list[ChatbarTriggers] = []
+
     def __init__(self, frame: Frame):
         self.game_ctrl = frame.get_game_control()
-        self.cfg, _ = Config.getPluginConfigAndVersion(self.name, self.STD_CFG_TYPE, self.DEFAULT_CFG, (0, 0, 1))
+        self.cfg, _ = Config.getPluginConfigAndVersion(
+            self.name, self.STD_CFG_TYPE, self.DEFAULT_CFG, (0, 0, 1))
     # ----API----
-    def add_trigger(self, triggers: list[str], argument_hint: str, usage: str, func, args_pd = lambda _: True, op_only = False):
+
+    def add_trigger(self, triggers: list[str], argument_hint: str, usage: str, func, args_pd=lambda _: True, op_only=False):
         # triggers: 所有命令触发词
         # arg_hint: 提示词(命令参数)
         # usage: 显示的命令说明
@@ -66,11 +72,14 @@ class ChatbarMenu(Plugin, PluginAPI):
         for tri in triggers:
             if not tri.startswith("."):
                 triggers[triggers.index(tri)] = "." + tri
-        self.chatbar_triggers.append(ChatbarTriggers(triggers, argument_hint, usage, func, args_pd, op_only))
+        self.chatbar_triggers.append(ChatbarTriggers(
+            triggers, argument_hint, usage, func, args_pd, op_only))
     # ------------
+
     def on_player_message(self, player: str, msg: str):
         if msg in self.cfg["/help触发词"]:
-            is_op_mode = bool(self.game_ctrl.sendcmd("/testfor @a[name=" + player + ",m=1]", True).SuccessCount)
+            is_op_mode = bool(self.game_ctrl.sendcmd(
+                "/testfor @a[name=" + player + ",m=1]", True).SuccessCount)
             self.game_ctrl.say_to(player, self.cfg["help菜单样式"]["菜单头"])
             for tri in self.chatbar_triggers:
                 if not tri.op_only or (is_op_mode and tri.op_only):
@@ -84,7 +93,8 @@ class ChatbarMenu(Plugin, PluginAPI):
             for tri in self.chatbar_triggers:
                 for trigger in tri.triggers:
                     if msg.startswith(trigger):
-                        is_op_mode = bool(self.game_ctrl.sendcmd("/testfor @a[name=" + player + ",m=1]", True).SuccessCount)
+                        is_op_mode = bool(self.game_ctrl.sendcmd(
+                            "/testfor @a[name=" + player + ",m=1]", True).SuccessCount)
                         if (not is_op_mode) and tri.op_only:
                             self.game_ctrl.say_to(player, "§c创造模式下才可以使用该菜单项")
                             return

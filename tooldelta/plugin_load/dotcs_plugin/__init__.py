@@ -1,8 +1,11 @@
 from ..classic_plugin import Plugin
 from ...color_print import Print
-import re, os, sys
+import re
+import os
+import sys
 
 NOT_IMPORTALL_RULE = re.compile(r"from .* import \*")
+
 
 def _import_original_dotcs_plugin(
     plugin_code: str, old_dotcs_env: dict, module_env: dict, plugin_group
@@ -124,6 +127,7 @@ def _import_original_dotcs_plugin(
         if _dotcs_runcode.get(f"repeat1m", None):
             evts["repeat1m"] = [plugin_body.name, _dotcs_runcode[f"repeat1m"]]
     return plugin_body, evts, newPacketFuncs
+
 
 def read_plugin_from_old(plugin_grp, module_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/原DotCS插件")

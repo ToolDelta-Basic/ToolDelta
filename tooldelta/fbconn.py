@@ -221,7 +221,8 @@ def GamePacketBytesAsIsJsonStr(pktBytes: bytes) -> str:
 
 
 def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
-    r = LIB.JsonStrAsIsGamePacketBytes(to_GoInt(packetID), to_GoString(jsonStr))
+    r = LIB.JsonStrAsIsGamePacketBytes(
+        to_GoInt(packetID), to_GoString(jsonStr))
     check_err_in_struct(r)
     bs = r.pktBytes[: r.l]
     freeMem(r.pktBytes)
