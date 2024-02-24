@@ -12,7 +12,6 @@ from .launch_cli import (
     FrameFBConn,
     FrameNeOmg,
     FrameNeOmgRemote,
-    StandardFrame,
     SysStatus,
 )
 from .logger import publicLogger

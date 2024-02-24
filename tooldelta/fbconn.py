@@ -1,5 +1,4 @@
 import ctypes
-import platform
 
 GoInt = ctypes.c_longlong
 GoString = ctypes.c_char_p

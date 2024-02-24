@@ -6,7 +6,6 @@ import json
 import requests
 import ujson
 import random
-from click import command
 from typing import Callable, Optional
 from .color_print import Print
 from .urlmethod import download_file, get_free_port

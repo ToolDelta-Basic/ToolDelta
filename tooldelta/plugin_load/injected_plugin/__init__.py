@@ -1,10 +1,7 @@
 import asyncio
-from distutils.core import setup_keywords
 import os
 import sys
 import importlib
-from re import A
-import ujson as json
 
 from tooldelta.color_print import Print
 

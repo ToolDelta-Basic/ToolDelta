@@ -1,4 +1,3 @@
-import os
 import time
 from tooldelta import plugins, Plugin, PluginAPI, Frame, Builtins, Print, Config
 

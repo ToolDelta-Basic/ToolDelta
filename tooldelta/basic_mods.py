@@ -10,25 +10,17 @@ try:
     import platform
     import subprocess
     import socket
-    import logging
-    import ctypes
     import asyncio
-    import copy
     import math
     import random
 
     sys.path.append(os.path.join(os.getcwd(), "libs"))
     import psutil
     import requests
-    import nbt
     import qrcode
-    import getpass
     import pymysql
     import websockets
-    import ujson
-    import hashlib
     import base64
-    import rich.progress
 except ModuleNotFoundError as err:
     # 第一次部署该项目, 将会自动安装这些模块.
     from . import get_python_libs

@@ -1,7 +1,6 @@
 from .color_print import Print
 import ujson
 import os
-import time
 import threading
 import traceback
 import copy
