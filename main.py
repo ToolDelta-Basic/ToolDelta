@@ -1,3 +1,3 @@
-from tooldelta.launch_options import launch_title
+import tooldelta
 
-launch_title()
+tooldelta.start_tool_delta()
