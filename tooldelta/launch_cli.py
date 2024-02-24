@@ -259,7 +259,6 @@ class FrameFBConn(StandardFrame):
                             break
                         except requests.exceptions.RequestException:
                             Print.print_war("镜像源故障, 正在切换")
-                            pass
                     if not succ:
                         Print.print_err("镜像源全不可用..")
                         return False
