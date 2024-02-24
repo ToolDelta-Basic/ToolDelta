@@ -136,8 +136,6 @@ def check_err(r):
         raise Exception(err)
 
 
-
-
 def ConnectFB(address: str) -> int:
     r = LIB.ConnectFB(to_GoString(address))
     check_err_in_struct(r)
