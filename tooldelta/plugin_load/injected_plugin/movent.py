@@ -27,7 +27,7 @@ def set_frame(my_frame: Frame) -> None:
     全局初始化框架
 
     参数:
-        my_frame: 要设置的帧对象
+        my_frame: 要设置的框架对象
     """
     global frame, game_control  # pylint: disable=global-statement
     frame = my_frame
