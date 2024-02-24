@@ -49,16 +49,19 @@ def sendcmd(cmd: str, waitForResp = False, timeout = 30):
                 if cmds[1] == "objectives":
                     if cmds[2] == "add":
                         scbname = cmds[3]
-                        assert cmds[4] == "dummy"
+                        if cmds[4] != "dummy":
+                            raise AssertionError
                         if scb_exists(scbname):
                             raise ExecFailed(f"计分板 {scbname} 已存在")
-                        assert len(scbname) in range(16), "计分板名太长"
+                        if len(scbname) not in range(16):
+                            raise AssertionError("计分板名太长")
                         scbs[scbname] = {}
                     elif cmds[2] == "remove":
                         scbname = cmds[3]
                         if not scb_exists(scbname):
                             raise ExecFailed(f"计分板 {scbname} 不存在")
-                    assert cmds[2] == "setdisplay"
+                    if cmds[2] != "setdisplay":
+                        raise AssertionError
                 elif cmds[1] == "players":
                     if cmds[2] in ["add", "remove"]:
                         # To be discussed
@@ -73,7 +76,8 @@ def sendcmd(cmd: str, waitForResp = False, timeout = 30):
                         scbs[scbname][target] = test_overflow(final)
                     elif cmds[2] == "operation":
                         target1, scb1, op, target2, scb2 = cmds[3:8]
-                        assert op in ["+=", "-=", "=", "*=", "/=", "%="], "计分板运算符不合法"
+                        if op not in ["+=", "-=", "=", "*=", "/=", "%="]:
+                            raise AssertionError("计分板运算符不合法")
                         match op:
                             case "+=":
                                 final = require_score(scb1, target1) + require_score(scb2, target2)
