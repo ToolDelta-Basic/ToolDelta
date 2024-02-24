@@ -58,7 +58,7 @@ class MapArtImporter(Plugin):
         progress = 0
         sname = self.game_ctrl.bot_name
         if not sname:
-            raise
+            raise ValueError("未找到机器人名")
         # /w @s .像素画 a1.png 10048 154 10048 3x2
         # /w @s .像素画 a1.jpg 10048 154 10048 2x2
         zchunk = 0

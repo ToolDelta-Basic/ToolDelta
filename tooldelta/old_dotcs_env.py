@@ -219,8 +219,7 @@ def get_dotcs_env(__F, print_ins):
         except FileNotFoundError:
             with open(f"data/players/{playerName}.json", "w", encoding="utf-8") as f:
                 json.dump({dataName: writeNew}, f)
-        finally:
-            return None
+        return None
 
     def setPlayerData(dataName: str, playerName: str, dataValue, writeNew: str = ""):
         if os.path.isfile(f"data/players/{playerName}.json"):
