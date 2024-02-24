@@ -90,7 +90,6 @@ def InitLib(LIB):
     # LIB.CreatePacketInJsonStrByID.argtypes = [GoInt]
     # LIB.CreatePacketInJsonStrByID.restype = GoString
 
-    # FreeMem(address *C.char)
     LIB.FreeMem.argtypes = [ctypes.c_void_p]
     return LIB
 
@@ -128,24 +127,13 @@ def freeMem(address):
 def check_err_in_struct(r):
     if r.err != None:
         err = to_PyString(r.err)
-        # freeMem(r.err)
         raise Exception(err)
 
 
 def check_err(r):
     if r != None:
         err = to_PyString(r)
-        # freeMem(r.err)
         raise Exception(err)
-
-
-# if platform.uname()[0] == "Linux":
-#     LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_linux_amd64.so")
-# elif platform.uname()[0] == "Windows":
-#     LIB = ctypes.cdll.LoadLibrary("tooldelta/fb_conn/libfbconn_windows_x86_64.dll")
-# else:
-#     raise Exception("未知的运行平台: " + platform.uname()[0])
-# LIB = InitLib(LIB)
 
 
 def ConnectFB(address: str) -> int:
@@ -200,7 +188,6 @@ def SendMCCommand(connID: int, cmd: str) -> str:
     r = LIB.SendMCCommand(to_GoInt(connID), to_GoString(cmd))
     check_err_in_struct(r)
     uuid = r.uuid[:]
-    # freeMem(r.uuid)
     return uuid
 
 
@@ -208,7 +195,6 @@ def SendWSCommand(connID: int, cmd: str) -> str:
     r = LIB.SendWSCommand(to_GoInt(connID), to_GoString(cmd))
     check_err_in_struct(r)
     uuid = r.uuid[:]
-    # freeMem(r.uuid)
     return uuid
 
 
@@ -216,7 +202,6 @@ def GamePacketBytesAsIsJsonStr(pktBytes: bytes) -> str:
     r = LIB.GamePacketBytesAsIsJsonStr(to_GoByteSlice(pktBytes))
     check_err_in_struct(r)
     jsonStr = to_PyString(r.jsonStr)
-    # freeMem(r.jsonStr)
     return jsonStr
 
 
