@@ -2,7 +2,7 @@ import os, time
 import ujson as json
 from 维度传送 import tp
 from tooldelta.plugin_load.injected_plugin import player_message, player_death
-from tooldelta.plugin_load.injected_plugin.movent import tellrawText, getPos
+from tooldelta.plugin_load.injected_plugin.movent import get_all_player, tellrawText, getPos
 
 
 __plugin_meta__ = {
@@ -65,6 +65,8 @@ async def _(playername, msg):
 
 @player_death()
 async def _(playername, killer):
+    if playername not in get_all_player():
+        return
     deathTime = int(time.time())
     with open(config_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -82,7 +84,7 @@ async def _(playername, killer):
             )
             return
 
-    deathData = getPos(f'@a[name="{playername}"]')
+    deathData = getPos(playername)
     deathData["time"] = deathTime
     data[playername] = deathData
     with open(config_path, "w", encoding="utf-8") as f:

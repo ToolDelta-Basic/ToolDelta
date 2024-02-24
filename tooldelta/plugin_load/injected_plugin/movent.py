@@ -47,7 +47,9 @@ def sendcmd(
     """
     check_avaliable(game_control)
     if game_control.sendcmd is None:
-        raise AttributeError(f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化")
+        raise AttributeError(
+            f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化"
+        )
     return game_control.sendcmd(cmd, waitForResp, timeout)
 
 
@@ -214,10 +216,9 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         AttributeError: 当获取玩家UUID失败时抛出该异常
     """
     check_avaliable(game_control)
-
-    if targetNameToGet not in get_all_player():
-        raise ValueError("Player not found.")
-    result = sendwscmd("/querytarget " + targetNameToGet, True, timeout)
+    if targetNameToGet not in get_all_player() or targetNameToGet.startswith("@"):
+        raise ValueError(f"Player {targetNameToGet} does not exist.")
+    result = sendwscmd(f'/querytarget @a[name="{targetNameToGet}"]', True, timeout)
     if not result.OutputMessages[0].Success:
         raise ValueError(f"Failed to get the position: {result.OutputMessages[0]}")
     parameter = result.OutputMessages[0].Parameters[0]
