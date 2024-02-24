@@ -986,14 +986,14 @@ class ThreadOmega:
     def listen_specific_chat(
         self, specific_name: str, callback: Callable[[Chat], None]
     ):
-        if not specific_name in self._specific_chat_listeners:
+        if specific_name not in self._specific_chat_listeners:
             self._specific_chat_listeners[specific_name] = []
         self._specific_chat_listeners[specific_name].append(callback)
 
     def listen_named_command_block(
         self, command_block_name: str, callback: Callable[[Chat], None]
     ):
-        if not command_block_name in self._name_command_block_msg_listeners:
+        if command_block_name not in self._name_command_block_msg_listeners:
             self._name_command_block_msg_listeners[command_block_name] = []
         LIB.ListenCommandBlock(toCString(command_block_name))
         self._name_command_block_msg_listeners[command_block_name].append(callback)
