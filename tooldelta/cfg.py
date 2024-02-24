@@ -80,11 +80,14 @@ class Cfg:
         def __repr__(self):
             return f"Cfg.UnneccessaryKey({self.key})"
 
-    class ConfigKeyError(ConfigError): ...
+    class ConfigKeyError(ConfigError):
+        ...
 
-    class ConfigValueError(ConfigError): ...
+    class ConfigValueError(ConfigError):
+        ...
 
-    class VersionLowError(ConfigError): ...
+    class VersionLowError(ConfigError):
+        ...
 
     class PInt(int):
         "正整数"
@@ -111,9 +114,7 @@ class Cfg:
             try:
                 obj = ujson.load(f)
             except ujson.JSONDecodeError:
-                raise self.ConfigValueError(
-                    "JSON配置文件格式不正确, 请修正或直接删除", None
-                )
+                raise self.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None)
         self.check_dict_2(standard_type, obj)
         return obj
 

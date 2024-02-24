@@ -1,7 +1,7 @@
 from tooldelta.plugin_load.injected_plugin.movent import (
     sendcmd,
     get_all_player,
-    rawText
+    rawText,
 )
 from tooldelta.plugin_load.injected_plugin import player_message, repeat
 
@@ -162,9 +162,7 @@ async def _(playername: str, msg: str):
                             if Game_JZQ.判定():
                                 Game_JZQ.stage_display(i, playername)
                                 sendcmd("/title %s title §e井字棋" % playername)
-                                sendcmd(
-                                    "/title %s subtitle §a祝贺!你赢了!" % playername
-                                )
+                                sendcmd("/title %s subtitle §a祝贺!你赢了!" % playername)
 
                                 nexPlayer = i[Game_JZQ.轮流()]
                                 Game_JZQ.stage_display(i, nexPlayer)
