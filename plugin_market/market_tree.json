@@ -84,6 +84,16 @@
       "pre-plugins": {},
       "plugin-type": "injected"
     },
+    "五子棋小游戏": {
+      "author": "SuperScript",
+      "version": "0.0.2",
+      "description": "在游戏内开一局五子棋游戏完(暂未设置自定义奖励配置)",
+      "limit_launcher": null,
+      "pre-plugins": {
+        "聊天栏菜单": "0.0.1"
+      },
+      "plugin-type": "classic"
+    },
     "库-基本组件API": {
       "author": "SuperScript",
       "version": "0.0.1",

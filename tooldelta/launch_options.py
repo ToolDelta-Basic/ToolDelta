@@ -2,5 +2,6 @@ from .builtins import Builtins
 from .color_print import Print
 
 
-def launch_title():
-    Print.print_inf(Print.colormode_replace("§8hhhhh§7", 7))
+# TODO: 这是启动界面, 在此方法下写启动选项(启动ToolDelta, 插件管理, 插件市场)
+def client_title():
+    ...
