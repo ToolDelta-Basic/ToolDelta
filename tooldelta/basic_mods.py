@@ -21,6 +21,7 @@ try:
     import pymysql
     import websockets
     import base64
+    import rich
 except ModuleNotFoundError as err:
     # 第一次部署该项目, 将会自动安装这些模块.
     from . import get_python_libs
@@ -52,8 +53,7 @@ except ModuleNotFoundError as err:
     import ujson
     import hashlib
     import base64
-    import rich.progress
-
+    import rich
 from typing import Callable
 
 dotcs_module_env = {
