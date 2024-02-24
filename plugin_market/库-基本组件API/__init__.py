@@ -53,10 +53,9 @@ class BasicFunctionLib(PluginAPI):
                 if scoreboardNameToGet == "*":
                     return [result, result2]
                 return result2[scoreboardNameToGet]
-            else:
-                if scoreboardNameToGet == "*":
-                    return result[targetNameToGet]
-                return result[targetNameToGet][scoreboardNameToGet]
+            if scoreboardNameToGet == "*":
+                return result[targetNameToGet]
+            return result[targetNameToGet][scoreboardNameToGet]
         except KeyError as err:
             raise Exception("Failed to get score: %s" % str(err))
 
