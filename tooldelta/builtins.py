@@ -234,7 +234,9 @@ class Builtins:
         return player in in_dialogue_list
 
     @staticmethod
-    def create_dialogue_threading(player, func, exc_cb=None, args=(), kwargs={}):
+    def create_dialogue_threading(player, func, exc_cb=None, args=(), kwargs=None):
+        if kwargs is None:
+            kwargs = {}
         "创建一个玩家与聊天栏交互的线程, 若玩家已处于一个对话中, 则向方法exc_cb传参: player(玩家名)"
         threading.Thread(
             target=_dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)

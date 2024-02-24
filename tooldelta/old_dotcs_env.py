@@ -43,7 +43,9 @@ def get_dotcs_env(__F, print_ins):
                 print_ins.print_with_info(text, info, end="\r")
 
     class createThread(threading.Thread):
-        def __init__(self, name, data={}, func="", output=True):
+        def __init__(self, name, data=None, func="", output=True):
+            if data is None:
+                data = {}
             threading.Thread.__init__(self)
             self.name = name
             self.data = data
