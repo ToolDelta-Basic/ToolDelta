@@ -75,7 +75,7 @@ class PluginGroup:
         "将下面的方法作为一个广播事件接收器"
 
         def deco(func: Callable[[Any], bool]):
-            if self._broadcast_evts.get(evt_name, None):
+            if self._broadcast_evts.get(evt_name):
                 self._broadcast_evts[evt_name].append(func)
             else:
                 self._broadcast_evts[evt_name] = [func]
@@ -85,7 +85,7 @@ class PluginGroup:
     def broadcastEvt(self, evt_name: str, **kwargs) -> list[Any] | None:
         "向全局广播一个特定事件, 可以传入附加信息参数"
         callback_list = []
-        res = self._broadcast_evts.get(evt_name, None)
+        res = self._broadcast_evts.get(evt_name)
         if res:
             for f in res:
                 interrupt, *res2 = f(**kwargs)
@@ -132,7 +132,7 @@ class PluginGroup:
     def get_plugin_api(
         self, apiName: str, min_version: tuple | None = None
     ) -> PluginAPI:
-        api = self.plugins_api.get(apiName, None)
+        api = self.plugins_api.get(apiName)
         if api:
             if min_version and api.version < min_version:
                 raise self.PluginAPIVersionError(apiName, min_version, api.version)
@@ -153,7 +153,7 @@ class PluginGroup:
         self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
     def _add_listen_packet_func(self, packetType, func: Callable):
-        if self.packet_funcs.get(str(packetType), None):
+        if self.packet_funcs.get(str(packetType)):
             self.packet_funcs[str(packetType)].append(func)
         else:
             self.packet_funcs[str(packetType)] = [func]
@@ -277,7 +277,7 @@ class PluginGroup:
                 onerr(name, err, traceback.format_exc())
 
     def processPacketFunc(self, pktID: int, pkt: dict):
-        d = self.packet_funcs.get(str(pktID), None)
+        d = self.packet_funcs.get(str(pktID))
         if d:
             for func in d:
                 try:

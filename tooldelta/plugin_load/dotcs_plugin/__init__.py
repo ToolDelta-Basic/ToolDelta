@@ -116,15 +116,15 @@ def _import_original_dotcs_plugin(
         "on_player_death",
         "on_player_leave",
     ]:
-        if _dotcs_runcode.get(codetype, None):
+        if _dotcs_runcode.get(codetype):
             evts[codetype] = [plugin_body.name, _dotcs_runcode[codetype]]
-        if _dotcs_runcode.get("repeat1s", None):
+        if _dotcs_runcode.get("repeat1s"):
             evts["repeat1s"] = [plugin_body.name, _dotcs_runcode["repeat1s"]]
-        if _dotcs_runcode.get("repeat10s", None):
+        if _dotcs_runcode.get("repeat10s"):
             evts["repeat10s"] = [plugin_body.name, _dotcs_runcode["repeat10s"]]
-        if _dotcs_runcode.get("repeat30s", None):
+        if _dotcs_runcode.get("repeat30s"):
             evts["repeat30s"] = [plugin_body.name, _dotcs_runcode["repeat30s"]]
-        if _dotcs_runcode.get("repeat1m", None):
+        if _dotcs_runcode.get("repeat1m"):
             evts["repeat1m"] = [plugin_body.name, _dotcs_runcode["repeat1m"]]
     return plugin_body, evts, newPacketFuncs
 

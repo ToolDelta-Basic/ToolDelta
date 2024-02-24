@@ -27,7 +27,7 @@ class MapArtImporter(Plugin):
         )
 
     def get_nearest_color_block(self, rvalue, gvalue, bvalue):
-        if self.color_cache.get((rvalue, gvalue, bvalue), None):
+        if self.color_cache.get((rvalue, gvalue, bvalue)):
             return self.color_cache.get((rvalue, gvalue, bvalue))
         max_weight_reversed = 10000000
         max_matches = (0, 0, 0)
