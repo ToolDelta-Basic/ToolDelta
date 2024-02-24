@@ -1,4 +1,5 @@
-import ujson, os
+import ujson
+import os
 
 NoneType = type(None)
 
@@ -80,11 +81,14 @@ class Cfg:
         def __repr__(self):
             return f"Cfg.UnneccessaryKey({self.key})"
 
-    class ConfigKeyError(ConfigError): ...
+    class ConfigKeyError(ConfigError):
+        ...
 
-    class ConfigValueError(ConfigError): ...
+    class ConfigValueError(ConfigError):
+        ...
 
-    class VersionLowError(ConfigError): ...
+    class VersionLowError(ConfigError):
+        ...
 
     class PInt(int):
         "正整数"

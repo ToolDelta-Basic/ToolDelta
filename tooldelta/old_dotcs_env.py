@@ -1,14 +1,19 @@
-import os, json, threading, ctypes, traceback
+import os
+import json
+import threading
+import ctypes
+import traceback
 
 
 def get_dotcs_env(__F, print_ins):
-    sendcmd = lambda cmd, waitForResp=False, timeout=30: (
+    def sendcmd(cmd, waitForResp=False, timeout=30): return (
         __F.link_game_ctrl.sendcmd(cmd, waitForResp, timeout).as_dict
         if waitForResp
         else __F.link_game_ctrl.sendcmd(cmd)
     )
     sendwocmd = __F.link_game_ctrl.sendwocmd
-    sendwscmd = lambda cmd, waitForResp=False, timeout=30: (
+
+    def sendwscmd(cmd, waitForResp=False, timeout=30): return (
         __F.link_game_ctrl.sendwscmd(cmd, waitForResp, timeout).as_dict
         if waitForResp
         else __F.link_game_ctrl.sendwscmd(cmd)

@@ -1,4 +1,11 @@
-import platform, os, subprocess, time, json, requests, ujson, random
+import platform
+import os
+import subprocess
+import time
+import json
+import requests
+import ujson
+import random
 from click import command
 from typing import Callable
 from .color_print import Print
@@ -215,7 +222,8 @@ class FrameFBConn(StandardFrame):
                 if packet_type == PacketIDS.CommandOutput:
                     cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                     if cmd_uuid in self.cmds_reqs:
-                        self.cmds_resp[cmd_uuid] = [time.time(), packet_mapping]
+                        self.cmds_resp[cmd_uuid] = [
+                            time.time(), packet_mapping]
                 self.packet_handler(packet_type, packet_mapping)
                 if not self.injected and packet_type == PacketIDS.PlayerList:
                     self.injected = True
@@ -233,7 +241,8 @@ class FrameFBConn(StandardFrame):
             + "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"
         )
         try:
-            files_to_get = json.loads(requests.get(file_get_src, timeout=30).text)
+            files_to_get = json.loads(
+                requests.get(file_get_src, timeout=30).text)
         except json.JSONDecodeError:
             Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
             return False
@@ -253,7 +262,8 @@ class FrameFBConn(StandardFrame):
                     succ = False
                     for mirr in mirrs:
                         try:
-                            download_file(mirr + "/https://github.com/" + furl, fdir)
+                            download_file(
+                                mirr + "/https://github.com/" + furl, fdir)
                             succ = True
                             break
                         except requests.exceptions.RequestException:
@@ -286,7 +296,8 @@ class FrameFBConn(StandardFrame):
                         self.cmds_reqs.remove(uuid)
                         try:
                             # 特殊情况下只有 sendwscmd 能接收到返回的命令
-                            Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
+                            Print.print_war(
+                                f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
                             return self.sendwscmd(cmd, True, timeout)
                         except TimeoutError:
                             raise
@@ -321,7 +332,8 @@ class FrameFBConn(StandardFrame):
                 ),
             )
         )
-        self.sendfbcmd = staticmethod(lambda cmd: fbconn.SendFBCommand(self.con, cmd))
+        self.sendfbcmd = staticmethod(
+            lambda cmd: fbconn.SendFBCommand(self.con, cmd))
         self.is_op = None
 
 
@@ -412,7 +424,8 @@ class FrameNeOmg(StandardFrame):
             while 1:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig == "" or msg_orig == "SIGNAL: exit":
-                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                    Print.print_with_info(
+                        f"ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 elif "[neOmega 接入点]: 就绪" in msg_orig:
@@ -531,7 +544,8 @@ class FrameNeOmg(StandardFrame):
 
         def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
-                res = self.omega.send_player_command_need_response(cmd, timeout)
+                res = self.omega.send_player_command_need_response(
+                    cmd, timeout)
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
@@ -541,7 +555,8 @@ class FrameNeOmg(StandardFrame):
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
-                res = self.omega.send_websocket_command_need_response(cmd, timeout)
+                res = self.omega.send_websocket_command_need_response(
+                    cmd, timeout)
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
@@ -572,7 +587,8 @@ class FrameNeOmg(StandardFrame):
 class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
         try:
-            openat_port = int(sys_args_to_dict().get("access-point-port", "24020"))
+            openat_port = int(sys_args_to_dict().get(
+                "access-point-port", "24020"))
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):
