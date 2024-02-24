@@ -12,6 +12,8 @@ from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
+from .neo_libs import neo_conn
+from . import fbconn
 import threading
 
 
@@ -85,9 +87,6 @@ class FrameFBConn(StandardFrame):
     cmds_resp = {}
 
     def __init__(self, serverNumber, password, fbToken, auth_server):
-        global fbconn
-        from . import fbconn
-
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
         self.init_all_functions()
@@ -162,11 +161,15 @@ class FrameFBConn(StandardFrame):
                     )
                     self.status = SysStatus.NORMAL_EXIT
                 elif "Failed to contact with API" in tmp:
-                    Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
+                    Print.print_err(
+                        "§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中"
+                    )
                     try:
                         Print.print_war("尝试连接到 FastBuilder 验证服务器")
                         requests.get("http://user.fastbuilder.pro", timeout=10)
-                        Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
+                        Print.print_err(
+                            "??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃"
+                        )
                     except:
                         Print.print_err(
                             "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)"
@@ -337,15 +340,9 @@ class FrameNeOmg(StandardFrame):
         self.injected = False
         self.omega = None
         self.download_libs()
-        self.set_neomg_lib()
         self.init_all_functions()
         self.status = SysStatus.LOADING
         self.secret_exit_key = ""
-
-    @staticmethod
-    def set_neomg_lib():
-        global neo_conn
-        from .neo_libs import neo_conn
 
     def set_omega(self, openat_port):
         retries = 0
@@ -575,7 +572,9 @@ class FrameNeOmgRemote(FrameNeOmg):
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
         if openat_port == 0:
-            Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
+            Print.print_war(
+                "未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015"
+            )
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             return SystemExit
