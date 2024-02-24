@@ -31,7 +31,7 @@ class Builtins:
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
                 if "exc_cb" in self.all_args[1]:
-                    self.all_args[1]["exc_cb"]
+                    pass
 
         def get_id(self):
             if hasattr(self, "_thread_id"):

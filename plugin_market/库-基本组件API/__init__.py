@@ -20,7 +20,6 @@ class BasicFunctionLib(PluginAPI):
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
-        frame
 
     # -------------- API ---------------
     def getScore(self, scoreboardNameToGet: str, targetNameToGet: str) -> int:
