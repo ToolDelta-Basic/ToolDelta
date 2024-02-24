@@ -31,18 +31,35 @@ class Builtins:
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
 
-        def get_id(self):
-            if hasattr(self, "_thread_id"):
-                return self._thread_id
-            for id, thread in threading._active.items():
-                if thread is self:
-                    return id
+        class ClassicThread(threading.Thread):
+            def __init__(self, func, args: tuple = (), usage="", **kwargs):
+                super().__init__(target=func)
+                self.func = func
+                self.daemon = True
+                self.all_args = [args, kwargs]
+                self.usage = usage
+                self.start()
 
-        def stop(self):
-            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                self.get_id(), ctypes.py_object(Builtins.ThreadExit)
-            )
-            return res
+            def run(self):
+                try:
+                    self.func(*self.all_args[0], **self.all_args[1])
+                except Builtins.ThreadExit:
+                    pass
+                except:
+                    Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
+
+            def get_id(self):
+                if hasattr(self, "_thread_id"):
+                    return self._thread_id
+                for thread_id, thread in enumerate(threading.enumerate()):
+                    if thread is self:
+                        return thread_id
+
+            def stop(self):
+                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                    self.get_id(), ctypes.py_object(Builtins.ThreadExit)
+                )
+                return res
 
     createThread = ClassicThread
 

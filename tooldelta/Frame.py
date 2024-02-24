@@ -52,7 +52,7 @@ class Frame:
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
-    _old_dotcs_threadinglist = []
+    old_dotcs_threadinglist = []
     on_plugin_err = staticmethod(
         lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     )
@@ -330,7 +330,7 @@ class Frame:
         self.launcher.exit_event.set()
         return -1
 
-    def _get_old_dotcs_env(self):
+    def get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
         return old_dotcs_env.get_dotcs_env(self, Print)
 
@@ -353,7 +353,7 @@ class Frame:
     @staticmethod
     def safe_close():
         builtins.safe_close()
-        publicLogger._exit()
+        publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")
 
 

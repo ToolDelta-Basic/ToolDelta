@@ -96,8 +96,8 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                 plugin_grp.normal_plugin_loaded_num += 1
                 if plugin_grp.plugin_added_cache["packets"] != []:
                     for pktType, func in plugin_grp.plugin_added_cache["packets"]:  # type: ignore
-                        plugin_grp._add_listen_packet_id(pktType)
-                        plugin_grp._add_listen_packet_func(
+                        plugin_grp.add_listen_packet_id(pktType)
+                        plugin_grp.add_listen_packet_func(
                             pktType, getattr(plugin_body, func.__name__)
                         )
                 if plugin_grp.pluginAPI_added_cache is not None:

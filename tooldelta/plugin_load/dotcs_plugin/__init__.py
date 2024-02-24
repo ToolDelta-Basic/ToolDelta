@@ -86,7 +86,7 @@ def _import_original_dotcs_plugin(
                             fun_exec_code = (
                                 f"def packet_{pktID}(jsonPkt):\n packetType={pktID}\n "
                             )
-                            plugin_body._add_req_listen_packet(pktID)
+                            plugin_body.add_req_listen_packet(pktID)
                             packetFuncs.append((pktID, f"packet_{pktID}"))
                     except:
                         Print.print_war(f"§c不合法的监听数据包ID： {k}, 已跳过")
@@ -132,7 +132,7 @@ def _import_original_dotcs_plugin(
 def read_plugin_from_old(plugin_grp, module_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/原DotCS插件")
     sys.path.append(PLUGIN_PATH)
-    dotcs_env = plugin_grp.linked_frame._get_old_dotcs_env()
+    dotcs_env = plugin_grp.linked_frame.get_old_dotcs_env()
     files = os.listdir(PLUGIN_PATH)
     files.sort()
     for file in files:
@@ -155,18 +155,18 @@ def read_plugin_from_old(plugin_grp, module_env: dict):
                     for i in evtnew:
                         if i.startswith("repeat"):
                             del evts[i]
-                            plugin_grp._dotcs_repeat_threadings[
+                            plugin_grp.dotcs_repeat_threadings[
                                 i.strip("repeat")
                             ].append(evtnew[i])
                 for pkt, func in pkfuncs:
-                    plugin_grp._add_listen_packet_id(pkt)
-                    plugin_grp._add_listen_packet_func(pkt, func)
+                    plugin_grp.add_listen_packet_id(pkt)
+                    plugin_grp.add_listen_packet_func(pkt, func)
                     Print.print_suc(
                         f"[DotCS插件 特殊数据包监听] 添加成功: {plugin.name} <- {func.__name__}"
                     )
                 for k, v in evts.items():
                     plugin_grp.plugins_funcs[k].append(v)
-                plugin_grp._add_plugin(plugin)
+                plugin_grp.add_plugin(plugin)
                 plugin_grp.dotcs_plugin_loaded_num += 1
                 Print.print_suc(f"§a成功载入插件 §2<DotCS> §a{plugin.name}")
         except Exception as err:

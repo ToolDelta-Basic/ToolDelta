@@ -566,7 +566,7 @@ class PlayerKit:
     def ask(self, hint: str) -> str:
         OmegaAvailable()
         self.say(hint)
-        return self.parent._intercept_player_just_next_input(
+        return self.parent.intercept_player_just_next_input(
             self._c_uuid
         ).RawMsg.strip()
 
@@ -969,7 +969,7 @@ class ThreadOmega:
             callback(player, "exist")
         self._player_change_listeners.append(callback)
 
-    def _intercept_player_just_next_input(
+    def intercept_player_just_next_input(
         self, player_c_uuid: CString, timeout: int = -1
     ) -> Chat:
         setter, getter = self._create_lock_and_result_setter()
