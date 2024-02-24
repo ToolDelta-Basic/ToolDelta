@@ -186,9 +186,7 @@ class Builtins:
 
     @staticmethod
     def simpleAssert(cond: any, exc):
-        """
-        相当于 assert cond, 但是可以自定义引发的异常的类型
-        """
+        """相当于 assert cond, 但是可以自定义引发的异常的类型"""
         if not cond:
             raise exc
 
