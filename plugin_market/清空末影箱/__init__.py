@@ -28,7 +28,7 @@ async def _(playername, message):
                     )
                 tellrawText(playername, text="§l§a清空末影箱  成功")
                 return
-        else:
-            tellrawText(playername, "§l§4ERROR§r", "§c目标玩家不存在！")
+        
+        tellrawText(playername, "§l§4ERROR§r", "§c目标玩家不存在！")
     else:
         tellrawText(playername, "§l§4ERROR§r", "§c权限不足.")
