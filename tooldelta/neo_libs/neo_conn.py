@@ -667,7 +667,6 @@ class ThreadOmega:
         self._bot_basic_info = ClientMaintainedBotBasicInfo(
             **json.loads(toPyString(LIB.GetClientMaintainedBotBasicInfo()))
         )
-        # print(self._bot_basic_info)
 
         # player hooks
         self._bind_players: Dict[str, PlayerKit] = {}
@@ -725,7 +724,6 @@ class ThreadOmega:
                 packetTypeName = retriever
                 if packetTypeName == "":
                     print("'', ignored")
-                # print(f"mc packet {packetTypeName}")
                 listeners = self._packet_listeners.get(packetTypeName, [])
                 if len(listeners) == 0:
                     LIB.OmitEvent()

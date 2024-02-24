@@ -70,7 +70,6 @@ def get_dotcs_env(__F, print_ins):
                 traceback.print_exc()
             except SystemExit as err:
                 pass
-                # color("§eThread %s has been terminated forcely." % self.name)
             finally:
                 threadList.remove(self)
 
@@ -83,7 +82,6 @@ def get_dotcs_env(__F, print_ins):
 
         def stop(self):
             self.stopping = True
-            # color("§eTerminating thread %s." % self.name)
             thread_id = self.get_id()
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
                 thread_id, ctypes.py_object(SystemExit)

@@ -30,7 +30,6 @@ class MyPluginExample(Plugin):
     def on_def(self):
         # 所有插件主类和插件API类都实例化后执行的方法
         "这里是用来获取其他插件提供的API的地方, 当然你也可以不使用这个方法"
-        # self.other_plugins_api = plugins.get_plugin_api("api_name")
 
     def on_inject(self):
         # 机器人进入游戏且ToolDelta初始化完成后加载的方法
