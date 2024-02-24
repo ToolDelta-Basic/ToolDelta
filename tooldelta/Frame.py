@@ -272,6 +272,7 @@ class Frame:
             except:
                 Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
+
         def _console_cmd_thread():
             self.add_console_cmd_trigger(
                 ["?", "help", "帮助"],
