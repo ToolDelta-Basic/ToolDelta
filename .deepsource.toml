@@ -1,19 +1,19 @@
 version = 1
 
 [[analyzers]]
-name = "docker"
+name = "python"
 
   [analyzers.meta]
-  dockerfile_paths = ["Dockerfile"]
+  runtime_version = "3.x.x"
 
 [[analyzers]]
 name = "shell"
 
 [[analyzers]]
-name = "python"
+name = "docker"
 
   [analyzers.meta]
-  runtime_version = "3.x.x"
+  dockerfile_paths = ["Dockerfile"]
 
 [[transformers]]
 name = "black"

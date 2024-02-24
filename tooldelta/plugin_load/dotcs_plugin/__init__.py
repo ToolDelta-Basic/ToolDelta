@@ -81,7 +81,7 @@ def _import_original_dotcs_plugin(
                     try:
                         pktID = int(k.split()[1])
                         if pktID == -1:
-                            Print.print_war(f"§c无法监听任意数据包, 已跳过")
+                            Print.print_war("§c无法监听任意数据包, 已跳过")
                         else:
                             fun_exec_code = (
                                 f"def packet_{pktID}(jsonPkt):\n packetType={pktID}\n "
@@ -116,16 +116,16 @@ def _import_original_dotcs_plugin(
         "on_player_death",
         "on_player_leave",
     ]:
-        if _dotcs_runcode.get(codetype, None):
+        if _dotcs_runcode.get(codetype):
             evts[codetype] = [plugin_body.name, _dotcs_runcode[codetype]]
-        if _dotcs_runcode.get(f"repeat1s", None):
-            evts["repeat1s"] = [plugin_body.name, _dotcs_runcode[f"repeat1s"]]
-        if _dotcs_runcode.get(f"repeat10s", None):
-            evts["repeat10s"] = [plugin_body.name, _dotcs_runcode[f"repeat10s"]]
-        if _dotcs_runcode.get(f"repeat30s", None):
-            evts["repeat30s"] = [plugin_body.name, _dotcs_runcode[f"repeat30s"]]
-        if _dotcs_runcode.get(f"repeat1m", None):
-            evts["repeat1m"] = [plugin_body.name, _dotcs_runcode[f"repeat1m"]]
+        if _dotcs_runcode.get("repeat1s"):
+            evts["repeat1s"] = [plugin_body.name, _dotcs_runcode["repeat1s"]]
+        if _dotcs_runcode.get("repeat10s"):
+            evts["repeat10s"] = [plugin_body.name, _dotcs_runcode["repeat10s"]]
+        if _dotcs_runcode.get("repeat30s"):
+            evts["repeat30s"] = [plugin_body.name, _dotcs_runcode["repeat30s"]]
+        if _dotcs_runcode.get("repeat1m"):
+            evts["repeat1m"] = [plugin_body.name, _dotcs_runcode["repeat1m"]]
     return plugin_body, evts, newPacketFuncs
 
 
@@ -146,13 +146,13 @@ def read_plugin_from_old(plugin_grp, module_env: dict):
                 )
                 plugin.name = file.strip(".py")
                 if (
-                    "repeat10s" in evts.keys()
-                    or "repeat1s" in evts.keys()
-                    or "repeat30s" in evts.keys()
-                    or "repeat1m" in evts.keys()
+                    "repeat10s" in evts
+                    or "repeat1s" in evts
+                    or "repeat30s" in evts
+                    or "repeat1m" in evts
                 ):
                     evtnew = evts.copy()
-                    for i in evtnew.keys():
+                    for i in evtnew:
                         if i.startswith("repeat"):
                             del evts[i]
                             plugin_grp._dotcs_repeat_threadings[

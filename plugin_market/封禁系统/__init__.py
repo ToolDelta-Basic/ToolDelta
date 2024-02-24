@@ -1,4 +1,3 @@
-import os
 import time
 from tooldelta import plugins, Plugin, PluginAPI, Frame, Builtins, Print, Config
 
@@ -33,7 +32,7 @@ class BanSystem(Plugin, PluginAPI):
             "[玩家名] [年]/[月]/[日] [时]:[分] [原因, 不填为未知原因]",
             "封禁玩家",
             self.ban_who,
-            lambda x: x == 3 or x == 4,
+            lambda x: x in (3, 4),
             True,
         )
         for i in self.game_ctrl.allplayers:

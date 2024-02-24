@@ -36,9 +36,6 @@ class ToolDeltaLogger:
             return
         if not isinstance(msg, str):
             raise TypeError("only allows string")
-        # 防止信息刷屏
-        if "\r" in msg:
-            pass
         if "\n" in msg:
             msg = msg.replace("\n", "\n    ")
         if len(msg) > 200:

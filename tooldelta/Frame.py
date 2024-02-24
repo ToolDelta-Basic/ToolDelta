@@ -12,7 +12,6 @@ from .launch_cli import (
     FrameFBConn,
     FrameNeOmg,
     FrameNeOmgRemote,
-    StandardFrame,
     SysStatus,
 )
 from .logger import publicLogger
@@ -63,7 +62,7 @@ class Frame:
         res = sys_args.sys_args_to_dict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
-            Print.print_err(f"启动参数错误")
+            Print.print_err("启动参数错误")
             raise SystemExit
 
     def read_cfg(self):
@@ -283,7 +282,7 @@ class Frame:
                     for _, _, func, triggers in self.consoleMenu:
                         if not rsp:
                             continue
-                        elif rsp.split()[0] in triggers:
+                        if rsp.split()[0] in triggers:
                             res = _try_execute_console_cmd(func, rsp, 0, None)
                             if res == -1:
                                 return

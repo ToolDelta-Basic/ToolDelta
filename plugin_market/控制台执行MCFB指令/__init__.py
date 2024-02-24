@@ -33,7 +33,7 @@ class ConsoleCommands(Plugin):
             None,
             "查询在线玩家",
             lambda _: self.print.print_inf(
-                f"在线玩家: " + ", ".join(self.game_ctrl.allplayers)
+                "在线玩家: " + ", ".join(self.game_ctrl.allplayers)
             ),
         )
         self.frame.add_console_cmd_trigger(

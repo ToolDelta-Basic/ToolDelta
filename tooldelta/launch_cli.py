@@ -6,13 +6,11 @@ import json
 import requests
 import ujson
 import random
-from click import command
 from typing import Callable, Optional
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
-from .urlmethod import get_free_port
 from .sys_args import sys_args_to_dict
 import threading
 
@@ -134,8 +132,8 @@ class FrameFBConn(StandardFrame):
                     Print.print_err(f"§4{max_con_time}秒内未连接上FB，已退出")
                     self.close_fb()
                     raise SystemExit
-                elif self.status == SysStatus.FB_LAUNCH_EXC:
-                    Print.print_err(f"§4连接FB时出现问题，已退出")
+                if self.status == SysStatus.FB_LAUNCH_EXC:
+                    Print.print_err("§4连接FB时出现问题，已退出")
                     self.close_fb()
                     raise SystemExit
 
@@ -144,14 +142,14 @@ class FrameFBConn(StandardFrame):
             tmp: str = self.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
             if not tmp:
                 continue
-            elif " 简体中文" in tmp:
+            if " 简体中文" in tmp:
                 # seems will be unable forever because it's no longer supported.
                 try:
                     self.fb_pipe.stdin.write(f"{tmp[1]}\n".encode("utf-8"))
                     self.fb_pipe.stdin.flush()
                     Print.print_inf(f"语言已自动选择为简体中文： [{tmp[1]}]")
                 except IndexError:
-                    Print.print_war(f"未能自动选择为简体中文")
+                    Print.print_war("未能自动选择为简体中文")
             elif "ERROR" in tmp:
                 if "Server not found" in tmp:
                     Print.print_err(
@@ -234,7 +232,7 @@ class FrameFBConn(StandardFrame):
 
     def downloadMissingFiles(self):
         "获取缺失文件"
-        Print.print_with_info(f"§d将自动检测缺失文件并补全", "§d 加载 ")
+        Print.print_with_info("§d将自动检测缺失文件并补全", "§d 加载 ")
         mirror_src = "https://mirror.ghproxy.com/"
         file_get_src = (
             mirror_src
@@ -246,13 +244,13 @@ class FrameFBConn(StandardFrame):
             Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
             return False
         except requests.Timeout:
-            Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: 请求超时")
+            Print.print_err("自动下载缺失文件失败: URL 请求出现问题: 请求超时")
             return False
         except Exception as err:
             Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: {err}")
             return False
         try:
-            Print.print_with_info(f"§d正在检测需要补全的文件", "§d 加载 ")
+            Print.print_with_info("§d正在检测需要补全的文件", "§d 加载 ")
             mirrs = files_to_get["Mirror"]
             files = files_to_get[self.system_type]
             for fdir, furl in files.items():
@@ -271,7 +269,7 @@ class FrameFBConn(StandardFrame):
                         return False
                     Print.print_inf(f"文件: <{fdir}> 下载完成        ")
         except requests.Timeout:
-            Print.print_err(f"自动检测文件并补全时出现错误: 超时, 自动跳过")
+            Print.print_err("自动检测文件并补全时出现错误: 超时, 自动跳过")
         except Exception as err:
             Print.print_err(f"自动检测文件并补全时出现错误: {err}")
             return False
@@ -289,14 +287,10 @@ class FrameFBConn(StandardFrame):
                         self.cmds_reqs.remove(uuid)
                         del self.cmds_resp[uuid]
                         return Packet_CommandOutput(res[1])
-                    elif time.time() - waitStartTime > timeout:
+                    if time.time() - waitStartTime > timeout:
                         self.cmds_reqs.remove(uuid)
-                        try:
-                            # 特殊情况下只有 sendwscmd 能接收到返回的命令
-                            Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
-                            return self.sendwscmd(cmd, True, timeout)
-                        except TimeoutError:
-                            raise
+                        Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
+                        return self.sendwscmd(cmd, True, timeout)
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendWSCommand(self.con, cmd)
@@ -309,7 +303,7 @@ class FrameFBConn(StandardFrame):
                         self.cmds_reqs.remove(uuid)
                         del self.cmds_resp[uuid]
                         return Packet_CommandOutput(res[1])
-                    elif time.time() - waitStartTime > timeout:
+                    if time.time() - waitStartTime > timeout:
                         self.cmds_reqs.remove(uuid)
                         raise TimeoutError("指令超时")
             else:
@@ -418,11 +412,11 @@ class FrameNeOmg(StandardFrame):
             str_max_len = 50
             while 1:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
-                if msg_orig == "" or msg_orig == "SIGNAL: exit":
-                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                if msg_orig in ("", "SIGNAL: exit"):
+                    Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
-                elif "[neOmega 接入点]: 就绪" in msg_orig:
+                if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
                 elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
                     Print.print_with_info("§a机器人已退出", "§b NOMG ")
@@ -463,10 +457,9 @@ class FrameNeOmg(StandardFrame):
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")
-        elif self.status == SysStatus.FB_CRASHED:
+        if self.status == SysStatus.FB_CRASHED:
             return Exception("NeOmega 已崩溃")
-        else:
-            return SystemError("未知的退出状态")
+        return SystemError("未知的退出状态")
 
     def download_libs(self):
         try:
@@ -541,9 +534,8 @@ class FrameNeOmg(StandardFrame):
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
-            else:
-                self.omega.send_player_command_omit_response(cmd)
-                return
+            self.omega.send_player_command_omit_response(cmd)
+            return
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
@@ -551,9 +543,8 @@ class FrameNeOmg(StandardFrame):
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
-            else:
-                self.omega.send_websocket_command_omit_response(cmd)
-                return
+            self.omega.send_websocket_command_omit_response(cmd)
+            return
 
         def sendwocmd(cmd: str):
             self.omega.send_settings_command(cmd)
@@ -588,8 +579,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             return SystemExit
-        else:
-            Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
+        Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
         self.set_omega(openat_port)
         Print.print_suc("已连接上 NEOMG 接入点进程.")
         pcks = [

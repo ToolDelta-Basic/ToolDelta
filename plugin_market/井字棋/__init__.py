@@ -57,8 +57,7 @@ class JZQStage:
         if pos == "§7▒§f":
             self.Stage[(xpos - 1) * 3 + ypos] = self.luozi_type[typePlayer]
             return True
-        else:
-            return False
+        return False
 
     def 判定(self):
         for i in self.panding:
@@ -171,7 +170,7 @@ async def _(playername: str, msg: str):
                                 JZQ_Rooms.remove(i)
                                 Game_JZQ.重置(True)
                                 continue
-                            elif Game_JZQ.判死():
+                            if Game_JZQ.判死():
                                 Game_JZQ.重置()
                         else:
                             rawText(playername, "§a井字棋§f>> §c这个地方不能下子")

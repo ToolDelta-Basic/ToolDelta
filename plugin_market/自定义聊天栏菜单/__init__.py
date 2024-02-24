@@ -88,5 +88,4 @@ class CustomChatbarMenu(Plugin):
         if len(args) < need_len:
             self.game_ctrl.say_to(player, f"§c菜单参数太少， 需要 {need_len} 个")
             return False
-        else:
-            return True
+        return True

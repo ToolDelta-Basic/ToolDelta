@@ -61,7 +61,7 @@ if sys_type == "Windows":
     lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
     LIB = ctypes.cdll.LoadLibrary(lib_path)
 elif "TERMUX_VERSION" in os.environ:
-    lib_path = f"neomega_android_arm64.so"
+    lib_path = "neomega_android_arm64.so"
     lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
     LIB = ctypes.CDLL(lib_path)
 elif sys_type == "Linux":
@@ -731,10 +731,9 @@ class ThreadOmega:
                     ret = LIB.ConsumeMCPacket()
                     if toPyString(ret.convertError) != "":
                         raise ValueError(toPyString(ret.convertError))
-                    else:
-                        jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
-                        for listener in listeners:
-                            self.start_new(listener, (packetTypeName, jsonPkt))
+                    jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
+                    for listener in listeners:
+                        self.start_new(listener, (packetTypeName, jsonPkt))
             elif eventType == "PlayerChange":
                 playerUUID = retriever
                 if len(self._player_change_listeners) == 0:
@@ -762,12 +761,12 @@ class ThreadOmega:
                     player = self.get_player_by_name(chat.Name)
                     if not player:
                         name = chat.Name
-                        if name in self._specific_chat_listeners.keys():
+                        if name in self._specific_chat_listeners:
                             for callback in self._specific_chat_listeners[name]:
                                 self.start_new(callback, (chat,))
                         if chat.Name != chat.RawName:
                             name = chat.RawName
-                            if name in self._specific_chat_listeners.keys():
+                            if name in self._specific_chat_listeners:
                                 for callback in self._specific_chat_listeners[name]:
                                     self.start_new(callback, (chat,))
                     else:
@@ -843,21 +842,19 @@ class ThreadOmega:
         self, requires: Optional[Union[List[str], str]] = None
     ) -> Union[Dict[str, int], int]:
         if requires is None:
-            return {k: v for k, v in self._packet_name_to_id_mapping.items()}
-        elif isinstance(requires, list):
+            return dict(self._packet_name_to_id_mapping.items())
+        if isinstance(requires, list):
             return {k: self._packet_name_to_id_mapping[k] for k in requires}
-        else:
-            return self._packet_name_to_id_mapping[requires]
+        return self._packet_name_to_id_mapping[requires]
 
     def get_packet_id_to_name_mapping(
         self, requires: Optional[Union[List[int], int]] = None
     ) -> Union[Dict[int, str], str]:
         if requires is None:
-            return {k: v for k, v in self._packet_id_to_name_mapping.items()}
-        elif isinstance(requires, list):
+            return dict(self._packet_id_to_name_mapping.items())
+        if isinstance(requires, list):
             return {k: self._packet_id_to_name_mapping[k] for k in requires}
-        else:
-            return self._packet_id_to_name_mapping[requires]
+        return self._packet_id_to_name_mapping[requires]
 
     def listen_packets(
         self, targets: Union[str, List[str]], callback: Callable[[str, Any], None]
@@ -946,12 +943,11 @@ class ThreadOmega:
     def _get_bind_player(self, uuidStr: str) -> Optional[PlayerKit]:
         if uuidStr is None or uuidStr == "":
             return None
-        if uuidStr in self._bind_players.keys():
+        if uuidStr in self._bind_players:
             return self._bind_players[uuidStr]
-        else:
-            bind_player = PlayerKit(uuidStr, self)
-            self._bind_players[uuidStr] = bind_player
-            return bind_player
+        bind_player = PlayerKit(uuidStr, self)
+        self._bind_players[uuidStr] = bind_player
+        return bind_player
 
     def get_all_online_players(self):
         OmegaAvailable()
@@ -990,14 +986,14 @@ class ThreadOmega:
     def listen_specific_chat(
         self, specific_name: str, callback: Callable[[Chat], None]
     ):
-        if not specific_name in self._specific_chat_listeners.keys():
+        if not specific_name in self._specific_chat_listeners:
             self._specific_chat_listeners[specific_name] = []
         self._specific_chat_listeners[specific_name].append(callback)
 
     def listen_named_command_block(
         self, command_block_name: str, callback: Callable[[Chat], None]
     ):
-        if not command_block_name in self._name_command_block_msg_listeners.keys():
+        if not command_block_name in self._name_command_block_msg_listeners:
             self._name_command_block_msg_listeners[command_block_name] = []
         LIB.ListenCommandBlock(toCString(command_block_name))
         self._name_command_block_msg_listeners[command_block_name].append(callback)

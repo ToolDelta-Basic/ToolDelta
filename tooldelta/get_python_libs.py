@@ -47,8 +47,7 @@ def get_single_lib(lib_name, lib_show_name=""):
     if pipe.returncode:
         Print.print_err(f"未成功安装库: {lib_show_name}")
         raise SystemExit
-    else:
-        Print.print_suc(f"成功安装库: {lib_show_name}")
+    Print.print_suc(f"成功安装库: {lib_show_name}")
 
 
 def install_libs(libs):

@@ -1,7 +1,6 @@
 from .color_print import Print
 import ujson
 import os
-import time
 import threading
 import traceback
 import copy
@@ -31,8 +30,8 @@ class Builtins:
                 pass
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
-                if "exc_cb" in self.all_args[1].keys():
-                    self.all_args[1]["exc_cb"]
+                if "exc_cb" in self.all_args[1]:
+                    pass
 
         def get_id(self):
             if hasattr(self, "_thread_id"):
@@ -58,7 +57,7 @@ class Builtins:
             在缓存文件已加载的情况下, 再使用一次该方法不会有任何作用.
             path: 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
             """
-            if path in jsonPathTmp.keys():
+            if path in jsonPathTmp:
                 return
             try:
                 js = Builtins.SimpleJsonDataReader.SafeJsonLoad(path)
@@ -81,27 +80,25 @@ class Builtins:
                     Builtins.SimpleJsonDataReader.SafeJsonDump(dat, path)
                 del jsonPathTmp[path]
                 return True
-            else:
-                return False
+            return False
 
         @staticmethod
         def read(path):
             "对缓存区的该虚拟路径的文件进行读操作"
-            if path in jsonPathTmp.keys():
+            if path in jsonPathTmp:
                 val = jsonPathTmp.get(path)[1]
                 if isinstance(val, (list, dict)):
                     val = copy.deepcopy(val)
                 return val
-            else:
-                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
+            raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
         @staticmethod
         def write(path, obj):
             "对缓存区的该虚拟路径的文件进行写操作"
-            if path in jsonPathTmp.keys():
+            if path in jsonPathTmp:
                 jsonPathTmp[path] = [True, obj]
             else:
-                raise Exception(f"json路径未初始化, 不能进行读取和写入操作: " + path)
+                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
         @staticmethod
         def cancel_change(path):
@@ -154,10 +151,9 @@ class Builtins:
                     with open(filepath, "w", encoding="utf-8") as f:
                         Builtins.SimpleJsonDataReader.SafeJsonDump(default, f)
                     return default
-                else:
-                    with open(filepath, "r", encoding="utf-8") as f:
-                        res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
-                    return res
+                with open(filepath, "r", encoding="utf-8") as f:
+                    res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
+                return res
             except ujson.JSONDecodeError as err:
                 raise Builtins.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
@@ -230,8 +226,7 @@ class Builtins:
         "使玩家离开聊天栏对话模式"
         if player not in in_dialogue_list:
             return
-        else:
-            in_dialogue_list.remove(player)
+        in_dialogue_list.remove(player)
 
     @staticmethod
     def player_in_dialogue(player: str):

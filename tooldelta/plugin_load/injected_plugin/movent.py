@@ -176,8 +176,7 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
     if result:
         result = result[0]
         return result.split(", ")
-    else:
-        return []
+    return []
 
 
 def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
@@ -287,9 +286,8 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     res = sendwscmd(f"/testforblock {x} {y} {z} air", True)
     if res.SuccessCount:
         return "air"
-    else:
-        print(res.OutputMessages[0].Parameters)
-        return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
+    print(res.OutputMessages[0].Parameters)
+    return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
 
 def getTickingAreaList() -> dict | AttributeError:
@@ -306,7 +304,7 @@ def getTickingAreaList() -> dict | AttributeError:
     else:
         raise AttributeError("Failed to get the tickingarea list.")
 
-    if resultList[0].Success == False:
+    if resultList[0].Success is False:
         return result
     for tickareaData in resultList[1].Message.split("%dimension.dimensionName")[1:]:
         tickareaDimension = tickareaData.split(": \n")[0]
