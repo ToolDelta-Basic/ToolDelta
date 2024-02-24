@@ -135,9 +135,7 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
 
 
 def get_all_player() -> list:
-    """
-    获取所有玩家列表
-    """
+    """获取所有玩家列表"""
     check_avaliable(game_control)
     return game_control.allplayers
 
@@ -193,9 +191,7 @@ def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
 
 
 def get_robotname() -> str | None:
-    """
-    获取机器人名称。
-    """
+    """获取机器人名称。"""
     check_avaliable(game_control)
     return game_control.bot_name
 
