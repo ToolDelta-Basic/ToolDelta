@@ -117,9 +117,11 @@ class Builtins:
                 fp: open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
-                fp = open(fp, "w", encoding="utf-8")
-            fp.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
-            fp.close()
+                with open(fp, "w", encoding="utf-8") as file:
+                    file.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
+            else:
+                with fp:
+                    fp.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
 
         @staticmethod
         def SafeJsonLoad(fp):
@@ -128,13 +130,12 @@ class Builtins:
                 fp: open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
-                fp = open(fp, "r", encoding="utf-8")
-            d = ujson.loads(fp.read())
-            fp.close()
-            return d
+                with open(fp, "r", encoding="utf-8") as file:
+                    return ujson.loads(file.read())
+            with fp as file:
+                return ujson.loads(file.read())
 
-        class DataReadError(ujson.JSONDecodeError):
-            ...
+        class DataReadError(ujson.JSONDecodeError): ...
 
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
