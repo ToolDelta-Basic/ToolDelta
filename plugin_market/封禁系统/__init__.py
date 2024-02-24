@@ -1,7 +1,5 @@
-import os
-import time
+import os, time
 from tooldelta import plugins, Plugin, PluginAPI, Frame, Builtins, Print, Config
-
 
 @plugins.add_plugin_as_api("封禁系统")
 class BanSystem(Plugin, PluginAPI):
@@ -12,7 +10,6 @@ class BanSystem(Plugin, PluginAPI):
         "BanTo": 0,
         "Reason": ""
     }
-
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
@@ -39,7 +36,7 @@ class BanSystem(Plugin, PluginAPI):
             "[玩家名] [年]/[月]/[日] [时]:[分] [原因, 不填为未知原因]",
             "封禁玩家",
             self.ban_who,
-            lambda x: x == 3 or x == 4,
+            lambda x: x==3 or x==4,
             True
         )
         for i in self.game_ctrl.allplayers:
@@ -75,12 +72,10 @@ class BanSystem(Plugin, PluginAPI):
         if all_matches == []:
             self.game_ctrl.say_to(caller, f"§c封禁系统: 无匹配名字关键词的玩家: {target}")
         elif len(all_matches) > 1:
-            self.game_ctrl.say_to(
-                caller, f"§c封禁系统: 匹配到多个玩家符合要求: {', '.join(all_matches)}")
+            self.game_ctrl.say_to(caller, f"§c封禁系统: 匹配到多个玩家符合要求: {', '.join(all_matches)}")
         else:
             try:
-                struct_time = time.strptime(
-                    ymd.strip() + " " + hms.strip(), "%Y年%m月%d日 %H:%M")
+                struct_time = time.strptime(ymd.strip() + " " + hms.strip(), "%Y年%m月%d日 %H:%M")
             except ValueError:
                 self.game_ctrl.say_to(caller, "§c封禁玩家: 封禁时间格式不正确")
                 return
@@ -91,10 +86,8 @@ class BanSystem(Plugin, PluginAPI):
         ban_data = self.get_ban_data(player)
         ban_to, reason = ban_data["BanTo"], ban_data["Reason"]
         if ban_to > time.time():
-            self.game_ctrl.sendwocmd(
-                f"/kick {player} {self.format_msg(player, ban_to, reason, '踢出玩家提示格式')}")
-            self.game_ctrl.say_to(
-                "@a", self.format_msg(player, ban_to, reason, "玩家被封禁的广播提示"))
+            self.game_ctrl.sendwocmd(f"/kick {player} {self.format_msg(player, ban_to, reason, '踢出玩家提示格式')}")
+            self.game_ctrl.say_to("@a", self.format_msg(player, ban_to, reason, "玩家被封禁的广播提示"))
             # 防止出现无法执行的指令
             self.game_ctrl.sendwocmd(f"/kick {player}")
 
@@ -102,8 +95,7 @@ class BanSystem(Plugin, PluginAPI):
         struct_time = time.gmtime(ban_to_sec)
         date_show = time.strftime("%Y年 %m月 %d日", struct_time)
         time_show = time.strftime("%H : %M : %S", struct_time)
-        Print.print_inf(
-            f"封禁系统使用的 当前时间: §6{time.strftime('%Y年%m月%d日 %H:%M:%S', time.gmtime(time.time()))}")
+        Print.print_inf(f"封禁系统使用的 当前时间: §6{time.strftime('%Y年%m月%d日 %H:%M:%S', time.gmtime(time.time()))}")
         return Builtins.SimpleFmt({
             "[日期]": date_show,
             "[时间]": time_show,

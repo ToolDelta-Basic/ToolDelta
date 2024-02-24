@@ -47,8 +47,7 @@ class WorldEdit(Plugin):
                     )
                     try:
                         signPlayerName = self.getTarget(
-                            "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (
-                                placeX, placeY, placeZ)
+                            "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
                         )[
                             0
                         ]  # [x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
@@ -84,8 +83,7 @@ class WorldEdit(Plugin):
                     )
                     try:
                         signPlayerName = self.getTarget(
-                            "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (
-                                placeX, placeY, placeZ)
+                            "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
                         )[0]
                         getXend = int(jsonPkt["NBTData"]["x"])
                         getYend = int(jsonPkt["NBTData"]["y"])
@@ -155,7 +153,7 @@ class WorldEdit(Plugin):
                         )
 
     def fillwith(self, sx, sy, sz, dx, dy, dz):
-        def p2n(n): return 1 if n >= 0 else -1
+        p2n = lambda n: 1 if n >= 0 else -1
         fx = p2n(dx - sx)
         fy = p2n(dy - sy)
         fz = p2n(dz - sz)

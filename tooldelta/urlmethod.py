@@ -1,7 +1,4 @@
-import requests
-import time
-import os
-import platform
+import requests, time, os, platform
 from .color_print import Print
 import shutil
 

@@ -51,12 +51,11 @@ class PluginGroup:
         self.injected_plugin_loaded_num = 0
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
-        self._dotcs_repeat_threadings = {
-            "1s": [], "10s": [], "30s": [], "1m": []}
+        self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
         self.linked_frame.linked_plugin_group = self
 
     @staticmethod
-    def require(module_name: str, pip_name=""):
+    def require(module_name: str, pip_name = ""):
         try:
             importlib.import_module(module_name)
         except (ModuleNotFoundError, ImportError):
@@ -130,8 +129,7 @@ class PluginGroup:
         api = self.plugins_api.get(apiName, None)
         if api:
             if min_version and api.version < min_version:
-                raise self.PluginAPIVersionError(
-                    apiName, min_version, api.version)
+                raise self.PluginAPIVersionError(apiName, min_version, api.version)
             return api
         else:
             raise self.PluginAPINotFoundError(apiName)

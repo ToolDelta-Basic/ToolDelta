@@ -1,11 +1,5 @@
 from .color_print import Print
-import ujson
-import os
-import time
-import threading
-import traceback
-import copy
-import ctypes
+import ujson, os, time, threading, traceback, copy, ctypes
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
@@ -30,8 +24,7 @@ class Builtins:
             except Builtins.ThreadExit:
                 pass
             except:
-                Print.print_err(
-                    f"线程 {self.usage} 出错:\n" + traceback.format_exc())
+                Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
                 if "exc_cb" in self.all_args[1].keys():
                     self.all_args[1]["exc_cb"]
 
@@ -139,8 +132,7 @@ class Builtins:
             fp.close()
             return d
 
-        class DataReadError(ujson.JSONDecodeError):
-            ...
+        class DataReadError(ujson.JSONDecodeError): ...
 
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
@@ -247,8 +239,7 @@ class Builtins:
             kwargs = {}
         "创建一个玩家与聊天栏交互的线程, 若玩家已处于一个对话中, 则向方法exc_cb传参: player(玩家名)"
         threading.Thread(
-            target=_dialogue_thread_run, args=(
-                player, func, exc_cb, args, kwargs)
+            target=_dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
         ).start()
 
     @staticmethod

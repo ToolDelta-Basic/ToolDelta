@@ -1,7 +1,6 @@
 import re
 from tooldelta import Frame, Plugin, plugins, Config, Builtins, Print
 
-
 @plugins.add_plugin
 class CustomChatbarMenu(Plugin):
     name = "自定义聊天栏菜单"
@@ -9,7 +8,6 @@ class CustomChatbarMenu(Plugin):
     version = (0, 0, 1)
     match_rule = re.compile(r"(\[参数:([0-9]+)\])")
     _counter = 0
-
     def __init__(self, frame: Frame):
         self.game_ctrl = frame.get_game_control()
         STD_CFG = {
@@ -41,8 +39,7 @@ class CustomChatbarMenu(Plugin):
                 }
             ]
         }
-        self.cfg, _ = Config.getPluginConfigAndVersion(
-            self.name, STD_CFG, DEFAULT_CFG, self.version)
+        self.cfg, _ = Config.getPluginConfigAndVersion(self.name, STD_CFG, DEFAULT_CFG, self.version)
 
     def on_def(self):
         self.chatbar = plugins.get_plugin_api("聊天栏菜单")
@@ -51,12 +48,10 @@ class CustomChatbarMenu(Plugin):
     def on_inject(self):
         for menu in self.cfg["菜单项"]:
             cb = self.make_cb_func(menu)
-            self.chatbar.add_trigger(
-                menu["触发词"], menu["参数提示"], menu["功能简介"], cb)
+            self.chatbar.add_trigger(menu["触发词"], menu["参数提示"], menu["功能简介"], cb)
 
     def make_cb_func(self, menu):
         cmds = menu["触发后执行的指令"]
-
         @Builtins.run_as_new_thread
         def _menu_cb_func(player, args: list):
             if not self.check_args_len(player, args, menu["需要的参数数量"]):
