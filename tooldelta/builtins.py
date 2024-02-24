@@ -5,7 +5,7 @@ import threading
 import traceback
 import copy
 import ctypes
-
+from typing import Any, Dict
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
 
@@ -251,11 +251,11 @@ class Builtins:
         return res
 
     class ArgsReplacement:
-        def __init__(this, kw: dict[str, any]):
-            this.kw = kw
+        def __init__(self, kw: Dict[str, Any]):
+            self.kw = kw
 
-        def replaceTo(this, __sub: str):
-            for k, v in this.kw.items():
+        def replaceTo(self, __sub: str):
+            for k, v in self.kw.items():
                 if k in __sub:
                     __sub = __sub.replace(k, str(v))
             return __sub
