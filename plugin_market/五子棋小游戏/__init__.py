@@ -5,6 +5,7 @@ from tooldelta import Plugin, Frame, plugins
 # install_lib("numpy")
 # import numpy as np
 
+
 @plugins.add_plugin
 class SuperScript_GobangBasic(Plugin):
     name = "五子棋"
@@ -19,6 +20,7 @@ class SuperScript_GobangBasic(Plugin):
     cacheUID = 0
     DESCRIPTION = __doc__
     __version__ = "0.0.1"
+
     class Room:
         def __init__(self, _1P: str, _2P: str):
             self.playerA = _1P
@@ -34,18 +36,24 @@ class SuperScript_GobangBasic(Plugin):
             self.turns = [0, 2, 1][self.turns]
 
         def isTurn(self, player: str):
-            return (player == self.playerA and self.turns == 1) or (player == self.playerB and self.turns == 2)
+            return (player == self.playerA and self.turns == 1) or (
+                player == self.playerB and self.turns == 2
+            )
 
         def resetTimer(self):
             self.startTime = time.time()
             self.timeleft = 120
 
         def fmtTimeLeft(self):
-            time_min, time_sec = divmod(int(time.time()+self.timeleft-self.startTime), 60)
+            time_min, time_sec = divmod(
+                int(time.time() + self.timeleft - self.startTime), 60
+            )
             return "%02d ： %02d" % (time_min, time_sec)
 
         def PID(self, player: str):
-            return 1 if player == self.playerA else (2 if player == self.playerB else None)
+            return (
+                1 if player == self.playerA else (2 if player == self.playerB else None)
+            )
 
         def anotherPlayer(self, player: str):
             "请不要在未确认玩家为该局玩家的时候使用该方法"
@@ -60,8 +68,10 @@ class SuperScript_GobangBasic(Plugin):
 
     def on_def(self):
         self.chatbar = plugins.get_plugin_api("聊天栏菜单")
-        self.chatbar.add_trigger(["五子棋", "wzq"], "[对手]", "开一局五子棋游戏", self.on_menu, lambda x:x==1)
-    
+        self.chatbar.add_trigger(
+            ["五子棋", "wzq"], "[对手]", "开一局五子棋游戏", self.on_menu, lambda x: x == 1
+        )
+
     def createRoom(self, roomdata: Room):
         roomUID = hex(self.cacheUID)
         self.cacheUID += 1
@@ -91,8 +101,12 @@ class SuperScript_GobangBasic(Plugin):
             time.sleep(0.5)
             nowPlayer = _1P if self_room.isTurn(_1P) else _2P
             actbarText = f"§e§l五子棋 {self_room.fmtTimeLeft()} %s\n{self_room.stage.strfChess()}§9SuperGobang\n§a"
-            gc.player_actionbar(_1P, actbarText % ("§a我方下子" if self_room.isTurn(_1P) else "§6对方下子"))
-            gc.player_actionbar(_2P, actbarText % ("§a我方下子" if self_room.isTurn(_2P) else "§6对方下子"))
+            gc.player_actionbar(
+                _1P, actbarText % ("§a我方下子" if self_room.isTurn(_1P) else "§6对方下子")
+            )
+            gc.player_actionbar(
+                _2P, actbarText % ("§a我方下子" if self_room.isTurn(_2P) else "§6对方下子")
+            )
             if self_room.status == "done":
                 break
             if self_room.timeleft < 20:
@@ -147,7 +161,7 @@ class SuperScript_GobangBasic(Plugin):
                 new2P = single_player
                 break
         if not new2P:
-            gc.say_to(player, f"§c未找到名字里含有\"{_2P}\"的玩家.")
+            gc.say_to(player, f'§c未找到名字里含有"{_2P}"的玩家.')
             return
         if new2P in self.waitingCache.keys():
             gc.say_to(player, f"§c申请已经发出了")
@@ -168,8 +182,12 @@ class SuperScript_GobangBasic(Plugin):
                             try:
                                 _, posl, posw = msg.split()
                             except:
-                                raise AssertionError("§c落子格式不正确； 下子/xiazi/xz <纵坐标> <横坐标>")
-                            assert inRoom.stage.onchess(int(posl), int(posw), inRoom.PID(player))
+                                raise AssertionError(
+                                    "§c落子格式不正确； 下子/xiazi/xz <纵坐标> <横坐标>"
+                                )
+                            assert inRoom.stage.onchess(
+                                int(posl), int(posw), inRoom.PID(player)
+                            )
                             gc.say_to(player, "§l§7> §r§a成功下子.")
                             inRoom.resetTimer()
                             is_win = inRoom.stage.get_win()
@@ -177,14 +195,24 @@ class SuperScript_GobangBasic(Plugin):
                                 gc.player_title(player, "§a§l恭喜！")
                                 gc.player_subtitle(player, "§e本局五子棋您获得了胜利！")
                                 gc.say_to(player, "§7§l> §r§e恭喜！ §a本局五子棋您取得了胜利！")
-                                gc.sendwocmd(f"/execute {player} ~~~ playsound random.levelup @s")
-                                gc.player_title(inRoom.anotherPlayer(player), "§7§l遗憾惜败")
-                                gc.player_subtitle(inRoom.anotherPlayer(player), "§6下局再接再厉哦！")
-                                gc.sendwocmd(f"/execute {inRoom.anotherPlayer(player)} ~~~ playsound note.pling @s ~~~ 1 0.5")
+                                gc.sendwocmd(
+                                    f"/execute {player} ~~~ playsound random.levelup @s"
+                                )
+                                gc.player_title(
+                                    inRoom.anotherPlayer(player), "§7§l遗憾惜败"
+                                )
+                                gc.player_subtitle(
+                                    inRoom.anotherPlayer(player), "§6下局再接再厉哦！"
+                                )
+                                gc.sendwocmd(
+                                    f"/execute {inRoom.anotherPlayer(player)} ~~~ playsound note.pling @s ~~~ 1 0.5"
+                                )
                                 inRoom.setStatus("done")
                                 return
                             else:
-                                gc.say_to(inRoom.anotherPlayer(player), "§l§7> §r§a到你啦！")
+                                gc.say_to(
+                                    inRoom.anotherPlayer(player), "§l§7> §r§a到你啦！"
+                                )
                                 inRoom.turn()
                         except AssertionError as err:
                             gc.say_to(player, str(err))
@@ -211,7 +239,8 @@ class SuperScript_GobangBasic(Plugin):
                 self.game_ctrl.say_to(inRoom.anotherPlayer(player), "§c对方已退出游戏，游戏结束")
                 inRoom.setStatus("done")
 
-class SuperGobangStage():
+
+class SuperGobangStage:
     def __init__(self):
         self.basic()
 
@@ -224,22 +253,56 @@ class SuperGobangStage():
         self.PosSignLeft = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"]
 
     def centers(self, l, w):
-        if (l<3 or l>self.SIZE-2) and (w<3 or w>self.SIZE-2) or not self.getField(l, w):
+        if (
+            (l < 3 or l > self.SIZE - 2)
+            and (w < 3 or w > self.SIZE - 2)
+            or not self.getField(l, w)
+        ):
             return False
-        return any([
-            (self.getField(l, w) == self.getField(l-1, w) == self.getField(l-2, w) == self.getField(l+1, w) == self.getField(l+2, w)),
-            (self.getField(l, w) == self.getField(l, w-1) == self.getField(l, w-2) == self.getField(l, w+1) == self.getField(l, w+2)),
-            (self.getField(l, w) == self.getField(l-1, w-1) == self.getField(l-2, w-2) == self.getField(l+1, w+1) == self.getField(l+2, w+2) != 0),
-            (self.getField(l, w) == self.getField(l-1, w+1) == self.getField(l-2, w+2) == self.getField(l+1, w-1) == self.getField(l+2, w-2) != 0)
-        ])
+        return any(
+            [
+                (
+                    self.getField(l, w)
+                    == self.getField(l - 1, w)
+                    == self.getField(l - 2, w)
+                    == self.getField(l + 1, w)
+                    == self.getField(l + 2, w)
+                ),
+                (
+                    self.getField(l, w)
+                    == self.getField(l, w - 1)
+                    == self.getField(l, w - 2)
+                    == self.getField(l, w + 1)
+                    == self.getField(l, w + 2)
+                ),
+                (
+                    self.getField(l, w)
+                    == self.getField(l - 1, w - 1)
+                    == self.getField(l - 2, w - 2)
+                    == self.getField(l + 1, w + 1)
+                    == self.getField(l + 2, w + 2)
+                    != 0
+                ),
+                (
+                    self.getField(l, w)
+                    == self.getField(l - 1, w + 1)
+                    == self.getField(l - 2, w + 2)
+                    == self.getField(l + 1, w - 1)
+                    == self.getField(l + 2, w - 2)
+                    != 0
+                ),
+            ]
+        )
 
     def getField(self, l: int, w: int):
-        if l not in range(1, self.SIZE + 1) or w not in range(1, self.SIZE + 1): return None
-        return self.field[l-1][w-1]
+        if l not in range(1, self.SIZE + 1) or w not in range(1, self.SIZE + 1):
+            return None
+        return self.field[l - 1][w - 1]
 
     def setField(self, l, w, chesType):
-        if l not in range(1, self.SIZE + 1) or w not in range(1, self.SIZE + 1): return False
-        self.field[l-1][w-1] = chesType
+        if l not in range(1, self.SIZE + 1) or w not in range(1, self.SIZE + 1):
+            return False
+        self.field[l - 1][w - 1] = chesType
         return True
 
     def get_win(self):
@@ -257,7 +320,7 @@ class SuperGobangStage():
         return True
 
     def toSignLeft(self, num: int):
-        return self.PosSignLeft[num-1]
+        return self.PosSignLeft[num - 1]
 
     def strfChess(self):
         fmt: str = "§e   1 2 3 4 5 6 7 8 9 10 1112§r"
