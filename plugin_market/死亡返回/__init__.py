@@ -7,7 +7,7 @@ from tooldelta.plugin_load.injected_plugin.movent import tellrawText, getPos
 
 __plugin_meta__ = {
     "name": "死亡返回",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "author": "wling/7912",
 }
 
@@ -82,7 +82,7 @@ async def _(playername, killer):
             )
             return
 
-    deathData = getPos(playername)
+    deathData = getPos(f'@a[name="{playername}"]')
     deathData["time"] = deathTime
     data[playername] = deathData
     with open(config_path, "w", encoding="utf-8") as f:

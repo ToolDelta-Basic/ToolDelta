@@ -70,7 +70,7 @@
     },
     "死亡返回": {
       "author": "wling/7912",
-      "version": "0.0.3",
+      "version": "0.0.4",
       "description": "死了啊？没事，哥们给你记着，让我帮你返回吧！",
       "limit_launcher": null,
       "pre-plugins": { "维度传送": "0.0.1" },
