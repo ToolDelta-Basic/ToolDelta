@@ -11,7 +11,6 @@ from .color_print import Print
 from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
-from .urlmethod import get_free_port
 from .sys_args import sys_args_to_dict
 import threading
 
