@@ -93,7 +93,8 @@ class PluginGroup:
             return None
 
     def add_plugin(self, plugin):
-        assert Plugin.__subclasscheck__(plugin), (1, "插件主类必须继承Plugin类")
+        if not Plugin.__subclasscheck__(plugin):
+            raise AssertionError(1, "插件主类必须继承Plugin类")
         self.plugin_added_cache["plugin"] = plugin
         return plugin
 
@@ -106,17 +107,19 @@ class PluginGroup:
 
     def add_plugin_api(self, apiName: str):
         def _add_api(api: Type[PluginAPI]):
-            assert PluginAPI.__subclasscheck__(api), (1, "插件API类必须继承PluginAPI类")
+            if not PluginAPI.__subclasscheck__(api):
+                raise AssertionError(1, "插件API类必须继承PluginAPI类")
             self.pluginAPI_added_cache.append((apiName, api))
 
         return _add_api
 
     def add_plugin_as_api(self, apiName: str):
         def _add_plugin_2_api(api_plugin: Type[PluginAPI]):
-            assert PluginAPI.__subclasscheck__(api_plugin), (
-                1,
-                "API插件API类必须继承PluginAPI类和Plugin类",
-            )
+            if not PluginAPI.__subclasscheck__(api_plugin):
+                raise AssertionError(
+                    1,
+                    "API插件API类必须继承PluginAPI类和Plugin类",
+                )
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
 

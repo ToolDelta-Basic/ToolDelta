@@ -111,7 +111,8 @@ class _Print:
                     try:
                         n = text_line.rfind("§")
                         _setNextCol = text_line[n : n + 2]
-                        assert setNextColor != -1
+                        if setNextColor == -1:
+                            raise AssertionError
                         setNextColor = _setNextCol
                     except:
                         pass
@@ -155,7 +156,8 @@ class _Print:
                     try:
                         n = text_line.rfind("§")
                         _setNextCol = text_line[n : n + 2]
-                        assert setNextColor != -1
+                        if setNextColor == -1:
+                            raise AssertionError
                         setNextColor = _setNextCol
                     except:
                         pass
