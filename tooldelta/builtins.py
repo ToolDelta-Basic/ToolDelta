@@ -10,6 +10,7 @@ from typing import Any, Dict
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
 
+
 class Builtins:
     class ThreadExit(SystemExit):
         "线程退出."
@@ -85,7 +86,7 @@ class Builtins:
         def read(path: str):
             """
             对缓存区的该虚拟路径的文件进行读操作
-            
+
             参数:
                 path: 文件的虚拟路径
             """
@@ -100,7 +101,7 @@ class Builtins:
         def write(path: str, obj: Any):
             """
             对缓存区的该虚拟路径的文件进行写操作, 这将会覆盖之前的内容
-            
+
             参数:
                 path: 文件的虚拟路径
                 obj: 任何合法的JSON类型 例如 dict/list/str/bool/int/float
@@ -157,7 +158,7 @@ class Builtins:
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
             """
-            使用插件便捷地读取一个json文件, 
+            使用插件便捷地读取一个json文件,
             这个文件应在 data/<plugin_name>/<file>文件夹内, 文件夹不存在时也会自动创建
 
             参数:
@@ -205,7 +206,7 @@ class Builtins:
         参数:
             kw: dict
             __sub: 需要被替换的字符串
-        
+
         Example:
         >>> my_color = "red"; my_item = "apple"
         >>> kw = {"[颜色]": my_color, "[物品]": my_item}
@@ -253,7 +254,7 @@ class Builtins:
     def add_in_dialogue_player(player: str):
         """
         使玩家进入聊天栏对话模式, 可防止其在对话时继续触发另一个会话线程
-        
+
         参数:
             玩家名: str
         """
@@ -266,7 +267,7 @@ class Builtins:
     def remove_in_dialogue_player(player: str):
         """
         使玩家离开聊天栏对话模式
-        
+
         参数:
             player: 玩家名
         """
@@ -278,7 +279,7 @@ class Builtins:
     def player_in_dialogue(player: str) -> bool:
         """
         检测玩家是否处在聊天栏对话模式中.
-        
+
         参数:
             player: 玩家名
         返回:
@@ -314,7 +315,7 @@ class Builtins:
         Example:
         >>> fuzzy_match(["a", "ab", "abc", "abd"], "ab")
         ["ab", "abc", "abd"]
-        
+
         参数:
             lst: 字符串列表
             sub: 需要匹配的字符串

@@ -242,7 +242,7 @@ class Frame:
     ):
         """
         注册ToolDelta控制台的菜单项
-        
+
         参数:
             triggers: 触发词列表
             arg_hint: 菜单命令参数提示句
@@ -361,6 +361,7 @@ class Frame:
         builtins.safe_close()
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")
+
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
@@ -558,7 +559,7 @@ class GameCtrl:
     def say_to(self, target: str, msg: str):
         """
         向玩家发送聊天栏信息
-        
+
         参数:
             target: 玩家名/目标选择器
             msg: 信息
@@ -568,7 +569,7 @@ class GameCtrl:
     def player_title(self, target: str, text: str):
         """
         向玩家展示大标题文本
-        
+
         参数:
             target: 玩家名/目标选择器
             text: 文本
@@ -578,7 +579,7 @@ class GameCtrl:
     def player_subtitle(self, target: str, text: str):
         """
         向玩家展示小标题文本
-        
+
         参数:
             target: 玩家名/目标选择器
             text: 文本
@@ -588,7 +589,7 @@ class GameCtrl:
     def player_actionbar(self, target: str, text: str):
         """
         向玩家展示行动栏文本
-        
+
         参数:
             target: 玩家名/目标选择器
             text: 文本
