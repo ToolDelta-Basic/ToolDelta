@@ -223,7 +223,7 @@ class Builtins:
             Builtins.createThread(func, args=args, **kwargs)
 
         return thread_fun
-    
+
     run_as_new_thread = new_thread
 
     @staticmethod
