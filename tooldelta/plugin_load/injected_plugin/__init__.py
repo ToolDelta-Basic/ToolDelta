@@ -1,6 +1,6 @@
 import asyncio
 from distutils.core import setup_keywords
-import os,sys
+import os, sys
 import importlib
 from re import A
 import ujson as json
@@ -39,13 +39,14 @@ def player_left(priority=None):
 
     return decorator
 
-def player_death(priority=None):
 
+def player_death(priority=None):
     def decorator(func):
         player_death_funcs[func] = priority
         return func
 
     return decorator
+
 
 def init(priority=None):
     def decorator(func):
@@ -73,6 +74,7 @@ async def repeat_task(func, time):
         except Exception as e:
             Print.print_err(f"repeat_task error: {e}")
 
+
 async def execute_asyncio_task(func_dict: dict, *args, **kwargs):
     tasks = []
     none_tasks = []
@@ -80,9 +82,9 @@ async def execute_asyncio_task(func_dict: dict, *args, **kwargs):
     # 将任务添加到 tasks 列表或 none_tasks 列表中
     for func, priority in func_dict.items():
         if priority is not None:
-            tasks.append((priority, func( *args, **kwargs)))
+            tasks.append((priority, func(*args, **kwargs)))
         else:
-            none_tasks.append((priority, func( *args, **kwargs)))
+            none_tasks.append((priority, func(*args, **kwargs)))
 
     # 按优先级对非 None 任务排序
     tasks.sort(key=lambda x: x[0])
@@ -112,7 +114,7 @@ async def execute_player_message(playername, message):
     await execute_asyncio_task(player_message_funcs, playername, message)
 
 
-async def execute_death_message(playername,killer):
+async def execute_death_message(playername, killer):
     await execute_asyncio_task(player_death_funcs, playername, killer)
 
 
@@ -123,6 +125,7 @@ async def execute_player_join(playername):
 async def execute_player_left(playername):
     await execute_asyncio_task(player_left_funcs, playername)
 
+
 async def load_plugin_file(file):
     # 导入插件模块
     module_name = file
@@ -130,7 +133,10 @@ async def load_plugin_file(file):
     plugin_module = importlib.import_module(module_name)
     # 获取插件元数据
 
-    return create_plugin_metadata(getattr(plugin_module, "__plugin_meta__", {"name": module_name}))
+    return create_plugin_metadata(
+        getattr(plugin_module, "__plugin_meta__", {"name": module_name})
+    )
+
 
 class PluginMetadata:
     def __init__(
@@ -151,7 +157,6 @@ class PluginMetadata:
 
 
 def create_plugin_metadata(metadata_dict: dict):
-
     name = metadata_dict.get("name", "未命名插件")
     version = metadata_dict.get("version", "1.0")
     description = metadata_dict.get("description", "未知插件")
@@ -160,6 +165,7 @@ def create_plugin_metadata(metadata_dict: dict):
     homepage = metadata_dict.get("homepage", "")
 
     return PluginMetadata(name, author, description, version, usage, homepage)
+
 
 async def load_plugin(plugin_grp):
     tasks = []
@@ -183,5 +189,3 @@ async def load_plugin(plugin_grp):
         Print.print_suc(
             f"成功载入插件 {metadata.name} 版本: {metadata.version} 作者: {metadata.author}"
         )
-
-

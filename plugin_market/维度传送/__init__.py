@@ -10,11 +10,13 @@ from tooldelta.plugin_load.injected_plugin.movent import (
     countdown,
     getTickingAreaList,
 )
+
 __plugin_meta__ = {
     "name": "维度传送",
     "version": "0.0.1",
     "author": "wling/7912",
 }
+
 
 def tp(target, *, x, y, z, dimension):
     if dimension == 0:
