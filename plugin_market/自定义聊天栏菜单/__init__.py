@@ -1,7 +1,6 @@
 import re
 from tooldelta import Frame, Plugin, plugins, Config, Builtins, Print
 
-
 @plugins.add_plugin
 class CustomChatbarMenu(Plugin):
     name = "自定义聊天栏菜单"
@@ -9,20 +8,16 @@ class CustomChatbarMenu(Plugin):
     version = (0, 0, 1)
     match_rule = re.compile(r"(\[参数:([0-9]+)\])")
     _counter = 0
-
     def __init__(self, frame: Frame):
         self.game_ctrl = frame.get_game_control()
         STD_CFG = {
-            "菜单项": [
-                r"%list",
-                {
-                    "触发词": [r"%list", str],
-                    "参数提示": str,
-                    "功能简介": str,
-                    "需要的参数数量": Config.NNInt,
-                    "触发后执行的指令": [r"%list", str],
-                },
-            ]
+            "菜单项": [r"%list", {
+                "触发词": [r"%list", str],
+                "参数提示": str,
+                "功能简介": str,
+                "需要的参数数量": Config.NNInt,
+                "触发后执行的指令": [r"%list", str]
+            }]
         }
         DEFAULT_CFG = {
             "菜单项": [
@@ -32,7 +27,7 @@ class CustomChatbarMenu(Plugin):
                     "需要的参数数量": 0,
                     "参数提示": "",
                     "功能简介": "返回重生点",
-                    "触发后执行的指令": ["/kill [玩家名]", "/title [玩家名] actionbar 自尽成功"],
+                    "触发后执行的指令": ["/kill [玩家名]", "/title [玩家名] actionbar 自尽成功"]
                 },
                 {
                     "说明": "一个测试菜单参数项的触发词菜单项",
@@ -40,13 +35,11 @@ class CustomChatbarMenu(Plugin):
                     "需要的参数数量": 2,
                     "参数提示": "[参数1] [参数2]",
                     "功能简介": "测试触发词参数",
-                    "触发后执行的指令": ["/w [玩家名] 触发词测试成功: 参数1=[参数:1], 参数2=[参数:2]"],
-                },
+                    "触发后执行的指令": ["/w [玩家名] 触发词测试成功: 参数1=[参数:1], 参数2=[参数:2]"]
+                }
             ]
         }
-        self.cfg, _ = Config.getPluginConfigAndVersion(
-            self.name, STD_CFG, DEFAULT_CFG, self.version
-        )
+        self.cfg, _ = Config.getPluginConfigAndVersion(self.name, STD_CFG, DEFAULT_CFG, self.version)
 
     def on_def(self):
         self.chatbar = plugins.get_plugin_api("聊天栏菜单")
@@ -59,17 +52,16 @@ class CustomChatbarMenu(Plugin):
 
     def make_cb_func(self, menu):
         cmds = menu["触发后执行的指令"]
-
         @Builtins.run_as_new_thread
         def _menu_cb_func(player, args: list):
             if not self.check_args_len(player, args, menu["需要的参数数量"]):
                 return
             for cmd in cmds:
                 f_cmd = Builtins.SimpleFmt(
-                    {"[玩家名]": player}, self.args_replace(args, cmd)
+                    {"[玩家名]": player},
+                    self.args_replace(args, cmd)
                 )
                 self.game_ctrl.sendwscmd(f_cmd)
-
         return _menu_cb_func
 
     def args_replace(self, args: list, sub: str):

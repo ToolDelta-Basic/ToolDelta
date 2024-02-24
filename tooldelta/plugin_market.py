@@ -92,11 +92,17 @@ class PluginMarket:
                         )
                     else:
                         Print.print_inf("")
-                Print.print_inf(f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页")
+                Print.print_inf(
+                    f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页"
+                )
                 Print.print_inf("§f输入插件序号选择插件, 以查看详情", need_log=False)
                 last_operation = (
                     (
-                        input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 "))
+                        input(
+                            Print.fmt_info(
+                                "回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 "
+                            )
+                        )
                         or last_operation
                     )
                     .lower()
@@ -119,8 +125,14 @@ class PluginMarket:
                                 market_datas["MarketPlugins"],
                             )
                             if r:
-                                Print.print_inf("下载插件后重启ToolDelta才能生效", need_log=False)
-                                r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
+                                Print.print_inf(
+                                    "下载插件后重启ToolDelta才能生效", need_log=False
+                                )
+                                r = input(
+                                    Print.fmt_info(
+                                        "§f输入 §cq §f退出, 其他则返回插件市场"
+                                    )
+                                )
                                 if r.lower() == "q":
                                     break
                         else:
@@ -140,7 +152,8 @@ class PluginMarket:
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = (
-            ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()]) or "无"
+            ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()])
+            or "无"
         )
         os.system(CLS_CMD)
         Print.print_inf(
@@ -153,7 +166,11 @@ class PluginMarket:
         Print.print_inf(f"前置插件: §f{pre_plugins_str}", need_log=False)
         Print.print_inf(f"介绍: {plugin_data.description}", need_log=False)
         Print.print_inf("", need_log=False)
-        res = input(Print.fmt_info("§f下载 = §aY§f, 取消 = §cN§f, 请输入:")).lower().strip()
+        res = (
+            input(Print.fmt_info("§f下载 = §aY§f, 取消 = §cN§f, 请输入:"))
+            .lower()
+            .strip()
+        )
         if res == "y":
             self.download_plugin(plugin_data, all_plugins_dict)
             return True
@@ -187,7 +204,9 @@ class PluginMarket:
                             os.getcwd(), "插件文件", "ToolDelta组合式插件"
                         )
                     case "dotcs":
-                        download_path = os.path.join(os.getcwd(), "插件文件", "原DotCS插件")
+                        download_path = os.path.join(
+                            os.getcwd(), "插件文件", "原DotCS插件"
+                        )
                     case "injected":
                         download_path = os.path.join(
                             os.getcwd(), "插件文件", "ToolDelta注入式插件"
@@ -232,7 +251,9 @@ class PluginMarket:
                         data_list.append(folder + r"/" + file)
             return data_list
         except KeyError as err:
-            Print.print_err(f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录")
+            Print.print_err(
+                f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录"
+            )
             return
         except Exception as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")

@@ -21,7 +21,9 @@ class WorldEdit(Plugin):
         self.getZ = None
 
     def on_inject(self):
-        self.add_trigger(["we help"], None, "查看 简易建造插件 的使用说明", self.description_show)
+        self.add_trigger(
+            ["we help"], None, "查看 简易建造插件 的使用说明", self.description_show
+        )
 
     def description_show(self, who: str, _):
         self.game_ctrl.say_to(
@@ -64,7 +66,8 @@ class WorldEdit(Plugin):
                         )
                         self.game_ctrl.say_to(
                             signPlayerName,
-                            "§a设置第一点: %d, %d, %d" % (self.getX, self.getY, self.getZ),
+                            "§a设置第一点: %d, %d, %d"
+                            % (self.getX, self.getY, self.getZ),
                         )
 
                 elif (
@@ -87,7 +90,9 @@ class WorldEdit(Plugin):
                         getZend = int(jsonPkt["NBTData"]["z"])
                     except Exception as err:
                         signPlayerName = ""
-                        self.game_ctrl.say_to("@a", "§4ERROR：目标选择器报错 §c " + int(err))
+                        self.game_ctrl.say_to(
+                            "@a", "§4ERROR：目标选择器报错 §c " + int(err)
+                        )
                     blockData = text[8:].replace("陶瓦", "stained_hardened_clay")
                     try:
                         if signPlayerName in self.getTarget("@a[m=1]"):

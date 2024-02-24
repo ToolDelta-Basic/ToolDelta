@@ -4,7 +4,6 @@ import re, os, sys
 
 NOT_IMPORTALL_RULE = re.compile(r"from .* import \*")
 
-
 def _import_original_dotcs_plugin(
     plugin_code: str, old_dotcs_env: dict, module_env: dict, plugin_group
 ):
@@ -126,7 +125,6 @@ def _import_original_dotcs_plugin(
             evts["repeat1m"] = [plugin_body.name, _dotcs_runcode[f"repeat1m"]]
     return plugin_body, evts, newPacketFuncs
 
-
 def read_plugin_from_old(plugin_grp, module_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/原DotCS插件")
     sys.path.append(PLUGIN_PATH)
@@ -153,9 +151,9 @@ def read_plugin_from_old(plugin_grp, module_env: dict):
                     for i in evtnew.keys():
                         if i.startswith("repeat"):
                             del evts[i]
-                            plugin_grp._dotcs_repeat_threadings[
-                                i.strip("repeat")
-                            ].append(evtnew[i])
+                            plugin_grp._dotcs_repeat_threadings[i.strip("repeat")].append(
+                                evtnew[i]
+                            )
                 for pkt, func in pkfuncs:
                     plugin_grp._add_listen_packet_id(pkt)
                     plugin_grp._add_listen_packet_func(pkt, func)

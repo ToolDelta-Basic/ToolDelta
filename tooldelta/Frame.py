@@ -35,8 +35,7 @@ Config = _Cfg()
 
 class Frame:
     # 系统框架
-    class SystemVersionException(OSError):
-        ...
+    class SystemVersionException(OSError): ...
 
     class FrameBasic:
         system_version = VERSION
@@ -122,7 +121,9 @@ class Frame:
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(public_launcher) + 1
             ):
-                raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
+                raise Config.ConfigError(
+                    "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
+                )
         except Config.ConfigError as err:
             r = self.upgrade_cfg(CFG)
             if r:
@@ -133,9 +134,16 @@ class Frame:
         if self.serverNumber == "0":
             while 1:
                 try:
-                    self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
+                    self.serverNumber = input(
+                        Print.fmt_info("请输入租赁服号: ", "§b 输入 ")
+                    )
                     self.serverPasswd = (
-                        input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                        input(
+                            Print.fmt_info(
+                                "请输入租赁服密码(没有请直接回车): ", "§b 输入 "
+                            )
+                        )
+                        or "0"
                     )
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
@@ -160,7 +168,9 @@ class Frame:
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        launcher: Callable = public_launcher[cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1][1]
+        launcher: Callable = public_launcher[
+            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+        ][1]
         self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
@@ -175,7 +185,9 @@ class Frame:
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
         if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg_keys:
-            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = "https://api.fastbuilder.pro"
+            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = (
+                "https://api.fastbuilder.pro"
+            )
             need_upgrade_cfg = True
         if "是否记录日志" not in old_cfg_keys:
             old_cfg["是否记录日志"] = False
@@ -436,7 +448,9 @@ class GameCtrl:
                     else None
                 )
                 if not self.requireUUIDPacket:
-                    Print.print_inf(f"§e{playername} 加入了游戏, UUID: {player['UUID']}")
+                    Print.print_inf(
+                        f"§e{playername} 加入了游戏, UUID: {player['UUID']}"
+                    )
                     asyncio.run(execute_player_join(playername))
                     plugin_group.execute_player_join(
                         playername, self.linked_frame.on_plugin_err
@@ -543,13 +557,17 @@ class GameCtrl:
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语
         Print.print_suc(
-            "初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name
+            "初始化完成, 在线玩家: "
+            + ", ".join(self.allplayers)
+            + ", 机器人ID: "
+            + self.bot_name
         )
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to(
             "@a",
-            "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"),
+            "§l§7[§f!§7] §r§f北京时间 "
+            + datetime.datetime.now().strftime("§a%H§f : §a%M"),
         )
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
