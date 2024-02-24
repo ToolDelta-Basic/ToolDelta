@@ -573,7 +573,8 @@ class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
         try:
             openat_port = int(sys_args_to_dict().get("access-point-port", "24020"))
-            assert openat_port in range(65536)
+            if openat_port not in range(65536):
+                raise AssertionError
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
         if openat_port == 0:

@@ -161,7 +161,8 @@ class Frame:
             while 1:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "输入")))
-                    assert ch in range(1, len(public_launcher) + 1)
+                    if ch not in range(1, len(public_launcher) + 1):
+                        raise AssertionError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                     break
                 except (ValueError, AssertionError):
