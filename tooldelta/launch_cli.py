@@ -134,7 +134,7 @@ class FrameFBConn(StandardFrame):
                     self.close_fb()
                     raise SystemExit
                 elif self.status == SysStatus.FB_LAUNCH_EXC:
-                    Print.print_err(f"§4连接FB时出现问题，已退出")
+                    Print.print_err("§4连接FB时出现问题，已退出")
                     self.close_fb()
                     raise SystemExit
 
@@ -150,7 +150,7 @@ class FrameFBConn(StandardFrame):
                     self.fb_pipe.stdin.flush()
                     Print.print_inf(f"语言已自动选择为简体中文： [{tmp[1]}]")
                 except IndexError:
-                    Print.print_war(f"未能自动选择为简体中文")
+                    Print.print_war("未能自动选择为简体中文")
             elif "ERROR" in tmp:
                 if "Server not found" in tmp:
                     Print.print_err(
@@ -233,7 +233,7 @@ class FrameFBConn(StandardFrame):
 
     def downloadMissingFiles(self):
         "获取缺失文件"
-        Print.print_with_info(f"§d将自动检测缺失文件并补全", "§d 加载 ")
+        Print.print_with_info("§d将自动检测缺失文件并补全", "§d 加载 ")
         mirror_src = "https://mirror.ghproxy.com/"
         file_get_src = (
             mirror_src
@@ -245,13 +245,13 @@ class FrameFBConn(StandardFrame):
             Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
             return False
         except requests.Timeout:
-            Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: 请求超时")
+            Print.print_err("自动下载缺失文件失败: URL 请求出现问题: 请求超时")
             return False
         except Exception as err:
             Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: {err}")
             return False
         try:
-            Print.print_with_info(f"§d正在检测需要补全的文件", "§d 加载 ")
+            Print.print_with_info("§d正在检测需要补全的文件", "§d 加载 ")
             mirrs = files_to_get["Mirror"]
             files = files_to_get[self.system_type]
             for fdir, furl in files.items():
@@ -270,7 +270,7 @@ class FrameFBConn(StandardFrame):
                         return False
                     Print.print_inf(f"文件: <{fdir}> 下载完成        ")
         except requests.Timeout:
-            Print.print_err(f"自动检测文件并补全时出现错误: 超时, 自动跳过")
+            Print.print_err("自动检测文件并补全时出现错误: 超时, 自动跳过")
         except Exception as err:
             Print.print_err(f"自动检测文件并补全时出现错误: {err}")
             return False
@@ -418,7 +418,7 @@ class FrameNeOmg(StandardFrame):
             while 1:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig == "" or msg_orig == "SIGNAL: exit":
-                    Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                    Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 if "[neOmega 接入点]: 就绪" in msg_orig:

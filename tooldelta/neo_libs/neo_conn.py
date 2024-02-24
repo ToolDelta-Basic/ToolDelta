@@ -61,7 +61,7 @@ if sys_type == "Windows":
     lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
     LIB = ctypes.cdll.LoadLibrary(lib_path)
 elif "TERMUX_VERSION" in os.environ:
-    lib_path = f"neomega_android_arm64.so"
+    lib_path = "neomega_android_arm64.so"
     lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
     LIB = ctypes.CDLL(lib_path)
 elif sys_type == "Linux":

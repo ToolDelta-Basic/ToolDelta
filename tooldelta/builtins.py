@@ -98,7 +98,7 @@ class Builtins:
             if path in jsonPathTmp.keys():
                 jsonPathTmp[path] = [True, obj]
             else:
-                raise Exception(f"json路径未初始化, 不能进行读取和写入操作: " + path)
+                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
         @staticmethod
         def cancel_change(path):

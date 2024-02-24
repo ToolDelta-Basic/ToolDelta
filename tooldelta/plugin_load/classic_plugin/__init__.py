@@ -122,7 +122,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                     raise
             except Cfg.ConfigError as err:
                 Print.print_err(f"插件 {plugin_dir} 配置文件报错：{err}")
-                Print.print_err(f"你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
+                Print.print_err("你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
                 raise SystemExit
             except Builtins.SimpleJsonDataReader.DataReadError as err:
                 Print.print_err(f"插件 {plugin_dir} 读取数据失败: {err}")
