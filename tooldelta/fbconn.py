@@ -154,7 +154,7 @@ def RecvGamePacket(connID: int):
             freeMem(r.pktBytes)
             yield bs
     except:
-        raise StopIteration
+        return
 
 
 def RecvGamePacketIt(connID: int):
