@@ -15,7 +15,8 @@ function EXIT_FAILURE(){
 function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
-chown -R $(whoami):$(whoami) "$install_dir"
+chown -R "$(whoami):$(whoami)" "$install_dir"
+
 # 使用apt安装Python
 echo "使用apt安装Python..."
 apt-get install python3 -y
@@ -56,7 +57,7 @@ echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command'
 function download_exec(){
 # 权限
 mkdir -p "$install_dir"
-chown -R $(whoami):$(whoami) "$install_dir"
+chown -R "$(whoami):$(whoami)" "$install_dir"
 
 # 切换到安装目录
 pushd "$install_dir" || exit
