@@ -842,7 +842,7 @@ class ThreadOmega:
         self, requires: Optional[Union[List[str], str]] = None
     ) -> Union[Dict[str, int], int]:
         if requires is None:
-            return {k: v for k, v in self._packet_name_to_id_mapping.items()}
+            return dict(self._packet_name_to_id_mapping.items())
         if isinstance(requires, list):
             return {k: self._packet_name_to_id_mapping[k] for k in requires}
         return self._packet_name_to_id_mapping[requires]
@@ -851,7 +851,7 @@ class ThreadOmega:
         self, requires: Optional[Union[List[int], int]] = None
     ) -> Union[Dict[int, str], str]:
         if requires is None:
-            return {k: v for k, v in self._packet_id_to_name_mapping.items()}
+            return dict(self._packet_id_to_name_mapping.items())
         if isinstance(requires, list):
             return {k: self._packet_id_to_name_mapping[k] for k in requires}
         return self._packet_id_to_name_mapping[requires]
