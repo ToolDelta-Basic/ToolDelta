@@ -44,7 +44,9 @@ class GamePacketBytesAsIsJsonStr_return(ctypes.Structure):
 class JsonStrAsIsGamePacketBytes_return(ctypes.Structure):
     _fields_ = [("pktBytes", GoBytes), ("l", GoInt), ("err", GoString)]
 
+
 LIB: ctypes.CDLL
+
 
 def InitLib(LIBs):
     global LIB

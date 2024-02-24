@@ -566,9 +566,7 @@ class PlayerKit:
     def ask(self, hint: str) -> str:
         OmegaAvailable()
         self.say(hint)
-        return self.parent.intercept_player_just_next_input(
-            self._c_uuid
-        ).RawMsg.strip()
+        return self.parent.intercept_player_just_next_input(self._c_uuid).RawMsg.strip()
 
     def title(self, title: str = "", subtitle: str = ""):
         # subtitle 只有在 title 给出时才能实际生效
