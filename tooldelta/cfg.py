@@ -67,7 +67,9 @@ class Cfg:
             return 'Cfg.Group("' + '", "'.join(self.members) + '")'
 
     class ConfigError(Exception):
-        def __init__(self, errStr: str, errPos: list = []):
+        def __init__(self, errStr: str, errPos: list = None):
+            if errPos is None:
+                errPos = []
             self.errPos = errPos
             self.args = (errStr,)
 
