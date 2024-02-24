@@ -1,9 +1,8 @@
 from tooldelta import Plugin, plugins, Print
+from tooldelta.Frame import Frame
 
 from PIL import Image
 import time
-
-from tooldelta.Frame import Frame
 
 
 @plugins.add_plugin

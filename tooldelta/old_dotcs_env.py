@@ -37,7 +37,6 @@ def get_dotcs_env(__F, print_ins):
         replaceByNext: bool = False,
         info=" 信息 ",
     ):
-        del replaceByNext
         if not output:
             return print_ins.fmt_info(text, info)
         if not replace:

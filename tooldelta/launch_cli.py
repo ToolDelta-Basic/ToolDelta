@@ -55,7 +55,7 @@ class StandardFrame:
         self._launcher_listener = cb
 
     def close_fb(self):
-        ...
+        raise NotImplementedError()
 
     @staticmethod
     def get_players_and_uuids():
