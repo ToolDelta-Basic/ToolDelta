@@ -82,31 +82,31 @@ class Cfg:
             return f"Cfg.UnneccessaryKey({self.key})"
 
     class ConfigKeyError(ConfigError):
-        ...
+        "配置json的键错误"
 
     class ConfigValueError(ConfigError):
-        ...
+        "配置json的值错误"
 
     class VersionLowError(ConfigError):
-        ...
+        "配置json的版本过低的错误"
 
     class PInt(int):
-        "正整数"
+        "配置文件的值限制: 正整数"
 
     class NNInt(int):
-        "非负整数"
+        "配置文件的值限制: 非负整数"
 
     class PFloat(float):
-        "正浮点小数"
+        "配置文件的值限制: 正浮点小数"
 
     class NNFloat(float):
-        "非负浮点小数"
+        "配置文件的值限制: 非负浮点小数"
 
     class PNumber:
-        "正数"
+        "配置文件的值限制: 正数"
 
     class NNNumber:
-        "大于0的数"
+        "配置文件的值限制: 大于0的数"
 
     def get_cfg(self, path: str, standard_type: dict):
         # 从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测.
@@ -171,7 +171,14 @@ class Cfg:
                 f'JSON键 "{fromkey}"未曾遇到过的类型: {standard.__class__.__name__}, 另外两个参数 standard={standard}, val={val}'
             )
 
-    def check_dict_2(self, pattern: dict, jsondict: dict, fromkey="?"):
+    def check_dict_2(self, pattern: dict, jsondict: dict):
+        """
+        按照给定的标准配置样式比对传入的配置文件jsondict, 对不上则引发相应异常
+
+        参数:
+            pattern: 标准样式dict
+            jsondict: 待检测的配置文件dict
+        """
         for key, std_val in pattern.items():
             if key == r"%any":
                 # ANY key
@@ -196,9 +203,9 @@ class Cfg:
 
     def check_list_2(self, pattern: list, value, fromkey="?"):
         if not isinstance(pattern, list):
-            raise ValueError("Not a valid list pattern")
+            raise ValueError("不是合法的标准列表检测样式")
         if len(pattern) == 0:
-            raise ValueError("Pattern's length can't be 0")
+            raise ValueError("标准检测列表的长度不能为0")
         if isinstance(pattern[0], str) and pattern[0].startswith(r"%list"):
             if not isinstance(value, list):
                 raise self.ConfigValueError(

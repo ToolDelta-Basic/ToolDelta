@@ -240,8 +240,15 @@ class Frame:
         usage: str,
         func: Callable[[list[str]], None],
     ):
-        # 添加控制台菜单触发词
-        #   triggers: 触发词组, arg_hint: 菜单命令参数提示句, usage: 命令说明, func: 菜单回调, 传入命令参数
+        """
+        注册ToolDelta控制台的菜单项
+        
+        参数:
+            triggers: 触发词列表
+            arg_hint: 菜单命令参数提示句
+            usage: 命令说明
+            func: 菜单回调方法 (list[str])
+        """
         try:
             if self.consoleMenu.index(triggers) != -1:
                 Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
@@ -318,7 +325,6 @@ class Frame:
         if self.link_game_ctrl.allplayers and not isinstance(
             self.launcher, (FrameNeOmgRemote,)
         ):
-            # kick @s
             try:
                 self.link_game_ctrl.sendwscmd(
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)\nSTATUS CODE: {exit_status_code}"
@@ -330,7 +336,7 @@ class Frame:
         self.launcher.exit_event.set()
         return -1
 
-    def get_old_dotcs_env(self):
+    def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
         return old_dotcs_env.get_dotcs_env(self, Print)
 
@@ -356,12 +362,8 @@ class Frame:
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")
 
-
-UPDATE_NOTE = ""
-ADVANCED = False
 sys_args_dict = sys_args_to_dict(sys.argv)
 createThread = Builtins.createThread
-
 
 from .builtins import Builtins
 from .basic_mods import asyncio, datetime, json
@@ -398,7 +400,6 @@ class GameCtrl:
         self.sendwscmd = self.launcher.sendwscmd
         self.sendwocmd = self.launcher.sendwocmd
         self.sendPacket = self.launcher.sendPacket
-        self.sendPacketJson = self.launcher.sendPacketJson
         self.sendfbcmd = self.launcher.sendfbcmd
         if isinstance(self.linked_frame.launcher, FrameNeOmg):
             self.requireUUIDPacket = False
@@ -555,17 +556,41 @@ class GameCtrl:
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
     def say_to(self, target: str, msg: str):
-        # 向玩家发送聊天栏信息
+        """
+        向玩家发送聊天栏信息
+        
+        参数:
+            target: 玩家名/目标选择器
+            msg: 信息
+        """
         self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
 
     def player_title(self, target: str, text: str):
-        # 向玩家显示大标题
+        """
+        向玩家展示大标题文本
+        
+        参数:
+            target: 玩家名/目标选择器
+            text: 文本
+        """
         self.sendwocmd(f"title {target} title {text}")
 
     def player_subtitle(self, target: str, text: str):
-        # 向玩家显示小标题 需要大标题
+        """
+        向玩家展示小标题文本
+        
+        参数:
+            target: 玩家名/目标选择器
+            text: 文本
+        """
         self.sendwocmd(f"title {target} subtitle {text}")
 
     def player_actionbar(self, target: str, text: str):
-        # 向玩家显示行动栏信息
+        """
+        向玩家展示行动栏文本
+        
+        参数:
+            target: 玩家名/目标选择器
+            text: 文本
+        """
         self.sendwocmd(f"title {target} actionbar {text}")

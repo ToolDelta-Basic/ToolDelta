@@ -10,13 +10,21 @@ from typing import Any, Dict
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
 
-
 class Builtins:
     class ThreadExit(SystemExit):
         "线程退出."
 
     class ClassicThread(threading.Thread):
         def __init__(self, func, args: tuple = (), usage="", **kwargs):
+            """
+            方便地新建一个ToolDelta子线程
+
+            参数:
+                func: 线程方法
+                args: 方法的参数项 tuple
+                usage: 线程的用途说明
+                ..kwargs: 方法的关键字参数项
+            """
             super().__init__(target=func)
             self.func = func
             self.daemon = True
@@ -32,46 +40,18 @@ class Builtins:
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
 
-        class ClassicThread(threading.Thread):
-            def __init__(self, func, args: tuple = (), usage="", **kwargs):
-                super().__init__(target=func)
-                self.func = func
-                self.daemon = True
-                self.all_args = [args, kwargs]
-                self.usage = usage
-                self.start()
-
-            def run(self):
-                try:
-                    self.func(*self.all_args[0], **self.all_args[1])
-                except Builtins.ThreadExit:
-                    pass
-                except:
-                    Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
-
-            def get_id(self):
-                if hasattr(self, "_thread_id"):
-                    return self._thread_id
-                for thread_id, thread in enumerate(threading.enumerate()):
-                    if thread is self:
-                        return thread_id
-
-            def stop(self):
-                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                    self.get_id(), ctypes.py_object(Builtins.ThreadExit)
-                )
-                return res
-
     createThread = ClassicThread
 
     class TMPJson:
         @staticmethod
-        def loadPathJson(path, needFileExists: bool = True):
+        def loadPathJson(path: str, needFileExists: bool = True):
             """
-            将json文件加载到缓存区, 以便快速读写.
-            needFileExists = False 时, 若文件路径不存在, 就会自动创建一个文件.
+            将json文件从磁盘加载到缓存区, 以便快速读写.
             在缓存文件已加载的情况下, 再使用一次该方法不会有任何作用.
-            path: 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
+
+            参数:
+                path: 作为文件的磁盘内路径的同时也会作为在缓存区的虚拟路径
+                needFileExists: 默认为 True, 为 False 时, 若文件路径不存在, 就会自动创建一个文件.
             """
             if path in jsonPathTmp:
                 return
@@ -85,10 +65,13 @@ class Builtins:
             jsonPathTmp[path] = [False, js]
 
         @staticmethod
-        def unloadPathJson(path):
+        def unloadPathJson(path: str):
             """
             将json文件从缓存区卸载(保存内容到磁盘), 之后不能再在缓存区对这个文件进行读写.
             在缓存文件已卸载的情况下, 再使用一次该方法不会有任何作用, 但是可以通过其返回的值来知道存盘有没有成功.
+
+            参数:
+                path: 文件的虚拟路径
             """
             if jsonPathTmp.get(path) is not None:
                 isChanged, dat = jsonPathTmp[path]
@@ -99,8 +82,13 @@ class Builtins:
             return False
 
         @staticmethod
-        def read(path):
-            "对缓存区的该虚拟路径的文件进行读操作"
+        def read(path: str):
+            """
+            对缓存区的该虚拟路径的文件进行读操作
+            
+            参数:
+                path: 文件的虚拟路径
+            """
             if path in jsonPathTmp:
                 val = jsonPathTmp.get(path)[1]
                 if isinstance(val, (list, dict)):
@@ -109,8 +97,14 @@ class Builtins:
             raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
         @staticmethod
-        def write(path, obj):
-            "对缓存区的该虚拟路径的文件进行写操作"
+        def write(path: str, obj: Any):
+            """
+            对缓存区的该虚拟路径的文件进行写操作, 这将会覆盖之前的内容
+            
+            参数:
+                path: 文件的虚拟路径
+                obj: 任何合法的JSON类型 例如 dict/list/str/bool/int/float
+            """
             if path in jsonPathTmp:
                 jsonPathTmp[path] = [True, obj]
             else:
@@ -130,9 +124,11 @@ class Builtins:
         @staticmethod
         def SafeJsonDump(obj: str | dict | list, fp):
             """
-            导出一个json文件, 弥补orjson库没有dump方法的不足.
+            导出一个json文件, 会自动关闭文件读写接口.
+
+            参数:
                 obj: json对象.
-                fp: open(...)打开的文件读写口 或 文件路径.
+                fp: 由open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
                 with open(fp, "w", encoding="utf-8") as file:
@@ -144,7 +140,9 @@ class Builtins:
         @staticmethod
         def SafeJsonLoad(fp):
             """
-            读取一个json文件, 弥补orjson库没有load方法的不足.
+            读取一个json文件, 会自动关闭文件读写接口.
+
+            参数:
                 fp: open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
@@ -159,8 +157,13 @@ class Builtins:
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
             """
-            使用插件便捷地读取一个json文件, 当文件不存在则创建一个空文件, 使用default给出的json默认值写入文件.
-            这个文件应在data/<plugin_name>/<file>文件夹内
+            使用插件便捷地读取一个json文件, 
+            这个文件应在 data/<plugin_name>/<file>文件夹内, 文件夹不存在时也会自动创建
+
+            参数:
+                plugin_name: 插件名
+                file: 文件名
+                default: 不为None时: 当文件不存在则创建一个空文件, 使用default给出的json字典写入文件.
             """
             filepath = os.path.join("data", plugin_name, f"{file}.json")
             os.makedirs(os.path.join("data", plugin_name), exist_ok=True)
@@ -183,17 +186,27 @@ class Builtins:
         @staticmethod
         def writeFileTo(plugin_name: str, file: str, obj):
             """
-            使用插件简单地写入一个json文件
+            使用插件简单地写入一个json文件, 会覆盖原有内容
             这个文件应在data/<plugin_name>/<file>文件夹内
+
+            参数:
+                plugin_name: 插件名
+                file: 文件名
+                obj: 任何合法的JSON类型 例如 dict/list/str/bool/int/float
             """
             os.makedirs(f"data/{plugin_name}", exist_ok=True)
             with open(f"data/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
                 Builtins.SimpleJsonDataReader.SafeJsonDump(obj, f)
 
     @staticmethod
-    def SimpleFmt(kw: dict[str, any], __sub: str):
+    def SimpleFmt(kw: dict[str, object], __sub: str):
         """
-        快速将字符串内的内容用给出的字典替换掉.
+        快速将字符串内按照给出的dict的键值对替换掉内容.
+        参数:
+            kw: dict
+            __sub: 需要被替换的字符串
+        
+        Example:
         >>> my_color = "red"; my_item = "apple"
         >>> kw = {"[颜色]": my_color, "[物品]": my_item}
         >>> SimpleFmt(kw, "I like [颜色] [物品].")
@@ -228,6 +241,9 @@ class Builtins:
 
     @staticmethod
     def try_int(arg):
+        """
+        尝试将提供的参数化为int类型并返回, 否则返回None
+        """
         try:
             return int(arg)
         except:
@@ -235,7 +251,12 @@ class Builtins:
 
     @staticmethod
     def add_in_dialogue_player(player: str):
-        "使玩家进入聊天栏对话模式"
+        """
+        使玩家进入聊天栏对话模式, 可防止其在对话时继续触发另一个会话线程
+        
+        参数:
+            玩家名: str
+        """
         if player not in in_dialogue_list:
             in_dialogue_list.append(player)
         else:
@@ -243,28 +264,61 @@ class Builtins:
 
     @staticmethod
     def remove_in_dialogue_player(player: str):
-        "使玩家离开聊天栏对话模式"
+        """
+        使玩家离开聊天栏对话模式
+        
+        参数:
+            player: 玩家名
+        """
         if player not in in_dialogue_list:
             return
         in_dialogue_list.remove(player)
 
     @staticmethod
-    def player_in_dialogue(player: str):
-        "玩家是否处在一个聊天栏对话中."
+    def player_in_dialogue(player: str) -> bool:
+        """
+        检测玩家是否处在聊天栏对话模式中.
+        
+        参数:
+            player: 玩家名
+        返回:
+            检测结果: bool
+        """
         return player in in_dialogue_list
 
     @staticmethod
     def create_dialogue_threading(player, func, exc_cb=None, args=(), kwargs=None):
         if kwargs is None:
             kwargs = {}
-        "创建一个玩家与聊天栏交互的线程, 若玩家已处于一个对话中, 则向方法exc_cb传参: player(玩家名)"
-        threading.Thread(
-            target=_dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
-        ).start()
+        """
+        创建一个玩家与聊天栏交互的线程, 
+        线程启动时玩家会自动进入聊天栏对话模式
+        线程结束后该玩家会自动退出聊天栏对话模式
+        可以用来防止玩家多开聊天栏对话或菜单线程
+        
+        参数:
+            player: 玩家名
+            func: 线程方法
+            exc_cb: 若玩家已处于一个对话中, 则向方法exc_cb传参并调用它: player(玩家名)
+            args: 线程方法的参数组 tuple
+            kwargs: 线程方法的关键词参数组: dict
+        """
+        Builtins.createThread(
+            _dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
+        )
 
     @staticmethod
     def fuzzy_match(lst: list, sub: str):
-        "模糊匹配列表内的字符串"
+        """
+        模糊匹配列表内的字符串, 可以用在诸如模糊匹配玩家名的用途
+        Example:
+        >>> fuzzy_match(["a", "ab", "abc", "abd"], "ab")
+        ["ab", "abc", "abd"]
+        
+        参数:
+            lst: 字符串列表
+            sub: 需要匹配的字符串
+        """
         res = []
         for i in lst:
             if sub in i:
