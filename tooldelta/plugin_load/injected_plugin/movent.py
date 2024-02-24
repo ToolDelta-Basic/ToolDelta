@@ -215,11 +215,7 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     """
     check_avaliable(game_control)
 
-    if (
-        (targetNameToGet not in get_all_player())
-        and (targetNameToGet != game_control.bot_name)
-        and (not targetNameToGet.startswith("@a"))
-    ):
+    if targetNameToGet not in get_all_player():
         raise ValueError("Player not found.")
     result = sendwscmd("/querytarget " + targetNameToGet, True, timeout)
     if not result.OutputMessages[0].Success:
