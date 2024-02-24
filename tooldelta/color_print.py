@@ -1,4 +1,5 @@
-import datetime, colorama
+import datetime
+import colorama
 
 # 防止输出颜色代码
 colorama.init(autoreset=True)
