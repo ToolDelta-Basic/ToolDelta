@@ -132,7 +132,8 @@ class Builtins:
             fp.close()
             return d
 
-        class DataReadError(ujson.JSONDecodeError): ...
+        class DataReadError(ujson.JSONDecodeError):
+            ...
 
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):

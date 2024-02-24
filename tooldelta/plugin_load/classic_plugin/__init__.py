@@ -4,10 +4,12 @@ from ...builtins import Builtins
 from ...cfg import Cfg
 from ..funcs import unzip_plugin
 
+
 class Plugin:
     name = "<未命名插件>"
     version = (0, 0, 1)
     author = "?"
+
 
 class PluginAPI:
     name = "<未命名插件api>"
@@ -15,6 +17,7 @@ class PluginAPI:
 
     def __init__(self, _):
         raise Exception("需要初始化__init__方法")
+
 
 def read_plugin_from_new(plugin_grp, root_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/ToolDelta组合式插件")
@@ -27,7 +30,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
             Print.print_with_info(f"§6正在解压插件{plugin_dir}, 请稍后", "§6 解压 ")
             unzip_plugin(
                 os.path.join(PLUGIN_PATH, plugin_dir),
-                os.path.join("插件文件/ToolDelta组合式插件", plugin_dir.strip(".zip"))
+                os.path.join("插件文件/ToolDelta组合式插件", plugin_dir.strip(".zip")),
             )
             Print.print_suc(f"§a成功解压插件{plugin_dir} -> 插件目录")
             plugin_dir = plugin_dir.strip(".zip")
@@ -101,7 +104,9 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                             plugin_grp.plugins_api[_api] = plugin_body
                         else:
                             (apiName, api) = _api
-                            plugin_grp.plugins_api[apiName] = api(plugin_grp.linked_frame)
+                            plugin_grp.plugins_api[apiName] = api(
+                                plugin_grp.linked_frame
+                            )
             except AssertionError as err:
                 if err.args[0] == 2:
                     Print.print_err(
