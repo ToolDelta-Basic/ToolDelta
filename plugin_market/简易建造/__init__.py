@@ -31,121 +31,120 @@ class WorldEdit(Plugin):
 
     @plugins.add_packet_listener(56)
     def we_pkt56(self, jsonPkt: dict):
-        if "NBTData" in jsonPkt:
-            if "id" in jsonPkt["NBTData"]:
-                if (
-                    jsonPkt["NBTData"]["id"] == "Sign"
-                    and jsonPkt["NBTData"]["Text"] == "We start"
-                ):
-                    placeX, placeY, placeZ, text = (
-                        jsonPkt["NBTData"]["x"],
-                        jsonPkt["NBTData"]["y"],
-                        jsonPkt["NBTData"]["z"],
-                        jsonPkt["NBTData"]["Text"],
+        if "NBTData" in jsonPkt and "id" in jsonPkt["NBTData"]:
+            if (
+                jsonPkt["NBTData"]["id"] == "Sign"
+                and jsonPkt["NBTData"]["Text"] == "We start"
+            ):
+                placeX, placeY, placeZ, text = (
+                    jsonPkt["NBTData"]["x"],
+                    jsonPkt["NBTData"]["y"],
+                    jsonPkt["NBTData"]["z"],
+                    jsonPkt["NBTData"]["Text"],
+                )
+                try:
+                    signPlayerName = self.getTarget(
+                        "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
+                    )[
+                        0
+                    ]  # [x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
+                except Exception as err:
+                    signPlayerName = ""
+                    self.game_ctrl.say_to(
+                        "@a", "§cCan't execute because " + str(err)
                     )
-                    try:
-                        signPlayerName = self.getTarget(
-                            "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
-                        )[
-                            0
-                        ]  # [x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
-                    except Exception as err:
-                        signPlayerName = ""
-                        self.game_ctrl.say_to(
-                            "@a", "§cCan't execute because " + str(err)
-                        )
-                    self.getX = int(jsonPkt["NBTData"]["x"])
-                    self.getY = int(jsonPkt["NBTData"]["y"])
-                    self.getZ = int(jsonPkt["NBTData"]["z"])
-                    if signPlayerName in self.getTarget("@a[m=1]"):
-                        self.game_ctrl.sendcmd(
-                            "/setblock %d %d %d air 0 destroy"
-                            % (self.getX, self.getY, self.getZ)
-                        )
-                        self.game_ctrl.say_to(
-                            signPlayerName,
-                            "§a设置第一点: %d, %d, %d" % (self.getX, self.getY, self.getZ),
-                        )
+                self.getX = int(jsonPkt["NBTData"]["x"])
+                self.getY = int(jsonPkt["NBTData"]["y"])
+                self.getZ = int(jsonPkt["NBTData"]["z"])
+                if signPlayerName in self.getTarget("@a[m=1]"):
+                    self.game_ctrl.sendcmd(
+                        "/setblock %d %d %d air 0 destroy"
+                        % (self.getX, self.getY, self.getZ)
+                    )
+                    self.game_ctrl.say_to(
+                        signPlayerName,
+                        "§a设置第一点: %d, %d, %d" % (self.getX, self.getY, self.getZ),
+                    )
 
-                elif (
-                    jsonPkt["NBTData"]["id"] == "Sign"
-                    and jsonPkt["NBTData"]["Text"].startswith("We fill ")
-                    and len(jsonPkt["NBTData"]["Text"]) > 8
-                ):
-                    placeX, placeY, placeZ, text = (
-                        jsonPkt["NBTData"]["x"],
-                        jsonPkt["NBTData"]["y"],
-                        jsonPkt["NBTData"]["z"],
-                        jsonPkt["NBTData"]["Text"],
-                    )
-                    try:
-                        signPlayerName = self.getTarget(
-                            "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
-                        )[0]
-                        getXend = int(jsonPkt["NBTData"]["x"])
-                        getYend = int(jsonPkt["NBTData"]["y"])
-                        getZend = int(jsonPkt["NBTData"]["z"])
-                    except Exception as err:
-                        signPlayerName = ""
-                        self.game_ctrl.say_to("@a", "§4ERROR：目标选择器报错 §c " + int(err))
-                    blockData = text[8:].replace("陶瓦", "stained_hardened_clay")
-                    try:
-                        if signPlayerName in self.getTarget("@a[m=1]"):
-                            if not self.getX:
-                                raise AssertionError
-                            self.game_ctrl.sendcmd(
-                                "/fill {} {} {} {} {} {} {}".format(
-                                    self.getX,
-                                    self.getY,
-                                    self.getZ,
-                                    getXend,
-                                    getYend,
-                                    getZend,
-                                    blockData,
-                                )
-                            )
-                            self.game_ctrl.say_to(
-                                signPlayerName, "§c§lWorldEdit§r>> §a填充完成"
-                            )
-                        else:
-                            self.game_ctrl.say_to(
-                                signPlayerName, "§c§lWorldEdit§r>> §c没有权限"
-                            )
-                    except AssertionError:
-                        self.game_ctrl.say_to(
-                            signPlayerName, "§c§lWorldEdit§r>> §c没有设置起点或终点"
-                        )
-                elif (
-                    jsonPkt["NBTData"]["id"] == "Sign"
-                    and jsonPkt["NBTData"]["Text"] == "We cn"
-                ):
-                    try:
+            elif (
+                jsonPkt["NBTData"]["id"] == "Sign"
+                and jsonPkt["NBTData"]["Text"].startswith("We fill ")
+                and len(jsonPkt["NBTData"]["Text"]) > 8
+            ):
+                placeX, placeY, placeZ, text = (
+                    jsonPkt["NBTData"]["x"],
+                    jsonPkt["NBTData"]["y"],
+                    jsonPkt["NBTData"]["z"],
+                    jsonPkt["NBTData"]["Text"],
+                )
+                try:
+                    signPlayerName = self.getTarget(
+                        "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
+                    )[0]
+                    getXend = int(jsonPkt["NBTData"]["x"])
+                    getYend = int(jsonPkt["NBTData"]["y"])
+                    getZend = int(jsonPkt["NBTData"]["z"])
+                except Exception as err:
+                    signPlayerName = ""
+                    self.game_ctrl.say_to("@a", "§4ERROR：目标选择器报错 §c " + int(err))
+                blockData = text[8:].replace("陶瓦", "stained_hardened_clay")
+                try:
+                    if signPlayerName in self.getTarget("@a[m=1]"):
                         if not self.getX:
                             raise AssertionError
-                        signPlayerName = self.getTarget(
-                            "@a[x=%d, y=%d, z=%d, c=1, r=10]"
-                            % (
-                                jsonPkt["NBTData"]["x"],
-                                jsonPkt["NBTData"]["y"],
-                                jsonPkt["NBTData"]["z"],
+                        self.game_ctrl.sendcmd(
+                            "/fill {} {} {} {} {} {} {}".format(
+                                self.getX,
+                                self.getY,
+                                self.getZ,
+                                getXend,
+                                getYend,
+                                getZend,
+                                blockData,
                             )
-                        )[0]
-                        if signPlayerName in self.getTarget("@a[m=1]"):
-                            self.frame.createThread(
-                                self.fillwith,
-                                (
-                                    self.getX,
-                                    self.getY,
-                                    self.getZ,
-                                    int(jsonPkt["NBTData"]["x"]),
-                                    int(jsonPkt["NBTData"]["y"]),
-                                    int(jsonPkt["NBTData"]["z"]),
-                                ),
-                            )
-                    except Exception as err:
-                        self.game_ctrl.say_to(
-                            "@a", "§cCan't execute because " + str(err)
                         )
+                        self.game_ctrl.say_to(
+                            signPlayerName, "§c§lWorldEdit§r>> §a填充完成"
+                        )
+                    else:
+                        self.game_ctrl.say_to(
+                            signPlayerName, "§c§lWorldEdit§r>> §c没有权限"
+                        )
+                except AssertionError:
+                    self.game_ctrl.say_to(
+                        signPlayerName, "§c§lWorldEdit§r>> §c没有设置起点或终点"
+                    )
+            elif (
+                jsonPkt["NBTData"]["id"] == "Sign"
+                and jsonPkt["NBTData"]["Text"] == "We cn"
+            ):
+                try:
+                    if not self.getX:
+                        raise AssertionError
+                    signPlayerName = self.getTarget(
+                        "@a[x=%d, y=%d, z=%d, c=1, r=10]"
+                        % (
+                            jsonPkt["NBTData"]["x"],
+                            jsonPkt["NBTData"]["y"],
+                            jsonPkt["NBTData"]["z"],
+                        )
+                    )[0]
+                    if signPlayerName in self.getTarget("@a[m=1]"):
+                        self.frame.createThread(
+                            self.fillwith,
+                            (
+                                self.getX,
+                                self.getY,
+                                self.getZ,
+                                int(jsonPkt["NBTData"]["x"]),
+                                int(jsonPkt["NBTData"]["y"]),
+                                int(jsonPkt["NBTData"]["z"]),
+                            ),
+                        )
+                except Exception as err:
+                    self.game_ctrl.say_to(
+                        "@a", "§cCan't execute because " + str(err)
+                    )
 
     def fillwith(self, sx, sy, sz, dx, dy, dz):
         p2n = lambda n: 1 if n >= 0 else -1
