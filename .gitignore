@@ -144,7 +144,6 @@ dmypy.json
 data/
 status/
 _Plugin_Data/
-.vscode/
 neo-omega-kernel/
 py_tests/
 py_test.py
