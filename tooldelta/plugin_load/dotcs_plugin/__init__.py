@@ -132,7 +132,7 @@ def _import_original_dotcs_plugin(
 def read_plugin_from_old(plugin_grp, module_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/原DotCS插件")
     sys.path.append(PLUGIN_PATH)
-    dotcs_env = plugin_grp.linked_frame.get_old_dotcs_env()
+    dotcs_env = plugin_grp.linked_frame._get_old_dotcs_env()
     files = os.listdir(PLUGIN_PATH)
     files.sort()
     for file in files:

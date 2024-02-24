@@ -163,9 +163,9 @@ class Cfg:
                 )
         elif isinstance(standard, list):
             # [%list] or [multi[type/dict]]
-            self.check_list_2(standard, val, fromkey)
+            self.check_list_2(standard, val)
         elif isinstance(standard, dict):
-            self.check_dict_2(standard, val, fromkey)
+            self.check_dict_2(standard, val)
         else:
             raise ValueError(
                 f'JSON键 "{fromkey}"未曾遇到过的类型: {standard.__class__.__name__}, 另外两个参数 standard={standard}, val={val}'
