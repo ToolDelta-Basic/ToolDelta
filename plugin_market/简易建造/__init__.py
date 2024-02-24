@@ -50,9 +50,7 @@ class WorldEdit(Plugin):
                     ]  # [x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
                 except Exception as err:
                     signPlayerName = ""
-                    self.game_ctrl.say_to(
-                        "@a", "§cCan't execute because " + str(err)
-                    )
+                    self.game_ctrl.say_to("@a", "§cCan't execute because " + str(err))
                 self.getX = int(jsonPkt["NBTData"]["x"])
                 self.getY = int(jsonPkt["NBTData"]["y"])
                 self.getZ = int(jsonPkt["NBTData"]["z"])
@@ -142,9 +140,7 @@ class WorldEdit(Plugin):
                             ),
                         )
                 except Exception as err:
-                    self.game_ctrl.say_to(
-                        "@a", "§cCan't execute because " + str(err)
-                    )
+                    self.game_ctrl.say_to("@a", "§cCan't execute because " + str(err))
 
     def fillwith(self, sx, sy, sz, dx, dy, dz):
         p2n = lambda n: 1 if n >= 0 else -1
