@@ -146,13 +146,13 @@ def read_plugin_from_old(plugin_grp, module_env: dict):
                 )
                 plugin.name = file.strip(".py")
                 if (
-                    "repeat10s" in evts.keys()
-                    or "repeat1s" in evts.keys()
-                    or "repeat30s" in evts.keys()
-                    or "repeat1m" in evts.keys()
+                    "repeat10s" in evts
+                    or "repeat1s" in evts
+                    or "repeat30s" in evts
+                    or "repeat1m" in evts
                 ):
                     evtnew = evts.copy()
-                    for i in evtnew.keys():
+                    for i in evtnew:
                         if i.startswith("repeat"):
                             del evts[i]
                             plugin_grp._dotcs_repeat_threadings[

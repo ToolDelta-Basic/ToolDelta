@@ -30,7 +30,7 @@ class Builtins:
                 pass
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
-                if "exc_cb" in self.all_args[1].keys():
+                if "exc_cb" in self.all_args[1]:
                     self.all_args[1]["exc_cb"]
 
         def get_id(self):
@@ -57,7 +57,7 @@ class Builtins:
             在缓存文件已加载的情况下, 再使用一次该方法不会有任何作用.
             path: 作为文件的真实路径的同时也会作为在缓存区的虚拟路径
             """
-            if path in jsonPathTmp.keys():
+            if path in jsonPathTmp:
                 return
             try:
                 js = Builtins.SimpleJsonDataReader.SafeJsonLoad(path)
@@ -85,7 +85,7 @@ class Builtins:
         @staticmethod
         def read(path):
             "对缓存区的该虚拟路径的文件进行读操作"
-            if path in jsonPathTmp.keys():
+            if path in jsonPathTmp:
                 val = jsonPathTmp.get(path)[1]
                 if isinstance(val, (list, dict)):
                     val = copy.deepcopy(val)
@@ -95,7 +95,7 @@ class Builtins:
         @staticmethod
         def write(path, obj):
             "对缓存区的该虚拟路径的文件进行写操作"
-            if path in jsonPathTmp.keys():
+            if path in jsonPathTmp:
                 jsonPathTmp[path] = [True, obj]
             else:
                 raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)

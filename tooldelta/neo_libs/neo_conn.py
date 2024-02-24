@@ -762,12 +762,12 @@ class ThreadOmega:
                     player = self.get_player_by_name(chat.Name)
                     if not player:
                         name = chat.Name
-                        if name in self._specific_chat_listeners.keys():
+                        if name in self._specific_chat_listeners:
                             for callback in self._specific_chat_listeners[name]:
                                 self.start_new(callback, (chat,))
                         if chat.Name != chat.RawName:
                             name = chat.RawName
-                            if name in self._specific_chat_listeners.keys():
+                            if name in self._specific_chat_listeners:
                                 for callback in self._specific_chat_listeners[name]:
                                     self.start_new(callback, (chat,))
                     else:
@@ -944,7 +944,7 @@ class ThreadOmega:
     def _get_bind_player(self, uuidStr: str) -> Optional[PlayerKit]:
         if uuidStr is None or uuidStr == "":
             return None
-        if uuidStr in self._bind_players.keys():
+        if uuidStr in self._bind_players:
             return self._bind_players[uuidStr]
         bind_player = PlayerKit(uuidStr, self)
         self._bind_players[uuidStr] = bind_player
@@ -987,14 +987,14 @@ class ThreadOmega:
     def listen_specific_chat(
         self, specific_name: str, callback: Callable[[Chat], None]
     ):
-        if not specific_name in self._specific_chat_listeners.keys():
+        if not specific_name in self._specific_chat_listeners:
             self._specific_chat_listeners[specific_name] = []
         self._specific_chat_listeners[specific_name].append(callback)
 
     def listen_named_command_block(
         self, command_block_name: str, callback: Callable[[Chat], None]
     ):
-        if not command_block_name in self._name_command_block_msg_listeners.keys():
+        if not command_block_name in self._name_command_block_msg_listeners:
             self._name_command_block_msg_listeners[command_block_name] = []
         LIB.ListenCommandBlock(toCString(command_block_name))
         self._name_command_block_msg_listeners[command_block_name].append(callback)

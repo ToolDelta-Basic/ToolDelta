@@ -21,7 +21,7 @@ def input_int(__prompt="", errmsg="请输入整数"):
 
 
 def scb_exists(scbname):
-    return scbname in scbs.keys()
+    return scbname in scbs
 
 
 def test_overflow(num):
