@@ -47,9 +47,7 @@ def sendcmd(
     """
     check_avaliable(game_control)
     if game_control.sendcmd is None:
-        raise AttributeError(
-            f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化"
-        )
+        raise AttributeError(f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化")
     return game_control.sendcmd(cmd, waitForResp, timeout)
 
 

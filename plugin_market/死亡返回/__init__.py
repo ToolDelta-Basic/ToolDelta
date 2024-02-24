@@ -2,7 +2,11 @@ import os, time
 import ujson as json
 from 维度传送 import tp
 from tooldelta.plugin_load.injected_plugin import player_message, player_death
-from tooldelta.plugin_load.injected_plugin.movent import get_all_player, tellrawText, getPos
+from tooldelta.plugin_load.injected_plugin.movent import (
+    get_all_player,
+    tellrawText,
+    getPos,
+)
 
 
 __plugin_meta__ = {
