@@ -94,8 +94,7 @@ class PluginGroup:
                     if interrupt:
                         break
             return callback_list
-        else:
-            return None
+        return None
 
     def add_plugin(self, plugin):
         if not Plugin.__subclasscheck__(plugin):
@@ -138,8 +137,7 @@ class PluginGroup:
             if min_version and api.version < min_version:
                 raise self.PluginAPIVersionError(apiName, min_version, api.version)
             return api
-        else:
-            raise self.PluginAPINotFoundError(apiName)
+        raise self.PluginAPINotFoundError(apiName)
 
     def checkSystemVersion(self, need_vers: tuple[int, int, int]):
         if need_vers > self.linked_frame.sys_data.system_version:

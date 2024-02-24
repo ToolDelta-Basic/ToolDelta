@@ -19,7 +19,7 @@ def _CfgIsinstance(obj, typ):
             Cfg.PNumber: lambda: isinstance(obj, (int, float)) and obj > 0,
             Cfg.NNNumber: lambda: isinstance(obj, (int, float)) and obj >= 0,
         }.get(typ, lambda: isinstance(obj, typ))()
-    elif isinstance(typ, tuple):
+    if isinstance(typ, tuple):
         try:
             for i in typ:
                 result = {

@@ -80,8 +80,7 @@ class Builtins:
                     Builtins.SimpleJsonDataReader.SafeJsonDump(dat, path)
                 del jsonPathTmp[path]
                 return True
-            else:
-                return False
+            return False
 
         @staticmethod
         def read(path):
@@ -91,8 +90,7 @@ class Builtins:
                 if isinstance(val, (list, dict)):
                     val = copy.deepcopy(val)
                 return val
-            else:
-                raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
+            raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
         @staticmethod
         def write(path, obj):
@@ -153,10 +151,9 @@ class Builtins:
                     with open(filepath, "w", encoding="utf-8") as f:
                         Builtins.SimpleJsonDataReader.SafeJsonDump(default, f)
                     return default
-                else:
-                    with open(filepath, "r", encoding="utf-8") as f:
-                        res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
-                    return res
+                with open(filepath, "r", encoding="utf-8") as f:
+                    res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
+                return res
             except ujson.JSONDecodeError as err:
                 raise Builtins.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
@@ -229,8 +226,7 @@ class Builtins:
         "使玩家离开聊天栏对话模式"
         if player not in in_dialogue_list:
             return
-        else:
-            in_dialogue_list.remove(player)
+        in_dialogue_list.remove(player)
 
     @staticmethod
     def player_in_dialogue(player: str):

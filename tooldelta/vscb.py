@@ -36,13 +36,12 @@ def require_score(scbname, tar_name, not_set_to_0=False):
         raise ExecFailed(f"计分板 {scbname} 不存在")
     if scbs[scbname].get(tar_name) is not None:
         return scbs[scbname][tar_name]
-    elif not_set_to_0:
+    if not_set_to_0:
         scbs[scbname][tar_name] = 0
         return 0
-    else:
-        score = input_int(f"需要计分板 {scbname} 的 {tar_name} 的分数, 请输入: ")
-        scbs[scbname][tar_name] = score
-        return score
+    score = input_int(f"需要计分板 {scbname} 的 {tar_name} 的分数, 请输入: ")
+    scbs[scbname][tar_name] = score
+    return score
 
 
 def sendcmd(cmd: str, waitForResp=False, timeout=30):

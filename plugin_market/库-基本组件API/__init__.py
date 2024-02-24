@@ -53,13 +53,11 @@ class BasicFunctionLib(PluginAPI):
             if targetNameToGet == "*" or targetNameToGet.startswith("@"):
                 if scoreboardNameToGet == "*":
                     return [result, result2]
-                else:
-                    return result2[scoreboardNameToGet]
+                return result2[scoreboardNameToGet]
             else:
                 if scoreboardNameToGet == "*":
                     return result[targetNameToGet]
-                else:
-                    return result[targetNameToGet][scoreboardNameToGet]
+                return result[targetNameToGet][scoreboardNameToGet]
         except KeyError as err:
             raise Exception("Failed to get score: %s" % str(err))
 
@@ -117,13 +115,11 @@ class BasicFunctionLib(PluginAPI):
             }
         if targetNameToGet == "@a":
             return result
-        else:
-            if len(result) != 1:
-                raise Exception("Failed to get the position.")
-            if targetNameToGet.startswith("@a"):
-                return list(result.values())[0]
-            else:
-                return result[targetNameToGet]
+        if len(result) != 1:
+            raise Exception("Failed to get the position.")
+        if targetNameToGet.startswith("@a"):
+            return list(result.values())[0]
+        return result[targetNameToGet]
 
     def getItem(self, targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
         "获取玩家背包内物品数量: 目标选择器, 物品ID, 特殊值 = 所有"
@@ -140,8 +136,7 @@ class BasicFunctionLib(PluginAPI):
             raise Exception("Item name error.")
         if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
             return 0
-        else:
-            return int(result.OutputMessages[0].Parameters[1])
+        return int(result.OutputMessages[0].Parameters[1])
 
     def getTarget(self, sth: str, timeout: bool | int = 5) -> list:
         "获取符合目标选择器实体的列表"
@@ -155,16 +150,14 @@ class BasicFunctionLib(PluginAPI):
         if result:
             result = result[0]
             return result.split(", ")
-        else:
-            return []
+        return []
 
     def getBlockTile(self, x: int, y: int, z: int):
         "获取指定坐标的方块的ID"
         res = self.game_ctrl.sendwscmd(f"/testforblock {x} {y} {z} air", True)
         if res.SuccessCount:
             return "air"
-        else:
-            return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
+        return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
     @staticmethod
     def waitMsg(who: str, timeout: int = 30, exc=None):
@@ -185,7 +178,7 @@ class BasicFunctionLib(PluginAPI):
                 if r == EXC_PLAYER_LEAVE:
                     raise EXC_PLAYER_LEAVE
                 return r
-            elif time.time() - timer >= timeout:
+            if time.time() - timer >= timeout:
                 try:
                     active_basic_api.waitmsg_req.remove(who)
                 except:

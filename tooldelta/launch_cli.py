@@ -288,7 +288,7 @@ class FrameFBConn(StandardFrame):
                         self.cmds_reqs.remove(uuid)
                         del self.cmds_resp[uuid]
                         return Packet_CommandOutput(res[1])
-                    elif time.time() - waitStartTime > timeout:
+                    if time.time() - waitStartTime > timeout:
                         self.cmds_reqs.remove(uuid)
                         try:
                             # 特殊情况下只有 sendwscmd 能接收到返回的命令
@@ -308,7 +308,7 @@ class FrameFBConn(StandardFrame):
                         self.cmds_reqs.remove(uuid)
                         del self.cmds_resp[uuid]
                         return Packet_CommandOutput(res[1])
-                    elif time.time() - waitStartTime > timeout:
+                    if time.time() - waitStartTime > timeout:
                         self.cmds_reqs.remove(uuid)
                         raise TimeoutError("指令超时")
             else:
@@ -421,7 +421,7 @@ class FrameNeOmg(StandardFrame):
                     Print.print_with_info(f"ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
-                elif "[neOmega 接入点]: 就绪" in msg_orig:
+                if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
                 elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
                     Print.print_with_info("§a机器人已退出", "§b NOMG ")
@@ -462,10 +462,9 @@ class FrameNeOmg(StandardFrame):
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")
-        elif self.status == SysStatus.FB_CRASHED:
+        if self.status == SysStatus.FB_CRASHED:
             return Exception("NeOmega 已崩溃")
-        else:
-            return SystemError("未知的退出状态")
+        return SystemError("未知的退出状态")
 
     def download_libs(self):
         try:
@@ -540,9 +539,8 @@ class FrameNeOmg(StandardFrame):
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
-            else:
-                self.omega.send_player_command_omit_response(cmd)
-                return
+            self.omega.send_player_command_omit_response(cmd)
+            return
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
@@ -550,9 +548,8 @@ class FrameNeOmg(StandardFrame):
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
-            else:
-                self.omega.send_websocket_command_omit_response(cmd)
-                return
+            self.omega.send_websocket_command_omit_response(cmd)
+            return
 
         def sendwocmd(cmd: str):
             self.omega.send_settings_command(cmd)
@@ -587,8 +584,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             return SystemExit
-        else:
-            Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
+        Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
         self.set_omega(openat_port)
         Print.print_suc("已连接上 NEOMG 接入点进程.")
         pcks = [

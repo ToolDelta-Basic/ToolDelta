@@ -844,20 +844,18 @@ class ThreadOmega:
     ) -> Union[Dict[str, int], int]:
         if requires is None:
             return {k: v for k, v in self._packet_name_to_id_mapping.items()}
-        elif isinstance(requires, list):
+        if isinstance(requires, list):
             return {k: self._packet_name_to_id_mapping[k] for k in requires}
-        else:
-            return self._packet_name_to_id_mapping[requires]
+        return self._packet_name_to_id_mapping[requires]
 
     def get_packet_id_to_name_mapping(
         self, requires: Optional[Union[List[int], int]] = None
     ) -> Union[Dict[int, str], str]:
         if requires is None:
             return {k: v for k, v in self._packet_id_to_name_mapping.items()}
-        elif isinstance(requires, list):
+        if isinstance(requires, list):
             return {k: self._packet_id_to_name_mapping[k] for k in requires}
-        else:
-            return self._packet_id_to_name_mapping[requires]
+        return self._packet_id_to_name_mapping[requires]
 
     def listen_packets(
         self, targets: Union[str, List[str]], callback: Callable[[str, Any], None]
@@ -948,10 +946,9 @@ class ThreadOmega:
             return None
         if uuidStr in self._bind_players.keys():
             return self._bind_players[uuidStr]
-        else:
-            bind_player = PlayerKit(uuidStr, self)
-            self._bind_players[uuidStr] = bind_player
-            return bind_player
+        bind_player = PlayerKit(uuidStr, self)
+        self._bind_players[uuidStr] = bind_player
+        return bind_player
 
     def get_all_online_players(self):
         OmegaAvailable()

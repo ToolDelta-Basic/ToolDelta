@@ -40,11 +40,10 @@ def get_dotcs_env(__F, print_ins):
         del replaceByNext
         if not output:
             return print_ins.fmt_info(text, info)
+        if not replace:
+            print_ins.print_with_info(text, info, end=end)
         else:
-            if not replace:
-                print_ins.print_with_info(text, info, end=end)
-            else:
-                print_ins.print_with_info(text, info, end="\r")
+            print_ins.print_with_info(text, info, end="\r")
 
     class createThread(threading.Thread):
         def __init__(self, name, data=None, func="", output=True):
@@ -99,8 +98,7 @@ def get_dotcs_env(__F, print_ins):
             if not result:
                 return []
             return [result]
-        else:
-            return result.split(", ")
+        return result.split(", ")
 
     def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int:
         resultList = sendcmd("/scoreboard players list %s" % targetNameToGet, True)[
@@ -131,13 +129,11 @@ def get_dotcs_env(__F, print_ins):
             if targetNameToGet == "*" or targetNameToGet.startswith("@"):
                 if scoreboardNameToGet == "*":
                     return [result, result2]
-                else:
-                    return result2[scoreboardNameToGet]
+                return result2[scoreboardNameToGet]
             else:
                 if scoreboardNameToGet == "*":
                     return result[targetNameToGet]
-                else:
-                    return result[targetNameToGet][scoreboardNameToGet]
+                return result[targetNameToGet][scoreboardNameToGet]
         except KeyError as err:
             raise Exception("Failed to get score: %s" % str(err))
 
@@ -174,13 +170,11 @@ def get_dotcs_env(__F, print_ins):
             }
         if targetNameToGet == "@a":
             return result
-        else:
-            if len(result) != 1:
-                raise Exception("Failed to get the position.")
-            if targetNameToGet.startswith("@a"):
-                return list(result.values())[0]
-            else:
-                return result[targetNameToGet]
+        if len(result) != 1:
+            raise Exception("Failed to get the position.")
+        if targetNameToGet.startswith("@a"):
+            return list(result.values())[0]
+        return result[targetNameToGet]
 
     def getItem(targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
         if (
@@ -196,8 +190,7 @@ def get_dotcs_env(__F, print_ins):
             raise Exception("Item name error.")
         if result["OutputMessages"][0]["Message"] == "commands.clear.failure.no.items":
             return 0
-        else:
-            return int(result["OutputMessages"][0]["Parameters"][1])
+        return int(result["OutputMessages"][0]["Parameters"][1])
 
     def getStatus(statusName: str):
         if not os.path.isfile("data/dotcs_status_%s.txt" % statusName):

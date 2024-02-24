@@ -9,17 +9,15 @@ import shutil
 def _pretty_kb(n):
     if n >= 1048576:
         return f"{round(n / 1048576, 2)}M"
-    elif n >= 1024:
+    if n >= 1024:
         return f"{round(n / 1024, 2)}K"
-    else:
-        return f"{round(n, 1)}"
+    return f"{round(n, 1)}"
 
 
 def _path_get_filename(path: str):
     if "/" not in path:
         return None
-    else:
-        return path.split("/")[-1]
+    return path.split("/")[-1]
 
 
 def _is_common_text_file(url_path: str):
@@ -34,8 +32,7 @@ def get_file_size(url):
     if "Content-Length" in response.headers:
         file_size = int(response.headers["Content-Length"])
         return file_size
-    else:
-        return None
+    return None
 
 
 def download_file(f_url: str, f_dir: str, ignore_warnings=False):
@@ -100,13 +97,11 @@ def get_free_port(start=8080, end=65535):
             r = os.popen(f'netstat -aon|findstr ":{port}"', "r")
             if r.read() == "":
                 return port
-            else:
-                Print.print_war(f"端口 {port} 正被占用, 跳过")
+            Print.print_war(f"端口 {port} 正被占用, 跳过")
     else:
         for port in range(start, end):
             r = os.popen(f'netstat -aon|grep ":{port}"', "r")
             if r.read() == "":
                 return port
-            else:
-                Print.print_war(f"端口 {port} 正被占用, 跳过")
+            Print.print_war(f"端口 {port} 正被占用, 跳过")
     raise Exception(f"未找到空闲端口({start}~{end})")

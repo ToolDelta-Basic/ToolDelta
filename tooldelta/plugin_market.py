@@ -18,8 +18,7 @@ else:
 def _path_dir(path: str):
     if "/" not in path:
         return None
-    else:
-        return "/".join(path.split("/")[:-1])
+    return "/".join(path.split("/")[:-1])
 
 
 def _url_join(*urls):
@@ -161,8 +160,7 @@ class PluginMarket:
         if res == "y":
             self.download_plugin(plugin_data, all_plugins_dict)
             return True
-        else:
-            return False
+        return False
 
     def download_plugin(
         self,

@@ -168,13 +168,12 @@ class _Print:
                     + self.colormode_replace(setNextColor + text_line)
                 )
             return "\n".join(output_txts)
-        else:
-            return (
-                datetime.datetime.now().strftime("[%H:%M] ")
-                + self.colormode_replace(info, 7)
-                + " "
-                + self.colormode_replace(text)
-            )
+        return (
+            datetime.datetime.now().strftime("[%H:%M] ")
+            + self.colormode_replace(info, 7)
+            + " "
+            + self.colormode_replace(text)
+        )
 
     def c_log(self, inf: str, msg: str):
         for _g, _s in [

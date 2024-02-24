@@ -57,8 +57,7 @@ class JZQStage:
         if pos == "§7▒§f":
             self.Stage[(xpos - 1) * 3 + ypos] = self.luozi_type[typePlayer]
             return True
-        else:
-            return False
+        return False
 
     def 判定(self):
         for i in self.panding:
