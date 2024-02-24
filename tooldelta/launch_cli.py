@@ -290,12 +290,8 @@ class FrameFBConn(StandardFrame):
                         return Packet_CommandOutput(res[1])
                     if time.time() - waitStartTime > timeout:
                         self.cmds_reqs.remove(uuid)
-                        try:
-                            # 特殊情况下只有 sendwscmd 能接收到返回的命令
-                            Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
-                            return self.sendwscmd(cmd, True, timeout)
-                        except TimeoutError:
-                            raise
+                        Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
+                        return self.sendwscmd(cmd, True, timeout)
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             uuid = fbconn.SendWSCommand(self.con, cmd)
