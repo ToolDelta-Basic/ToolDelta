@@ -1,4 +1,7 @@
-import datetime
+import datetime, colorama
+
+# 防止输出颜色代码
+colorama.init(autoreset=True)
 
 try:
     from .logger import publicLogger

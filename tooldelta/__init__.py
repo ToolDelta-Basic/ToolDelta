@@ -1,7 +1,3 @@
-from colorama import init
-
-# 初始化 colorama 库
-init(autoreset=True)
 from .basic_mods import *
 from .packets import Packet_CommandOutput
 from .start_tool_delta import start_tool_delta
