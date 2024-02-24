@@ -91,7 +91,8 @@ class MapArtImporter(Plugin):
             try:
                 size = size.split("x")
                 sizex, sizey = int(size[0]) * 128, int(size[1]) * 128
-                assert sizex > 0 and sizey > 0
+                if not (sizex > 0 and sizey > 0):
+                    raise AssertionError
                 size = (sizex, sizey)
             except:
                 self.game_ctrl.say_to(player, "§c地图画尺寸格式应该像这样: 1x2")

@@ -96,7 +96,8 @@ class WorldEdit(Plugin):
                     blockData = text[8:].replace("陶瓦", "stained_hardened_clay")
                     try:
                         if signPlayerName in self.getTarget("@a[m=1]"):
-                            assert self.getX
+                            if not self.getX:
+                                raise AssertionError
                             self.game_ctrl.sendcmd(
                                 "/fill {} {} {} {} {} {} {}".format(
                                     self.getX,
@@ -124,7 +125,8 @@ class WorldEdit(Plugin):
                     and jsonPkt["NBTData"]["Text"] == "We cn"
                 ):
                     try:
-                        assert self.getX
+                        if not self.getX:
+                            raise AssertionError
                         signPlayerName = self.getTarget(
                             "@a[x=%d, y=%d, z=%d, c=1, r=10]"
                             % (
