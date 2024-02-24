@@ -124,13 +124,13 @@ def freeMem(address):
 
 
 def check_err_in_struct(r):
-    if r.err != None:
+    if r.err is not None:
         err = to_PyString(r.err)
         raise Exception(err)
 
 
 def check_err(r):
-    if r != None:
+    if r is not None:
         err = to_PyString(r)
         raise Exception(err)
 

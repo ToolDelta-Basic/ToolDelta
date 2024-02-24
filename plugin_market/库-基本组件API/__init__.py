@@ -78,7 +78,7 @@ class BasicFunctionLib(PluginAPI):
         result = self.game_ctrl.sendwscmd(
             "/querytarget " + targetNameToGet, True, timeout
         )
-        if result.OutputMessages[0].Success == False:
+        if result.OutputMessages[0].Success is False:
             raise Exception(
                 f"Failed to get the position: {result.OutputMessages[0].Parameters[0]}"
             )

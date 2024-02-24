@@ -147,7 +147,7 @@ def get_dotcs_env(__F, print_ins):
         result = sendcmd("/querytarget %s" % targetNameToGet, True, timeout)[
             "OutputMessages"
         ][0]
-        if result["Success"] == False:
+        if result["Success"] is False:
             raise Exception("Failed to get the position.")
         resultList = json.loads(result["Parameters"][0])
         result = {}

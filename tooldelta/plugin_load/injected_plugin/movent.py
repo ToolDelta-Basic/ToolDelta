@@ -304,7 +304,7 @@ def getTickingAreaList() -> dict | AttributeError:
     else:
         raise AttributeError("Failed to get the tickingarea list.")
 
-    if resultList[0].Success == False:
+    if resultList[0].Success is False:
         return result
     for tickareaData in resultList[1].Message.split("%dimension.dimensionName")[1:]:
         tickareaDimension = tickareaData.split(": \n")[0]
