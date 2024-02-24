@@ -21,6 +21,7 @@ def check_avaliable(sth: GameCtrl) -> Optional[AttributeError]:
 game_control: GameCtrl
 frame: Frame
 
+
 def set_frame(my_frame: Frame) -> None:
     """
     全局初始化框架
@@ -28,7 +29,7 @@ def set_frame(my_frame: Frame) -> None:
     参数:
         my_frame: 要设置的帧对象
     """
-    global frame, game_control # pylint: disable=global-statement
+    global frame, game_control  # pylint: disable=global-statement
     frame = my_frame
     game_control = my_frame.get_game_control()
 
@@ -89,6 +90,7 @@ def sendPacket(pktID: int, pkt: str) -> None:
     check_avaliable(game_control)
     game_control.sendPacket(pktID, pkt)
 
+
 def sendfbcmd(cmd: str) -> None:
     """向FastBuilder发送命令\n
     在除FastBuilder外的其他启动器上不可用
@@ -109,7 +111,8 @@ def rawText(playername: str, text: str) -> None:
         text: 要发送的文本
     """
 
-    sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
+    sendcmd(
+        r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
 
 
 def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
@@ -122,7 +125,8 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
         text: 消息文本
     """
     if title is None:
-        sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
+        sendcmd(
+            r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
     else:
         sendcmd(
             r"""/tellraw %s {"rawtext":[{"text":"<%s> §r%s"}]}"""
@@ -219,7 +223,8 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         raise ValueError("Player not found.")
     result = sendwscmd("/querytarget " + targetNameToGet, True, timeout)
     if not result.OutputMessages[0].Success:
-        raise ValueError(f"Failed to get the position: {result.OutputMessages[0]}")
+        raise ValueError(
+            f"Failed to get the position: {result.OutputMessages[0]}")
     parameter = result.OutputMessages[0].Parameters[0]
     if isinstance(parameter, str):
         resultList = json.loads(parameter)
@@ -229,7 +234,8 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     for i in resultList:
         if game_control.players_uuid is None:
             raise AttributeError("Failed to get the players_uuid.")
-        targetName = find_key_from_value(game_control.players_uuid, i["uniqueId"])
+        targetName = find_key_from_value(
+            game_control.players_uuid, i["uniqueId"])
         x = i["position"]["x"] if i["position"]["x"] >= 0 else i["position"]["x"] - 1
         y = i["position"]["y"] - 1.6200103759765
         z = i["position"]["z"] if i["position"]["z"] >= 0 else i["position"]["z"] - 1

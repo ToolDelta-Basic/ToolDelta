@@ -169,7 +169,8 @@ async def _(playername: str, msg: str):
                                 nexPlayer = i[Game_JZQ.轮流()]
                                 Game_JZQ.stage_display(i, nexPlayer)
                                 sendcmd("/title %s title §e井字棋" % nexPlayer)
-                                sendcmd("/title %s subtitle §7惜败.." % nexPlayer)
+                                sendcmd("/title %s subtitle §7惜败.." %
+                                        nexPlayer)
                                 JZQ_Rooms.remove(i)
                                 Game_JZQ.重置(True)
                                 continue

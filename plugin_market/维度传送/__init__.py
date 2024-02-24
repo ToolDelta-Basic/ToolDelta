@@ -16,6 +16,7 @@ __plugin_meta__ = {
     "author": "wling/7912",
 }
 
+
 def tp(target, *, x, y, z, dimension):
     if dimension == 0:
         sendcmd(
