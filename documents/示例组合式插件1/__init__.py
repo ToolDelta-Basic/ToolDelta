@@ -53,7 +53,7 @@ class MyPluginExample(Plugin):
             # 发送一条指令
             self.game_ctrl.sendcmd(f"/scoreboard players add {killer} kill_score 1")
 
-    def on_player_join(self, player):
+    def on_player_leave(self, player):
         # 玩家退出游戏.
         self.game_ctrl.say_to("@a", f"{player} 退出游戏")
 
