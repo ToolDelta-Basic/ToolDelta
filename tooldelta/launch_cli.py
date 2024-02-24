@@ -42,7 +42,8 @@ class StandardFrame:
         for i in pcks:
             self.need_listen_packets.add(i)
 
-    def launch(self):
+    @staticmethod
+    def launch():
         raise Exception("Cannot launch this launcher")
 
     def listen_launched(self, cb):
@@ -50,10 +51,12 @@ class StandardFrame:
 
     def close_fb(self): ...
 
-    def get_players_and_uuids(self):
+    @staticmethod
+    def get_players_and_uuids():
         return None
 
-    def get_bot_name(self):
+    @staticmethod
+    def get_bot_name():
         return None
 
     get_all_players = None
@@ -338,7 +341,8 @@ class FrameNeOmg(StandardFrame):
         self.status = SysStatus.LOADING
         self.secret_exit_key = ""
 
-    def set_neomg_lib(self):
+    @staticmethod
+    def set_neomg_lib():
         global neo_conn
         from .neo_libs import neo_conn
 

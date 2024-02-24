@@ -115,14 +115,16 @@ class Cfg:
         self.check_dict_2(standard_type, obj)
         return obj
 
-    def default_cfg(self, path: str, default: dict, force: bool = False):
+    @staticmethod
+    def default_cfg(path: str, default: dict, force: bool = False):
         # 向path路径写入json文本, 若文件不存在或参数force为True, 将写入提供的默认json文本
         path = path if path.endswith(".json") else path + ".json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding="utf-8") as f:
                 ujson.dump(default, f, indent=4, ensure_ascii=False)
 
-    def exists(self, path: str):
+    @staticmethod
+    def exists(path: str):
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
 
     def getPluginConfigAndVersion(

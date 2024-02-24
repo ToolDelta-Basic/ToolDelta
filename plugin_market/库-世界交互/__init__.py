@@ -8,8 +8,8 @@ class GameInteractive(PluginAPI, Plugin):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
 
+    @staticmethod
     def make_packet_command_block_update(
-        self,
         position: tuple[int, int, int],
         command: str,
         mode: int = 0,

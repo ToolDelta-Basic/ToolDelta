@@ -667,7 +667,8 @@ class ThreadOmega:
         self._omega_disconnected_lock.wait()
         return self._omega_disconnected_reason
 
-    def _create_lock_and_result_setter(self):
+    @staticmethod
+    def _create_lock_and_result_setter():
         lock=threading.Lock()
         lock.acquire()
         ret=[None]
@@ -697,13 +698,16 @@ class ThreadOmega:
         del self._omega_cmd_callback_events[retriever_id]
         return res
 
-    def send_settings_command(self,cmd:str):
+    @staticmethod
+    def send_settings_command(cmd:str):
         SendSettingsCommand(cmd)
 
-    def send_websocket_command_omit_response(self,cmd:str):
+    @staticmethod
+    def send_websocket_command_omit_response(cmd:str):
         SendWebSocketCommandOmitResponse(cmd)
 
-    def send_player_command_omit_response(self,cmd:str):
+    @staticmethod
+    def send_player_command_omit_response(cmd:str):
         SendPlayerCommandOmitResponse(cmd)
 
     def get_packet_name_to_id_mapping(self,requires:Optional[Union[List[str],str]]=None)->Union[Dict[str,int],int]:
@@ -798,7 +802,8 @@ class ThreadOmega:
     def get_bot_uuid_str(self) -> str:
         return self._bot_basic_info.BotUUIDStr
 
-    def get_extend_info(self) ->ClientMaintainedExtendInfo:
+    @staticmethod
+    def get_extend_info() ->ClientMaintainedExtendInfo:
         OmegaAvailable()
         return ClientMaintainedExtendInfo(**json.loads(toPyString(LIB.GetClientMaintainedExtendInfo())))
 
@@ -855,7 +860,8 @@ class ThreadOmega:
         LIB.ListenCommandBlock(toCString(command_block_name))
         self._name_command_block_msg_listeners[command_block_name].append(callback)
 
-    def place_command_block(self,place_option:CommandBlockPlaceOption):
+    @staticmethod
+    def place_command_block(place_option:CommandBlockPlaceOption):
         LIB.PlaceCommandBlock(toCString(json.dumps(place_option.__dict__)))
 
     def __del__(self):
