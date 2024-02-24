@@ -1,17 +1,13 @@
-import os
-import sys
-import traceback
+import os, sys, traceback
 from ...color_print import Print
 from ...builtins import Builtins
 from ...cfg import Cfg
 from ..funcs import unzip_plugin
 
-
 class Plugin:
     name = "<未命名插件>"
     version = (0, 0, 1)
     author = "?"
-
 
 class PluginAPI:
     name = "<未命名插件api>"
@@ -20,13 +16,11 @@ class PluginAPI:
     def __init__(self, _):
         raise Exception("需要初始化__init__方法")
 
-
 def read_plugin_from_new(plugin_grp, root_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/ToolDelta组合式插件")
     for plugin_dir in os.listdir(PLUGIN_PATH):
         if (
-            not os.path.isdir(os.path.join(
-                PLUGIN_PATH, plugin_dir.strip(".zip")))
+            not os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir.strip(".zip")))
             and os.path.isfile(os.path.join(PLUGIN_PATH, plugin_dir))
             and plugin_dir.endswith(".zip")
         ):
@@ -44,12 +38,10 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
             plugin_grp.pluginAPI_added_cache.clear()
             try:
                 if os.path.isfile(
-                    os.path.join("插件文件/ToolDelta组合式插件",
-                                 plugin_dir, "__init__.py")
+                    os.path.join("插件文件/ToolDelta组合式插件", plugin_dir, "__init__.py")
                 ):
                     with open(
-                        os.path.join("插件文件/ToolDelta组合式插件",
-                                     plugin_dir, "__init__.py"),
+                        os.path.join("插件文件/ToolDelta组合式插件", plugin_dir, "__init__.py"),
                         "r",
                         encoding="utf-8",
                     ) as f:
@@ -98,8 +90,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                 )
                 plugin_grp.normal_plugin_loaded_num += 1
                 if plugin_grp.plugin_added_cache["packets"] != []:
-                    # type: ignore
-                    for pktType, func in plugin_grp.plugin_added_cache["packets"]:
+                    for pktType, func in plugin_grp.plugin_added_cache["packets"]:  # type: ignore
                         plugin_grp._add_listen_packet_id(pktType)
                         plugin_grp._add_listen_packet_func(
                             pktType, getattr(plugin_body, func.__name__)
@@ -110,8 +101,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                             plugin_grp.plugins_api[_api] = plugin_body
                         else:
                             (apiName, api) = _api
-                            plugin_grp.plugins_api[apiName] = api(
-                                plugin_grp.linked_frame)
+                            plugin_grp.plugins_api[apiName] = api(plugin_grp.linked_frame)
             except AssertionError as err:
                 if err.args[0] == 2:
                     Print.print_err(
@@ -133,8 +123,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                 Print.print_err(f"插件 {plugin_dir} 需要更高版本的ToolDelta加载: {err}")
             except Exception as err:
                 if "() takes no arguments" in str(err):
-                    Print.print_err(
-                        f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
+                    Print.print_err(f"插件 {plugin_dir} 不合法： 主类初始化时应接受 1 个参数: Frame")
                 else:
                     Print.print_err(f"加载插件 {plugin_dir} 出现问题, 报错如下: ")
                     Print.print_err("§c" + traceback.format_exc())

@@ -1,5 +1,4 @@
-import os
-import time
+import os, time
 import ujson as json
 from 维度传送 import tp
 from tooldelta.plugin_load.injected_plugin import player_message, player_death
@@ -38,8 +37,7 @@ async def _(playername, msg):
         with open(config_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         if playername not in data:
-            tellrawText('@a[name="%s"]' %
-                        playername, "§l§4ERROR§r", "§c未找到记录.")
+            tellrawText('@a[name="%s"]' % playername, "§l§4ERROR§r", "§c未找到记录.")
             return
         deathData = data[playername]
         tp(

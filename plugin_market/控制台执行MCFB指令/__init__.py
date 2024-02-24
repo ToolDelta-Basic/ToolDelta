@@ -26,8 +26,7 @@ class ConsoleCommands(Plugin):
             ["wo/"], "[指令]", "执行控制台权限指令", self.SendWOCmdOnConsole
         )
         self.frame.add_console_cmd_trigger(
-            ["fb",
-                "!"], "[指令]", "执行FB指令 (fb + <fb指令>)", self.SendFBCmdOnConsole
+            ["fb", "!"], "[指令]", "执行FB指令 (fb + <fb指令>)", self.SendFBCmdOnConsole
         )
         self.frame.add_console_cmd_trigger(
             ["list"],
