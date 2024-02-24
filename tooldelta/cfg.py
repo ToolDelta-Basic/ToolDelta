@@ -1,4 +1,5 @@
-import ujson, os
+import ujson
+import os
 
 NoneType = type(None)
 

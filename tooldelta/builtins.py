@@ -1,5 +1,11 @@
 from .color_print import Print
-import ujson, os, time, threading, traceback, copy, ctypes
+import ujson
+import os
+import time
+import threading
+import traceback
+import copy
+import ctypes
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}

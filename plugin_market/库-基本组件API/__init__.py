@@ -1,4 +1,5 @@
-import json, time
+import json
+import time
 from tooldelta import Plugin, PluginAPI, plugins, Frame
 
 

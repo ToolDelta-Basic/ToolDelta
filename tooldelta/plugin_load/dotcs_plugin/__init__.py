@@ -1,6 +1,8 @@
 from ..classic_plugin import Plugin
 from ...color_print import Print
-import re, os, sys
+import re
+import os
+import sys
 
 NOT_IMPORTALL_RULE = re.compile(r"from .* import \*")
 

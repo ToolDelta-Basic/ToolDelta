@@ -1,5 +1,6 @@
 # FURTURE library for Plugin Emulator
-import json, re
+import json
+import re
 from .color_print import Print
 
 FLOW_UP = 2**31 - 1

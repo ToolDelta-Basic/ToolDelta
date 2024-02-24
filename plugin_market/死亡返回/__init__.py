@@ -1,4 +1,5 @@
-import os, time
+import os
+import time
 import ujson as json
 from 维度传送 import tp
 from tooldelta.plugin_load.injected_plugin import player_message, player_death
