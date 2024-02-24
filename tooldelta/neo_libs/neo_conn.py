@@ -731,10 +731,9 @@ class ThreadOmega:
                     ret = LIB.ConsumeMCPacket()
                     if toPyString(ret.convertError) != "":
                         raise ValueError(toPyString(ret.convertError))
-                    else:
-                        jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
-                        for listener in listeners:
-                            self.start_new(listener, (packetTypeName, jsonPkt))
+                    jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
+                    for listener in listeners:
+                        self.start_new(listener, (packetTypeName, jsonPkt))
             elif eventType == "PlayerChange":
                 playerUUID = retriever
                 if len(self._player_change_listeners) == 0:

@@ -185,8 +185,7 @@ class BasicFunctionLib(PluginAPI):
                     pass
                 if exc is not None:
                     raise exc
-                else:
-                    return None
+                return None
 
     def getPosXYZ(self, player, timeout=30) -> tuple[float, float, float]:
         "获取玩家坐标的X, Y, Z值"

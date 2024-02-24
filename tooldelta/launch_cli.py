@@ -133,7 +133,7 @@ class FrameFBConn(StandardFrame):
                     Print.print_err(f"§4{max_con_time}秒内未连接上FB，已退出")
                     self.close_fb()
                     raise SystemExit
-                elif self.status == SysStatus.FB_LAUNCH_EXC:
+                if self.status == SysStatus.FB_LAUNCH_EXC:
                     Print.print_err("§4连接FB时出现问题，已退出")
                     self.close_fb()
                     raise SystemExit
