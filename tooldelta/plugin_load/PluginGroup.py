@@ -1,12 +1,7 @@
 from tooldelta.basic_mods import dotcs_module_env
 from tooldelta.color_print import Print
 from tooldelta.get_python_libs import get_single_lib
-from tooldelta.plugin_load import (
-    NON_FUNC,
-    classic_plugin,
-    dotcs_plugin,
-    injected_plugin,
-)
+from tooldelta.plugin_load import NON_FUNC, classic_plugin, dotcs_plugin, injected_plugin
 from tooldelta.plugin_load.classic_plugin import Plugin, PluginAPI
 
 
@@ -60,7 +55,7 @@ class PluginGroup:
         self.linked_frame.linked_plugin_group = self
 
     @staticmethod
-    def require(module_name: str, pip_name=""):
+    def require(module_name: str, pip_name = ""):
         try:
             importlib.import_module(module_name)
         except (ModuleNotFoundError, ImportError):
@@ -130,9 +125,7 @@ class PluginGroup:
 
         return _add_plugin_2_api
 
-    def get_plugin_api(
-        self, apiName: str, min_version: tuple | None = None
-    ) -> PluginAPI:
+    def get_plugin_api(self, apiName: str, min_version: tuple | None = None) -> PluginAPI:
         api = self.plugins_api.get(apiName, None)
         if api:
             if min_version and api.version < min_version:
@@ -182,21 +175,27 @@ class PluginGroup:
                         # A strong desire to remove "try" block !!
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}"
+                        )
                 lastTime1m = nowTime
             if nowTime - lastTime30s > 30:
                 for fname, func in self._dotcs_repeat_threadings["30s"]:
                     try:
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}"
+                        )
                 lastTime30s = nowTime
             if nowTime - lastTime10s > 10:
                 for fname, func in self._dotcs_repeat_threadings["10s"]:
                     try:
                         func()
                     except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}")
+                        Print.print_err(
+                            f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}"
+                        )
                 lastTime10s = nowTime
             for fname, func in self._dotcs_repeat_threadings["1s"]:
                 try:

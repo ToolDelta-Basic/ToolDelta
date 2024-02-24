@@ -5,7 +5,6 @@ from typing import Callable
 
 plugins.checkSystemVersion((0, 1, 8))
 
-
 @dataclass
 class ChatbarTriggers:
     triggers: list
@@ -14,7 +13,6 @@ class ChatbarTriggers:
     func: Callable
     args_pd: Callable
     op_only: bool
-
 
 # 使用 api = plugins.get_plugin_api("聊天栏菜单") 来获取到这个api
 @plugins.add_plugin_as_api("聊天栏菜单")
@@ -31,7 +29,6 @@ class ChatbarMenu(Plugin, PluginAPI):
             print("你摸了: ", " 和 ".join(args))
     >>> menu.add_trigger(["摸鱼", "摸鱼鱼"], "<鱼的名字>", "随便摸一下鱼", MoYu, lambda a: a >= 1)
     """
-
     name = "聊天栏菜单"
     author = "SuperScript"
     version = (0, 0, 4)
@@ -39,33 +36,25 @@ class ChatbarMenu(Plugin, PluginAPI):
         "help菜单样式": {
             "菜单头": "§7>>> §l§bＴｏｏｌＤｅｌｔａ\n§r§l===============================",
             "菜单列表": " - [菜单指令][参数提示] §7§o[菜单功能说明]",
-            "菜单尾": "§r§l=============================\n§r>>> §7Producted by §fToolDelta",
+            "菜单尾": "§r§l=============================\n§r>>> §7Producted by §fToolDelta"
         },
-        "/help触发词": [".help"],
+        "/help触发词": [".help"]
     }
     STD_CFG_TYPE = {
-        "help菜单样式": {"菜单头": str, "菜单列表": str, "菜单尾": str},
-        "/help触发词": [r"%list", str],
+        "help菜单样式": {
+            "菜单头": str,
+            "菜单列表": str,
+            "菜单尾": str
+        },
+        "/help触发词": [r"%list", str]
     }
     version = (0, 0, 3)
     chatbar_triggers: list[ChatbarTriggers] = []
-
     def __init__(self, frame: Frame):
         self.game_ctrl = frame.get_game_control()
-        self.cfg, _ = Config.getPluginConfigAndVersion(
-            self.name, self.STD_CFG_TYPE, self.DEFAULT_CFG, (0, 0, 1)
-        )
-
+        self.cfg, _ = Config.getPluginConfigAndVersion(self.name, self.STD_CFG_TYPE, self.DEFAULT_CFG, (0, 0, 1))
     # ----API----
-    def add_trigger(
-        self,
-        triggers: list[str],
-        argument_hint: str,
-        usage: str,
-        func,
-        args_pd=lambda _: True,
-        op_only=False,
-    ):
+    def add_trigger(self, triggers: list[str], argument_hint: str, usage: str, func, args_pd = lambda _: True, op_only = False):
         # triggers: 所有命令触发词
         # arg_hint: 提示词(命令参数)
         # usage: 显示的命令说明
@@ -77,45 +66,25 @@ class ChatbarMenu(Plugin, PluginAPI):
         for tri in triggers:
             if not tri.startswith("."):
                 triggers[triggers.index(tri)] = "." + tri
-        self.chatbar_triggers.append(
-            ChatbarTriggers(triggers, argument_hint, usage, func, args_pd, op_only)
-        )
-
+        self.chatbar_triggers.append(ChatbarTriggers(triggers, argument_hint, usage, func, args_pd, op_only))
     # ------------
     def on_player_message(self, player: str, msg: str):
         if msg in self.cfg["/help触发词"]:
-            is_op_mode = bool(
-                self.game_ctrl.sendcmd(
-                    "/testfor @a[name=" + player + ",m=1]", True
-                ).SuccessCount
-            )
+            is_op_mode = bool(self.game_ctrl.sendcmd("/testfor @a[name=" + player + ",m=1]", True).SuccessCount)
             self.game_ctrl.say_to(player, self.cfg["help菜单样式"]["菜单头"])
             for tri in self.chatbar_triggers:
                 if not tri.op_only or (is_op_mode and tri.op_only):
-                    self.game_ctrl.say_to(
-                        player,
-                        Builtins.ArgsReplacement(
-                            {
-                                "[菜单指令]": " / ".join(tri.triggers),
-                                "[参数提示]": " " + tri.argument_hint
-                                if tri.argument_hint
-                                else "",
-                                "[菜单功能说明]": ""
-                                if tri.usage is None
-                                else "以" + tri.usage,
-                            }
-                        ).replaceTo(self.cfg["help菜单样式"]["菜单列表"]),
-                    )
+                    self.game_ctrl.say_to(player, Builtins.ArgsReplacement({
+                        "[菜单指令]": " / ".join(tri.triggers),
+                        "[参数提示]": ' ' + tri.argument_hint if tri.argument_hint else "",
+                        "[菜单功能说明]": "" if tri.usage is None else "以" + tri.usage
+                    }).replaceTo(self.cfg["help菜单样式"]["菜单列表"]))
             self.game_ctrl.say_to(player, self.cfg["help菜单样式"]["菜单尾"])
         elif msg.startswith("."):
             for tri in self.chatbar_triggers:
                 for trigger in tri.triggers:
                     if msg.startswith(trigger):
-                        is_op_mode = bool(
-                            self.game_ctrl.sendcmd(
-                                "/testfor @a[name=" + player + ",m=1]", True
-                            ).SuccessCount
-                        )
+                        is_op_mode = bool(self.game_ctrl.sendcmd("/testfor @a[name=" + player + ",m=1]", True).SuccessCount)
                         if (not is_op_mode) and tri.op_only:
                             self.game_ctrl.say_to(player, "§c创造模式下才可以使用该菜单项")
                             return

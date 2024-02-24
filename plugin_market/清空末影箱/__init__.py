@@ -24,7 +24,7 @@ async def _(playername, message):
             if player_entity_clear == i:
                 for i in range(0, 27):
                     sendcmd(
-                        f"/replaceitem entity {player_entity_clear} slot.enderchest {str(i)} air"
+                        f'/replaceitem entity {player_entity_clear} slot.enderchest {str(i)} air'
                     )
                 tellrawText(playername, text="§l§a清空末影箱  成功")
                 return

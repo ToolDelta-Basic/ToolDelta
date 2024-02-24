@@ -21,7 +21,6 @@ def check_avaliable(sth: GameCtrl) -> Optional[AttributeError]:
 game_control: GameCtrl
 frame: Frame
 
-
 def set_frame(my_frame: Frame) -> None:
     """
     全局初始化框架
@@ -29,7 +28,7 @@ def set_frame(my_frame: Frame) -> None:
     参数:
         my_frame: 要设置的帧对象
     """
-    global frame, game_control  # pylint: disable=global-statement
+    global frame, game_control # pylint: disable=global-statement
     frame = my_frame
     game_control = my_frame.get_game_control()
 
@@ -47,7 +46,9 @@ def sendcmd(
     """
     check_avaliable(game_control)
     if game_control.sendcmd is None:
-        raise AttributeError(f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化")
+        raise AttributeError(
+            f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化"
+        )
     return game_control.sendcmd(cmd, waitForResp, timeout)
 
 
@@ -87,7 +88,6 @@ def sendPacket(pktID: int, pkt: str) -> None:
     """
     check_avaliable(game_control)
     game_control.sendPacket(pktID, pkt)
-
 
 def sendfbcmd(cmd: str) -> None:
     """向FastBuilder发送命令\n
