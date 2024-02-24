@@ -1,4 +1,6 @@
-import os, sys, traceback
+import os
+import sys
+import traceback
 from ...color_print import Print
 from ...builtins import Builtins
 from ...cfg import Cfg

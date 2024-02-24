@@ -1,4 +1,8 @@
-import requests, json, os, platform, shutil
+import requests
+import json
+import os
+import platform
+import shutil
 import tempfile
 from . import urlmethod
 from .builtins import Builtins
