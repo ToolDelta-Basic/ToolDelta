@@ -108,7 +108,6 @@ def rawText(playername: str, text: str) -> None:
         playername: 玩家名称
         text: 要发送的文本
     """
-
     sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
 
 
