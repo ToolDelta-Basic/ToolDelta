@@ -54,7 +54,8 @@ class PluginGroup:
         self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
         self.linked_frame.linked_plugin_group = self
 
-    def require(self, module_name: str, pip_name = ""):
+    @staticmethod
+    def require(module_name: str, pip_name = ""):
         try:
             importlib.import_module(module_name)
         except (ModuleNotFoundError, ImportError):

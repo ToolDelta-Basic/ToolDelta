@@ -124,7 +124,8 @@ class BasicFunctionLib(PluginAPI):
         else:
             return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
-    def waitMsg(self, who: str, timeout: int  = 30, exc = None):
+    @staticmethod
+    def waitMsg(who: str, timeout: int  = 30, exc = None):
         active_basic_api: ActivatePluginAPI = active_basic_apis[0]
         """
         使用其来等待一个玩家的聊天栏回复, 超时则引发exc给定的异常, 没有给定时超时返回None

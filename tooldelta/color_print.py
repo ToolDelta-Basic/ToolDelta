@@ -74,7 +74,8 @@ class _Print:
             + "\033[0m"
         )
 
-    def _strike(self, text: str):
+    @staticmethod
+    def _strike(text: str):
         text_ok = ""
         strikeMode = False
         i = 0

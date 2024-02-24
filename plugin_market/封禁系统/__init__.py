@@ -103,7 +103,8 @@ class BanSystem(Plugin, PluginAPI):
             "[ban原因]": ban_reason or "未知"
         }, self.cfg[cfg_key])
 
-    def rec_ban_data(self, player: str, data):
+    @staticmethod
+    def rec_ban_data(player: str, data):
         Builtins.SimpleJsonDataReader.writeFileTo(
             "封禁系统", player, data
         )

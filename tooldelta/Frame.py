@@ -57,7 +57,8 @@ class Frame:
         lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     )
 
-    def check_use_token(self, tok_name="", check_md=""):
+    @staticmethod
+    def check_use_token(tok_name="", check_md=""):
         res = sys_args.sys_args_to_dict(sys.argv)
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
@@ -176,7 +177,8 @@ class Frame:
             self.serverNumber, self.serverPasswd, fbtoken, auth_server
         )
 
-    def upgrade_cfg(self, cfg_std):
+    @staticmethod
+    def upgrade_cfg(cfg_std):
         # 升级本地的配置文件
         old_cfg = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
@@ -196,7 +198,8 @@ class Frame:
             Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
         return need_upgrade_cfg
 
-    def welcome(self):
+    @staticmethod
+    def welcome():
         # 欢迎提示
         Print.print_with_info(
             f"§d{PRG_NAME} Panel Embed By SuperScript", Print.INFO_LOAD
@@ -212,13 +215,15 @@ class Frame:
         )
         Print.print_with_info(f"§d{PRG_NAME} Panel 已启动", Print.INFO_LOAD)
 
-    def plugin_load_finished(self, plugins: PluginGroup):
+    @staticmethod
+    def plugin_load_finished(plugins: PluginGroup):
         # 插件成功载入提示
         Print.print_suc(
             f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin_loaded_num}§a 个注入式插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
         )
 
-    def basic_operation(self):
+    @staticmethod
+    def basic_operation():
         # 初始化文件夹
         os.makedirs("插件文件/原DotCS插件", exist_ok=True)
         os.makedirs("插件文件/ToolDelta注入式插件", exist_ok=True)
@@ -230,7 +235,8 @@ class Frame:
         os.makedirs("data/status", exist_ok=True)
         os.makedirs("data/players", exist_ok=True)
 
-    def fbtokenFix(self):
+    @staticmethod
+    def fbtokenFix():
         # 对异常FbToken的自动修复
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
@@ -356,7 +362,8 @@ class Frame:
         gcl: GameCtrl = self.link_game_ctrl
         return gcl
 
-    def safe_close(self):
+    @staticmethod
+    def safe_close():
         builtins.safe_close()
         publicLogger._exit()
         Print.print_inf("已保存数据与日志等信息.")
