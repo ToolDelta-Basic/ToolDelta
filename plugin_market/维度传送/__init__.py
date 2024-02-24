@@ -111,8 +111,6 @@ async def _() -> None:
                     sendcmd("/setblock 77905 1 77905 portal")
                 await asyncio.sleep(1)
                 sendcmd("/tp @s 77905 0 77905")
-                while getPos(get_robotname())["dimension"] != 1:
-                    pass
                 await asyncio.sleep(1)
                 await asyncio.sleep(1)
                 sendcmd("/tickingarea add 77904 0 77904 77919 0 77919 td_the_nether")
@@ -135,8 +133,6 @@ async def _() -> None:
                     await asyncio.sleep(1)
                     sendcmd("/tp @s 77905 1 77905")
                     await asyncio.sleep(1)
-                    while getPos(get_robotname())["dimension"] != 1:
-                        pass
                     await asyncio.sleep(1)
                 await asyncio.sleep(2)
                 sendcmd("/tp @s 77912 1 77912", True)
@@ -146,8 +142,6 @@ async def _() -> None:
                 sendcmd("/summon armor_stand td_the_nether 77912 1 77912")
             if getPos(get_robotname())["dimension"] == 1:
                 sendcmd("/tp @s @e[type=armor_stand, name=td_overworld]", True)
-                while getPos(get_robotname())["dimension"] != 0:
-                    pass
         await asyncio.sleep(1)
         if dimension == 2:
             if "td_the_end" not in tickareaList:
@@ -158,8 +152,6 @@ async def _() -> None:
                     sendcmd("/setblock 77918 1 77918 end_portal")
                     await asyncio.sleep(1)
                 sendcmd("/tp @s 77918 0 77918")
-                while getPos(get_robotname())["dimension"] != 2:
-                    pass
                 await asyncio.sleep(1)
                 await asyncio.sleep(1)
                 sendcmd("/tickingarea add 77904 0 77904 77919 0 77919 td_the_end")
@@ -177,8 +169,6 @@ async def _() -> None:
                         sendcmd("/setblock 77918 1 77918 end_portal")
                     await asyncio.sleep(1)
                 sendcmd("/tp @s 77918 0 77918")
-                while getPos(get_robotname())["dimension"] != 2:
-                    pass
                 await asyncio.sleep(1)
                 await asyncio.sleep(1)
                 sendcmd("/tp @s 77912 1 77912", True)
