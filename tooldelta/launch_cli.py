@@ -12,6 +12,8 @@ from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
+from .neo_libs import neo_conn
+from . import fbconn
 import threading
 
 
@@ -85,9 +87,6 @@ class FrameFBConn(StandardFrame):
     cmds_resp = {}
 
     def __init__(self, serverNumber, password, fbToken, auth_server):
-        global fbconn
-        from . import fbconn
-
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
         self.init_all_functions()
@@ -337,15 +336,9 @@ class FrameNeOmg(StandardFrame):
         self.injected = False
         self.omega = None
         self.download_libs()
-        self.set_neomg_lib()
         self.init_all_functions()
         self.status = SysStatus.LOADING
         self.secret_exit_key = ""
-
-    @staticmethod
-    def set_neomg_lib():
-        global neo_conn
-        from .neo_libs import neo_conn
 
     def set_omega(self, openat_port):
         retries = 0

@@ -70,7 +70,7 @@ class JZQStage:
         return False
 
     def 判死(self):
-        return not "§7▒§f" in self.Stage
+        return "§7▒§f" not in self.Stage
 
     def 重置(self, done=False):
         self.__time = 180

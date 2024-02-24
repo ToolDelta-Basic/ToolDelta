@@ -56,10 +56,10 @@ class ToolDeltaLogger:
     def _check_is_another_day(self):
         # 判断记录日志的时候是否已经是第二天, 是的话就变更文件名.
         if time.strftime("%Y-%m-%d") != self.now_day:
-            self._exit()
+            self.exit()
             self.open_wrapper_io(self.path)
 
-    def _exit(self):
+    def exit(self):
         if self.writable:
             self.writable = False
             self._save_log()

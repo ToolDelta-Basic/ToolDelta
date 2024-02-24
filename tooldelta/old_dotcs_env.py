@@ -21,7 +21,7 @@ def get_dotcs_env(__F, print_ins):
     allplayers = __F.link_game_ctrl.allplayers
     robotname = __F.link_game_ctrl.bot_name
     XUID2playerName = __F.link_game_ctrl.players_uuid
-    threadList = __F._old_dotcs_threadinglist
+    threadList = __F.old_dotcs_threadinglist
     admin = adminhigh = [robotname]
     tellrawText = lambda target, dispname=None, text="": __F.link_game_ctrl.say_to(
         target, dispname + " " + text if dispname else text
@@ -74,9 +74,9 @@ def get_dotcs_env(__F, print_ins):
         def get_id(self):
             if hasattr(self, "_thread_id"):
                 return self._thread_id
-            for id, thread in threading._active.items():
+            for thread_id, thread in enumerate(threading.enumerate()):
                 if thread is self:
-                    return id
+                    return thread_id
 
         def stop(self):
             self.stopping = True
@@ -219,8 +219,7 @@ def get_dotcs_env(__F, print_ins):
         except FileNotFoundError:
             with open(f"data/players/{playerName}.json", "w", encoding="utf-8") as f:
                 json.dump({dataName: writeNew}, f)
-        finally:
-            return None
+        return None
 
     def setPlayerData(dataName: str, playerName: str, dataValue, writeNew: str = ""):
         if os.path.isfile(f"data/players/{playerName}.json"):

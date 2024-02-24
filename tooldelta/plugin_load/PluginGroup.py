@@ -56,7 +56,7 @@ class PluginGroup:
         self.injected_plugin_loaded_num = 0
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
-        self._dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
+        self.dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
         self.linked_frame.linked_plugin_group = self
 
     @staticmethod
@@ -145,14 +145,11 @@ class PluginGroup:
                 f"该组件需要{self.linked_frame.PRG_NAME}为{'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])}版本"
             )
 
-    def _add_plugin(self, plugin: Plugin):
-        self.plugins.append(plugin)
-
-    def _add_listen_packet_id(self, packetType: int):
+    def add_listen_packet_id(self, packetType: int):
         self.listen_packet_ids.add(packetType)
         self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
-    def _add_listen_packet_func(self, packetType, func: Callable):
+    def add_listen_packet_func(self, packetType, func: Callable):
         if self.packet_funcs.get(str(packetType)):
             self.packet_funcs[str(packetType)].append(func)
         else:
@@ -166,16 +163,16 @@ class PluginGroup:
         lastTime10s = 0
         lastTime30s = 0
         lastTime1m = 0
-        if not any(self._dotcs_repeat_threadings.values()):
+        if not any(self.dotcs_repeat_threadings.values()):
             return
         Print.print_inf(
-            f"开始运行 {sum([len(funcs) for funcs in self._dotcs_repeat_threadings.values()])} 个原dotcs计划任务方法"
+            f"开始运行 {sum([len(funcs) for funcs in self.dotcs_repeat_threadings.values()])} 个原dotcs计划任务方法"
         )
         while 1:
             time.sleep(1)
             nowTime = time.time()
             if nowTime - lastTime1m > 60:
-                for fname, func in self._dotcs_repeat_threadings["1m"]:
+                for fname, func in self.dotcs_repeat_threadings["1m"]:
                     try:
                         # A strong desire to remove "try" block !!
                         func()
@@ -183,20 +180,20 @@ class PluginGroup:
                         Print.print_err(f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}")
                 lastTime1m = nowTime
             if nowTime - lastTime30s > 30:
-                for fname, func in self._dotcs_repeat_threadings["30s"]:
+                for fname, func in self.dotcs_repeat_threadings["30s"]:
                     try:
                         func()
                     except Exception as err:
                         Print.print_err(f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}")
                 lastTime30s = nowTime
             if nowTime - lastTime10s > 10:
-                for fname, func in self._dotcs_repeat_threadings["10s"]:
+                for fname, func in self.dotcs_repeat_threadings["10s"]:
                     try:
                         func()
                     except Exception as err:
                         Print.print_err(f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}")
                 lastTime10s = nowTime
-            for fname, func in self._dotcs_repeat_threadings["1s"]:
+            for fname, func in self.dotcs_repeat_threadings["1s"]:
                 try:
                     func()
                 except Exception as err:

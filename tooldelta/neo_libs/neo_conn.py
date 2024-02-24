@@ -566,9 +566,7 @@ class PlayerKit:
     def ask(self, hint: str) -> str:
         OmegaAvailable()
         self.say(hint)
-        return self.parent._intercept_player_just_next_input(
-            self._c_uuid
-        ).RawMsg.strip()
+        return self.parent.intercept_player_just_next_input(self._c_uuid).RawMsg.strip()
 
     def title(self, title: str = "", subtitle: str = ""):
         # subtitle 只有在 title 给出时才能实际生效
@@ -969,7 +967,7 @@ class ThreadOmega:
             callback(player, "exist")
         self._player_change_listeners.append(callback)
 
-    def _intercept_player_just_next_input(
+    def intercept_player_just_next_input(
         self, player_c_uuid: CString, timeout: int = -1
     ) -> Chat:
         setter, getter = self._create_lock_and_result_setter()
@@ -986,14 +984,14 @@ class ThreadOmega:
     def listen_specific_chat(
         self, specific_name: str, callback: Callable[[Chat], None]
     ):
-        if not specific_name in self._specific_chat_listeners:
+        if specific_name not in self._specific_chat_listeners:
             self._specific_chat_listeners[specific_name] = []
         self._specific_chat_listeners[specific_name].append(callback)
 
     def listen_named_command_block(
         self, command_block_name: str, callback: Callable[[Chat], None]
     ):
-        if not command_block_name in self._name_command_block_msg_listeners:
+        if command_block_name not in self._name_command_block_msg_listeners:
             self._name_command_block_msg_listeners[command_block_name] = []
         LIB.ListenCommandBlock(toCString(command_block_name))
         self._name_command_block_msg_listeners[command_block_name].append(callback)

@@ -5,6 +5,7 @@ import threading
 import traceback
 import copy
 import ctypes
+from typing import Any, Dict
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
@@ -31,18 +32,35 @@ class Builtins:
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
 
-        def get_id(self):
-            if hasattr(self, "_thread_id"):
-                return self._thread_id
-            for id, thread in threading._active.items():
-                if thread is self:
-                    return id
+        class ClassicThread(threading.Thread):
+            def __init__(self, func, args: tuple = (), usage="", **kwargs):
+                super().__init__(target=func)
+                self.func = func
+                self.daemon = True
+                self.all_args = [args, kwargs]
+                self.usage = usage
+                self.start()
 
-        def stop(self):
-            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                self.get_id(), ctypes.py_object(Builtins.ThreadExit)
-            )
-            return res
+            def run(self):
+                try:
+                    self.func(*self.all_args[0], **self.all_args[1])
+                except Builtins.ThreadExit:
+                    pass
+                except:
+                    Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
+
+            def get_id(self):
+                if hasattr(self, "_thread_id"):
+                    return self._thread_id
+                for thread_id, thread in enumerate(threading.enumerate()):
+                    if thread is self:
+                        return thread_id
+
+            def stop(self):
+                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                    self.get_id(), ctypes.py_object(Builtins.ThreadExit)
+                )
+                return res
 
     createThread = ClassicThread
 
@@ -117,9 +135,11 @@ class Builtins:
                 fp: open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
-                fp = open(fp, "w", encoding="utf-8")
-            fp.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
-            fp.close()
+                with open(fp, "w", encoding="utf-8") as file:
+                    file.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
+            else:
+                with fp:
+                    fp.write(ujson.dumps(obj, indent=4, ensure_ascii=False))
 
         @staticmethod
         def SafeJsonLoad(fp):
@@ -128,10 +148,10 @@ class Builtins:
                 fp: open(...)打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
-                fp = open(fp, "r", encoding="utf-8")
-            d = ujson.loads(fp.read())
-            fp.close()
-            return d
+                with open(fp, "r", encoding="utf-8") as file:
+                    return ujson.loads(file.read())
+            with fp as file:
+                return ujson.loads(file.read())
 
         class DataReadError(ujson.JSONDecodeError):
             ...
@@ -252,11 +272,11 @@ class Builtins:
         return res
 
     class ArgsReplacement:
-        def __init__(this, kw: dict[str, any]):
-            this.kw = kw
+        def __init__(self, kw: Dict[str, Any]):
+            self.kw = kw
 
-        def replaceTo(this, __sub: str):
-            for k, v in this.kw.items():
+        def replaceTo(self, __sub: str):
+            for k, v in self.kw.items():
                 if k in __sub:
                     __sub = __sub.replace(k, str(v))
             return __sub

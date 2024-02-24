@@ -40,8 +40,9 @@ case ${PLANTFORM} in
 esac
 
 cat > "$install_dir/main.py" << EOF
-from tooldelta import start_tool_delta
-start_tool_delta(exit_directly=True)
+import tooldelta
+
+tooldelta.start_tool_delta()
 EOF
 
 if ln -s "$install_dir/start.sh" $executable; then
