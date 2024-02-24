@@ -417,7 +417,7 @@ class FrameNeOmg(StandardFrame):
             str_max_len = 50
             while 1:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
-                if msg_orig == "" or msg_orig == "SIGNAL: exit":
+                if msg_orig in ("", "SIGNAL: exit"):
                     Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
