@@ -2,6 +2,7 @@ import requests, time, os, platform
 from .color_print import Print
 import shutil
 
+
 def _pretty_kb(n):
     if n >= 1048576:
         return f"{round(n / 1048576, 2)}M"
@@ -9,18 +10,21 @@ def _pretty_kb(n):
         return f"{round(n / 1024, 2)}K"
     else:
         return f"{round(n, 1)}"
-    
+
+
 def _path_get_filename(path: str):
     if "/" not in path:
         return None
     else:
         return path.split("/")[-1]
-    
+
+
 def _is_common_text_file(url_path: str):
     for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]:
         if url_path.endswith(i):
             return True
     return False
+
 
 def get_file_size(url):
     response = requests.head(url)
@@ -29,6 +33,7 @@ def get_file_size(url):
         return file_size
     else:
         return None
+
 
 def download_file(f_url: str, f_dir: str, ignore_warnings=False):
     with requests.get(f_url, stream=True, timeout=10) as res:
@@ -45,7 +50,7 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
         useSpeed = 0
 
         with open(f_dir + ".tmp", "wb") as dwnf:
-            for chk in res.iter_content(chunk_size = 8192):
+            for chk in res.iter_content(chunk_size=8192):
                 nowtime = time.time()
 
                 if nowtime != lastime:
@@ -74,13 +79,13 @@ def download_file(f_url: str, f_dir: str, ignore_warnings=False):
         else:
             os.remove(f_dir + ".tmp")
 
+
 def download_unknown_file(url: str, save_dir: str):
     # 鉴于 Content-Length 不一定表示文件原始大小, 二进制文件与文本文件需要分开下载
-    if (_is_common_text_file(url) or
-        _path_get_filename(url) in ("LICENSE",)):
+    if _is_common_text_file(url) or _path_get_filename(url) in ("LICENSE",):
         resp = requests.get(url)
         resp.raise_for_status()
-        with open(save_dir, "w", encoding = "utf-8") as f:
+        with open(save_dir, "w", encoding="utf-8") as f:
             f.write(resp.text)
     else:
         download_file(url, save_dir)

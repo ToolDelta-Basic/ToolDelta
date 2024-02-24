@@ -1,14 +1,17 @@
 import datetime
+
 try:
     from .logger import publicLogger
 except:
     pass
+
 
 def simple_fmt(kw, __sub):
     for k, v in kw.items():
         if k in __sub:
             __sub = __sub.replace(k, str(v))
     return __sub
+
 
 class _Print:
     INFO_NORMAL = "§f 信息 "
@@ -18,54 +21,58 @@ class _Print:
     INFO_SUCC = "§a 成功 "
     INFO_LOAD = "§d 加载 "
     STD_COLOR_LIST = [
-            ["0", "#000000"],
-            ["1", "#0000AA"],
-            ["2", "#00AA00"],
-            ["3", "#00AAAA"],
-            ["4", "#AA0000"],
-            ["5", "#AA00AA"],
-            ["6", "#FFAA00"],
-            ["7", "#AAAAAA"],
-            ["8", "#555555"],
-            ["9", "#5555FF"],
-            ["a", "#55FF55"],
-            ["b", "#55FFFF"],
-            ["c", "#FF5555"],
-            ["d", "#FF55FF"],
-            ["e", "#FFFF55"],
-            ["f", "#FFFFFF"],
-            ["g", "#DDD605"],
-            ["r", "/"]
-        ]
+        ["0", "#000000"],
+        ["1", "#0000AA"],
+        ["2", "#00AA00"],
+        ["3", "#00AAAA"],
+        ["4", "#AA0000"],
+        ["5", "#AA00AA"],
+        ["6", "#FFAA00"],
+        ["7", "#AAAAAA"],
+        ["8", "#555555"],
+        ["9", "#5555FF"],
+        ["a", "#55FF55"],
+        ["b", "#55FFFF"],
+        ["c", "#FF5555"],
+        ["d", "#FF55FF"],
+        ["e", "#FFFF55"],
+        ["f", "#FFFFFF"],
+        ["g", "#DDD605"],
+        ["r", "/"],
+    ]
 
     def __call__(self, text: str):
         self.print_inf(text)
 
-    def colormode_replace(self, text: str, showmode = 0):
+    def colormode_replace(self, text: str, showmode=0):
         # 1 = bg_color
         text = self._strike(text)
-        return simple_fmt(
-            {
-                "§1": f"\033[{showmode};37;34m",
-                "§2": f"\033[{showmode};37;32m",
-                "§3": f"\033[{showmode};37;36m",
-                "§4": f"\033[{showmode};37;31m",
-                "§5": f"\033[{showmode};37;35m",
-                "§6": f"\033[{showmode};37;33m",
-                "§7": f"\033[{showmode};37;90m",
-                "§8": f"\033[{showmode};37;2m",
-                "§9": f"\033[{showmode};37;94m",
-                "§a": f"\033[{showmode};37;92m",
-                "§b": f"\033[{showmode};37;96m",
-                "§c": f"\033[{showmode};37;91m",
-                "§d": f"\033[{showmode};37;95m",
-                "§e": f"\033[{showmode};37;93m",
-                "§f": f"\033[{showmode};37;1m",
-                "§r": "\033[0m",
-                "§u": "\033[4m",
-                "§l": "\033[1m"
-            }, text
-        ) + "\033[0m"
+        return (
+            simple_fmt(
+                {
+                    "§1": f"\033[{showmode};37;34m",
+                    "§2": f"\033[{showmode};37;32m",
+                    "§3": f"\033[{showmode};37;36m",
+                    "§4": f"\033[{showmode};37;31m",
+                    "§5": f"\033[{showmode};37;35m",
+                    "§6": f"\033[{showmode};37;33m",
+                    "§7": f"\033[{showmode};37;90m",
+                    "§8": f"\033[{showmode};37;2m",
+                    "§9": f"\033[{showmode};37;94m",
+                    "§a": f"\033[{showmode};37;92m",
+                    "§b": f"\033[{showmode};37;96m",
+                    "§c": f"\033[{showmode};37;91m",
+                    "§d": f"\033[{showmode};37;95m",
+                    "§e": f"\033[{showmode};37;93m",
+                    "§f": f"\033[{showmode};37;1m",
+                    "§r": "\033[0m",
+                    "§u": "\033[4m",
+                    "§l": "\033[1m",
+                },
+                text,
+            )
+            + "\033[0m"
+        )
 
     def _strike(self, text: str):
         text_ok = ""
@@ -84,13 +91,15 @@ class _Print:
             except IndexError:
                 pass
             if strikeMode:
-                text_ok += u'\u0336' + char
+                text_ok += "\u0336" + char
             else:
                 text_ok += char
             i += 1
         return text_ok
 
-    def print_with_info(self, text: str, info: str = INFO_NORMAL, need_log = True, **print_kwargs):
+    def print_with_info(
+        self, text: str, info: str = INFO_NORMAL, need_log=True, **print_kwargs
+    ):
         if need_log:
             self.c_log(info, text)
         setNextColor = "§r"
@@ -100,20 +109,25 @@ class _Print:
                 if "§" in text_line:
                     try:
                         n = text_line.rfind("§")
-                        _setNextCol = text_line[n:n+2]
+                        _setNextCol = text_line[n : n + 2]
                         assert setNextColor != -1
                         setNextColor = _setNextCol
                     except:
                         pass
                 output_txts.append(
-                    datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
-                      + " " + self.colormode_replace(setNextColor + text_line)
-                    )
+                    datetime.datetime.now().strftime("[%H:%M] ")
+                    + self.colormode_replace(info, 7)
+                    + " "
+                    + self.colormode_replace(setNextColor + text_line)
+                )
             print("\n".join(output_txts), **print_kwargs)
         else:
             print(
-                datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
-                  + " " + self.colormode_replace(text), **print_kwargs
+                datetime.datetime.now().strftime("[%H:%M] ")
+                + self.colormode_replace(info, 7)
+                + " "
+                + self.colormode_replace(text),
+                **print_kwargs,
             )
 
     def print_err(self, text: str, **print_kwargs):
@@ -139,22 +153,34 @@ class _Print:
                 if "§" in text_line:
                     try:
                         n = text_line.rfind("§")
-                        _setNextCol = text_line[n:n+2]
+                        _setNextCol = text_line[n : n + 2]
                         assert setNextColor != -1
                         setNextColor = _setNextCol
                     except:
                         pass
                 output_txts.append(
-                    datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
-                      + " " + self.colormode_replace(setNextColor + text_line)
-                    )
+                    datetime.datetime.now().strftime("[%H:%M] ")
+                    + self.colormode_replace(info, 7)
+                    + " "
+                    + self.colormode_replace(setNextColor + text_line)
+                )
             return "\n".join(output_txts)
         else:
-            return (datetime.datetime.now().strftime("[%H:%M] ") + self.colormode_replace(info, 7)
-                + " " + self.colormode_replace(text))
+            return (
+                datetime.datetime.now().strftime("[%H:%M] ")
+                + self.colormode_replace(info, 7)
+                + " "
+                + self.colormode_replace(text)
+            )
 
     def c_log(self, inf: str, msg: str):
-        for _g, _s in [("§6 警告 ", "WARN"), ("§a 成功 ", "INFO"), ("§f 信息 ", "INFO"), ("§c 失败 ", "FAIL"), ("§4 报错 ", "ERROR")]:
+        for _g, _s in [
+            ("§6 警告 ", "WARN"),
+            ("§a 成功 ", "INFO"),
+            ("§f 信息 ", "INFO"),
+            ("§c 失败 ", "FAIL"),
+            ("§4 报错 ", "ERROR"),
+        ]:
             if inf == _g:
                 inf = _s
                 break
@@ -166,5 +192,6 @@ class _Print:
             inf = inf.replace(col, "")
         inf = inf.replace(" ", "")
         publicLogger.log_in(msg, inf)
+
 
 Print = _Print()

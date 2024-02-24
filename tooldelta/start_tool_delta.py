@@ -9,7 +9,9 @@ from tooldelta.plugin_load.injected_plugin import movent
 frame = Frame()
 plugins = PluginGroup(frame, PRG_NAME)
 game_control = GameCtrl(frame)
-def start_tool_delta(exit_directly = False):
+
+
+def start_tool_delta(exit_directly=False):
     # 初始化系统
     try:
         frame.welcome()

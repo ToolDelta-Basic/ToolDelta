@@ -1,12 +1,14 @@
 import os, time
 
+
 class ToolDeltaLogger:
     INFO = "INFO"
     WARNING = "WARNING"
     ERROR = "ERROR"
     FATAL = "FATAL"
     OTHER_TYPE = "???"
-    def __init__(self, log_path, name_fmt = "%Y-%m-%d"):
+
+    def __init__(self, log_path, name_fmt="%Y-%m-%d"):
         self.path = log_path
         self.name_fmt = name_fmt
         self.now_day = time.strftime("%Y-%m-%d")
@@ -23,11 +25,11 @@ class ToolDeltaLogger:
         self._wrapper = open(
             log_path + os.sep + time.strftime(self.name_fmt) + ".log",
             "a",
-            encoding = "utf-8",
-            buffering = 4096
+            encoding="utf-8",
+            buffering=4096,
         )
 
-    def log_in(self, msg, level = INFO):
+    def log_in(self, msg, level=INFO):
         # 写入日志信息. level给定了其等级.
         if not self.writable or not self.enable_logger:
             return
@@ -41,7 +43,11 @@ class ToolDeltaLogger:
         if len(msg) > 200:
             msg = msg[:200] + "..."
         self._check_is_another_day()
-        self._wrapper.write(time.strftime(self.logging_fmt) + f" [{level}] " + (msg if msg.endswith("\n") else msg + "\n"))
+        self._wrapper.write(
+            time.strftime(self.logging_fmt)
+            + f" [{level}] "
+            + (msg if msg.endswith("\n") else msg + "\n")
+        )
         if time.time() - self.lastLogTime > 15:
             self._save_log()
             self.lastLogTime = time.time()
@@ -61,8 +67,10 @@ class ToolDeltaLogger:
             self._save_log()
             self._wrapper.close()
 
+
 def new_logger(log_path: str):
-    os.makedirs(log_path, exist_ok = True)
+    os.makedirs(log_path, exist_ok=True)
     return ToolDeltaLogger(log_path)
+
 
 publicLogger = new_logger("日志文件")

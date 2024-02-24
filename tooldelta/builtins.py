@@ -1,12 +1,9 @@
 from .color_print import Print
 import ujson, os, time, threading, traceback, copy, ctypes
 
-event_pool = {
-    "tmpjson_save": threading.Event()
-}
-event_flags_pool = {
-    "tmpjson_save": True
-}
+event_pool = {"tmpjson_save": threading.Event()}
+event_flags_pool = {"tmpjson_save": True}
+
 
 class Builtins:
     class ThreadExit(SystemExit):
@@ -135,8 +132,7 @@ class Builtins:
             fp.close()
             return d
 
-        class DataReadError(ujson.JSONDecodeError):
-            ...
+        class DataReadError(ujson.JSONDecodeError): ...
 
         @staticmethod
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
@@ -149,9 +145,7 @@ class Builtins:
             try:
                 if default is not None and not os.path.isfile(filepath):
                     with open(filepath, "w", encoding="utf-8") as f:
-                        Builtins.SimpleJsonDataReader.SafeJsonDump(
-                            default, f
-                        )
+                        Builtins.SimpleJsonDataReader.SafeJsonDump(default, f)
                     return default
                 else:
                     with open(filepath, "r", encoding="utf-8") as f:
@@ -196,7 +190,7 @@ class Builtins:
         """
         if not cond:
             raise exc
-        
+
     @staticmethod
     def run_as_new_thread(func):
         """
@@ -205,8 +199,10 @@ class Builtins:
         def on_inject(self):
             ...
         """
+
         def thread_fun(*args, **kwargs):
-            Builtins.createThread(func, args = args, **kwargs)
+            Builtins.createThread(func, args=args, **kwargs)
+
         return thread_fun
 
     @staticmethod
