@@ -82,7 +82,7 @@ async def _(playername, killer):
             )
             return
 
-    deathData = getPos(f'@a[name="{playername}"]')
+    deathData = getPos(playername)
     deathData["time"] = deathTime
     data[playername] = deathData
     with open(config_path, "w", encoding="utf-8") as f:
