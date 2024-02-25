@@ -185,9 +185,10 @@ class SuperScript_GobangBasic(Plugin):
                                 raise AssertionError(
                                     "§c落子格式不正确； 下子/xiazi/xz <纵坐标> <横坐标>"
                                 )
-                            assert inRoom.stage.onchess(
+                            if not inRoom.stage.onchess(
                                 int(posl), int(posw), inRoom.PID(player)
-                            )
+                            ):
+                                raise AssertionError
                             gc.say_to(player, "§l§7> §r§a成功下子.")
                             inRoom.resetTimer()
                             is_win = inRoom.stage.get_win()
@@ -313,7 +314,8 @@ class SuperGobangStage:
         return None
 
     def onchess(self, l: int, w: int, player):
-        assert not self.getField(l, w), "§c此处不可以再下子哦"
+        if self.getField(l, w):
+            raise AssertionError("§c此处不可以再下子哦")
         if not l in range(1, self.SIZE + 1) or not w in range(1, self.SIZE + 1):
             return False
         self.setField(l, w, player)
