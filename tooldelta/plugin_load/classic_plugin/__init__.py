@@ -115,6 +115,9 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                         f"插件 {plugin_dir} 不合法: 只能调用一次 @plugins.add_plugin, 实际调用了0次或多次"
                     )
                     raise SystemExit
+                elif isinstance(err.args[0], int):
+                    Print.print_err(f"插件 {plugin_dir} 不合法: {err.args[1]}")
+                    raise SystemExit
                 if len(err.args[0]) == 2:
                     Print.print_err(f"插件 {plugin_dir} 不合法: {err.args[0][1]}")
                     raise SystemExit

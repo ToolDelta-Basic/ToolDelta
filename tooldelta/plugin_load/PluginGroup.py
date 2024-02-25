@@ -97,8 +97,12 @@ class PluginGroup:
         return None
 
     def add_plugin(self, plugin):
-        if not Plugin.__subclasscheck__(plugin):
-            raise AssertionError(1, "插件主类必须继承Plugin类")
+        try:
+            if not Plugin.__subclasscheck__(plugin):
+                raise AssertionError(1, f"插件主类必须继承Plugin类 而不是 {plugin}")
+        except TypeError:
+            if not Plugin.__subclasscheck__(type(plugin)):
+                raise AssertionError(1, f"插件主类必须继承Plugin类 而不是 {plugin.__class__.__name__}")
         self.plugin_added_cache["plugin"] = plugin
         return plugin
 
