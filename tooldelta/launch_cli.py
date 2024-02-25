@@ -12,9 +12,10 @@ from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
-from .neo_libs import neo_conn
+# from .neo_libs import neo_conn
 from . import fbconn
 import threading
+global neo_conn
 
 
 class SysStatus:
@@ -89,6 +90,8 @@ class FrameFBConn(StandardFrame):
     def __init__(self, serverNumber, password, fbToken, auth_server):
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
+        self.downloadMissingFiles()
+        from .neo_libs import neo_conn
         self.init_all_functions()
 
     def launch(self):
@@ -102,7 +105,6 @@ class FrameFBConn(StandardFrame):
             return err
 
     def runFB(self, ip="0.0.0.0", port=8080):
-        self.downloadMissingFiles()
         if self.system_type == "Linux":
             os.system("chmod +x phoenixbuilder")
             con_cmd = rf"./phoenixbuilder -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
