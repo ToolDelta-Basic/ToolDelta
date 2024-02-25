@@ -26,7 +26,7 @@ def try_install_libs(parent_err):
 def check_pip():
     try:
         p = Popen(
-            "pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple",
+            "python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple",
             shell=True,
             stdout=PIPE,
             stderr=PIPE,
