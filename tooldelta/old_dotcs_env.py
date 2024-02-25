@@ -1,6 +1,5 @@
 import os
 import json
-import re
 import threading
 import ctypes
 import traceback
@@ -192,22 +191,21 @@ def get_dotcs_env(__F, print_ins):
         return int(result["OutputMessages"][0]["Parameters"][1])
 
     def getStatus(statusName: str):
-        statusName = re.sub(r"[^\w\s\p{Han}]", "", statusName)
-        if not os.path.isfile(f"data/dotcs_status_{statusName}.txt"):
+        if not os.path.isfile("data/dotcs_status_%s.txt" % statusName):
             return None
         with open(
-            f"data/dotcs_status_{statusName}.txt", "r", encoding="utf-8"
+            "data/dotcs_status_%s.txt" % statusName, "r", encoding="utf-8"
         ) as file:
             status = file.read()
         return status
 
     def setStatus(statusName: str, status):
-        statusName = re.sub(r"[^\w\s\p{Han}]", "", statusName)
-        with open(f"data/dotcs_status_{statusName}.txt", "w", encoding="utf-8") as file:
+        with open(
+            "data/dotcs_status_%s.txt" % statusName, "w", encoding="utf-8"
+        ) as file:
             file.write(str(status))
 
     def getPlayerData(dataName: str, playerName: str, writeNew):
-        playerName = re.sub(r"[^\w\s\p{Han}]", "", playerName)
         try:
             with open(f"data/players/{playerName}.json", "r", encoding="utf-8") as f:
                 j = json.load(f)[dataName]
@@ -224,7 +222,6 @@ def get_dotcs_env(__F, print_ins):
         return None
 
     def setPlayerData(dataName: str, playerName: str, dataValue, writeNew: str = ""):
-        playerName = re.sub(r"[^\w\s\p{Han}]", "", playerName)
         if os.path.isfile(f"data/players/{playerName}.json"):
             with open(f"data/players/{playerName}.json", "r", encoding="utf-8") as f:
                 j = json.load(f)
