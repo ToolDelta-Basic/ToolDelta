@@ -1,5 +1,6 @@
 import platform
 import os
+import shlex
 import subprocess
 import time
 import json
@@ -103,7 +104,7 @@ class FrameFBConn(StandardFrame):
         except Exception as err:
             return err
 
-    def runFB(self, ip="0.0.0.0", port=8080):
+    def runFB(self, ip="127.0.0.1", port=8080):
         if self.system_type == "Linux":
             os.system("chmod +x phoenixbuilder")
             con_cmd = rf"./phoenixbuilder -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
@@ -119,7 +120,7 @@ class FrameFBConn(StandardFrame):
             shell=True,
         )
 
-    def run_conn(self, ip="0.0.0.0", port=8080, timeout=None):
+    def run_conn(self, ip="127.0.0.1", port=8080, timeout=None):
         connect_fb_start_time = time.time()
         max_con_time = timeout or 10
         while 1:
@@ -380,7 +381,7 @@ class FrameNeOmg(StandardFrame):
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
         if platform.uname().system.lower() == "linux":
-            os.system(f"chmod +x {py_file_path}")
+            os.system(f"chmod +x {shlex.quote(py_file_path)}")
         # 只需要+x即可
         Print.print_inf(f"DEBUG: 将使用端口 {free_port}")
         self.neomg_proc = subprocess.Popen(
