@@ -195,9 +195,7 @@ def get_dotcs_env(__F, print_ins):
         statusName = re.sub(r"[^\w\s\p{Han}]", "", statusName)
         if not os.path.isfile(f"data/dotcs_status_{statusName}.txt"):
             return None
-        with open(
-            f"data/dotcs_status_{statusName}.txt", "r", encoding="utf-8"
-        ) as file:
+        with open(f"data/dotcs_status_{statusName}.txt", "r", encoding="utf-8") as file:
             status = file.read()
         return status
 
