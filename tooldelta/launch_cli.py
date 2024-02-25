@@ -15,8 +15,6 @@ from .sys_args import sys_args_to_dict
 # from .neo_libs import neo_conn
 from . import fbconn
 import threading
-global neo_conn
-
 
 class SysStatus:
     LOADING = 100
@@ -91,7 +89,6 @@ class FrameFBConn(StandardFrame):
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.injected = False
         self.downloadMissingFiles()
-        from .neo_libs import neo_conn
         self.init_all_functions()
 
     def launch(self):
@@ -343,6 +340,7 @@ class FrameNeOmg(StandardFrame):
         self.secret_exit_key = ""
 
     def set_omega(self, openat_port):
+        from .neo_libs import neo_conn
         retries = 0
         while retries <= 10:
             try:
