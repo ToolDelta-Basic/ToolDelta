@@ -46,7 +46,7 @@ except ModuleNotFoundError as err:
     import hashlib
     import base64
     import rich
-    
+
 from typing import Callable
 
 dotcs_module_env = {
