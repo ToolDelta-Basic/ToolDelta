@@ -97,7 +97,7 @@ def get_free_port(start=8080, end=65535):
     for port in range(start, end):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
-                s.bind(('localhost', port))
+                s.bind(("localhost", port))
                 return port
             except OSError:
                 Print.print_war(f"端口 {port} 正被占用, 跳过")
