@@ -210,7 +210,6 @@ def get_dotcs_env(__F, print_ins):
             with open(
                 f"data/players/{playerName}.json", "r", encoding="utf-8"
             ) as f:  # skipcq: PTC-W6004
-
                 j = json.load(f)[dataName]
             return j
         except KeyError:
