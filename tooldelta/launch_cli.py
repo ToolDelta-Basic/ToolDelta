@@ -117,7 +117,6 @@ class FrameFBConn(StandardFrame):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            shell=True,
         )
 
     def run_conn(self, ip="127.0.0.1", port=8080, timeout=None):
