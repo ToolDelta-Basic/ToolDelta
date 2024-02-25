@@ -12,9 +12,11 @@ from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
+
 # from .neo_libs import neo_conn
 from . import fbconn
 import threading
+
 global neo_conn
 
 
@@ -92,6 +94,7 @@ class FrameFBConn(StandardFrame):
         self.injected = False
         self.downloadMissingFiles()
         from .neo_libs import neo_conn
+
         self.init_all_functions()
 
     def launch(self):
