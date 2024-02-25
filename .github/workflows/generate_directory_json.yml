@@ -1,11 +1,6 @@
 name: Generate Directory JSON
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "plugin_market/**"
-
   pull_request:
     branches: [ main ]
     paths:
