@@ -106,7 +106,7 @@ class FrameFBConn(StandardFrame):
 
     def runFB(self, ip="127.0.0.1", port=8080):
         if self.system_type == "Linux":
-            os.system("chmod +x phoenixbuilder")
+            os.system("chmod +x ./phoenixbuilder")
             con_cmd = rf"./phoenixbuilder -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
 
         # windows updated "./PRGM" command.
