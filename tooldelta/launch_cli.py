@@ -343,6 +343,7 @@ class FrameNeOmg(StandardFrame):
 
     def set_omega(self, openat_port):
         from .neo_libs import neo_conn
+
         retries = 0
         while retries <= 10:
             try:
