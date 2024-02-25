@@ -46,11 +46,9 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                 if os.path.isfile(
                     os.path.join("插件文件/ToolDelta组合式插件", plugin_dir, "__init__.py")
                 ):
-                    sys.path.append(
-                        os.path.join(os.getcwd(), "插件文件", "ToolDelta组合式插件")
-                    )
+                    sys.path.append(os.path.join(os.getcwd(), "插件文件", "ToolDelta组合式插件"))
                     # 理论上所有插件共享一个整体环境
-                    importlib.__import__(plugin_dir,root_env)
+                    importlib.__import__(plugin_dir, root_env)
                 else:
                     Print.print_war(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
                     continue
