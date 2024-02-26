@@ -14,6 +14,7 @@ game_control = GameCtrl(frame)
 def start_tool_delta(exit_directly=False):
     # 初始化系统
     try:
+        frame.auto_update()
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)

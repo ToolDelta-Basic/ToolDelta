@@ -6,7 +6,7 @@ from . import (
 )
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .basic_mods import Callable, os, sys, time, traceback
+from .basic_mods import Callable, os, sys, time, traceback, requests, platform, subprocess
 from .cfg import Cfg as _Cfg
 from .launch_cli import (
     FrameFBConn,
@@ -16,6 +16,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
+from .urlmethod import download_file
 from .sys_args import sys_args_to_dict
 from typing import List
 
@@ -64,6 +65,30 @@ class Frame:
         if (res == 1 and check_md) or res != check_md:
             Print.print_err("启动参数错误")
             raise SystemExit
+
+    def auto_update(self):
+        try:
+            latest_version:str = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
+            Version:str = f"{get_tool_delta_version()[0]}.{get_tool_delta_version()[1]}.{get_tool_delta_version()[2]}"
+            Print.print_load(f"当前ToolDelta版本号:v{Version}，正在检测更新...")
+            if not latest_version == Version:
+                Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
+                if platform.system() == "Linux":
+                    URL:str = f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux";file_path:str = os.path.join(os.getcwd(),"ToolDelta-linux_new")
+                elif platform.system() == "Windows":
+                    URL:str = "https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe";file_path:str = os.path.join(os.getcwd(),"ToolDelta-windows_new.exe")
+                download_file(URL,file_path)
+                if os.path.exists(file_path):
+                    try:
+                        upgrade = open("upgrade.sh",'w') if platform.system() == "Linux" else open("upgrade.bat",'w')
+                        TempShell:str = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f'@echo off\nif not exist {file_path} exit\nsleep(3)\ndel {os.path.join(os.getcwd(),os.path.basename(__file__))}\nstart {os.path.join(os.getcwd(),os.path.basename(__file__))}'
+                        upgrade.write(TempShell);upgrade.close()
+                        if platform.system() == "Linux":subprocess.Popen("sh upgrade.sh",cwd=os.getcwd(),shell=True)
+                        elif platform.system() == "Windows":subprocess.Popen("upgrade.bat",cwd=os.getcwd(),shell=True)
+                        sys.exit()
+                    except Exception as err:Print.print_err(f"在尝试运行最新版本ToolDelta时出现异常! {err}");exit(1)
+            else:Print.print_suc(f"检测成功,当前为最新版本 -> {Version}，无需更新!")
+        except Exception as err:Print.print_err(f"在检测最新版本或更新ToolDelta至最新版本时出现异常! {err}")
 
     def read_cfg(self):
         # 读取启动配置等
