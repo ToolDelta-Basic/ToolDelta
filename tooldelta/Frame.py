@@ -6,7 +6,7 @@ from . import (
 )
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .basic_mods import Callable, os, sys, time, traceback, requests, platform, subprocess
+from .basic_mods import Callable, os, sys, time, traceback, requests, platform, subprocess, ping3, re
 from .cfg import Cfg as _Cfg
 from .launch_cli import (
     FrameFBConn,
@@ -18,7 +18,7 @@ from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
 from .urlmethod import download_file
 from .sys_args import sys_args_to_dict
-from typing import List
+from typing import List,Union
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -66,32 +66,52 @@ class Frame:
             Print.print_err("启动参数错误")
             raise SystemExit
 
+    def Test_site_latency(self,Da:dict) -> list:
+        # Da 变量数据结构
+        # class Da(object):
+        #     def __init__(self) -> dict:
+        #         self.url: str
+        #         self.mirror_url: list       (Union[list,str] <- 未采用!如只需要提交单个镜像网站需以["https://dl.mirrorurl.com"]方式传入)
+        # 返回结构:{"https://dl.url1.com","https://dl.url2.com"}返回类型:list排序方式:从快到慢,所以通常使用Fastest_url:str = next(iter(Url_sor))[0]就可使用最快的链接
+        tmp_speed:dict = {}
+        tmp_speed[Da["url"]] = ping3.ping(re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))",Da["url"]).group())
+        for url in Da["mirror_url"]:
+            Tmp: Union[float,None] = ping3.ping(re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))",url).group())
+            tmp_speed[url] = Tmp if Tmp != None else 1024
+        return sorted(tmp_speed.items(),key=lambda x:x[1])
+
     def auto_update(self):
+        # 因行数缩减所以此函数可读性极差!
         try:
             latest_version:str = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
             Version:str = f"{get_tool_delta_version()[0]}.{get_tool_delta_version()[1]}.{get_tool_delta_version()[2]}"
-            Print.print_load(f"当前ToolDelta版本号:v{Version}，正在检测更新...")
             if not latest_version == Version:
-                if ".py" in os.path.basename(__file__):
-                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及其拉取最新版本代码!")
+                if ".py" in os.path.basename(__file__) and ".pyc" not in os.path.basename(__file__):
+                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
                     return True
                 Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
                 if platform.system() == "Linux":
-                    URL:str = f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux";file_path:str = os.path.join(os.getcwd(),"ToolDelta-linux_new")
+                    Url_sor:dict = self.Test_site_latency({"url":f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux","mirror_url":[f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux",f"https://hub.gitmirror.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux"]});Fastest_url:str = next(iter(Url_sor))[0]
+                    URL:str = Fastest_url;file_path:str = os.path.join(os.getcwd(),"ToolDelta-linux_new")
                 elif platform.system() == "Windows":
-                    URL:str = "https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe";file_path:str = os.path.join(os.getcwd(),"ToolDelta-windows_new.exe")
+                    Url_sor:dict = self.Test_site_latency({"url":f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe","mirror_url":[f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe",f"https://hub.gitmirror.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe"]});Fastest_url:str = next(iter(Url_sor))[0]
+                    URL:str = Fastest_url;file_path:str = os.path.join(os.getcwd(),"ToolDelta-windows_new.exe")
                 download_file(URL,file_path)
                 if os.path.exists(file_path):
                     try:
+                        if platform.system() == "Windows":
+                            for filewalks in os.walk(os.getcwd(),topdown=False):
+                                for files in filewalks[2]:
+                                    if ".exe" in files and "new" not in files and "ToolDelta" in files or "tooldelta" in files:Win_Old_ToolDelta_Path: str = os.path.join(filewalks[0],files)
                         upgrade = open("upgrade.sh",'w') if platform.system() == "Linux" else open("upgrade.bat",'w')
-                        TempShell:str = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f'@echo off\nif not exist {file_path} exit\nsleep(3)\ndel {os.path.join(os.getcwd(),os.path.basename(__file__))}\nstart {os.path.join(os.getcwd(),os.path.basename(__file__))}'
+                        TempShell:str = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f'@echo off\ncd {os.getcwd()}\nif not exist {Win_Old_ToolDelta_Path} exit\ntimeout /T 3 /NOBREAK\ndel {Win_Old_ToolDelta_Path}\nren ToolDelta-windows_new.exe {os.path.basename(Win_Old_ToolDelta_Path)}\nstart {Win_Old_ToolDelta_Path}'
                         upgrade.write(TempShell);upgrade.close()
                         if platform.system() == "Linux":subprocess.Popen("sh upgrade.sh",cwd=os.getcwd(),shell=True)
                         elif platform.system() == "Windows":subprocess.Popen("upgrade.bat",cwd=os.getcwd(),shell=True)
                         sys.exit()
-                    except Exception as err:Print.print_err(f"在尝试运行最新版本ToolDelta时出现异常! {err}");exit(1)
+                    except Exception as err:Print.print_err(f"在生成或尝试运行更新脚本时出现异常! {err}");exit(1)
             else:Print.print_suc(f"检测成功,当前为最新版本 -> {Version}，无需更新!")
-        except Exception as err:Print.print_err(f"在检测最新版本或更新ToolDelta至最新版本时出现异常! {err}")
+        except Exception as err:Print.print_war(f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新! {err}")
 
     def read_cfg(self):
         # 读取启动配置等
@@ -124,18 +144,52 @@ class Frame:
             "是否记录日志": bool,
             "插件市场源": str,
         }
-        if not os.path.isfile("fbtoken"):
-            Print.print_err(
-                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
-            )
-            # 用户手动输入fbtoken并创建文件
-            fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
-            if fbtoken:
-                with open("fbtoken", "w", encoding="utf-8") as f:
-                    f.write(fbtoken)
-            else:
-                Print.print_err("未输入fbtoken, 无法继续")
-                raise SystemExit
+        Print.print_inf("请选择登录方法:\n 1 - 使用账号密码(登录成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r")
+        Login_method: str = input("请输入你的选择:")
+        while True:
+            if Login_method.isdigit() == False:
+                Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:","§6 警告 "))
+            elif int(Login_method) > 2 or int(Login_method) < 1:
+                Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:","§6 警告 "))
+            else:break
+        if Login_method == "1":
+            if not os.path.isfile("fbtoken"):
+                Print.print_err(
+                    "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
+                )
+                # 用户选择登录方式 && 获取通过账号密码获取Token或直接输入Token
+                if fbtoken:
+                    with open("fbtoken", "w", encoding="utf-8") as f:
+                        f.write(fbtoken)
+                else:
+                    Print.print_err("未输入fbtoken, 无法继续")
+                    raise SystemExit
+        elif Login_method == "2":
+            Print.print_war("此功能正在开发，将自动使用Token登录")
+            if not os.path.isfile("fbtoken"):
+                Print.print_err(
+                    "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
+                )
+                # 用户选择登录方式 && 获取通过账号密码获取Token或直接输入Token
+                if fbtoken:
+                    with open("fbtoken", "w", encoding="utf-8") as f:
+                        f.write(fbtoken)
+                else:
+                    Print.print_err("未输入fbtoken, 无法继续")
+                    raise SystemExit
+        else:
+            Print.print_war("异常参数，将自动选择Token登录!")
+            if not os.path.isfile("fbtoken"):
+                Print.print_err(
+                    "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
+                )
+                # 用户选择登录方式 && 获取通过账号密码获取Token或直接输入Token
+                if fbtoken:
+                    with open("fbtoken", "w", encoding="utf-8") as f:
+                        f.write(fbtoken)
+                else:
+                    Print.print_err("未输入fbtoken, 无法继续")
+                    raise SystemExit
 
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
