@@ -72,6 +72,9 @@ class Frame:
             Version:str = f"{get_tool_delta_version()[0]}.{get_tool_delta_version()[1]}.{get_tool_delta_version()[2]}"
             Print.print_load(f"当前ToolDelta版本号:v{Version}，正在检测更新...")
             if not latest_version == Version:
+                if ".py" in os.path.basename(__file__):
+                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及其拉取最新版本代码!")
+                    return True
                 Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
                 if platform.system() == "Linux":
                     URL:str = f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux";file_path:str = os.path.join(os.getcwd(),"ToolDelta-linux_new")
