@@ -2,6 +2,7 @@
 try:
     import time
     import os
+    import re
     import sys
     import threading
     import json
@@ -23,6 +24,7 @@ try:
     import getpass
     import pymysql
     import websockets
+    import ping3
     import ujson
     import hashlib
     import base64

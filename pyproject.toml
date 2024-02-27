@@ -22,8 +22,8 @@ ujson = "5.9.0"
 rich = "13.7.0"
 colorama = "^0.4.6"
 pillow = "^10.2.0"
+ping3 = "4.0.4"
 shellescape = "^3.8.1"
-
 
 [build-system]
 requires = ["poetry-core"]
