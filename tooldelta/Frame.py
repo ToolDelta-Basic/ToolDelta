@@ -6,7 +6,7 @@ from . import (
 )
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .basic_mods import Callable, os, sys, time, traceback, requests, platform, subprocess, ping3, re
+from .basic_mods import Callable, os, sys, time, traceback, requests, platform, subprocess, ping3, re, getpass, hashlib
 from .cfg import Cfg as _Cfg
 from .launch_cli import (
     FrameFBConn,
@@ -66,6 +66,47 @@ class Frame:
             Print.print_err("启动参数错误")
             raise SystemExit
 
+    def IF_Token(self):
+        if not os.path.isfile("fbtoken"):
+            Print.print_err("请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken")
+            fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
+            if fbtoken:
+                with open("fbtoken", "w", encoding="utf-8") as f:f.write(fbtoken)
+            else:Print.print_err("未输入fbtoken, 无法继续");raise SystemExit
+
+    def Login_Fc(self) -> requests.Response:
+        try:
+            FastBuilderApi: list = ["https://api.fastbuilder.pro/api/phoenix/login","https://api.fastbuilder.pro/api/new","https://api.fastbuilder.pro/api/api","https://api.fastbuilder.pro/api/login","https://api.fastbuilder.pro"]
+            hash_obj: hashlib._Hash = hashlib.sha256()
+            username: str = input(Print.fmt_info("请输入账号:","§6 账号 "))
+            hash_obj.update(getpass.getpass(Print.fmt_info("请输入密码(已隐藏):","§6 密码 ")).encode())
+            __password: str = hash_obj.hexdigest()
+            __mfa_code: str = getpass.getpass(Print.fmt_info("请输入双重验证码(已隐藏)(如未设置请直接回车):","§6 MFA  "))
+            Authorization: str = requests.get(url= FastBuilderApi[1],timeout=5).text
+            # so?我写完你跟我说{'message': '无效用户名或一次性密码，注意: 为防止账号盗用，您不再能够使用用户中心的密码登陆 PhoenixBuilder ，请使用 FBToken 或用户中心一次性密码登陆。', 'success': False}
+            # repo = requests.post(url=FastBuilderApi[0],data=json.dumps({"username":username,"password":__password,"server_code":"","server_passcode":"","client_public_key":""},ensure_ascii=False),headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"})
+            # print(json.loads((str(repo.text).strip("n"))))
+            # 拜拜了您嘞,我直接用用户中心的Api去了
+            repo: requests.Response = requests.post(url=FastBuilderApi[3],data=json.dumps({"username":username,"password":__password,"mfa_code":__mfa_code},ensure_ascii=False),headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"})
+            repo_text: dict = json.loads(repo.text)
+            repo_message: str = repo_text["message"]
+            repo_success: bool = repo_text["success"]
+            if repo.status_code != 200:
+                Print.print_war(f"请求Api接口失败，将自动使用Token登陆!状态码:{repo.status_code}，返回值:{repo.text}")
+                self.IF_Token()
+            if repo_success == False:
+                if "Invalid username, password, or MFA code." in repo_message:Print.print_war(f"登陆失败，无效的用户名、密码或MFA代码!");self.Login_Fc()
+            elif repo_success == True:
+                with_perfix: dict = json.loads(requests.get(url= FastBuilderApi[2],data=json.dumps({"with_prefix":FastBuilderApi[4]}),timeout=5,headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"}).text)
+                fetch_announcements: dict = json.loads(requests.get(url= FastBuilderApi[4]+with_perfix["fetch_announcements"],timeout=5,headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"}).text)
+                fetch_profile: dict = json.loads(requests.get(url= FastBuilderApi[4]+with_perfix["fetch_profile"],timeout=5,headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"}).text)
+                get_helper_status: dict = json.loads(requests.get(url= FastBuilderApi[4]+with_perfix["get_helper_status"],timeout=5,headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"}).text)
+                self.UserInfo: dict = {"isadmin": repo_text["isadmin"],"blc": fetch_profile["blc"],"cn_username": fetch_profile["cn_username"],"phoenix_otp": fetch_profile["phoenix_otp"],"points": fetch_profile["points"],"slots": fetch_profile["slots"],"get_helper_status": get_helper_status}
+                self.token = requests.get(url= FastBuilderApi[4]+with_perfix["get_phoenix_token"],data=json.dumps({"secret":f"{Authorization}"}),timeout=5,headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"}).text
+                with open("fbtoken", "w", encoding="utf-8") as f:f.write(self.token)
+        except Exception as err:
+            Print.print_err(f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}")
+    
     def Test_site_latency(self,Da:dict) -> list:
         # Da 变量数据结构
         # class Da(object):
@@ -144,52 +185,18 @@ class Frame:
             "是否记录日志": bool,
             "插件市场源": str,
         }
-        Print.print_inf("请选择登录方法:\n 1 - 使用账号密码(登录成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r")
-        Login_method: str = input("请输入你的选择:")
-        while True:
-            if Login_method.isdigit() == False:
-                Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:","§6 警告 "))
-            elif int(Login_method) > 2 or int(Login_method) < 1:
-                Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:","§6 警告 "))
-            else:break
-        if Login_method == "1":
-            if not os.path.isfile("fbtoken"):
-                Print.print_err(
-                    "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
-                )
-                # 用户选择登录方式 && 获取通过账号密码获取Token或直接输入Token
-                if fbtoken:
-                    with open("fbtoken", "w", encoding="utf-8") as f:
-                        f.write(fbtoken)
-                else:
-                    Print.print_err("未输入fbtoken, 无法继续")
-                    raise SystemExit
-        elif Login_method == "2":
-            Print.print_war("此功能正在开发，将自动使用Token登录")
-            if not os.path.isfile("fbtoken"):
-                Print.print_err(
-                    "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
-                )
-                # 用户选择登录方式 && 获取通过账号密码获取Token或直接输入Token
-                if fbtoken:
-                    with open("fbtoken", "w", encoding="utf-8") as f:
-                        f.write(fbtoken)
-                else:
-                    Print.print_err("未输入fbtoken, 无法继续")
-                    raise SystemExit
-        else:
-            Print.print_war("异常参数，将自动选择Token登录!")
-            if not os.path.isfile("fbtoken"):
-                Print.print_err(
-                    "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
-                )
-                # 用户选择登录方式 && 获取通过账号密码获取Token或直接输入Token
-                if fbtoken:
-                    with open("fbtoken", "w", encoding="utf-8") as f:
-                        f.write(fbtoken)
-                else:
-                    Print.print_err("未输入fbtoken, 无法继续")
-                    raise SystemExit
+        if not os.path.isfile("fbtoken"):
+            Print.print_inf("请选择登陆方法:\n 1 - 使用账号密码(登陆成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r")
+            Login_method: str = input(Print.fmt_info("请输入你的选择:","§6 输入 "))
+            while True:
+                if Login_method.isdigit() == False:
+                    Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:","§6 警告 "))
+                elif int(Login_method) > 2 or int(Login_method) < 1:
+                    Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:","§6 警告 "))
+                else:break
+            if Login_method == "1":self.Login_Fc()    
+            elif Login_method == "2":self.IF_Token()
+            else:self.IF_Token()
 
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
@@ -222,7 +229,7 @@ class Frame:
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
                     Config.default_cfg("ToolDelta基本配置.json", std, True)
-                    Print.print_suc("登录配置设置成功")
+                    Print.print_suc("登陆配置设置成功")
                     cfgs = std
                     break
                 except:
@@ -311,7 +318,7 @@ class Frame:
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
-                Print.print_war("fbtoken里有换行符， 会造成fb登录失败， 已自动修复")
+                Print.print_war("fbtoken里有换行符， 会造成fb登陆失败， 已自动修复")
                 with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(token.replace("\n", ""))
 
