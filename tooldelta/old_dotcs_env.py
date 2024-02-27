@@ -200,14 +200,16 @@ def get_dotcs_env(__F, print_ins):
         return status
 
     def setStatus(statusName: str, status):
-        with open(
+        with open(  # skipcq: PTC-W6004
             "data/dotcs_status_%s.txt" % statusName, "w", encoding="utf-8"
         ) as file:
             file.write(str(status))
 
     def getPlayerData(dataName: str, playerName: str, writeNew):
         try:
-            with open(f"data/players/{playerName}.json", "r", encoding="utf-8") as f:
+            with open(
+                f"data/players/{playerName}.json", "r", encoding="utf-8"
+            ) as f:  # skipcq: PTC-W6004
                 j = json.load(f)[dataName]
             return j
         except KeyError:

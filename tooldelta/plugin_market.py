@@ -1,3 +1,4 @@
+import shlex
 import requests
 import json
 import os
@@ -79,7 +80,7 @@ class PluginMarket:
             now_page = 0
             last_operation = ""
             while True:
-                os.system(CLS_CMD)
+                os.system(shlex.quote(CLS_CMD))
                 Print.print_inf(
                     market_datas["SourceName"] + ": " + market_datas["Greetings"]
                 )
@@ -138,14 +139,14 @@ class PluginMarket:
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             return
-        os.system(CLS_CMD)
+        os.system(shlex.quote(CLS_CMD))
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
 
     def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
         pre_plugins_str = (
             ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()]) or "无"
         )
-        os.system(CLS_CMD)
+        os.system(shlex.quote(CLS_CMD))
         Print.print_inf(
             f"{plugin_data.name} v{plugin_data.version_str}", need_log=False
         )

@@ -1,9 +1,11 @@
+import shlex
 import requests
 import time
 import os
 import platform
 from .color_print import Print
 import shutil
+import socket
 
 
 def _pretty_kb(n):
@@ -92,16 +94,11 @@ def download_unknown_file(url: str, save_dir: str):
 
 
 def get_free_port(start=8080, end=65535):
-    if platform.uname()[0] == "Windows":
-        for port in range(start, end):
-            r = os.popen(f'netstat -aon|findstr ":{port}"', "r")
-            if r.read() == "":
+    for port in range(start, end):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("localhost", port))
                 return port
-            Print.print_war(f"端口 {port} 正被占用, 跳过")
-    else:
-        for port in range(start, end):
-            r = os.popen(f'netstat -aon|grep ":{port}"', "r")
-            if r.read() == "":
-                return port
-            Print.print_war(f"端口 {port} 正被占用, 跳过")
+            except OSError:
+                Print.print_war(f"端口 {port} 正被占用, 跳过")
     raise Exception(f"未找到空闲端口({start}~{end})")
