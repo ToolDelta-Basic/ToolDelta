@@ -70,11 +70,11 @@ echo "Docker镜像编译完成!"
 # 创建容器
 echo "***** 安装 ToolDelta-Docker 版 *****"
 read -p "请输入数据存放目录(默认$DataPath):" TmpDataPath
-if [ ! "$TmpDataPath" = " ]; then
+if [ ! "$TmpDataPath" = "" ]; then
     DataPath="$TmpDataPath"
 fi
-read -p "请设置容器名称(默认"$DockerName"):" TmpDockerName
-if [ ! "$TmpDockerName" = " ]; then
+read -p "请设置容器名称(默认$DockerName):" TmpDockerName
+if [ ! "$TmpDockerName" = "" ]; then
     DockerName="$TmpDockerName"
 fi
 
