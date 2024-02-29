@@ -19,12 +19,24 @@
 
 - [目录](#目录)
 - [注意事项](#注意事项)
+- [在docker运行](#在docker运行)
 - [更新日志](#更新日志)
 
 # 注意事项
 
 - 遇到平台不兼容的情况请尽快提交 `Issue`
 - 已支持 `Termux`
+
+How to use?：[learn-use](https://tooldelta-wiki.tblstudio.cn/learn-use.html)
+
+Docker Image: [DockerHub](https://hub.docker.com/r/wlingzhenyu/tooldelta)
+
+# 在docker运行
+
+```bash
+docker run -v .:/app -t wlingzhenyu/tooldelta:latest
+```
+
 
 # 更新日志
 
