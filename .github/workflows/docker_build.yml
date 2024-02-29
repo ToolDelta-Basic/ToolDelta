@@ -28,10 +28,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tooldelta:${{ env.VERSION }}
+          tags: wlingzhenyu/tooldelta:${{ env.VERSION }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tooldelta:latest
+          tags: wlingzhenyu/tooldelta:latest
