@@ -8,6 +8,7 @@ import requests
 import ujson
 import random
 from typing import Callable, Optional
+
 from .color_print import Print
 from .urlmethod import download_file, get_free_port
 from .builtins import Builtins
@@ -17,6 +18,8 @@ from .sys_args import sys_args_to_dict
 # from .neo_libs import neo_conn
 from . import fbconn
 import threading
+
+import tooldelta
 
 
 class SysStatus:
@@ -427,6 +430,7 @@ class FrameNeOmg(StandardFrame):
     def update_status(self, new_status):
         self.status = new_status
         if new_status != SysStatus.RUNNING:
+            tooldelta.safe_jump()
             self.exit_event.set()  # 设置事件，触发等待结束
 
     def make_secret_key(self):

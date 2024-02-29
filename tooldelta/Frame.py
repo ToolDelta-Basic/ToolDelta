@@ -418,7 +418,7 @@ class Frame:
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
         self.launcher: FrameFBConn | FrameNeOmg | FrameNeOmgRemote = launcher(
-            self.serverNumber, self.serverPasswd, fbtoken, auth_server
+            self.serverNumber, self.serverPasswd, fbtoken, auth_server,
         )
 
     @staticmethod
@@ -612,6 +612,7 @@ class Frame:
 
     @staticmethod
     def safe_close():
+        asyncio.run(safe_jump())
         builtins.safe_close()
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")
@@ -630,6 +631,7 @@ from .plugin_load.injected_plugin import (
     execute_player_left,
     execute_player_message,
     execute_repeat,
+    safe_jump,
 )
 
 

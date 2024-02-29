@@ -1,7 +1,9 @@
 import asyncio
+from concurrent.futures import thread
 import os
 import sys
 import importlib
+import threading
 
 from tooldelta.color_print import Print
 
@@ -97,14 +99,26 @@ async def execute_asyncio_task(func_dict: dict, *args, **kwargs):
 async def execute_init():
     await execute_asyncio_task(init_plugin_funcs)
 
-
-async def execute_repeat():
+async def run_repeat():
     # 为字典中的每一个函数创建一个循环特定时间的任务
     tasks = []
     for func, time in repeat_funcs.items():
         tasks.append(repeat_task(func, time))
     # 并发执行所有任务
     await asyncio.gather(*tasks)
+
+async def safe_jump():
+    main_task.cancel()
+
+main_task: asyncio.Task
+
+async def execute_repeat():
+    global main_task
+    main_task = asyncio.create_task(run_repeat())
+    try:
+        await main_task
+    except asyncio.CancelledError:
+        Print.print_suc("重复任务 repeat_task 已退出！")
 
 
 # 处理玩家消息并执行插件
