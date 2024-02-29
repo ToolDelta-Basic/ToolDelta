@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY . /app/
 
-RUN pip install .
-RUN rm -rf /app/*
+RUN pip3 install . && \
+    rm -rf /app/*
 
 CMD ["python", "-c", "import tooldelta; tooldelta.start_tool_delta()"]
