@@ -82,7 +82,8 @@ fi
 echo "***** 安装成功! *****"
 echo "Docker版ToolDelta安装成功!"
 echo "***** ToolDelta-Docker *****"
-echo ToolDelta数据存放位置:"$DataPath"
-echo 运行容器命令:docker start "$(docker create -it --name $DockerName -t -v $DataPath:/root/.TDC --network=host tooldelta-docker:$LatestTag)"
+echo "ToolDelta数据存放位置: $DataPath"
+echo "运行容器命令: docker start '$(docker create -it --name "$DockerName" -t -v "$DataPath":/root/.TDC --network=host tooldelta-docker:"$LatestTag")'"
 echo "请提前将fbtoken放入数据目录"
 echo "********************"
+
