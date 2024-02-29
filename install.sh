@@ -5,8 +5,10 @@ install_dir="$PWD/tooldelta"
 app_name="ToolDelta"
 # 设置快捷指令
 shortcut_command="td"
+# 获取ToolDelta的最新版本
+LatestTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest" | jq -r '.tag_name')
 # 设置 GitHub release URL
-github_release_url="https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/0.3.17/ToolDelta-linux"
+github_release_url="https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
 
 function EXIT_FAILURE(){
     exit -1
