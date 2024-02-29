@@ -12,9 +12,9 @@ mkdir $DataPath
 cd $WorkDir
 
 # 判断是Termux还是普通Linux
-if [ $(uname -o) = "aarch64 Android" ]; then
+if [ "$(uname -o)" = "aarch64 Android" ]; then
     Type="Termux"
-elif [ $(uname -o) = "GNU/Linux" ]; then
+elif [ "$(uname -o)" = "GNU/Linux" ]; then
     Type="Linux"
 else
     echo "暂不支持您的操作系统类型!"
