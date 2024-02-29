@@ -43,7 +43,7 @@ if [ $? -ne  0 ]; then
     if [ $Type = "Termux" ]; then
         pkg install runc
         pkg install root-repo
-        pkg install docker   
+        pkg install docker
     elif [ $Type = "Linux" ]; then
         curl -fsSL https://get.docker.com -o get-docker.sh
         sudo sh get-docker.sh
@@ -58,7 +58,7 @@ fi
 # 下载ToolDelta文件
 wget https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/archive/refs/tags/${LatestTag}.tar.gz -O ${LatestTag}.tar.gz
 tar  zxvf  ${LatestTag}.tar.gz  -C $WorkDir
-mv $WorkDir/ToolDelta-${LatestTag}/* $WorkDir  
+mv $WorkDir/ToolDelta-${LatestTag}/* $WorkDir
 rm -f ${LatestTag}.tar.gz
 
 # 构建Docker镜像
@@ -81,6 +81,6 @@ echo "***** 安装成功! *****"
 echo "Docker版ToolDelta安装成功!"
 echo "***** ToolDelta-Docker *****"
 echo "ToolDelta数据存放位置:$DataPath"
-echo "运行容器命令:docker start $(docker create -it --name $DockerName -v $DataPath:/root/.TDC --network=host tooldelta-docker:$LatestTag)"
+echo "运行容器命令:docker start $(docker create -it --name $DockerName -t -v $DataPath:/root/.TDC --network=host tooldelta-docker:$LatestTag)"
 echo "请提前将fbtoken放入数据目录"
 echo "********************"
