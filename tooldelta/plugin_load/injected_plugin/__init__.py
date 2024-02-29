@@ -99,6 +99,7 @@ async def execute_asyncio_task(func_dict: dict, *args, **kwargs):
 async def execute_init():
     await execute_asyncio_task(init_plugin_funcs)
 
+
 async def run_repeat():
     # 为字典中的每一个函数创建一个循环特定时间的任务
     tasks = []
@@ -107,10 +108,13 @@ async def run_repeat():
     # 并发执行所有任务
     await asyncio.gather(*tasks)
 
+
 async def safe_jump():
     main_task.cancel()
 
+
 main_task: asyncio.Task
+
 
 async def execute_repeat():
     global main_task
