@@ -1,10 +1,10 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "version"
+  workflow_run:
+    workflows: ["Sync Version"]
+    types:
+      - completed
   workflow_dispatch: {}
 
 jobs:
