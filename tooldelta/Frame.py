@@ -418,7 +418,10 @@ class Frame:
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
         self.launcher: FrameFBConn | FrameNeOmg | FrameNeOmgRemote = launcher(
-            self.serverNumber, self.serverPasswd, fbtoken, auth_server,
+            self.serverNumber,
+            self.serverPasswd,
+            fbtoken,
+            auth_server,
         )
 
     @staticmethod
