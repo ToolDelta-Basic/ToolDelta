@@ -18,13 +18,13 @@ try:
     import math
     import random
     import psutil
+    import pyspeedtest
     import requests
     import nbt
     import qrcode
     import getpass
     import pymysql
     import websockets
-    import ping3
     import ujson
     import hashlib
     import base64

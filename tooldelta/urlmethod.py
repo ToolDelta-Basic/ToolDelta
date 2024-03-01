@@ -7,6 +7,7 @@ from .color_print import Print
 import shutil
 import ping3
 import re
+import pyspeedtest
 from typing import Union
 import socket
 
@@ -95,25 +96,22 @@ def download_unknown_file(url: str, save_dir: str):
     else:
         download_file(url, save_dir)
 
-
-# 该函数会堵塞程序会严重影响运行速度!
-def Test_site_latency(self, Da: dict) -> list:
-    # Da 变量数据结构
-    # class Da(object):
-    #     def __init__(self) -> dict:
-    #         self.url: str
-    #         self.mirror_url: list       (Union[list,str] <- 未采用!如只需要提交单个镜像网站需以["https://dl.mirrorurl.com"]方式传入)
-    # 返回结构:{"https://dl.url1.com","https://dl.url2.com"}返回类型:list排序方式:从快到慢,所以通常使用Fastest_url:str = next(iter(Url_sor))[0]就可使用最快的链接
-    tmp_speed: dict = {}
-    tmp_speed[Da["url"]] = ping3.ping(
-        re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", Da["url"]).group()
-    )
+# 请注意！如果以正常方式运行该函数会导致程序运行缓慢！
+def Test_site_latency(Da: dict) -> list:
+    tmp_speed = {}
+    tmp_speed[Da["url"]] = measure_latency(Da["url"])
     for url in Da["mirror_url"]:
-        Tmp: Union[float, None] = ping3.ping(
-            re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", url).group()
-        )
-        tmp_speed[url] = Tmp if Tmp != None else 1024
-    return sorted(tmp_speed.items(), key=lambda x: x[1])
+        tmp_speed[url] = measure_latency(url)
+    sorted_speed = sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
+    return sorted_speed
+
+def measure_latency(url: str) -> float:
+    try:
+        st = pyspeedtest.SpeedTest(re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))",url).group())
+        download_speed = st.download() # / 1000000  # # 转换为兆字节/秒 （取消）
+        return download_speed
+    except Exception:
+        return -1  # 返回-1表示测速失败
 
 
 def get_free_port(start=8080, end=65535):
