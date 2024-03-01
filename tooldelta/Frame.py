@@ -111,10 +111,6 @@ class Frame:
                 Print.fmt_info("请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  ")
             )
             Authorization: str = requests.get(url=FastBuilderApi[1], timeout=5).text
-            # so?我写完你跟我说{'message': '无效用户名或一次性密码，注意: 为防止账号盗用，您不再能够使用用户中心的密码登陆 PhoenixBuilder ，请使用 FBToken 或用户中心一次性密码登陆。', 'success': False}
-            # repo = requests.post(url=FastBuilderApi[0],data=json.dumps({"username":username,"password":__password,"server_code":"","server_passcode":"","client_public_key":""},ensure_ascii=False),headers={"Content-Type": "application/json","authorization": f"Bearer {Authorization}"})
-            # print(json.loads((str(repo.text).strip("n"))))
-            # 拜拜了您嘞,我直接用用户中心的Api去了
             repo: requests.Response = requests.post(
                 url=FastBuilderApi[3],
                 data=json.dumps(
