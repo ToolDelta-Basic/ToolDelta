@@ -96,6 +96,7 @@ def download_unknown_file(url: str, save_dir: str):
     else:
         download_file(url, save_dir)
 
+
 # 请注意！如果以正常方式运行该函数会导致程序运行缓慢！
 def Test_site_latency(Da: dict) -> list:
     tmp_speed = {}
@@ -105,10 +106,13 @@ def Test_site_latency(Da: dict) -> list:
     sorted_speed = sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
     return sorted_speed
 
+
 def measure_latency(url: str) -> float:
     try:
-        st = pyspeedtest.SpeedTest(re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))",url).group())
-        download_speed = st.download() # / 1000000  # # 转换为兆字节/秒 （取消）
+        st = pyspeedtest.SpeedTest(
+            re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", url).group()
+        )
+        download_speed = st.download()  # / 1000000  # # 转换为兆字节/秒 （取消）
         return download_speed
     except Exception:
         return -1  # 返回-1表示测速失败
