@@ -29,7 +29,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
-from .urlmethod import download_file
+from .urlmethod import download_file, Test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union
 
@@ -79,7 +79,7 @@ class Frame:
             Print.print_err("启动参数错误")
             raise SystemExit
 
-    def IF_Token(self):
+    def if_token(self):
         if not os.path.isfile("fbtoken"):
             Print.print_err(
                 "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
@@ -92,7 +92,7 @@ class Frame:
                 Print.print_err("未输入fbtoken, 无法继续")
                 raise SystemExit
 
-    def Login_Fc(self) -> requests.Response:
+    def login_fc(self) -> requests.Response:
         try:
             FastBuilderApi: list = [
                 "https://api.fastbuilder.pro/api/phoenix/login",
@@ -137,11 +137,11 @@ class Frame:
                 Print.print_war(
                     f"请求Api接口失败，将自动使用Token登陆!状态码:{repo.status_code}，返回值:{repo.text}"
                 )
-                self.IF_Token()
+                self.if_token()
             if repo_success == False:
                 if "Invalid username, password, or MFA code." in repo_message:
                     Print.print_war(f"登陆失败，无效的用户名、密码或MFA代码!")
-                    self.Login_Fc()
+                    self.login_fc()
             elif repo_success == True:
                 with_perfix: dict = json.loads(
                     requests.get(
@@ -207,26 +207,6 @@ class Frame:
         except Exception as err:
             Print.print_err(f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}")
 
-    def Test_site_latency(self, Da: dict) -> list:
-        # Da 变量数据结构
-        # class Da(object):
-        #     def __init__(self) -> dict:
-        #         self.url: str
-        #         self.mirror_url: list       (Union[list,str] <- 未采用!如只需要提交单个镜像网站需以["https://dl.mirrorurl.com"]方式传入)
-        # 返回结构:{"https://dl.url1.com","https://dl.url2.com"}返回类型:list排序方式:从快到慢,所以通常使用Fastest_url:str = next(iter(Url_sor))[0]就可使用最快的链接
-        tmp_speed: dict = {}
-        tmp_speed[Da["url"]] = ping3.ping(
-            re.search(
-                r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", Da["url"]
-            ).group()
-        )
-        for url in Da["mirror_url"]:
-            Tmp: Union[float, None] = ping3.ping(
-                re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", url).group()
-            )
-            tmp_speed[url] = Tmp if Tmp != None else 1024
-        return sorted(tmp_speed.items(), key=lambda x: x[1])
-
     def auto_update(self):
         # 因行数缩减所以此函数可读性极差!
         try:
@@ -242,7 +222,7 @@ class Frame:
                     return True
                 Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
                 if platform.system() == "Linux":
-                    Url_sor: dict = self.Test_site_latency(
+                    Url_sor: dict = Test_site_latency(
                         {
                             "url": f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux",
                             "mirror_url": [
@@ -255,7 +235,7 @@ class Frame:
                     URL: str = Fastest_url
                     file_path: str = os.path.join(os.getcwd(), "ToolDelta-linux_new")
                 elif platform.system() == "Windows":
-                    Url_sor: dict = self.Test_site_latency(
+                    Url_sor: dict = Test_site_latency(
                         {
                             "url": f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe",
                             "mirror_url": [
@@ -357,11 +337,11 @@ class Frame:
                 else:
                     break
             if Login_method == "1":
-                self.Login_Fc()
+                self.login_fc()
             elif Login_method == "2":
-                self.IF_Token()
+                self.if_token()
             else:
-                self.IF_Token()
+                self.if_token()
 
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
