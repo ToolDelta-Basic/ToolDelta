@@ -95,6 +95,7 @@ def download_unknown_file(url: str, save_dir: str):
     else:
         download_file(url, save_dir)
 
+
 # 该函数会堵塞程序会严重影响运行速度!
 def Test_site_latency(self, Da: dict) -> list:
     # Da 变量数据结构
@@ -105,9 +106,7 @@ def Test_site_latency(self, Da: dict) -> list:
     # 返回结构:{"https://dl.url1.com","https://dl.url2.com"}返回类型:list排序方式:从快到慢,所以通常使用Fastest_url:str = next(iter(Url_sor))[0]就可使用最快的链接
     tmp_speed: dict = {}
     tmp_speed[Da["url"]] = ping3.ping(
-        re.search(
-            r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", Da["url"]
-        ).group()
+        re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", Da["url"]).group()
     )
     for url in Da["mirror_url"]:
         Tmp: Union[float, None] = ping3.ping(
@@ -115,6 +114,7 @@ def Test_site_latency(self, Da: dict) -> list:
         )
         tmp_speed[url] = Tmp if Tmp != None else 1024
     return sorted(tmp_speed.items(), key=lambda x: x[1])
+
 
 def get_free_port(start=8080, end=65535):
     for port in range(start, end):
