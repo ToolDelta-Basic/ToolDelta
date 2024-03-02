@@ -91,7 +91,7 @@ class Frame:
                 Print.print_err("未输入fbtoken, 无法继续")
                 raise SystemExit
 
-    def login_fc(self) -> requests.Response:
+    def login_fbuc(self) -> requests.Response:
         try:
             FastBuilderApi: list = [
                 "https://api.fastbuilder.pro/api/phoenix/login",
@@ -136,7 +136,7 @@ class Frame:
             if not repo_success:
                 if "Invalid username, password, or MFA code." in repo_message:
                     Print.print_war(f"登陆失败，无效的用户名、密码或MFA代码!")
-                    self.login_fc()
+                    self.login_fbuc()
             else:
                 with_perfix: dict = json.loads(
                     requests.get(
@@ -203,6 +203,7 @@ class Frame:
             Print.print_err(f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}")
 
     def auto_update(self):
+        # 对ToolDelta进行自动更新
         try:
             latest_version = requests.get(
                 "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"
@@ -215,20 +216,21 @@ class Frame:
                     Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
                     return True
                 Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
+                tooldelta_url = f"https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
                 url = (
-                    f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux"
+                    f"https://gh.ddlc.top//ToolDelta-linux"
                     if platform.system() == "Linux"
-                    else f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe"
+                    else f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-windows.exe"
                 )
                 mirror_urls = (
                     [
-                        f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux",
-                        f"https://hub.gitmirror.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux",
+                        f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux",
+                        f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux",
                     ]
                     if platform.system() == "Linux"
                     else [
-                        f"https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe",
-                        f"https://hub.gitmirror.com/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-windows.exe",
+                        f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe",
+                        f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe",
                     ]
                 )
                 file_path = (
@@ -322,7 +324,7 @@ class Frame:
                 else:
                     break
             if Login_method == "1":
-                self.login_fc()
+                self.login_fbuc()
             elif Login_method == "2":
                 self.if_token()
             else:

@@ -1,7 +1,7 @@
 import time
 import ujson as json
 from typing import Any
-from tooldelta.Frame import Frame, GameCtrl
+from tooldelta.frame import Frame, GameCtrl
 from typing import Optional
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput

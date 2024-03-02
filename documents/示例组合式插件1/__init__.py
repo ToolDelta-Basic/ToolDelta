@@ -4,7 +4,7 @@ from tooldelta import *
 
 import json
 
-from tooldelta.Frame import Builtins, Config, Frame
+from tooldelta.frame import Builtins, Config, Frame
 
 
 # 注册插件主类

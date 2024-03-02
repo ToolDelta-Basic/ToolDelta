@@ -3,7 +3,7 @@ from tooldelta import plugins, Plugin, PluginAPI
 from dataclasses import dataclass
 from typing import Callable
 
-from tooldelta.Frame import Builtins, Config, Frame
+from tooldelta.frame import Builtins, Config, Frame
 
 plugins.checkSystemVersion((0, 1, 8))
 
