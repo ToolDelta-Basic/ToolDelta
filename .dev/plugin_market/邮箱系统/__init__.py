@@ -2,6 +2,7 @@ from tooldelta import Plugin, PluginAPI, plugins, Frame, Builtins
 
 JsonIO = Builtins.SimpleJsonDataReader
 
+
 @plugins.add_plugin_as_api("邮箱系统")
 class MailSystem(Plugin, PluginAPI):
     class Mail:
@@ -13,7 +14,7 @@ class MailSystem(Plugin, PluginAPI):
             content: str,
             give_items: dict[str, int] = {},
             exe_cmds: list[str] = [],
-            func_hooks_and_args: dict[str, tuple] = {}
+            func_hooks_and_args: dict[str, tuple] = {},
         ):
             self.sender, self.title, self.date = sender, title, date
             self.content = content
@@ -29,7 +30,7 @@ class MailSystem(Plugin, PluginAPI):
                 "content": self.content,
                 "give_items": self.give_items,
                 "exec_cmds": self.exec_cmds,
-                "func_hooks_and_args": self.func_hooks_and_args
+                "func_hooks_and_args": self.func_hooks_and_args,
             }
 
     def __init__(self, f: Frame):
@@ -48,7 +49,7 @@ class MailSystem(Plugin, PluginAPI):
         counter = 0
         while name in it:
             counter += 1
-            name = name.replace("(%d)"%(counter-1), "") + "(%d)"%counter
+            name = name.replace("(%d)" % (counter - 1), "") + "(%d)" % counter
         return name
 
     def _store_mail(self, who: str, m: Mail):
@@ -57,4 +58,3 @@ class MailSystem(Plugin, PluginAPI):
         m.title = valid_name
         old[valid_name] = m.dump()
         JsonIO.writeFileTo("邮箱系统-玩家邮箱", who, old)
-
