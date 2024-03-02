@@ -591,7 +591,7 @@ createThread = Builtins.createThread
 
 from .builtins import Builtins
 from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS
+from .packets import PacketIDS, game_data 
 from .plugin_load.injected_plugin import (
     execute_death_message,
     execute_init,
@@ -606,6 +606,7 @@ from .plugin_load.injected_plugin import (
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
+        self.Game_Data = game_data()
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
@@ -819,3 +820,21 @@ class GameCtrl:
             text: 文本
         """
         self.sendwocmd(f"title {target} actionbar {text}")
+
+    def get_game_data(self):
+        """
+        获取minecraft事件数据
+
+        返回参数:
+            类: game_data
+                变量: 
+                    packets 数据包
+                    death 死亡信息
+                    biome 生物群落
+                    block 方块信息
+                    entity 实体信息
+                    gamerule 游戏规则
+                    item 掉落物
+                    subtitles 音效
+        """
+        return self.Game_Data
