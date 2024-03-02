@@ -3,6 +3,7 @@ class PacketIDS:
     PlayerList = 63
     CommandOutput = 79
 
+
 class game_data(object):
     def __init__(self) -> None:
         self.packets = {
@@ -184,127 +185,127 @@ class game_data(object):
             "176": "IDClientStartItemCooldown",
             "177": "IDScriptMessage",
             "178": "IDCodeBuilderSource",
-        # 以下为机翻数据包名称(仅供参考！)
-        # 1. "IDLogin" -> "ID 登录"
-        # 2. "IDPlayStatus" -> "ID 游戏状态"
-        # 3. "IDServerToClientHandshake" -> "ID 服务器到客户端握手"
-        # 4. "IDClientToServerHandshake" -> "ID 客户端到服务器握手"
-        # 5. "IDDisconnect" -> "ID 断开连接"
-        # 6. "IDResourcePacksInfo" -> "ID 资源包信息"
-        # 7. "IDResourcePackStack" -> "ID 资源包堆栈"
-        # 8. "IDResourcePackClientResponse" -> "ID 资源包客户端响应"
-        # 9. "IDText" -> "ID 文本"
-        # 10. "IDSetTime" -> "ID 设置时间"
-        # 11. "IDStartGame" -> "ID 开始游戏"
-        # 12. "IDAddPlayer" -> "ID 添加玩家"
-        # 13. "IDAddActor" -> "ID 添加角色"
-        # 14. "_" -> "_"
-        # 15. "IDRemoveActor" -> "ID 移除角色"
-        # 16. "IDAddItemActor" -> "ID 添加物品角色"
-        # 17. "IDTakeItemActor" -> "ID 拿起物品角色"
-        # 18. "IDMoveActorAbsolute" -> "ID 绝对移动角色"
-        # 19. "IDMovePlayer" -> "ID 移动玩家"
-        # 20. "IDPassengerJump" -> "ID 乘客跳跃"
-        # 21. "IDUpdateBlock" -> "ID 更新方块"
-        # 22. "IDAddPainting" -> "ID 添加绘画"
-        # 23. "IDTickSync" -> "ID 时钟同步"
-        # 24. "_" -> "_"
-        # 25. "IDLevelEvent" -> "ID 关卡事件"
-        # 26. "IDBlockEvent" -> "ID 方块事件"
-        # 27. "IDActorEvent" -> "ID 角色事件"
-        # 28. "IDMobEffect" -> "ID 生物效果"
-        # 29. "IDUpdateAttributes" -> "ID 更新属性"
-        # 30. "IDInventoryTransaction" -> "ID 物品栏交易"
-        # 31. "IDMobEquipment" -> "ID 生物装备"
-        # 32. "IDMobArmourEquipment" -> "ID 生物护甲装备"
-        # 33. "IDInteract" -> "ID 交互"
-        # 34. "IDBlockPickRequest" -> "ID 方块选择请求"
-        # 35. "IDActorPickRequest" -> "ID 角色选择请求"
-        # 36. "IDPlayerAction" -> "ID 玩家动作"
-        # 37. "_" -> "_"
-        # 38. "IDHurtArmour" -> "ID 伤害护甲"
-        # 39. "IDSetActorData" -> "ID 设置角色数据"
-        # 40. "IDSetActorMotion" -> "ID 设置角色动作"
-        # 41. "IDSetActorLink" -> "ID 设置角色链接"
-        # 42. "IDSetHealth" -> "ID 设置生命值"
-        # 43. "IDSetSpawnPosition" -> "ID 设置生成位置"
-        # 44. "IDAnimate" -> "ID 动画"
-        # 45. "IDRespawn" -> "ID 重生"
-        # 46. "IDContainerOpen" -> "ID 打开容器"
-        # 47. "IDContainerClose" -> "ID 关闭容器"
-        # 48. "IDPlayerHotBar" -> "ID 玩家快捷栏"
-        # 49. "IDInventoryContent" -> "ID 物品栏内容"
-        # 50. "IDInventorySlot" -> "ID 物品栏槽位"
-        # 51. "IDContainerSetData" -> "ID 设置容器数据"
-        # 52. "IDCraftingData" -> "ID 制作数据"
-        # 53. "IDCraftingEvent" -> "ID 制作事件"
-        # 54. "IDGUIDataPickItem" -> "ID GUI 数据选取物品"
-        # 55. "IDAdventureSettings" -> "ID 冒险设置"
-        # 56. "IDBlockActorData" -> "ID 方块角色数据"
-        # 57. "IDPlayerInput" -> "ID 玩家输入"
-        # 58. "IDLevelChunk" -> "ID 关卡区块"
-        # 59. "IDSetCommandsEnabled" -> "ID 设置命令启用"
-        # 60. "IDSetDifficulty" -> "ID 设置难度"
-        # 61. "IDChangeDimension" -> "ID 切换维度"
-        # 62. "IDSetPlayerGameType" -> "ID 设置玩家游戏模式"
-        # 63. "IDPlayerList" -> "ID 玩家列表"
-        # 64. "IDSimpleEvent" -> "ID 简单事件"
-        # 65. "IDEvent" -> "ID 事件"
-        # 66. "IDSpawnExperienceOrb" -> "ID 生成经验球"
-        # 67. "IDClientBoundMapItemData" -> "ID 客户端绑定的地图物品数据"
-        # 68. "IDMapInfoRequest" -> "ID 地图信息请求"
-        # 69. "IDRequestChunkRadius" -> "ID 请求区块半径"
-        # 70. "IDChunkRadiusUpdated" -> "ID 区块半径更新"
-        # 71. "IDItemFrameDropItem" -> "ID 物品展示框掉落物品"
-        # 72. "IDGameRulesChanged" -> "ID 游戏规则更改"
-        # 73. "IDCamera" -> "ID 摄像机"
-        # 74. "IDBossEvent" -> "ID Boss 事件"
-        # 75. "IDShowCredits" -> "ID 显示制作人员"
-        # 76. "IDAvailableCommands" -> "ID 可用命令"
-        # 77. "IDCommandRequest" -> "ID 命令请求"
-        # 78. "IDCommandBlockUpdate" -> "ID 命令方块更新"
-        # 79. "IDCommandOutput" -> "ID 命令输出"
-        # 80. "IDUpdateTrade" -> "ID 更新交易"
-        # 81. "IDUpdateEquip" -> "ID 更新装备"
-        # 82. "IDResourcePackDataInfo" -> "ID 资源包数据信息"
-        # 83. "IDResourcePackChunkData" -> "ID 资源包区块数据"
-        # 84. "IDResourcePackChunkRequest" -> "ID 资源包区块请求"
-        # 85. "IDTransfer" -> "ID 传输"
-        # 86. "IDPlaySound" -> "ID 播放声音"
-        # 87. "IDStopSound" -> "ID 停止声音"
-        # 88. "IDSetTitle" -> "ID 设置标题"
-        # 89. "IDAddBehaviourTree" -> "ID 添加行为树"
-        # 90. "IDStructureBlockUpdate" -> "ID 结构方块更新"
-        # 91. "IDShowStoreOffer" -> "ID 显示商店优惠"
-        # 92. "IDPurchaseReceipt" -> "ID 购买凭据"
-        # 93. "IDPlayerSkin" -> "ID 玩家皮肤"
-        # 94. "IDSubClientLogin" -> "ID 子客户端登录"
-        # 95. "IDAutomationClientConnect" -> "ID 自动化客户端连接"
-        # 96. "IDSetLastHurtBy" -> "ID 设置最后受伤者"
-        # 97. "IDBookEdit" -> "ID 编辑书籍"
-        # 98. "IDNPCRequest" -> "ID NPC 请求"
-        # 99. "IDPhotoTransfer" -> "ID 照片传输"
-        # 100. "IDModalFormRequest" -> "ID 模态表单请求"
-        # 101. "IDModalFormResponse" -> "ID 模态表单响应"
-        # 102. "IDServerSettingsRequest" -> "ID 服务器设置请求"
-        # 103. "IDServerSettingsResponse" -> "ID 服务器设置响应"
-        # 104. "IDShowProfile" -> "ID 显示个人资料"
-        # 105. "IDSetDefaultGameType" -> "ID 设置默认游戏模式"
-        # 106. "IDRemoveObjective" -> "ID 移除目标"
-        # 107. "IDSetDisplayObjective" -> "ID 设置显示目标"
-        # 108. "IDSetScore" -> "ID 设置分数"
-        # 109. "IDLabTable" -> "ID 实验室桌子"
-        # 110. "IDUpdateBlockSynced" -> "ID 同步更新方块"
-        # 111. "IDMoveActorDelta" -> "ID 移动角色增量"
-        # 112. "IDSetScoreboardIdentity" -> "ID 设置记分板身份"
-        # 113. "IDSetLocalPlayerAsInitialised" -> "ID 设置本地玩家已初始化"
-        # 114. "IDUpdateSoftEnum" -> "ID 更新软枚举"
-        # 115. "IDNetworkStackLatency" -> "ID 网络堆栈延迟"
-        # 116. "_" -> "_"
-        # 117. "IDScriptCustomEvent" -> "ID
+            # 以下为机翻数据包名称(仅供参考！)
+            # 1. "IDLogin" -> "ID 登录"
+            # 2. "IDPlayStatus" -> "ID 游戏状态"
+            # 3. "IDServerToClientHandshake" -> "ID 服务器到客户端握手"
+            # 4. "IDClientToServerHandshake" -> "ID 客户端到服务器握手"
+            # 5. "IDDisconnect" -> "ID 断开连接"
+            # 6. "IDResourcePacksInfo" -> "ID 资源包信息"
+            # 7. "IDResourcePackStack" -> "ID 资源包堆栈"
+            # 8. "IDResourcePackClientResponse" -> "ID 资源包客户端响应"
+            # 9. "IDText" -> "ID 文本"
+            # 10. "IDSetTime" -> "ID 设置时间"
+            # 11. "IDStartGame" -> "ID 开始游戏"
+            # 12. "IDAddPlayer" -> "ID 添加玩家"
+            # 13. "IDAddActor" -> "ID 添加角色"
+            # 14. "_" -> "_"
+            # 15. "IDRemoveActor" -> "ID 移除角色"
+            # 16. "IDAddItemActor" -> "ID 添加物品角色"
+            # 17. "IDTakeItemActor" -> "ID 拿起物品角色"
+            # 18. "IDMoveActorAbsolute" -> "ID 绝对移动角色"
+            # 19. "IDMovePlayer" -> "ID 移动玩家"
+            # 20. "IDPassengerJump" -> "ID 乘客跳跃"
+            # 21. "IDUpdateBlock" -> "ID 更新方块"
+            # 22. "IDAddPainting" -> "ID 添加绘画"
+            # 23. "IDTickSync" -> "ID 时钟同步"
+            # 24. "_" -> "_"
+            # 25. "IDLevelEvent" -> "ID 关卡事件"
+            # 26. "IDBlockEvent" -> "ID 方块事件"
+            # 27. "IDActorEvent" -> "ID 角色事件"
+            # 28. "IDMobEffect" -> "ID 生物效果"
+            # 29. "IDUpdateAttributes" -> "ID 更新属性"
+            # 30. "IDInventoryTransaction" -> "ID 物品栏交易"
+            # 31. "IDMobEquipment" -> "ID 生物装备"
+            # 32. "IDMobArmourEquipment" -> "ID 生物护甲装备"
+            # 33. "IDInteract" -> "ID 交互"
+            # 34. "IDBlockPickRequest" -> "ID 方块选择请求"
+            # 35. "IDActorPickRequest" -> "ID 角色选择请求"
+            # 36. "IDPlayerAction" -> "ID 玩家动作"
+            # 37. "_" -> "_"
+            # 38. "IDHurtArmour" -> "ID 伤害护甲"
+            # 39. "IDSetActorData" -> "ID 设置角色数据"
+            # 40. "IDSetActorMotion" -> "ID 设置角色动作"
+            # 41. "IDSetActorLink" -> "ID 设置角色链接"
+            # 42. "IDSetHealth" -> "ID 设置生命值"
+            # 43. "IDSetSpawnPosition" -> "ID 设置生成位置"
+            # 44. "IDAnimate" -> "ID 动画"
+            # 45. "IDRespawn" -> "ID 重生"
+            # 46. "IDContainerOpen" -> "ID 打开容器"
+            # 47. "IDContainerClose" -> "ID 关闭容器"
+            # 48. "IDPlayerHotBar" -> "ID 玩家快捷栏"
+            # 49. "IDInventoryContent" -> "ID 物品栏内容"
+            # 50. "IDInventorySlot" -> "ID 物品栏槽位"
+            # 51. "IDContainerSetData" -> "ID 设置容器数据"
+            # 52. "IDCraftingData" -> "ID 制作数据"
+            # 53. "IDCraftingEvent" -> "ID 制作事件"
+            # 54. "IDGUIDataPickItem" -> "ID GUI 数据选取物品"
+            # 55. "IDAdventureSettings" -> "ID 冒险设置"
+            # 56. "IDBlockActorData" -> "ID 方块角色数据"
+            # 57. "IDPlayerInput" -> "ID 玩家输入"
+            # 58. "IDLevelChunk" -> "ID 关卡区块"
+            # 59. "IDSetCommandsEnabled" -> "ID 设置命令启用"
+            # 60. "IDSetDifficulty" -> "ID 设置难度"
+            # 61. "IDChangeDimension" -> "ID 切换维度"
+            # 62. "IDSetPlayerGameType" -> "ID 设置玩家游戏模式"
+            # 63. "IDPlayerList" -> "ID 玩家列表"
+            # 64. "IDSimpleEvent" -> "ID 简单事件"
+            # 65. "IDEvent" -> "ID 事件"
+            # 66. "IDSpawnExperienceOrb" -> "ID 生成经验球"
+            # 67. "IDClientBoundMapItemData" -> "ID 客户端绑定的地图物品数据"
+            # 68. "IDMapInfoRequest" -> "ID 地图信息请求"
+            # 69. "IDRequestChunkRadius" -> "ID 请求区块半径"
+            # 70. "IDChunkRadiusUpdated" -> "ID 区块半径更新"
+            # 71. "IDItemFrameDropItem" -> "ID 物品展示框掉落物品"
+            # 72. "IDGameRulesChanged" -> "ID 游戏规则更改"
+            # 73. "IDCamera" -> "ID 摄像机"
+            # 74. "IDBossEvent" -> "ID Boss 事件"
+            # 75. "IDShowCredits" -> "ID 显示制作人员"
+            # 76. "IDAvailableCommands" -> "ID 可用命令"
+            # 77. "IDCommandRequest" -> "ID 命令请求"
+            # 78. "IDCommandBlockUpdate" -> "ID 命令方块更新"
+            # 79. "IDCommandOutput" -> "ID 命令输出"
+            # 80. "IDUpdateTrade" -> "ID 更新交易"
+            # 81. "IDUpdateEquip" -> "ID 更新装备"
+            # 82. "IDResourcePackDataInfo" -> "ID 资源包数据信息"
+            # 83. "IDResourcePackChunkData" -> "ID 资源包区块数据"
+            # 84. "IDResourcePackChunkRequest" -> "ID 资源包区块请求"
+            # 85. "IDTransfer" -> "ID 传输"
+            # 86. "IDPlaySound" -> "ID 播放声音"
+            # 87. "IDStopSound" -> "ID 停止声音"
+            # 88. "IDSetTitle" -> "ID 设置标题"
+            # 89. "IDAddBehaviourTree" -> "ID 添加行为树"
+            # 90. "IDStructureBlockUpdate" -> "ID 结构方块更新"
+            # 91. "IDShowStoreOffer" -> "ID 显示商店优惠"
+            # 92. "IDPurchaseReceipt" -> "ID 购买凭据"
+            # 93. "IDPlayerSkin" -> "ID 玩家皮肤"
+            # 94. "IDSubClientLogin" -> "ID 子客户端登录"
+            # 95. "IDAutomationClientConnect" -> "ID 自动化客户端连接"
+            # 96. "IDSetLastHurtBy" -> "ID 设置最后受伤者"
+            # 97. "IDBookEdit" -> "ID 编辑书籍"
+            # 98. "IDNPCRequest" -> "ID NPC 请求"
+            # 99. "IDPhotoTransfer" -> "ID 照片传输"
+            # 100. "IDModalFormRequest" -> "ID 模态表单请求"
+            # 101. "IDModalFormResponse" -> "ID 模态表单响应"
+            # 102. "IDServerSettingsRequest" -> "ID 服务器设置请求"
+            # 103. "IDServerSettingsResponse" -> "ID 服务器设置响应"
+            # 104. "IDShowProfile" -> "ID 显示个人资料"
+            # 105. "IDSetDefaultGameType" -> "ID 设置默认游戏模式"
+            # 106. "IDRemoveObjective" -> "ID 移除目标"
+            # 107. "IDSetDisplayObjective" -> "ID 设置显示目标"
+            # 108. "IDSetScore" -> "ID 设置分数"
+            # 109. "IDLabTable" -> "ID 实验室桌子"
+            # 110. "IDUpdateBlockSynced" -> "ID 同步更新方块"
+            # 111. "IDMoveActorDelta" -> "ID 移动角色增量"
+            # 112. "IDSetScoreboardIdentity" -> "ID 设置记分板身份"
+            # 113. "IDSetLocalPlayerAsInitialised" -> "ID 设置本地玩家已初始化"
+            # 114. "IDUpdateSoftEnum" -> "ID 更新软枚举"
+            # 115. "IDNetworkStackLatency" -> "ID 网络堆栈延迟"
+            # 116. "_" -> "_"
+            # 117. "IDScriptCustomEvent" -> "ID
         }
 
-        self.death: dict = {  
+        self.death: dict = {
             "death.attack.anvil": "%[1]s被坠落的铁砧压扁了",
             "death.attack.anvil.player": "%[1]s在与%[2]s战斗时被坠落的铁砧压扁了",
             "death.attack.arrow": "%[1]s被%[2]s射杀",
@@ -403,8 +404,8 @@ class game_data(object):
             "death.fell.assist.item": "%[1]s因为%[2]s使用了%[3]s注定要摔死",
             "death.fell.finish": "%[1]s摔伤得太重并被%[2]s完结了生命",
             "death.fell.finish.item": "%[1]s摔伤得太重并被%[2]s用%[3]s完结了生命",
-            "death.fell.killer": "%[1]s注定要摔死"
-            }
+            "death.fell.killer": "%[1]s注定要摔死",
+        }
 
         self.biome: dict = {
             "biome.minecraft.badlands": "恶地",
@@ -470,7 +471,7 @@ class game_data(object):
             "biome.minecraft.windswept_gravelly_hills": "风袭沙砾丘陵",
             "biome.minecraft.windswept_hills": "风袭丘陵",
             "biome.minecraft.windswept_savanna": "风袭热带草原",
-            "biome.minecraft.wooded_badlands": "疏林恶地"
+            "biome.minecraft.wooded_badlands": "疏林恶地",
         }
 
         self.block: dict = {
@@ -2184,7 +2185,7 @@ class game_data(object):
             "block.minecraft.yellow_terracotta": "黄色陶瓦",
             "block.minecraft.yellow_wool": "黄色羊毛",
             "block.minecraft.zombie_head": "僵尸的头",
-            "block.minecraft.zombie_wall_head": "墙上的僵尸的头"
+            "block.minecraft.zombie_wall_head": "墙上的僵尸的头",
         }
 
         self.entity: dict = {
@@ -2364,7 +2365,7 @@ class game_data(object):
             "entity.minecraft.zombie": "僵尸",
             "entity.minecraft.zombie_horse": "僵尸马",
             "entity.minecraft.zombie_villager": "僵尸村民",
-            "entity.minecraft.zombified_piglin": "僵尸猪灵"
+            "entity.minecraft.zombified_piglin": "僵尸猪灵",
         }
 
         self.gamerule: dict = {
@@ -2448,7 +2449,7 @@ class game_data(object):
             "gamerule.universalAnger": "无差别愤怒",
             "gamerule.universalAnger.description": "愤怒的中立生物将攻击附近的所有玩家，而不再限于激怒它们的玩家。禁用“宽恕死亡玩家”可达到最佳效果。",
             "gamerule.waterSourceConversion": "允许流动水转化为水源",
-            "gamerule.waterSourceConversion.description": "流动水在两面与水源相邻时转化为水源。"
+            "gamerule.waterSourceConversion.description": "流动水在两面与水源相邻时转化为水源。",
         }
 
         self.item: dict = {
@@ -3055,7 +3056,7 @@ class game_data(object):
             "item.minecraft.zombie_horse_spawn_egg": "僵尸马刷怪蛋",
             "item.minecraft.zombie_spawn_egg": "僵尸刷怪蛋",
             "item.minecraft.zombie_villager_spawn_egg": "僵尸村民刷怪蛋",
-            "item.minecraft.zombified_piglin_spawn_egg": "僵尸猪灵刷怪蛋"
+            "item.minecraft.zombified_piglin_spawn_egg": "僵尸猪灵刷怪蛋",
         }
 
         self.subtitles: dict = {
@@ -3826,8 +3827,9 @@ class game_data(object):
             "subtitles.ui.cartography_table.take_result": "地图：绘制",
             "subtitles.ui.loom.take_result": "织布机：使用",
             "subtitles.ui.stonecutter.take_result": "切石机：使用",
-            "subtitles.weather.rain": "雨：落下"
+            "subtitles.weather.rain": "雨：落下",
         }
+
 
 class SubPacket_CmdOutputMsg:
     Success: bool

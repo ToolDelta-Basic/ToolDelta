@@ -591,7 +591,7 @@ createThread = Builtins.createThread
 
 from .builtins import Builtins
 from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS, game_data 
+from .packets import PacketIDS, game_data
 from .plugin_load.injected_plugin import (
     execute_death_message,
     execute_init,
@@ -827,7 +827,7 @@ class GameCtrl:
 
         返回参数:
             类: game_data
-                变量: 
+                变量:
                     packets 数据包
                     death 死亡信息
                     biome 生物群落
