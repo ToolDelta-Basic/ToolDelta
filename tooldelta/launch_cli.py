@@ -467,9 +467,10 @@ class FrameNeOmg(StandardFrame):
         try:
             res = json.loads(
                 requests.get(
-                    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json",timeout=5
+                    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json",
+                    timeout=5,
                 ).text
-            ) # 该行代码有概率导致程序长时间未响应所以添加timeout
+            )  # 该行代码有概率导致程序长时间未响应所以添加timeout
             use_mirror = res["Mirror"][0]
         except Exception as err:
             Print.print_err(f"获取依赖库表出现问题: {err}")
@@ -486,8 +487,8 @@ class FrameNeOmg(StandardFrame):
         source_dict = res[sys_info_fmt]
         commit_file_path, commit_url = list(res["Commit"].items())[0]
         commit_remote = requests.get(
-            use_mirror + "/raw.githubusercontent.com/" + commit_url,timeout=5
-        ).text # 该行代码有概率导致程序长时间未响应所以添加timeout
+            use_mirror + "/raw.githubusercontent.com/" + commit_url, timeout=5
+        ).text  # 该行代码有概率导致程序长时间未响应所以添加timeout
         commit_local = ""
         commit_file_path = os.path.join(os.getcwd(), commit_file_path)
         if not os.path.isfile(commit_file_path):
