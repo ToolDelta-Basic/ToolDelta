@@ -823,18 +823,14 @@ class GameCtrl:
 
     def get_game_data(self):
         """
-        获取minecraft事件数据
+        获取minecraft信息数据
 
         返回参数:
             类: game_data
                 变量: 
-                    packets 数据包
-                    death 死亡信息
-                    biome 生物群落
-                    block 方块信息
-                    entity 实体信息
-                    gamerule 游戏规则
-                    item 掉落物
-                    subtitles 音效
+                    packets 数据包id
+                    item 掉落物id
+                    soundid 音效id
+                    lang 具有大多数事件的中文文本，大致包括(游戏规则、效果、凋落物、音效、方块、成就等！)
         """
         return self.Game_Data
