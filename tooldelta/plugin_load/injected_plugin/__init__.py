@@ -110,8 +110,10 @@ async def run_repeat():
 
 
 async def safe_jump():
-    try:main_task.cancel()
-    except NameError:return
+    try:
+        main_task.cancel()
+    except NameError:
+        return
 
 
 main_task: asyncio.Task
