@@ -827,7 +827,7 @@ class GameCtrl:
 
         返回参数:
             类: game_data
-                变量: 
+                变量:
                     packets 数据包id
                     item 掉落物id
                     soundid 音效id
