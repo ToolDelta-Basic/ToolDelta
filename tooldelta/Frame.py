@@ -28,7 +28,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
-from .urlmethod import download_file, test_site_latency
+from .urlmethod import download_file_multithreading, test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union, TextIO
 
@@ -209,11 +209,11 @@ class Frame:
             ).json()["tag_name"]
             current_version = ".".join(map(str, get_tool_delta_version()[:3]))
             if latest_version != current_version:
-                if ".py" in os.path.basename(
-                    __file__
-                ) and ".pyc" not in os.path.basename(__file__):
-                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
-                    return True
+                # if ".py" in os.path.basename(
+                #     __file__
+                # ) and ".pyc" not in os.path.basename(__file__):
+                #     Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
+                #     return True
                 Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
                 url = (
                     f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux"
@@ -242,7 +242,7 @@ class Frame:
                 if not fastest_url:
                     Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
                     return True
-                download_file(fastest_url[0], file_path)
+                download_file_multithreading(fastest_url[0], file_path)
                 if os.path.exists(file_path):
                     if platform.system() == "Windows":
                         win_old_tool_delta_path = next(
