@@ -12,6 +12,7 @@ import requests
 
 from .color_print import Print
 
+
 def _pretty_kb(n: int) -> str:
     if n >= 1048576:
         return f"{round(n / 1048576, 2)}M"
@@ -19,13 +20,19 @@ def _pretty_kb(n: int) -> str:
         return f"{round(n / 1024, 2)}K"
     return f"{round(n, 1)}"
 
+
 def _path_get_filename(path: str) -> Union[str, None]:
     if "/" not in path:
         return None
     return path.split("/")[-1]
 
+
 def _is_common_text_file(url_path: str) -> bool:
-    return any(url_path.endswith(i) for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"])
+    return any(
+        url_path.endswith(i)
+        for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]
+    )
+
 
 def get_file_size(url: str) -> Union[int, None]:
     response = requests.head(url, timeout=10)
@@ -49,7 +56,9 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
         return downloaded_bytes
 
 
-def download_file_singlethreaded(url: str, save_dir: str, ignore_warnings: bool = False) -> None:
+def download_file_singlethreaded(
+    url: str, save_dir: str, ignore_warnings: bool = False
+) -> None:
     with requests.get(url, stream=True, timeout=10) as res:
         res.raise_for_status()
         filesize = get_file_size(url)
@@ -86,19 +95,30 @@ def download_file_singlethreaded(url: str, save_dir: str, ignore_warnings: bool 
         else:
             os.remove(save_dir + ".tmp")
 
-def download_file_multithreading(url: str, save_dir: str, num_threads: int = 8, ignore_warnings: bool = False) -> None:
+
+def download_file_multithreading(
+    url: str, save_dir: str, num_threads: int = 8, ignore_warnings: bool = False
+) -> None:
     filesize = get_file_size(url)
     if filesize is None:
-        download_file_singlethreaded(url = url, save_dir = save_dir)
+        download_file_singlethreaded(url=url, save_dir=save_dir)
     if filesize < 256 and not ignore_warnings:
         Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
     elif filesize < 1048576 and not ignore_warnings:
-        download_file_singlethreaded(url = url, save_dir = save_dir)
+        download_file_singlethreaded(url=url, save_dir=save_dir)
     chunk_size = filesize // num_threads  # 每个线程下载的块大小
     with open(save_dir + ".tmp", "wb") as dwnf:
-        with tqdm(total=filesize, unit="B", unit_scale=True, desc=Print.fmt_info("", "§a 下载 §r"), ncols=80) as pbar:
+        with tqdm(
+            total=filesize,
+            unit="B",
+            unit_scale=True,
+            desc=Print.fmt_info("", "§a 下载 §r"),
+            ncols=80,
+        ) as pbar:
+
             def update_progress(downloaded_bytes: int) -> None:
                 pbar.update(downloaded_bytes)
+
             with ThreadPoolExecutor(max_workers=num_threads) as executor:
                 futures = []
                 for i in range(num_threads):
@@ -106,12 +126,15 @@ def download_file_multithreading(url: str, save_dir: str, num_threads: int = 8, 
                     end_byte = start_byte + chunk_size - 1
                     if i == num_threads - 1:
                         end_byte = filesize - 1
-                    future = executor.submit(download_file_chunk, url, start_byte, end_byte, save_dir)
+                    future = executor.submit(
+                        download_file_chunk, url, start_byte, end_byte, save_dir
+                    )
                     future.add_done_callback(lambda f: update_progress(f.result()))
                     futures.append(future)
                 for future in futures:
                     future.result()
     shutil.move(save_dir + ".tmp", save_dir)
+
 
 def download_unknown_file(url: str, save_dir: str) -> None:
     # 鉴于 Content-Length 不一定表示文件原始大小, 二进制文件与文本文件需要分开下载
@@ -120,6 +143,7 @@ def download_unknown_file(url: str, save_dir: str) -> None:
 
     with open(save_dir, "wb") as f:
         f.write(resp.content)
+
 
 def test_site_latency(Da: dict) -> list:
     tmp_speed = {}
@@ -134,6 +158,7 @@ def test_site_latency(Da: dict) -> list:
     sorted_speed = sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
     return sorted_speed
 
+
 def measure_latencyt(url: str) -> Union[float, int]:
     try:
         st = pyspeedtest.SpeedTest(
@@ -143,6 +168,7 @@ def measure_latencyt(url: str) -> Union[float, int]:
         return download_speed
     except Exception:
         return -1  # 返回-1表示测速失败
+
 
 def get_free_port(start: int = 8080, end: int = 65535) -> int:
     for port in range(start, end):
