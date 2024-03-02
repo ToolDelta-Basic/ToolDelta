@@ -14,6 +14,7 @@ neccessary_libs = {
     "qrcode": None,
     "ujson": None,
     "pyspeedtest": None,
+    "tqdm": None,
 }
 
 

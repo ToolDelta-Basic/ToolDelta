@@ -29,6 +29,7 @@ try:
     import hashlib
     import base64
     import rich
+    import tqdm
 
     sys.path.append(os.path.join(os.getcwd(), "libs"))
 

@@ -28,7 +28,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
-from .urlmethod import download_file, Test_site_latency
+from .urlmethod import download_file, test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union, TextIO
 
@@ -237,7 +237,7 @@ class Frame:
                     else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
                 )
                 fastest_url = next(
-                    iter(Test_site_latency({"url": url, "mirror_url": mirror_urls}))
+                    iter(test_site_latency({"url": url, "mirror_url": mirror_urls}))
                 )
                 if not fastest_url:
                     Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
