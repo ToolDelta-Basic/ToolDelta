@@ -3,6 +3,7 @@ import re
 import shutil
 import socket
 import platform
+import time
 from typing import Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
@@ -55,14 +56,56 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
         return downloaded_bytes
 
 
-def download_file(
+def download_file_singlethreaded(
+    url: str, save_dir: str, ignore_warnings: bool = False
+) -> None:
+    with requests.get(url, stream=True, timeout=10) as res:
+        res.raise_for_status()
+        filesize = get_file_size(url)
+        if filesize < 256 and not ignore_warnings:
+            Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
+        chunk_size = 8192
+        nowsize = 0
+        succ = False
+        lastime = time.time()
+        useSpeed = 0
+        with open(save_dir + ".tmp", "wb") as dwnf:
+            for chk in res.iter_content(chunk_size=8192):
+                nowtime = time.time()
+                if nowtime != lastime:
+                    useSpeed = chunk_size / (nowtime - lastime)
+                    lastime = nowtime
+                nowsize += len(chk)
+                dwnf.write(chk)
+                if nowsize % 81920 == 0:  # 每下载 10 个数据块更新一次进度
+                    prgs = nowsize / filesize
+                    _tmp = int(prgs * 20)
+                    bar = Print.colormode_replace(
+                        "§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r ", 7
+                    )
+                    Print.print_with_info(
+                        f"{bar} {_pretty_kb(nowsize)}B / {_pretty_kb(filesize)}B ({_pretty_kb(useSpeed)}B/s)    ",
+                        "§a 下载 §r",
+                        end="\r",
+                        need_log=False,
+                    )
+        succ = True
+        if succ:
+            shutil.move(save_dir + ".tmp", save_dir)
+        else:
+            os.remove(save_dir + ".tmp")
+
+
+def download_file_multithreading(
     url: str, save_dir: str, num_threads: int = 8, ignore_warnings: bool = False
 ) -> None:
     filesize = get_file_size(url)
     if filesize is None:
-        raise ValueError("无法获取文件大小")
+        download_file_singlethreaded(url=url, save_dir=save_dir)
     if filesize < 256 and not ignore_warnings:
         Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
+    elif filesize < 1048576 and not ignore_warnings:
+        download_file_singlethreaded(url=url, save_dir=save_dir)
     chunk_size = filesize // num_threads  # 每个线程下载的块大小
     with open(save_dir + ".tmp", "wb") as dwnf:
         with tqdm(

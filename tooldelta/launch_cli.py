@@ -10,7 +10,7 @@ import random
 from typing import Callable, Optional
 
 from .color_print import Print
-from .urlmethod import download_file, get_free_port
+from .urlmethod import download_file_singlethreaded, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
@@ -262,7 +262,9 @@ class FrameFBConn(StandardFrame):
                     succ = False
                     for mirr in mirrs:
                         try:
-                            download_file(mirr + "/https://github.com/" + furl, fdir)
+                            download_file_singlethreaded(
+                                mirr + "/https://github.com/" + furl, fdir
+                            )
                             succ = True
                             break
                         except requests.exceptions.RequestException:
@@ -503,7 +505,7 @@ class FrameNeOmg(StandardFrame):
             if not os.path.isfile(pathdir) or replace_file:
                 Print.print_inf(f"正在下载依赖库 {pathdir} ...")
                 try:
-                    download_file(url, pathdir)
+                    download_file_singlethreaded(url, pathdir)
                 except Exception as err:
                     Print.print_err(f"下载依赖库出现问题: {err}")
                     raise SystemExit

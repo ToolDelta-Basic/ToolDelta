@@ -28,7 +28,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
-from .urlmethod import download_file, test_site_latency
+from .urlmethod import download_file_multithreading, test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union, TextIO
 
@@ -242,7 +242,7 @@ class Frame:
                 if not fastest_url:
                     Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
                     return True
-                download_file(fastest_url[0], file_path)
+                download_file_multithreading(fastest_url[0], file_path)
                 if os.path.exists(file_path):
                     if platform.system() == "Windows":
                         win_old_tool_delta_path = next(
