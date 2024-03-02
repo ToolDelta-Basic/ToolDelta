@@ -591,7 +591,7 @@ createThread = Builtins.createThread
 
 from .builtins import Builtins
 from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS
+from .packets import PacketIDS, game_data
 from .plugin_load.injected_plugin import (
     execute_death_message,
     execute_init,
@@ -606,6 +606,7 @@ from .plugin_load.injected_plugin import (
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
+        self.Game_Data = game_data()
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
@@ -819,3 +820,18 @@ class GameCtrl:
             text: 文本
         """
         self.sendwocmd(f"title {target} actionbar {text}")
+
+    def get_game_data(self):
+        """
+        获取minecraft信息数据
+
+        返回参数:
+            类: game_data
+                变量:
+                    packets 数据包id
+                    item 掉落物id
+                    soundid 音效id
+                    lang 具有大多数事件的中文文本，大致包括(游戏规则、效果、凋落物、音效、方块、成就等！)
+
+        """
+        return self.Game_Data
