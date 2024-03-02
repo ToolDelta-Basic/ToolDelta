@@ -3,6 +3,7 @@ class PacketIDS:
     PlayerList = 63
     CommandOutput = 79
 
+
 class game_data(object):
     def __init__(self) -> None:
         self.packets: dict = {
@@ -8388,6 +8389,7 @@ class game_data(object):
             "tutorial.socialInteractions.title": "社交",
             "upgrade.minecraft.netherite_upgrade": "下界合金升级"
         }
+
 
 class SubPacket_CmdOutputMsg:
     Success: bool

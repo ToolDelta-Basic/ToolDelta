@@ -591,7 +591,7 @@ createThread = Builtins.createThread
 
 from .builtins import Builtins
 from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS, game_data 
+from .packets import PacketIDS, game_data
 from .plugin_load.injected_plugin import (
     execute_death_message,
     execute_init,
@@ -832,5 +832,6 @@ class GameCtrl:
                     item 掉落物id
                     soundid 音效id
                     lang 具有大多数事件的中文文本，大致包括(游戏规则、效果、凋落物、音效、方块、成就等！)
+
         """
         return self.Game_Data
