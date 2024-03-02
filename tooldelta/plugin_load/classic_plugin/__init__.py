@@ -52,8 +52,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                 else:
                     Print.print_war(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
                     continue
-                if plugin_grp.plugin_added_cache["plugin"] is None:
-                    raise AssertionError(2)
+                assert  plugin_grp.plugin_added_cache["plugin"] is not None, 2
                 plugin = plugin_grp.plugin_added_cache["plugin"]
                 plugin_body: Plugin = plugin(plugin_grp.linked_frame)
                 plugin_grp.plugins.append([plugin_body.name, plugin_body])
