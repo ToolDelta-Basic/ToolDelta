@@ -209,11 +209,11 @@ class Frame:
             ).json()["tag_name"]
             current_version = ".".join(map(str, get_tool_delta_version()[:3]))
             if latest_version != current_version:
-                # if ".py" in os.path.basename(
-                #     __file__
-                # ) and ".pyc" not in os.path.basename(__file__):
-                #     Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
-                #     return True
+                if ".py" in os.path.basename(
+                    __file__
+                ) and ".pyc" not in os.path.basename(__file__):
+                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
+                    return True
                 Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
                 url = (
                     f"https://gh.ddlc.top/https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}/ToolDelta-linux"
