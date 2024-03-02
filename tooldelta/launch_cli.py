@@ -262,7 +262,9 @@ class FrameFBConn(StandardFrame):
                     succ = False
                     for mirr in mirrs:
                         try:
-                            download_file_singlethreaded(mirr + "/https://github.com/" + furl, fdir)
+                            download_file_singlethreaded(
+                                mirr + "/https://github.com/" + furl, fdir
+                            )
                             succ = True
                             break
                         except requests.exceptions.RequestException:
