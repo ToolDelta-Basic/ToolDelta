@@ -35,7 +35,7 @@ Docker Image: [DockerHub](https://hub.docker.com/r/wlingzhenyu/tooldelta)
 # 在docker运行
 
 ```bash
-docker run -v .:/app -t wlingzhenyu/tooldelta:latest
+docker run -v .:/app -t -i wlingzhenyu/tooldelta:latest
 ```
 
 
