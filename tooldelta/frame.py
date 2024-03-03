@@ -6,6 +6,7 @@ from . import (
 )
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
+from .texts import texts_zh_cn
 from .basic_mods import (
     Callable,
     os,
@@ -593,7 +594,7 @@ createThread = Builtins.createThread
 
 from .builtins import Builtins
 from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS, game_data
+from .packets import PacketIDS
 from .plugin_load.injected_plugin import (
     execute_death_message,
     execute_init,
@@ -608,7 +609,7 @@ from .plugin_load.injected_plugin import (
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
-        self.Game_Data = game_data()
+        self.Game_Data = texts_zh_cn.texts
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
@@ -701,7 +702,12 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
+                    death_message = self.Game_Data.get(pkt['Message'], None)
+                    if death_message:
+                        filled_parameters = [self.Game_Data.get(param.replace('%', ''), param) for param in pkt['Parameters']]
+                        filled_message = death_message.format(*filled_parameters)
+                        Print.print_inf(filled_message)
+
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
                     else:
@@ -828,12 +834,7 @@ class GameCtrl:
         获取minecraft信息数据
 
         返回参数:
-            类: game_data
-                变量:
-                    packets 数据包id
-                    item 掉落物id
-                    soundid 音效id
-                    lang 具有大多数事件的中文文本，大致包括(游戏规则、效果、凋落物、音效、方块、成就等！)
-
+            库: zh_ch
+                变量: texts: achievement、color、commands、death、disconnect、effect、enchantment、entity、feature、gameMode、item、potion、tile、packets:{id:name}
         """
         return self.Game_Data
