@@ -269,13 +269,18 @@ class PluginManager:
         for plugin in plugins:
             texts.append(self.make_plugin_icon(plugin))
         slen = len(texts)
-        for i in range(slen // 2):
-            text1 = texts[i]
-            text2 = texts[i + slen // 2]
-            Print.clean_print("§f" + Print.align(text1, 35) + "§f" + Print.align(text2))
-        if slen // 2:
-            text1 = texts[slen // 2 + 1]
-            Print.clean_print("§f" + Print.align(text1, 35))
+        lfts = []
+        rgts = []
+        for i, t in enumerate(texts):
+            if (i + 1) % 2 == 1:
+                lfts.append(t)
+            else:
+                rgts.append(t)
+        for i, t in enumerate(lfts):
+            if i + 1 in range(len(rgts)):
+                Print.clean_print("§f" + Print.align(t, 35) + "§f" + Print.align(rgts[i + 1]))
+            else:
+                Print.clean_print("§f" + Print.align(t, 35))
 
     @staticmethod
     def test_name_same(name: str, dirname: str):

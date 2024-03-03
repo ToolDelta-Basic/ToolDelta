@@ -198,6 +198,9 @@ class PluginMarket:
                     )
                     os.makedirs(os.path.dirname(target_file), exist_ok=True)
                     shutil.move(source_file, target_file)
+            from tooldelta.plugin_manager import plugin_manager
+            # 注册插件
+            plugin_manager.push_plugin_reg_data(plugin_data)   
             Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             # Clean up cache directory
