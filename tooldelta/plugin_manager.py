@@ -124,11 +124,11 @@ class PluginManager:
                 if plugin.is_enabled:
                     os.rename(
                         os.path.join("插件文件", f_dirname, plugin.name),
-                        os.path.join("插件文件", f_dirname, plugin.name + ".disabled")
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled")
                     )
                 else:
                     os.rename(
-                        os.path.join("插件文件", f_dirname, plugin.name + ".disabled"),
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
                         os.path.join("插件文件", f_dirname, plugin.name)
                     )
                 plugin.is_enabled = [True, False][plugin.is_enabled]
