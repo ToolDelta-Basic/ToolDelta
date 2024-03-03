@@ -13,13 +13,29 @@ def find_key_from_value(dic, val):
 plugins.checkSystemVersion((0, 1, 8))
 
 
-@plugins.add_plugin_api("基本插件功能库")
-class BasicFunctionLib(PluginAPI):
+@plugins.add_plugin_as_api("基本插件功能库")
+class BasicFunctionLib(Plugin, PluginAPI):
     version = (0, 0, 3)
-
+    name = "基本插件功能库"
+    author = "SuperScript"
+    description = "提供额外的方法用于获取游戏数据"
+    
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
+        self.waitmsg_req = []
+        self.waitmsg_result = {}
+
+    def on_player_message(self, player: str, msg: str):
+        if player in self.waitmsg_req:
+            self.waitmsg_result[player] = msg
+            self.waitmsg_req.remove(player)
+
+    def on_player_leave(self, player: str):
+        if player in self.waitmsg_req:
+            self.waitmsg_result[player] = EXC_PLAYER_LEAVE
+            self.waitmsg_req.remove(player)
+
 
     # -------------- API ---------------
     def getScore(self, scoreboardNameToGet: str, targetNameToGet: str) -> int:
@@ -157,28 +173,26 @@ class BasicFunctionLib(PluginAPI):
             return "air"
         return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
-    @staticmethod
-    def waitMsg(who: str, timeout: int = 30, exc=None):
-        active_basic_api: ActivatePluginAPI = active_basic_apis[0]
+    def waitMsg(self, who: str, timeout: int = 30, exc=None):
         """
         使用其来等待一个玩家的聊天栏回复, 超时则引发exc给定的异常, 没有给定时超时返回None
         当过程中玩家退出了游戏, 则引发异常(为IOError)
         """
         time.sleep(0.5)
-        if who not in active_basic_api.waitmsg_req:
-            active_basic_api.waitmsg_req.append(who)
+        if who not in self.waitmsg_req:
+            self.waitmsg_req.append(who)
         timer = time.time()
         while 1:
             time.sleep(0.2)
-            if who in active_basic_api.waitmsg_result.keys():
-                r = active_basic_api.waitmsg_result[who]
-                del active_basic_api.waitmsg_result[who]
+            if who in self.waitmsg_result.keys():
+                r = self.waitmsg_result[who]
+                del self.waitmsg_result[who]
                 if r == EXC_PLAYER_LEAVE:
                     raise EXC_PLAYER_LEAVE
                 return r
             if time.time() - timer >= timeout:
                 try:
-                    active_basic_api.waitmsg_req.remove(who)
+                    self.waitmsg_req.remove(who)
                 except:
                     pass
                 if exc is not None:
@@ -195,30 +209,4 @@ class BasicFunctionLib(PluginAPI):
         res = self.game_ctrl.sendwscmd(cmd, True, timeout).SuccessCount
         return bool(res)
 
-
-active_basic_apis: list = []
-
 EXC_PLAYER_LEAVE = IOError("Player left when waiting msg.")
-
-
-@plugins.add_plugin
-class ActivatePluginAPI(Plugin):
-    name = "基本组件API"
-    author = "System"
-    version = (0, 0, 1)
-
-    def __init__(self, frame: Frame):
-        self.game_ctrl = frame.get_game_control()
-        self.waitmsg_req = []
-        self.waitmsg_result = {}
-        active_basic_apis.append(self)
-
-    def on_player_message(self, player: str, msg: str):
-        if player in self.waitmsg_req:
-            self.waitmsg_result[player] = msg
-            self.waitmsg_req.remove(player)
-
-    def on_player_leave(self, player: str):
-        if player in self.waitmsg_req:
-            self.waitmsg_result[player] = EXC_PLAYER_LEAVE
-            self.waitmsg_req.remove(player)

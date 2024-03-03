@@ -151,11 +151,14 @@ async def load_plugin_file(file):
     module_name = file
     sys.path.append(os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件"))
     plugin_module = importlib.import_module(module_name)
-    # 获取插件元数据
-
-    return create_plugin_metadata(
+    meta_data = create_plugin_metadata(
         getattr(plugin_module, "__plugin_meta__", {"name": module_name})
     )
+    # 获取插件元数据
+    plugin_manager.test_name_same(meta_data.name, file)
+    if not plugin_manager.plugin_is_registered("injected", meta_data.name):
+        plugin_manager.auto_register_plugin("injected", meta_data)
+    return meta_data
 
 
 class PluginMetadata:
@@ -203,8 +206,6 @@ async def load_plugin(plugin_grp):
     for task in tasks:
         plugin_metadata = await task
         all_plugin_metadata.append(plugin_metadata)
-        if not plugin_manager.plugin_is_registered("injected", plugin_metadata.name):
-            plugin_manager.auto_register_plugin("injected", plugin_metadata)
 
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:

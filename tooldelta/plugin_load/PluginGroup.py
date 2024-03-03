@@ -67,9 +67,13 @@ class PluginGroup:
             get_single_lib(pip_name if pip_name else module_name)
 
     def read_all_plugins(self):
-        dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)
-        classic_plugin.read_plugin_from_new(self, {})
-        asyncio.run(injected_plugin.load_plugin(self))
+        try:
+            dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)
+            classic_plugin.read_plugin_from_new(self, {})
+            asyncio.run(injected_plugin.load_plugin(self))
+        except Exception as err:
+            Print.print_err(f"加载插件出现问题: {err}")
+            raise SystemExit
 
     def add_broadcast_listener(self, evt_name: str):
         "将下面的方法作为一个广播事件接收器"

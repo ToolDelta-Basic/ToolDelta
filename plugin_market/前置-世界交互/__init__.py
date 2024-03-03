@@ -5,6 +5,7 @@ import time
 # 使用 api = plugins.get_plugin_api("前置-世界交互") 来获取到这个api
 @plugins.add_plugin_as_api("前置-世界交互")
 class GameInteractive(PluginAPI, Plugin):
+    name = "前置-世界交互"
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
@@ -35,7 +36,7 @@ class GameInteractive(PluginAPI, Plugin):
             "TickDelay": tick_delay,
             "ExecuteOnFirstTick": execute_on_first_tick,
         }
-        return 78, myPacket
+        return myPacket
 
     def place_command_block(self, command_block_update_packet):
         # 传入参数: 为 make_packet_command_block_update 方法的返回的第二个值

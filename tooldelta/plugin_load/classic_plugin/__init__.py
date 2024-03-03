@@ -107,6 +107,7 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                                 plugin_grp.linked_frame
                             )
                 # 自动注册插件到插件管理器
+                plugin_manager.test_name_same(plugin_body.name, plugin_dir)
                 if not plugin_manager.plugin_is_registered("classic", plugin_body.name):
                     plugin_manager.auto_register_plugin("classic", plugin_body)
             except AssertionError as err:
