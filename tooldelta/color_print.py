@@ -9,6 +9,8 @@ try:
 except:
     pass
 
+unicode = type("")
+
 
 def simple_fmt(kw, __sub):
     for k, v in kw.items():
@@ -143,6 +145,17 @@ class _Print:
                 + self.colormode_replace(text),
                 **print_kwargs,
             )
+
+    @staticmethod
+    def align(text: str, length=15):
+        l = len(text)
+        for i in text:
+            if not i.isascii():
+                l += 1
+        return text + " " * (length - l)
+
+    def clean_print(self, text: str, **print_kwargs):
+        print(self.colormode_replace(text), **print_kwargs)
 
     def print_err(self, text: str, **print_kwargs):
         self.print_with_info(f"§c{text}", self.INFO_ERROR, **print_kwargs)
