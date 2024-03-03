@@ -4,7 +4,8 @@ import time
 
 @plugins.add_plugin
 class Display32KShulkerBox(Plugin):
-    name = "检测32k盒子并反制"
+    name = "32k盒子显示"
+    description = "检测32k盒子并反制"
     author = "SuperScript"
     version = (0, 0, 2)
 

@@ -49,6 +49,11 @@ class PluginManager:
     default_reg_data = {"dotcs": {}, "classic": {}, "injected": {}, "unknown": {}}
     _plugin_datas_cache = []
 
+    def manage_plugins(self):
+        while 1:
+            self.list_plugins_list()
+            r = input(Print.clean_print())
+
     def plugin_is_registered(self, plugin_type: str, plugin_name: str):
         if not self._plugin_datas_cache:
             _, self._plugin_datas_cache = self.get_plugin_reg_name_dict_and_datas()
@@ -163,19 +168,18 @@ class PluginManager:
             text1 = texts[slen // 2 + 1]
             Print.clean_print("§f" + Print.align(text1, 35))
 
+    @staticmethod
+    def test_name_same(name: str, dirname: str):
+        if name != dirname:
+            raise AssertionError(f"插件名: {name} 与文件夹名({dirname}) 不一致") from None
+
     def list_plugins_list(self):
         Print.clean_print("§a☑ §f目前已安装的插件列表:")
         all_plugins = self.get_2_compare_plugins_reg()
         txts = []
         for plugin in all_plugins:
             txts.append(self.make_plugin_icon(plugin))
-        print(txts)
         self.make_printable_list(txts)
-
-    @staticmethod
-    def test_name_same(name: str, dirname: str):
-        if name != dirname:
-            raise AssertionError(f"插件名: {name} 与文件夹名({dirname}) 不一致") from None
 
 
 plugin_manager = PluginManager()

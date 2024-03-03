@@ -7,6 +7,8 @@ class CustomChatbarMenu(Plugin):
     name = "自定义聊天栏菜单"
     author = "SuperScript"
     version = (0, 0, 1)
+    description = "自定义ToolDelta的聊天栏菜单触发词等"
+
     match_rule = re.compile(r"(\[参数:([0-9]+)\])")
     _counter = 0
 

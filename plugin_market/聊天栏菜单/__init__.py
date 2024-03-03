@@ -35,6 +35,7 @@ class ChatbarMenu(Plugin, PluginAPI):
     name = "聊天栏菜单"
     author = "SuperScript"
     version = (0, 0, 4)
+    description = "前置插件, 提供聊天栏菜单功能"
     DEFAULT_CFG = {
         "help菜单样式": {
             "菜单头": "§7>>> §l§bＴｏｏｌＤｅｌｔａ\n§r§l===============================",

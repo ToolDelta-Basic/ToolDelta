@@ -157,6 +157,9 @@ class _Print:
     def clean_print(self, text: str, **print_kwargs):
         print(self.colormode_replace(text), **print_kwargs)
 
+    def clean_fmt(self, text: str):
+        return self.colormode_replace(text)
+
     def print_err(self, text: str, **print_kwargs):
         self.print_with_info(f"§c{text}", self.INFO_ERROR, **print_kwargs)
 

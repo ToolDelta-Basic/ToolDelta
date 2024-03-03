@@ -7,6 +7,11 @@ import time
 
 @plugins.add_plugin
 class MapArtImporter(Plugin):
+    name = "地图画导入"
+    version = (0, 0, 2)
+    author = "SuperScript"
+    description = "导入图片到租赁服"
+
     def __init__(self, frame: Frame):
         self.color_cache = {}
         self.color_mapping = {}
