@@ -35,9 +35,7 @@ def start_tool_delta(exit_directly=True):
         pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
-    finally:
-        if exit_directly:
-            os._exit(0)
+
 
 
 def safe_jump(exit_directly=True):
@@ -46,7 +44,7 @@ def safe_jump(exit_directly=True):
         for _ in range(3, 0, -1):
             Print.print_war(f"{_}秒后强制退出...", end="\r")
             time.sleep(1)
-        Print.print_war(f"0秒后强制退出...", end="\r")
+        Print.print_war("0秒后强制退出...", end="\r")
         Print.print_suc("ToolDelta 已退出.")
         os._exit(0)
     Print.print_suc("ToolDelta 已退出.")
