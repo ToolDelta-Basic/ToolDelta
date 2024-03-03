@@ -36,9 +36,6 @@ def start_tool_delta(exit_directly=True):
         pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
-    finally:
-        if exit_directly:
-            os._exit(0)
 
 
 def safe_jump(exit_directly=True):
