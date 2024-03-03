@@ -12,10 +12,16 @@ class MailSystem(Plugin, PluginAPI):
             sender: str,
             date: int,
             content: str,
-            give_items: dict[str, int] = {},
-            exe_cmds: list[str] = [],
-            func_hooks_and_args: dict[str, tuple] = {},
+            give_items: dict[str, int] = None,
+            exe_cmds: list[str] = None,
+            func_hooks_and_args: dict[str, tuple] = None,
         ):
+            if give_items is None:
+                give_items = {}
+            if exe_cmds is None:
+                exe_cmds = []
+            if func_hooks_and_args is None:
+                func_hooks_and_args = {}
             self.sender, self.title, self.date = sender, title, date
             self.content = content
             self.give_items = give_items
