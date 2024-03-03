@@ -5,10 +5,10 @@ import os
 import platform
 import shutil
 import tempfile
-from . import urlmethod
-from .builtins import Builtins
-from .color_print import Print
-from .plugin_manager import PluginRegData
+from tooldelta import urlmethod
+from tooldelta.builtins import Builtins
+from tooldelta.color_print import Print
+from tooldelta.plugin_manager import PluginRegData
 from typing import Dict
 
 if platform.system().lower() == "windows":

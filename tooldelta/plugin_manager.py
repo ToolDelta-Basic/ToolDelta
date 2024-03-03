@@ -5,9 +5,8 @@ from .color_print import Print
 
 JsonIO = Builtins.SimpleJsonDataReader
 
-
 class PluginRegData:
-    def __init__(self, name: str, plugin_data: dict = {}, is_registered=True):
+    def __init__(self, name: str, plugin_data: dict = {}, is_registered=True, is_enabled=True):
         self.name: str = name
         if isinstance(plugin_data.get("version"), str):
             self.version: tuple = tuple(
@@ -20,6 +19,7 @@ class PluginRegData:
         self.description: str = plugin_data.get("description", "")
         self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", [])
         self.is_registered = is_registered
+        self.is_enabled = is_enabled
 
     def dump(self):
         return {
@@ -51,8 +51,48 @@ class PluginManager:
 
     def manage_plugins(self):
         while 1:
-            self.list_plugins_list()
-            r = input(Print.clean_print())
+            plugins = self.list_plugins_list()
+            r = input(Print.clean_fmt("§f输入§cq§f退出, 或输入插件关键词进行选择\n(空格可分隔关键词):"))
+            if r.lower() == "q":
+                return
+            else:
+                res = self.search_plugin(r, plugins)
+                if res is None:
+                    input()
+
+    def plugin_operation(self, plugin: PluginRegData):
+        description_fixed = plugin.description.replace('\n', '\n    ')
+        Print.clean_print(f"§d插件信息: §f{plugin.name}")
+        Print.clean_print(f" - 版本: {plugin.version_str}")
+        Print.clean_print(f" - 作者: {plugin.author}")
+        Print.clean_print(f" 描述: {description_fixed}")
+        Print.clean_print("§f1.")
+        Print.clean_print("§f输入")
+
+    def search_plugin(self, resp, plugins):
+        res = self.search_plugin_by_kw(resp.split(" "), plugins)
+        if res == []:
+            Print.clean_print("§c没有任何已安装插件匹配得上关键词")
+            return None
+        elif len(res) > 1:
+            Print.clean_print("§a☑ §f关键词查找到的插件:")
+            for i, plugin in enumerate(res):
+                Print.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
+            r = Builtins.try_int(input(Print.clean_fmt("§f请选择序号: ")))
+            if r is None or r not in range(1, len(res) + 1):
+                Print.clean_print("§c序号无效")
+                return None
+            else:
+                return res[r - 1]
+        else:
+            return res[0]
+            
+    def search_plugin_by_kw(self, kws: list[str], plugins: list[PluginRegData]):
+        res = []
+        for plugin in plugins:
+            if all(kw in plugin.name for kw in kws):
+                res.append(plugin)
+        return res
 
     def plugin_is_registered(self, plugin_type: str, plugin_name: str):
         if not self._plugin_datas_cache:
@@ -158,7 +198,10 @@ class PluginManager:
             + plugin.name
         )
 
-    def make_printable_list(self, texts: list[str]):
+    def make_printable_list(self, plugins: list[PluginRegData]):
+        texts = []
+        for plugin in plugins:
+            texts.append(self.make_plugin_icon(plugin))
         slen = len(texts)
         for i in range(slen // 2):
             text1 = texts[i]
@@ -176,10 +219,8 @@ class PluginManager:
     def list_plugins_list(self):
         Print.clean_print("§a☑ §f目前已安装的插件列表:")
         all_plugins = self.get_2_compare_plugins_reg()
-        txts = []
-        for plugin in all_plugins:
-            txts.append(self.make_plugin_icon(plugin))
-        self.make_printable_list(txts)
+        self.make_printable_list(all_plugins)
+        return all_plugins
 
 
 plugin_manager = PluginManager()
