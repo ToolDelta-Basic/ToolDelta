@@ -20,13 +20,11 @@ class SubPacket_CmdOrigin:
     UUID: str
     RequestID: str
     PlayerUniqueID: int
-
-
-def __init__(self, pkt: dict):
-    self.Origin = pkt["Origin"]
-    self.UUID = pkt["UUID"]
-    self.RequestID = pkt["RequestID"]
-    self.PlayerUniqueID = pkt["PlayerUniqueID"]
+    def __init__(self, pkt: dict):
+        self.Origin = pkt["Origin"]
+        self.UUID = pkt["UUID"]
+        self.RequestID = pkt["RequestID"]
+        self.PlayerUniqueID = pkt["PlayerUniqueID"]
 
 
 class Packet_CommandOutput:

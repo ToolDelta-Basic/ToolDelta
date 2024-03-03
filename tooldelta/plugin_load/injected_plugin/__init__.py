@@ -6,6 +6,7 @@ import importlib
 import threading
 
 from tooldelta.color_print import Print
+from tooldelta.plugin_manager import plugin_manager
 
 # 定义插件处理函数列表
 player_message_funcs = {}
@@ -202,6 +203,8 @@ async def load_plugin(plugin_grp):
     for task in tasks:
         plugin_metadata = await task
         all_plugin_metadata.append(plugin_metadata)
+        if not plugin_manager.plugin_is_registered("injected", plugin_metadata.name):
+            plugin_manager.auto_register_plugin("injected", plugin_metadata)
 
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:

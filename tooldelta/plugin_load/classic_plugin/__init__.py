@@ -5,13 +5,14 @@ import traceback
 from ...color_print import Print
 from ...builtins import Builtins
 from ...cfg import Cfg
+from ...plugin_manager import plugin_manager
 from ..funcs import unzip_plugin
-
 
 class Plugin:
     name = "<未命名插件>"
     version = (0, 0, 1)
     author = "?"
+    description = "..."
 
 
 class PluginAPI:
@@ -104,6 +105,9 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                             plugin_grp.plugins_api[apiName] = api(
                                 plugin_grp.linked_frame
                             )
+                # 自动注册插件到插件管理器
+                if not plugin_manager.plugin_is_registered("classic", plugin_body.name):
+                    plugin_manager.auto_register_plugin("classic", plugin_body)
             except AssertionError as err:
                 if err.args[0] == 2:
                     Print.print_err(

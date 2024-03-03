@@ -110,7 +110,11 @@ class PluginGroup:
 
     def add_packet_listener(self, pktID):
         def deco(func):
-            self.plugin_added_cache["packets"].append((pktID, func))
+            if isinstance(pktID, int):
+                self.plugin_added_cache["packets"].append((pktID, func))
+            else:
+                for i in pktID:
+                    self.plugin_added_cache["packets"].append((i, func))
             return func
 
         return deco

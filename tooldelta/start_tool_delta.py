@@ -16,7 +16,7 @@ def start_tool_delta(exit_directly=True):
     global frame
     # 初始化系统
     try:
-        frame.auto_update()
+        #frame.auto_update()
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)
@@ -35,6 +35,9 @@ def start_tool_delta(exit_directly=True):
         pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
+    finally:
+        if exit_directly:
+            os._exit(0)
 
 
 def safe_jump(exit_directly=True):
