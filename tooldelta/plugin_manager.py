@@ -1,4 +1,4 @@
-import os, platform
+import os, platform, shutil
 
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
@@ -30,7 +30,10 @@ class PluginRegData:
         self.description: str = plugin_data.get("description", "")
         self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", [])
         self.is_registered = is_registered
-        self.is_enabled = is_enabled
+        if plugin_data.get("enabled") is not None:
+            self.is_enabled = plugin_data["enabled"]
+        else:
+            self.is_enabled = is_enabled
 
     def dump(self):
         return {
@@ -39,6 +42,7 @@ class PluginRegData:
             "plugin-type": self.plugin_type,
             "description": self.description,
             "pre-plugins": self.pre_plugins,
+            "enabled": self.is_enabled
         }
 
     @property
@@ -96,8 +100,11 @@ class PluginManager:
                     return
                 else:
                     plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
-                    os.remove(plugin_dir)
-                    Print.print_suc(f"已成功删除插件 {plugin.name}, 回车键继续")
+                    shutil.rmtree(plugin_dir)
+                    Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
+                    self.pop_plugin_reg_data(plugin)
+                    input()
+                    return
             case "2":
                 latest_version = market.get_latest_plugin_version(plugin.plugin_type, plugin.name)
                 if latest_version is None:
@@ -214,7 +221,7 @@ class PluginManager:
 
     def pop_plugin_reg_data(self, plugin_data: PluginRegData):
         r = JsonIO.readFileFrom("主系统核心数据", self.plugin_reg_data_path)
-        del r[plugin_data.name]
+        del r[plugin_data.plugin_type][plugin_data.name]
         JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
 
     def get_plugin_reg_name_dict_and_datas(self):
