@@ -219,4 +219,5 @@ class PluginMarket:
             Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
             return
 
+
 market = PluginMarket()

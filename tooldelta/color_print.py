@@ -9,7 +9,8 @@ try:
 except:
     pass
 
-unicode = type(u"")
+unicode = type("")
+
 
 def simple_fmt(kw, __sub):
     for k, v in kw.items():
@@ -143,11 +144,11 @@ class _Print:
         for i in text:
             if not i.isascii():
                 l += 1
-        return text + " "*(length-l)
+        return text + " " * (length - l)
 
     def clean_print(self, text: str, **print_kwargs):
         print(self.colormode_replace(text), **print_kwargs)
-    
+
     def print_err(self, text: str, **print_kwargs):
         self.print_with_info(f"§c{text}", self.INFO_ERROR, **print_kwargs)
 
