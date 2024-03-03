@@ -33,5 +33,7 @@ jobs:
       - name: Install Dependencies
         run: pip install poetry
 
-      - name: Check
-        run: poetry check
+      - name: Lock and Check
+        run: |
+            poetry lock
+            poetry check

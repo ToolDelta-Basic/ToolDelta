@@ -1,7 +1,7 @@
 import os
 import zipfile
 import traceback
-from ..color_print import Print
+from tooldelta.color_print import Print
 
 
 def unzip_plugin(zip_dir, exp_dir):
