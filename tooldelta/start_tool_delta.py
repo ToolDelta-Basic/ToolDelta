@@ -33,8 +33,7 @@ def start_tool_delta(exit_directly=True):
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
         raise frame.launcher.launch()
-    except (KeyboardInterrupt, SystemExit):
-        traceback.print_exc()
+    except (KeyboardInterrupt, SystemExit):pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
 
