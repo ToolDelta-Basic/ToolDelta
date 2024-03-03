@@ -1,9 +1,18 @@
-import os
+import os, platform
 
-from .builtins import Builtins
-from .color_print import Print
+from tooldelta.builtins import Builtins
+from tooldelta.color_print import Print
+from tooldelta.plugin_load import PluginRegData
+from tooldelta.plugin_market import market
 
 JsonIO = Builtins.SimpleJsonDataReader
+
+if platform.system().lower() == "windows":
+    CLS_CMD = "cls"
+else:
+    CLS_CMD = "clear"
+
+clear_screen = lambda: os.system(CLS_CMD)
 
 class PluginRegData:
     def __init__(self, name: str, plugin_data: dict = None, is_registered=True, is_enabled=True):
@@ -53,6 +62,7 @@ class PluginManager:
 
     def manage_plugins(self):
         while 1:
+            clear_screen()
             plugins = self.list_plugins_list()
             r = input(Print.clean_fmt("§f输入§cq§f退出, 或输入插件关键词进行选择\n(空格可分隔关键词):"))
             if r.lower() == "q":
@@ -61,15 +71,62 @@ class PluginManager:
                 res = self.search_plugin(r, plugins)
                 if res is None:
                     input()
+                else:
+                    self.plugin_operation(res)
 
     def plugin_operation(self, plugin: PluginRegData):
         description_fixed = plugin.description.replace('\n', '\n    ')
+        clear_screen()
         Print.clean_print(f"§d插件信息: §f{plugin.name}")
         Print.clean_print(f" - 版本: {plugin.version_str}")
         Print.clean_print(f" - 作者: {plugin.author}")
         Print.clean_print(f" 描述: {description_fixed}")
-        Print.clean_print("§f1.")
-        Print.clean_print("§f输入")
+        Print.clean_print(f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}")
+        f_dirname = {
+            "dotcs": "原DotCS插件",
+            "classic": "ToolDelta组合式插件",
+            "injected": "ToolDelta注入式插件"
+        }[plugin.plugin_type]
+        match input(Print.clean_fmt("§f请选择选项: ")):
+            case "1":
+                r = input(Print.clean_fmt("§c删除插件操作不可逆, 请输入y, 其他取消: ")).lower()
+                if r != "y":
+                    return
+                else:
+                    plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
+                    os.remove(plugin_dir)
+                    Print.print_suc(f"已成功删除插件 {plugin.name}, 回车键继续")
+            case "2":
+                latest_version = market.get_latest_plugin_version(plugin.plugin_type, plugin.name)
+                if latest_version is None:
+                    Print.clean_print("§6无法获取其的最新版本")
+                elif latest_version == plugin.version_str:
+                    Print.clean_print("此插件已经为最新版本")
+                else:
+                    Print.clean_print(f"§a插件有新版本可用 ({plugin.version_str} => {latest_version})")
+                    r = input(Print.clean_fmt("输入§a1§f=立刻更新, §62§f=取消更新: ")).strip()
+                    if r == "1":
+                        Print.clean_print("§a正在下载插件...", end = "\r")
+                        market.download_plugin(plugin, market.get_datas_from_market())
+                        Print.clean_print("§a插件下载完成, 回车键继续")
+                        input()
+                    else:
+                        Print.clean_print("§6已取消, 回车键返回")
+            case "3":
+                if plugin.is_enabled:
+                    os.rename(
+                        os.path.join("插件文件", f_dirname, plugin.name),
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled")
+                    )
+                else:
+                    os.rename(
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
+                        os.path.join("插件文件", f_dirname, plugin.name)
+                    )
+                plugin.is_enabled = [True, False][plugin.is_enabled]
+                Print.clean_print(f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}")
+        self.push_plugin_reg_data(plugin)
+        input()
 
     def search_plugin(self, resp, plugins):
         res = self.search_plugin_by_kw(resp.split(" "), plugins)
@@ -82,7 +139,7 @@ class PluginManager:
                 Print.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
             r = Builtins.try_int(input(Print.clean_fmt("§f请选择序号: ")))
             if r is None or r not in range(1, len(res) + 1):
-                Print.clean_print("§c序号无效")
+                Print.clean_print("§c序号无效, 回车键继续")
                 return None
             else:
                 return res[r - 1]
@@ -186,17 +243,16 @@ class PluginManager:
             "ToolDelta注入式插件": "injected",
         }.items():
             for i in os.listdir(os.path.join("插件文件", p)):
-                if i not in reg_dict[k]:
+                if i.replace("+disabled", "") not in reg_dict[k]:
                     f_plugins.append(PluginRegData(i, {"plugin-type": k}, False))
         return f_plugins + reg_list
 
-    def make_plugin_icon(self, plugin: PluginRegData | str):
-        is_reg = plugin.is_registered
+    def make_plugin_icon(self, plugin: PluginRegData):
         ico_colors = {"dotcs": "§6", "classic": "§b", "injected": "§d"}
         return (
             ico_colors.get(plugin.plugin_type, "§7")
             + "■ "
-            + ("§a" if is_reg else "§6")
+            + (("§a"if plugin.is_enabled else "§7") if plugin.is_registered else "§6")
             + plugin.name
         )
 

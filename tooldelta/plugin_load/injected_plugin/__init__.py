@@ -7,6 +7,8 @@ import threading
 
 from tooldelta.color_print import Print
 from tooldelta.plugin_manager import plugin_manager
+from tooldelta.plugin_load import plugin_is_enabled
+
 
 # 定义插件处理函数列表
 player_message_funcs = {}
@@ -196,6 +198,8 @@ async def load_plugin(plugin_grp):
     # 读取本目录下的文件夹名字
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
     for file in os.listdir(PLUGIN_PATH):
+        if not plugin_is_enabled(file):
+            continue
         if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
             plugin_grp.injected_plugin_loaded_num += 1
             task = asyncio.create_task(load_plugin_file(file))
