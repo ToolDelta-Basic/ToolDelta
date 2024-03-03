@@ -1,3 +1,3 @@
-import tooldelta.plugin_manager as pm
+import tooldelta
 
-pm.PluginManager().list_plugins_list()
+tooldelta.start_tool_delta()
