@@ -3,6 +3,7 @@ class PacketIDS:
     PlayerList = 63
     CommandOutput = 79
 
+
 class SubPacket_CmdOutputMsg:
     Success: bool
     Message: str
