@@ -65,7 +65,9 @@ class PluginManager:
             clear_screen()
             plugins = self.list_plugins_list()
             r = input(Print.clean_fmt("§f输入§cq§f退出, 或输入插件关键词进行选择\n(空格可分隔关键词):"))
-            if r.lower() == "q":
+            if r.strip() == "":
+                continue
+            elif r.lower() == "q":
                 return
             else:
                 res = self.search_plugin(r, plugins)
@@ -99,17 +101,17 @@ class PluginManager:
             case "2":
                 latest_version = market.get_latest_plugin_version(plugin.plugin_type, plugin.name)
                 if latest_version is None:
-                    Print.clean_print("§6无法获取其的最新版本")
+                    Print.clean_print("§6无法获取其的最新版本, 回车键继续")
                 elif latest_version == plugin.version_str:
-                    Print.clean_print("此插件已经为最新版本")
+                    Print.clean_print("§a此插件已经为最新版本, 回车键继续")
                 else:
                     Print.clean_print(f"§a插件有新版本可用 ({plugin.version_str} => {latest_version})")
                     r = input(Print.clean_fmt("输入§a1§f=立刻更新, §62§f=取消更新: ")).strip()
                     if r == "1":
-                        Print.clean_print("§a正在下载插件...", end = "\r")
+                        Print.clean_print("§a正在下载新版插件...", end = "\r")
                         market.download_plugin(plugin, market.get_datas_from_market())
-                        Print.clean_print("§a插件下载完成, 回车键继续")
-                        input()
+                        Print.clean_print("§a插件更新完成, 回车键继续")
+                        plugin.version = (int(i) for i in latest_version.split("."))
                     else:
                         Print.clean_print("§6已取消, 回车键返回")
             case "3":
