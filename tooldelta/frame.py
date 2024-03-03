@@ -545,6 +545,7 @@ class Frame:
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
     def system_exit(self):
+        asyncio.run(safe_jump())
         exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
         if self.link_game_ctrl.allplayers and not isinstance(
             self.launcher, (FrameNeOmgRemote,)
@@ -582,7 +583,6 @@ class Frame:
 
     @staticmethod
     def safe_close():
-        asyncio.run(safe_jump())
         builtins.safe_close()
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")

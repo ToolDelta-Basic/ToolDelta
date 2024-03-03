@@ -73,12 +73,8 @@ class StandardFrame:
         return None
 
     get_all_players = None
-    sendcmd: Callable[
-        [str, Optional[bool], Optional[int | float]], None | Packet_CommandOutput
-    ]
-    sendwscmd: Callable[
-        [str, Optional[bool], Optional[int | float]], Packet_CommandOutput
-    ]
+    sendcmd: Callable[[str, bool, int | float], None | Packet_CommandOutput]
+    sendwscmd: Callable[[str, bool, int | float], Packet_CommandOutput]
     sendwocmd: Callable[[str], None]
     sendfbcmd: Callable[[str], None | AttributeError]
     sendPacket: Callable[[int, str], None]
@@ -165,11 +161,15 @@ class FrameFBConn(StandardFrame):
                     )
                     self.status = SysStatus.NORMAL_EXIT
                 elif "Failed to contact with API" in tmp:
-                    Print.print_err("§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中")
+                    Print.print_err(
+                        "§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中"
+                    )
                     try:
                         Print.print_war("尝试连接到 FastBuilder 验证服务器")
                         requests.get("http://user.fastbuilder.pro", timeout=10)
-                        Print.print_err("??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃")
+                        Print.print_err(
+                            "??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃"
+                        )
                     except:
                         Print.print_err(
                             "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)"
@@ -281,7 +281,7 @@ class FrameFBConn(StandardFrame):
         return True
 
     def init_all_functions(self):
-        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
+        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
             uuid = fbconn.SendMCCommand(self.con, cmd)
             if waitForResp:
                 self.cmds_reqs.append(uuid)
@@ -531,7 +531,7 @@ class FrameNeOmg(StandardFrame):
         self.packet_handler(pkt_type, pkt)
 
     def init_all_functions(self):
-        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
+        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
             if waitForResp:
                 res = self.omega.send_player_command_need_response(cmd, timeout)
                 if res is None:
@@ -578,7 +578,9 @@ class FrameNeOmgRemote(FrameNeOmg):
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
         if openat_port == 0:
-            Print.print_war("未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015")
+            Print.print_war(
+                "未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015"
+            )
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             return SystemExit
