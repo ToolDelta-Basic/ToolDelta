@@ -1,6 +1,5 @@
 import sys
 
-
 def sys_args_to_dict(argv: list[str] = sys.argv):
     # 将启动参数分割为 -键=值 或 -键=None
     # 为什么不用 argsparser? 因为这样可以支持混合型启动参数

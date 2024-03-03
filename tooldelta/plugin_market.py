@@ -41,7 +41,7 @@ def _get_json_from_url(url: str):
 
 
 class PluginMarket:
-    def enter_plugin_market(self, source_url: str):
+    def enter_plugin_market(self, source_url: str = None):
         Print.print_inf("正在连接到插件市场..")
         try:
             market_datas = self.get_datas_from_market(source_url)
@@ -224,7 +224,10 @@ class PluginMarket:
 
     @staticmethod
     def get_latest_plugin_version(plugin_type: str, plugin_name: str):
-        src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
+        try:
+            src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
+        except:
+            src_url = "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market"
         return _get_json_from_url(
             _url_join(src_url, "latest_versions.json")
         )[plugin_type + "_plugin"].get(plugin_name)

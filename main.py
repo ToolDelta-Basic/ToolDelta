@@ -1,7 +1,3 @@
-from tooldelta.plugin_manager import plugin_manager
-import tooldelta
+from tooldelta.launch_options import client_title
 
-if 1:
-    tooldelta.start_tool_delta()
-else:
-    plugin_manager.manage_plugins()
+client_title()
