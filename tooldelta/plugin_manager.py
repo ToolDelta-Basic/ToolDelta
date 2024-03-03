@@ -2,7 +2,6 @@ import os, platform, shutil
 
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
-from tooldelta.plugin_load import PluginRegData
 from tooldelta.plugin_market import market
 
 JsonIO = Builtins.SimpleJsonDataReader
@@ -125,11 +124,11 @@ class PluginManager:
                 if plugin.is_enabled:
                     os.rename(
                         os.path.join("插件文件", f_dirname, plugin.name),
-                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled")
+                        os.path.join("插件文件", f_dirname, plugin.name + ".disabled")
                     )
                 else:
                     os.rename(
-                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
+                        os.path.join("插件文件", f_dirname, plugin.name + ".disabled"),
                         os.path.join("插件文件", f_dirname, plugin.name)
                     )
                 plugin.is_enabled = [True, False][plugin.is_enabled]
@@ -154,7 +153,7 @@ class PluginManager:
                 return res[r - 1]
         else:
             return res[0]
-            
+
     def search_plugin_by_kw(self, kws: list[str], plugins: list[PluginRegData]):
         res = []
         for plugin in plugins:

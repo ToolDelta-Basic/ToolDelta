@@ -5,7 +5,9 @@ class PluginSkip(EOFError):
     ...
 
 class PluginRegData:
-    def __init__(self, name: str, plugin_data: dict = {}, is_registered=True, is_enabled=True):
+    def __init__(self, name: str, plugin_data: dict = None, is_registered=True, is_enabled=True):
+        if plugin_data is None:
+            plugin_data = {}
         self.name: str = name
         if isinstance(plugin_data.get("version"), str):
             self.version: tuple = tuple(
@@ -45,6 +47,6 @@ class PluginRegData:
             "dotcs": "DotCS",
             "unknown": "未知类型",
         }.get(self.plugin_type, "未知类型")
-    
+
 def plugin_is_enabled(pname: str):
     return not pname.endswith("+disabled")
