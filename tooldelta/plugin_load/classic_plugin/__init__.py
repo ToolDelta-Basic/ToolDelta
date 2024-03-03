@@ -8,6 +8,7 @@ from ...cfg import Cfg
 from ...plugin_manager import plugin_manager
 from ..funcs import unzip_plugin
 
+
 class Plugin:
     name = "<未命名插件>"
     version = (0, 0, 1)
