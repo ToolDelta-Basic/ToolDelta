@@ -6,7 +6,20 @@ from . import (
 )
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .basic_mods import Callable, os, sys, time, traceback
+from .texts import texts_zh_cn
+from .basic_mods import (
+    Callable,
+    os,
+    sys,
+    time,
+    traceback,
+    requests,
+    platform,
+    subprocess,
+    re,
+    getpass,
+    hashlib,
+)
 from .cfg import Cfg as _Cfg
 from .launch_cli import (
     FrameFBConn,
@@ -16,8 +29,9 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
+from .urlmethod import download_file_multithreading, test_site_latency
 from .sys_args import sys_args_to_dict
-from typing import List
+from typing import List, Union, TextIO
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -65,6 +79,208 @@ class Frame:
             Print.print_err("启动参数错误")
             raise SystemExit
 
+    def if_token(self):
+        if not os.path.isfile("fbtoken"):
+            Print.print_err(
+                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
+            )
+            fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
+            if fbtoken:
+                with open("fbtoken", "w", encoding="utf-8") as f:
+                    f.write(fbtoken)
+            else:
+                Print.print_err("未输入fbtoken, 无法继续")
+                raise SystemExit
+
+    def login_fbuc(self) -> requests.Response:
+        try:
+            FastBuilderApi: list = [
+                "https://api.fastbuilder.pro/api/phoenix/login",
+                "https://api.fastbuilder.pro/api/new",
+                "https://api.fastbuilder.pro/api/api",
+                "https://api.fastbuilder.pro/api/login",
+                "https://api.fastbuilder.pro",
+            ]
+            hash_obj: hashlib._Hash = hashlib.sha256()
+            username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
+            hash_obj.update(
+                getpass.getpass(Print.fmt_info("请输入密码(已隐藏):", "§6 密码 ")).encode()
+            )
+            __password: str = hash_obj.hexdigest()
+            __mfa_code: str = getpass.getpass(
+                Print.fmt_info("请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  ")
+            )
+            Authorization: str = requests.get(url=FastBuilderApi[1], timeout=5).text
+            repo: requests.Response = requests.post(
+                url=FastBuilderApi[3],
+                data=json.dumps(
+                    {
+                        "username": username,
+                        "password": __password,
+                        "mfa_code": __mfa_code,
+                    },
+                    ensure_ascii=False,
+                ),
+                headers={
+                    "Content-Type": "application/json",
+                    "authorization": f"Bearer {Authorization}",
+                },
+            )
+            repo_text: dict = json.loads(repo.text)
+            repo_message: str = repo_text["message"]
+            repo_success: bool = repo_text["success"]
+            if repo.status_code != 200:
+                Print.print_war(
+                    f"请求Api接口失败，将自动使用Token登陆!状态码:{repo.status_code}，返回值:{repo.text}"
+                )
+                self.if_token()
+            if not repo_success:
+                if "Invalid username, password, or MFA code." in repo_message:
+                    Print.print_war(f"登陆失败，无效的用户名、密码或MFA代码!")
+                    self.login_fbuc()
+            else:
+                with_perfix: dict = json.loads(
+                    requests.get(
+                        url=FastBuilderApi[2],
+                        data=json.dumps({"with_prefix": FastBuilderApi[4]}),
+                        timeout=5,
+                        headers={
+                            "Content-Type": "application/json",
+                            "authorization": f"Bearer {Authorization}",
+                        },
+                    ).text
+                )
+                fetch_announcements: dict = json.loads(
+                    requests.get(
+                        url=FastBuilderApi[4] + with_perfix["fetch_announcements"],
+                        timeout=5,
+                        headers={
+                            "Content-Type": "application/json",
+                            "authorization": f"Bearer {Authorization}",
+                        },
+                    ).text
+                )
+                fetch_profile: dict = json.loads(
+                    requests.get(
+                        url=FastBuilderApi[4] + with_perfix["fetch_profile"],
+                        timeout=5,
+                        headers={
+                            "Content-Type": "application/json",
+                            "authorization": f"Bearer {Authorization}",
+                        },
+                    ).text
+                )
+                get_helper_status: dict = json.loads(
+                    requests.get(
+                        url=FastBuilderApi[4] + with_perfix["get_helper_status"],
+                        timeout=5,
+                        headers={
+                            "Content-Type": "application/json",
+                            "authorization": f"Bearer {Authorization}",
+                        },
+                    ).text
+                )
+                self.UserInfo: dict = {
+                    "isadmin": repo_text["isadmin"],
+                    "blc": fetch_profile["blc"],
+                    "cn_username": fetch_profile["cn_username"],
+                    "phoenix_otp": fetch_profile["phoenix_otp"],
+                    "points": fetch_profile["points"],
+                    "slots": fetch_profile["slots"],
+                    "get_helper_status": get_helper_status,
+                }
+                self.token = requests.get(
+                    url=FastBuilderApi[4] + with_perfix["get_phoenix_token"],
+                    data=json.dumps({"secret": f"{Authorization}"}),
+                    timeout=5,
+                    headers={
+                        "Content-Type": "application/json",
+                        "authorization": f"Bearer {Authorization}",
+                    },
+                ).text
+                with open("fbtoken", "w", encoding="utf-8") as f:
+                    f.write(self.token)
+        except Exception as err:
+            Print.print_err(f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}")
+
+    def auto_update(self):
+        # 对ToolDelta进行自动更新
+        try:
+            latest_version = requests.get(
+                "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"
+            ).json()["tag_name"]
+            current_version = ".".join(map(str, get_tool_delta_version()[:3]))
+            if latest_version != current_version:
+                if ".py" in os.path.basename(
+                    __file__
+                ) and ".pyc" not in os.path.basename(__file__):
+                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
+                    return True
+                Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
+                tooldelta_url = f"https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
+                url = (
+                    f"https://gh.ddlc.top//ToolDelta-linux"
+                    if platform.system() == "Linux"
+                    else f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-windows.exe"
+                )
+                mirror_urls = (
+                    [
+                        f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux",
+                        f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux",
+                    ]
+                    if platform.system() == "Linux"
+                    else [
+                        f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe",
+                        f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe",
+                    ]
+                )
+                file_path = (
+                    os.path.join(os.getcwd(), "ToolDelta-linux_new")
+                    if platform.system() == "Linux"
+                    else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
+                )
+                fastest_url = next(
+                    iter(test_site_latency({"url": url, "mirror_url": mirror_urls}))
+                )
+                if not fastest_url:
+                    Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
+                    return True
+                download_file_multithreading(fastest_url[0], file_path)
+                if os.path.exists(file_path):
+                    if platform.system() == "Windows":
+                        win_old_tool_delta_path = next(
+                            os.path.join(filewalks[0], files)
+                            for filewalks in os.walk(os.getcwd(), topdown=False)
+                            for files in filewalks[2]
+                            if ".exe" in files
+                            and "new" not in files
+                            and ("ToolDelta" in files or "tooldelta" in files)
+                        )
+                    upgrade_script = (
+                        open("upgrade.sh", "w")
+                        if platform.system() == "Linux"
+                        else open("upgrade.bat", "w")
+                    )
+                    temp_shell = (
+                        f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi'
+                        if platform.system() == "Linux"
+                        else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {win_old_tool_delta_path}"
+                    )
+                    upgrade_script.write(temp_shell)
+                    upgrade_script.close()
+                    subprocess.Popen(
+                        "sh upgrade.sh", cwd=os.getcwd(), shell=True
+                    ) if platform.system() == "Linux" else subprocess.Popen(
+                        "upgrade.bat", cwd=os.getcwd(), shell=True
+                    )
+                    sys.exit()
+            else:
+                Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新!")
+        except Exception as err:
+            Print.print_war(
+                f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新! {err}"
+            )
+
     def read_cfg(self):
         # 读取启动配置等
         public_launcher: List[
@@ -97,17 +313,23 @@ class Frame:
             "插件市场源": str,
         }
         if not os.path.isfile("fbtoken"):
-            Print.print_err(
-                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
+            Print.print_inf(
+                "请选择登陆方法:\n 1 - 使用账号密码(登陆成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r"
             )
-            # 用户手动输入fbtoken并创建文件
-            fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
-            if fbtoken:
-                with open("fbtoken", "w", encoding="utf-8") as f:
-                    f.write(fbtoken)
+            Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
+            while True:
+                if Login_method.isdigit() == False:
+                    Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 "))
+                elif int(Login_method) > 2 or int(Login_method) < 1:
+                    Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 "))
+                else:
+                    break
+            if Login_method == "1":
+                self.login_fbuc()
+            elif Login_method == "2":
+                self.if_token()
             else:
-                Print.print_err("未输入fbtoken, 无法继续")
-                raise SystemExit
+                self.if_token()
 
         Config.default_cfg("ToolDelta基本配置.json", CFG)
         try:
@@ -140,7 +362,7 @@ class Frame:
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
                     Config.default_cfg("ToolDelta基本配置.json", std, True)
-                    Print.print_suc("登录配置设置成功")
+                    Print.print_suc("登陆配置设置成功")
                     cfgs = std
                     break
                 except:
@@ -164,7 +386,10 @@ class Frame:
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
         self.launcher: FrameFBConn | FrameNeOmg | FrameNeOmgRemote = launcher(
-            self.serverNumber, self.serverPasswd, fbtoken, auth_server
+            self.serverNumber,
+            self.serverPasswd,
+            fbtoken,
+            auth_server,
         )
 
     @staticmethod
@@ -229,7 +454,7 @@ class Frame:
         with open("fbtoken", "r", encoding="utf-8") as f:
             token = f.read()
             if "\n" in token:
-                Print.print_war("fbtoken里有换行符， 会造成fb登录失败， 已自动修复")
+                Print.print_war("fbtoken里有换行符， 会造成fb登陆失败， 已自动修复")
                 with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(token.replace("\n", ""))
 
@@ -321,6 +546,7 @@ class Frame:
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
     def system_exit(self):
+        asyncio.run(safe_jump())
         exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
         if self.link_game_ctrl.allplayers and not isinstance(
             self.launcher, (FrameNeOmgRemote,)
@@ -376,12 +602,14 @@ from .plugin_load.injected_plugin import (
     execute_player_left,
     execute_player_message,
     execute_repeat,
+    safe_jump,
 )
 
 
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
+        self.Game_Data = texts_zh_cn.texts
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
@@ -474,7 +702,15 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    Print.print_inf(f"{pkt['Parameters'][0]} 失败了: {pkt['Message']}")
+                    death_message = self.Game_Data.get(pkt["Message"], None)
+                    if death_message:
+                        filled_parameters = [
+                            self.Game_Data.get(param.replace("%", ""), param)
+                            for param in pkt["Parameters"]
+                        ]
+                        filled_message = death_message.format(*filled_parameters)
+                        Print.print_inf(filled_message)
+
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
                     else:
@@ -595,3 +831,13 @@ class GameCtrl:
             text: 文本
         """
         self.sendwocmd(f"title {target} actionbar {text}")
+
+    def get_game_data(self):
+        """
+        获取minecraft信息数据
+
+        返回参数:
+            库: zh_ch
+                变量: texts: achievement、color、commands、death、disconnect、effect、enchantment、entity、feature、gameMode、item、potion、tile、packets:{id:name}
+        """
+        return self.Game_Data

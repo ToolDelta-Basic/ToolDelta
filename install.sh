@@ -5,8 +5,10 @@ install_dir="$PWD/tooldelta"
 app_name="ToolDelta"
 # 设置快捷指令
 shortcut_command="td"
+# 获取ToolDelta的最新版本
+LatestTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest" | jq -r '.tag_name')
 # 设置 GitHub release URL
-github_release_url="https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/0.3.16/ToolDelta-linux"
+github_release_url="https://mirror.ghproxy.com/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
 
 function EXIT_FAILURE(){
     exit -1
@@ -15,8 +17,7 @@ function EXIT_FAILURE(){
 function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
-chown -R "$(whoami):$(whoami)" "$install_dir"
-
+chown -R $(whoami):$(whoami) "$install_dir"
 # 使用apt安装Python
 echo "使用apt安装Python..."
 apt-get install python3 -y
@@ -38,13 +39,10 @@ case ${PLANTFORM} in
     EXIT_FAILURE
     ;;
 esac
-
-cat > "$install_dir/main.py" << EOF
-import tooldelta
-
-tooldelta.start_tool_delta()
+cat > $install_dir/main.py << EOF
+from tooldelta import start_tool_delta
+start_tool_delta(exit_directly=True)
 EOF
-
 if ln -s "$install_dir/start.sh" $executable; then
     echo "快捷指令 '$shortcut_command' 创建成功。"
 else
@@ -60,7 +58,7 @@ echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command'
 function download_exec(){
 # 权限
 mkdir -p "$install_dir"
-chown -R "$(whoami):$(whoami)" "$install_dir"
+chown -R $(whoami):$(whoami) "$install_dir"
 
 # 切换到安装目录
 pushd "$install_dir" || exit

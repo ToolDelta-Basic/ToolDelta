@@ -12,19 +12,32 @@
 </p>
 
 <p align="center">
-  <code>TooldDelta</code> 是依赖于 <code>PhoenixBuilder | NeOmega</code> 的多功能扩展组件，可以加载各种各样有趣的插件。
+  <code>ToolDelta</code> 是依赖于 <code>PhoenixBuilder | NeOmega</code> 的多功能扩展组件，可以加载各种各样有趣的插件。   
+  <code>ToolDelta</code> 可以使得你的 <b>中国版《我的世界》手机版租赁服</b> 的玩法和功能更加多样化。
 </p>
 
 # 目录
 
 - [目录](#目录)
 - [注意事项](#注意事项)
+- [在docker运行](#在docker运行)
 - [更新日志](#更新日志)
 
 # 注意事项
 
 - 遇到平台不兼容的情况请尽快提交 `Issue`
 - 已支持 `Termux`
+
+How to use?：[learn-use](https://tooldelta-wiki.tblstudio.cn/learn-use.html)
+
+Docker Image: [DockerHub](https://hub.docker.com/r/wlingzhenyu/tooldelta)
+
+# 在docker运行
+
+```bash
+docker run -v .:/app -t wlingzhenyu/tooldelta:latest
+```
+
 
 # 更新日志
 

@@ -81,6 +81,14 @@ class _Print:
         )
 
     @staticmethod
+    def align(text: str, length: int):
+        l = len(text)
+        for char in text:
+            if not char.isascii():
+                l += 1
+        return text + " " * (length - l)
+
+    @staticmethod
     def _strike(text: str):
         text_ok = ""
         strikeMode = False

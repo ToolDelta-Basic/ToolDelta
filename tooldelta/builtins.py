@@ -5,7 +5,7 @@ import threading
 import traceback
 import copy
 import ctypes
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple, Optional
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
@@ -202,18 +202,19 @@ class Builtins:
                 Builtins.SimpleJsonDataReader.SafeJsonDump(obj, f)
 
     @staticmethod
-    def SimpleFmt(kw: dict[str, object], __sub: str):
+    def SimpleFmt(kw: Dict[str, Any], __sub: str) -> str:
         """
         快速将字符串内按照给出的dict的键值对替换掉内容.
-        参数:
-            kw: dict
-            __sub: 需要被替换的字符串
 
-        Example:
-        >>> my_color = "red"; my_item = "apple"
-        >>> kw = {"[颜色]": my_color, "[物品]": my_item}
-        >>> SimpleFmt(kw, "I like [颜色] [物品].")
-        I like red apple.
+        参数:
+            kw: Dict[str, Any], 键值对应替换的内容
+            __sub: str, 需要被替换的字符串
+
+        示例:
+            >>> my_color = "red"; my_item = "apple"
+            >>> kw = {"[颜色]": my_color, "[物品]": my_item}
+            >>> Builtins.SimpleFmt(kw, "I like [颜色] [物品].")
+            I like red apple.
         """
         for k, v in kw.items():
             if k in __sub:
@@ -221,21 +222,22 @@ class Builtins:
         return __sub
 
     @staticmethod
-    def simpleAssert(cond: any, exc):
+    def simpleAssert(cond: Any, exc: Any) -> None:
         """相当于 assert cond, 但是可以自定义引发的异常的类型"""
         if not cond:
             raise exc
 
     @staticmethod
-    def new_thread(func):
+    def new_thread(func: Any) -> Any:
         """
         在事件方法可能执行较久会造成堵塞时使用, 方便快捷地创建一个新线程, 例如:
+
         @Builtins.run_as_new_thread
         def on_inject(self):
             ...
         """
 
-        def thread_fun(*args, **kwargs):
+        def thread_fun(*args: Tuple, **kwargs: Any) -> None:
             Builtins.createThread(func, args=args, **kwargs)
 
         return thread_fun
@@ -243,7 +245,7 @@ class Builtins:
     run_as_new_thread = new_thread
 
     @staticmethod
-    def try_int(arg):
+    def try_int(arg: Any) -> Optional[int]:
         """
         尝试将提供的参数化为int类型并返回, 否则返回None
         """
@@ -253,12 +255,12 @@ class Builtins:
             return None
 
     @staticmethod
-    def add_in_dialogue_player(player: str):
+    def add_in_dialogue_player(player: str) -> None:
         """
         使玩家进入聊天栏对话模式, 可防止其在对话时继续触发另一个会话线程
 
         参数:
-            玩家名: str
+            player: str, 玩家名
         """
         if player not in in_dialogue_list:
             in_dialogue_list.append(player)
@@ -266,12 +268,12 @@ class Builtins:
             raise Exception("Already in a dialogue!")
 
     @staticmethod
-    def remove_in_dialogue_player(player: str):
+    def remove_in_dialogue_player(player: str) -> None:
         """
         使玩家离开聊天栏对话模式
 
         参数:
-            player: 玩家名
+            player: str, 玩家名
         """
         if player not in in_dialogue_list:
             return
@@ -283,44 +285,49 @@ class Builtins:
         检测玩家是否处在聊天栏对话模式中.
 
         参数:
-            player: 玩家名
+            player: str, 玩家名
         返回:
-            检测结果: bool
+            bool, 检测结果
         """
         return player in in_dialogue_list
 
     @staticmethod
-    def create_dialogue_threading(player, func, exc_cb=None, args=(), kwargs=None):
-        if kwargs is None:
-            kwargs = {}
+    def create_dialogue_threading(
+        player: str,
+        func: Any,
+        exc_cb: Optional[Any] = None,
+        args: Tuple = (),
+        kwargs: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
-        创建一个玩家与聊天栏交互的线程, 
+        创建一个玩家与聊天栏交互的线程,
         线程启动时玩家会自动进入聊天栏对话模式
         线程结束后该玩家会自动退出聊天栏对话模式
         可以用来防止玩家多开聊天栏对话或菜单线程
-        
+
         参数:
-            player: 玩家名
-            func: 线程方法
-            exc_cb: 若玩家已处于一个对话中, 则向方法exc_cb传参并调用它: player(玩家名)
-            args: 线程方法的参数组 tuple
-            kwargs: 线程方法的关键词参数组: dict
+            player: str, 玩家名
+            func: function, 线程方法
+            exc_cb: function, 若玩家已处于一个对话中, 则向方法exc_cb传参并调用它: player(玩家名)
+            args: tuple, 线程方法的参数组
+            kwargs: dict, 线程方法的关键词参数组
         """
+        if kwargs is None:
+            kwargs = {}
         Builtins.createThread(
             _dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
         )
 
     @staticmethod
-    def fuzzy_match(lst: list, sub: str):
+    def fuzzy_match(lst: List[str], sub: str) -> List[str]:
         """
         模糊匹配列表内的字符串, 可以用在诸如模糊匹配玩家名的用途
-        Example:
-        >>> fuzzy_match(["a", "ab", "abc", "abd"], "ab")
-        ["ab", "abc", "abd"]
 
         参数:
-            lst: 字符串列表
-            sub: 需要匹配的字符串
+            lst: list, 字符串列表
+            sub: str, 需要匹配的字符串
+        返回:
+            list, 匹配结果
         """
         res = []
         for i in lst:

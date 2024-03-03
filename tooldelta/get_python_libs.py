@@ -13,6 +13,8 @@ neccessary_libs = {
     "websockets": None,
     "qrcode": None,
     "ujson": None,
+    "pyspeedtest": None,
+    "tqdm": None,
 }
 
 

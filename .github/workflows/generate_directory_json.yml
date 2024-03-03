@@ -1,8 +1,8 @@
 name: Generate Directory JSON
 
 on:
-  pull_request:
-    branches: [ main ]
+  push:
+    branches: [main]
     paths:
       - "plugin_market/**"
   workflow_dispatch: {}
@@ -21,24 +21,24 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'  # 你想要使用的 Python 版本
+          python-version: "3.12" # 你想要使用的 Python 版本
 
       - name: Generate JSON
         run: python plugin_market/get_directory.py
 
       - name: Submit Changes
-        if: ${{ github.event_name == 'pull_request' }}  # 仅在 Pull Request 事件中运行
+        if: ${{ github.event_name == 'pull_request' }} # 仅在 Pull Request 事件中运行
         uses: EndBug/add-and-commit@v9
         with:
-            default_author: github_actions
-            message: '[AUTO] Generate Directory JSON'
-            add: 'plugin_market/directory.json'
-            branch: ${{ github.head_ref }}  # 使用 PR 的源分支作为目标分支
+          default_author: github_actions
+          message: "[AUTO] Generate Directory JSON"
+          add: "plugin_market/directory.json"
+          branch: ${{ github.head_ref }} # 使用 PR 的源分支作为目标分支
 
       - name: Submit Changes
         uses: EndBug/add-and-commit@v9
         if: ${{ github.event_name == 'push' }}
         with:
-            default_author: github_actions
-            message: '[AUTO] Generate Directory JSON'
-            add: 'plugin_market/directory.json'
+          default_author: github_actions
+          message: "[AUTO] Generate Directory JSON"
+          add: "plugin_market/directory.json"

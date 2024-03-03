@@ -7,7 +7,7 @@ import enum
 from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
 from threading import Thread
 from dataclasses import dataclass
-from ..color_print import Print
+from tooldelta.color_print import Print
 
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p

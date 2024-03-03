@@ -1,6 +1,7 @@
+import time
 from tooldelta import builtins
-from tooldelta.Frame import PRG_NAME, Frame
-from tooldelta.Frame import GameCtrl
+from tooldelta.frame import PRG_NAME, Frame
+from tooldelta.frame import GameCtrl
 from tooldelta.basic_mods import os, traceback
 from tooldelta.color_print import Print
 from tooldelta.plugin_load.PluginGroup import PluginGroup
@@ -11,9 +12,11 @@ plugins = PluginGroup(frame, PRG_NAME)
 game_control = GameCtrl(frame)
 
 
-def start_tool_delta(exit_directly=False):
+def start_tool_delta(exit_directly=True):
+    global frame
     # 初始化系统
     try:
+        frame.auto_update()
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)
@@ -32,8 +35,15 @@ def start_tool_delta(exit_directly=False):
         pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
-    finally:
-        frame.safe_close()
+
+
+def safe_jump(exit_directly=True):
+    frame.safe_close()
+    if exit_directly:
+        for _ in range(3, 0, -1):
+            Print.print_war(f"{_}秒后强制退出...", end="\r")
+            time.sleep(1)
+        Print.print_war("0秒后强制退出...", end="\r")
         Print.print_suc("ToolDelta 已退出.")
-        if exit_directly:
-            os._exit(0)
+        os._exit(0)
+    Print.print_suc("ToolDelta 已退出.")

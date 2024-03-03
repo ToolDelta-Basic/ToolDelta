@@ -2,6 +2,7 @@
 try:
     import time
     import os
+    import re
     import sys
     import threading
     import json
@@ -17,6 +18,7 @@ try:
     import math
     import random
     import psutil
+    import pyspeedtest
     import requests
     import nbt
     import qrcode
@@ -27,6 +29,7 @@ try:
     import hashlib
     import base64
     import rich
+    import tqdm
 
     sys.path.append(os.path.join(os.getcwd(), "libs"))
 

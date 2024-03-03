@@ -23,7 +23,8 @@ rich = "13.7.0"
 colorama = "^0.4.6"
 pillow = "^10.2.0"
 shellescape = "^3.8.1"
-
+pyspeedtest = "1.2.7"
+tqdm = "4.66.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -8,8 +8,9 @@ import requests
 import ujson
 import random
 from typing import Callable, Optional
+
 from .color_print import Print
-from .urlmethod import download_file, get_free_port
+from .urlmethod import download_file_singlethreaded, get_free_port
 from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
@@ -17,6 +18,8 @@ from .sys_args import sys_args_to_dict
 # from .neo_libs import neo_conn
 from . import fbconn
 import threading
+
+import tooldelta
 
 
 class SysStatus:
@@ -70,12 +73,8 @@ class StandardFrame:
         return None
 
     get_all_players = None
-    sendcmd: Callable[
-        [str, Optional[bool], Optional[int | float]], None | Packet_CommandOutput
-    ]
-    sendwscmd: Callable[
-        [str, Optional[bool], Optional[int | float]], Packet_CommandOutput
-    ]
+    sendcmd: Callable[[str, bool, int | float], None | Packet_CommandOutput]
+    sendwscmd: Callable[[str, bool, int | float], Packet_CommandOutput]
     sendwocmd: Callable[[str], None]
     sendfbcmd: Callable[[str], None | AttributeError]
     sendPacket: Callable[[int, str], None]
@@ -259,7 +258,9 @@ class FrameFBConn(StandardFrame):
                     succ = False
                     for mirr in mirrs:
                         try:
-                            download_file(mirr + "/https://github.com/" + furl, fdir)
+                            download_file_singlethreaded(
+                                mirr + "/https://github.com/" + furl, fdir
+                            )
                             succ = True
                             break
                         except requests.exceptions.RequestException:
@@ -276,7 +277,7 @@ class FrameFBConn(StandardFrame):
         return True
 
     def init_all_functions(self):
-        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
+        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
             uuid = fbconn.SendMCCommand(self.con, cmd)
             if waitForResp:
                 self.cmds_reqs.append(uuid)
@@ -427,6 +428,7 @@ class FrameNeOmg(StandardFrame):
     def update_status(self, new_status):
         self.status = new_status
         if new_status != SysStatus.RUNNING:
+            tooldelta.safe_jump()
             self.exit_event.set()  # 设置事件，触发等待结束
 
     def make_secret_key(self):
@@ -499,7 +501,7 @@ class FrameNeOmg(StandardFrame):
             if not os.path.isfile(pathdir) or replace_file:
                 Print.print_inf(f"正在下载依赖库 {pathdir} ...")
                 try:
-                    download_file(url, pathdir)
+                    download_file_singlethreaded(url, pathdir)
                 except Exception as err:
                     Print.print_err(f"下载依赖库出现问题: {err}")
                     raise SystemExit
@@ -524,7 +526,7 @@ class FrameNeOmg(StandardFrame):
         self.packet_handler(pkt_type, pkt)
 
     def init_all_functions(self):
-        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
+        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
             if waitForResp:
                 res = self.omega.send_player_command_need_response(cmd, timeout)
                 if res is None:

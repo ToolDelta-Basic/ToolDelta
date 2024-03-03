@@ -1,5 +1,5 @@
 from tooldelta import Plugin, plugins, Print
-from tooldelta.Frame import Frame
+from tooldelta.frame import Frame
 
 from PIL import Image
 import time
