@@ -8,6 +8,7 @@ class game_data(object):
     def __init__(self) -> None:
         pass
 
+
 class SubPacket_CmdOutputMsg:
     Success: bool
     Message: str
