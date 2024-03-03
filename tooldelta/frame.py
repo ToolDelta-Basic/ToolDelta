@@ -33,6 +33,8 @@ from .urlmethod import download_file_multithreading, test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union, TextIO
 
+import tooldelta
+
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
 #  GameCtrl: 负责对接游戏
@@ -513,7 +515,7 @@ class Frame:
                 self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
-                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
+                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: tooldelta.safe_jump(out_task=True)
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -527,10 +529,12 @@ class Frame:
                 rsp=''
                 while True:
                     res = sys.stdin.read(1)
+                    print(res)
                     if res == '\n':  # 如果是换行符，则输出当前输入并清空输入
                         break
                     if res == '':
                         Print.print_inf("使用 Ctrl+C 退出中...")
+                        self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()
                         return
                     rsp += res
@@ -563,7 +567,6 @@ class Frame:
             except:
                 pass
         time.sleep(0.5)
-        self.launcher.status = SysStatus.NORMAL_EXIT
         self.launcher.exit_event.set()
 
 

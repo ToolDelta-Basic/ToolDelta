@@ -1,5 +1,7 @@
+from hmac import new
 import platform
 import os
+from poplib import CR
 import shlex
 import subprocess
 import time
@@ -28,7 +30,7 @@ class SysStatus:
     RUNNING = 102
     NORMAL_EXIT = 103
     FB_LAUNCH_EXC = 104
-    FB_CRASHED = 105
+    CRASHED_EXIT = 105
     NEED_RESTART = 106
     launch_type = "None"
 
@@ -71,6 +73,15 @@ class StandardFrame:
     @staticmethod
     def get_bot_name():
         return None
+
+    def update_status(self, new_status):
+        self.status = new_status
+        if new_status == SysStatus.NORMAL_EXIT:
+            tooldelta.safe_jump(out_task=True)
+            self.exit_event.set()  # 设置事件，触发等待结束
+        if new_status == SysStatus.CRASHED_EXIT:
+            tooldelta.safe_jump(out_task=False)
+            self.exit_event.set()
 
     get_all_players = None
     sendcmd: Callable[[str, bool, int | float], None | Packet_CommandOutput]
@@ -154,12 +165,13 @@ class FrameFBConn(StandardFrame):
                     Print.print_err(
                         f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码"
                     )
-                    self.status = SysStatus.NORMAL_EXIT
+                    self.update_status(SysStatus.CRASHED_EXIT)
+
                 elif "Unauthorized rental server number" in tmp:
                     Print.print_err(
                         f"§c租赁服号: {self.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买"
                     )
-                    self.status = SysStatus.NORMAL_EXIT
+                    self.update_status(SysStatus.CRASHED_EXIT)
                 elif "Failed to contact with API" in tmp:
                     Print.print_err(
                         "§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中"
@@ -174,18 +186,18 @@ class FrameFBConn(StandardFrame):
                         Print.print_err(
                             "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)"
                         )
-                    self.status = SysStatus.NORMAL_EXIT
+                    self.update_status(SysStatus.CRASHED_EXIT)
                 elif "Invalid token" in tmp:
                     Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
-                    self.status = SysStatus.NORMAL_EXIT
+                    self.update_status(SysStatus.CRASHED_EXIT)
                 elif "netease.report.kick.hint" in tmp:
                     Print.print_err(
                         "§c无法连接到网易租赁服 -> 网易土豆的常见问题，检查你的租赁服状态（等级、是否开启、密码）并重试, 也可能是你的网络问题"
                     )
-                    self.status = SysStatus.NORMAL_EXIT
+                    self.update_status(SysStatus.CRASHED_EXIT)
                 elif "Press ENTER to exit." in tmp:
                     Print.print_err("§c程序退出")
-                    self.status = SysStatus.NORMAL_EXIT
+                    self.update_status(SysStatus.CRASHED_EXIT)
                 else:
                     Print.print_with_info(tmp, "§b  FB  §r")
 
@@ -231,7 +243,7 @@ class FrameFBConn(StandardFrame):
                     Builtins.createThread(self._launcher_listener)
         except StopIteration:
             pass
-        self.status = SysStatus.FB_CRASHED
+        self.update_status(SysStatus.CRASHED_EXIT)
 
     def downloadMissingFiles(self):
         "获取缺失文件"
@@ -410,8 +422,7 @@ class FrameNeOmg(StandardFrame):
 
     def msg_show(self):
         def _msg_show_thread():
-            str_max_len = 50
-            while 1:
+            while True:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig in ("", "SIGNAL: exit"):
                     Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
@@ -422,18 +433,9 @@ class FrameNeOmg(StandardFrame):
                 elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
                     Print.print_with_info("§a机器人已退出", "§b NOMG ")
                     continue
-                while msg_orig:
-                    msg = msg_orig[:str_max_len]
-                    msg_orig = msg_orig[str_max_len:]
-                    Print.print_with_info(msg, "§b NOMG ")
+                Print.print_with_info(msg_orig, "§b NOMG ")
 
         Builtins.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
-
-    def update_status(self, new_status):
-        self.status = new_status
-        if new_status != SysStatus.RUNNING:
-            tooldelta.safe_jump()
-            self.exit_event.set()  # 设置事件，触发等待结束
 
     def make_secret_key(self):
         self.secret_exit_key = hex(random.randint(10000, 99999))
@@ -445,7 +447,7 @@ class FrameNeOmg(StandardFrame):
         self.launch_event.wait()
         self.make_secret_key()
         self.set_omega(openat_port)
-        self.status = SysStatus.RUNNING
+        self.update_status(SysStatus.RUNNING)
         Print.print_suc("已开启 NEOMG 进程")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
@@ -459,7 +461,7 @@ class FrameNeOmg(StandardFrame):
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")
-        if self.status == SysStatus.FB_CRASHED:
+        if self.status == SysStatus.CRASHED_EXIT:
             return Exception("NeOmega 已崩溃")
         return SystemError("未知的退出状态")
 
@@ -599,7 +601,7 @@ class FrameNeOmgRemote(FrameNeOmg):
         self.update_status(SysStatus.NORMAL_EXIT)
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")
-        if self.status == SysStatus.FB_CRASHED:
+        if self.status == SysStatus.CRASHED_EXIT:
             return Exception("NeOmega 已崩溃")
         return SystemError("未知的退出状态")
 
