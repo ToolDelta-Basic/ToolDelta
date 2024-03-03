@@ -6,7 +6,9 @@ from .color_print import Print
 JsonIO = Builtins.SimpleJsonDataReader
 
 class PluginRegData:
-    def __init__(self, name: str, plugin_data: dict = {}, is_registered=True, is_enabled=True):
+    def __init__(self, name: str, plugin_data: dict = None, is_registered=True, is_enabled=True):
+        if plugin_data is None:
+            plugin_data = {}
         self.name: str = name
         if isinstance(plugin_data.get("version"), str):
             self.version: tuple = tuple(
