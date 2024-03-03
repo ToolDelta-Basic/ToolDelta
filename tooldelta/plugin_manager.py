@@ -5,6 +5,7 @@ from .color_print import Print
 
 JsonIO = Builtins.SimpleJsonDataReader
 
+
 class PluginRegData:
     def __init__(self, name: str, plugin_data: dict = {}, is_registered=True):
         self.name: str = name
@@ -59,33 +60,42 @@ class PluginManager:
     def auto_register_plugin(self, plugin_type, p_data):
         match plugin_type:
             case "classic":
-                self.push_plugin_reg_data(PluginRegData(
-                    p_data.name, {
-                        "name": p_data.name, 
-                        "author": p_data.author, 
-                        "version": p_data.version,
-                        "plugin-type": "classic"
-                    }
-                ))
+                self.push_plugin_reg_data(
+                    PluginRegData(
+                        p_data.name,
+                        {
+                            "name": p_data.name,
+                            "author": p_data.author,
+                            "version": p_data.version,
+                            "plugin-type": "classic",
+                        },
+                    )
+                )
             case "injected":
-                self.push_plugin_reg_data(PluginRegData(
-                    p_data.name, {
-                        "name": p_data.name, 
-                        "author": p_data.author, 
-                        "version": p_data.version,
-                        "description": p_data.description,
-                        "plugin-type": "injected"
-                    }
-                ))
+                self.push_plugin_reg_data(
+                    PluginRegData(
+                        p_data.name,
+                        {
+                            "name": p_data.name,
+                            "author": p_data.author,
+                            "version": p_data.version,
+                            "description": p_data.description,
+                            "plugin-type": "injected",
+                        },
+                    )
+                )
             case "dotcs":
                 assert isinstance(p_data, dict), "Not a valid dotcs plugin"
-                self.push_plugin_reg_data(PluginRegData(
-                    p_data.get("name", "未命名插件"), {
-                        "name": p_data.get("name", "未命名插件"), 
-                        "author": p_data.get("author", "unknown"),
-                        "plugin-type": "dotcs"
-                    }
-                ))
+                self.push_plugin_reg_data(
+                    PluginRegData(
+                        p_data.get("name", "未命名插件"),
+                        {
+                            "name": p_data.get("name", "未命名插件"),
+                            "author": p_data.get("author", "unknown"),
+                            "plugin-type": "dotcs",
+                        },
+                    )
+                )
             case _:
                 Print.print_err("不合法的注册插件: " + plugin_type)
 
@@ -110,7 +120,9 @@ class PluginManager:
         for _, r1 in r.items():
             for k, v in r1.items():
                 if not isinstance(k, str) or not isinstance(v, dict):
-                    raise ValueError(f"获取插件注册表出现问题: 类型出错: {k.__class__.__name__}, {v.__class__.__name__}")
+                    raise ValueError(
+                        f"获取插件注册表出现问题: 类型出错: {k.__class__.__name__}, {v.__class__.__name__}"
+                    )
                 v.update({"name": k})
                 p = PluginRegData(k, v)
                 res.append(p)
@@ -130,7 +142,6 @@ class PluginManager:
                 if i not in reg_dict[k]:
                     f_plugins.append(PluginRegData(i, {"plugin-type": k}, False))
         return f_plugins + reg_list
-
 
     def make_plugin_icon(self, plugin: PluginRegData | str):
         is_reg = plugin.is_registered
@@ -160,5 +171,6 @@ class PluginManager:
             txts.append(self.make_plugin_icon(plugin))
         print(txts)
         self.make_printable_list(txts)
+
 
 plugin_manager = PluginManager()
