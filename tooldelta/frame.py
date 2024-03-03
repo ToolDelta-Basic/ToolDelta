@@ -529,12 +529,6 @@ class Frame:
                     res = sys.stdin.read(1)
                     if res == '\n':  # 如果是换行符，则输出当前输入并清空输入
                         break
-                    if res == '\x08':  # 如果是退格符，则删除最后一个字符
-                        if user_input and ord(user_input[-1]) >= 0x4E00 and ord(user_input[-1]) <= 0x9FFF:
-                            # 如果是中文字符，则删除最后一个字符的前两个字节
-                            user_input = user_input[:-2]
-                        else:
-                            user_input = user_input[:-1]
                     if res == '':
                         Print.print_inf("使用 Ctrl+C 退出中...")
                         self.system_exit()
