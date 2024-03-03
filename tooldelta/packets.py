@@ -3,6 +3,7 @@ class PacketIDS:
     PlayerList = 63
     CommandOutput = 79
 
+
 class SubPacket_CmdOutputMsg:
     Success: bool
     Message: str
@@ -12,6 +13,7 @@ class SubPacket_CmdOutputMsg:
         self.Success = pkt["Success"]
         self.Parameters = pkt["Parameters"]
         self.Message = pkt["Message"]
+
 
 class SubPacket_CmdOrigin:
     Origin: int
