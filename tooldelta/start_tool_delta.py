@@ -17,7 +17,7 @@ def start_tool_delta(exit_directly=True):
     # 初始化系统
     try:
         # TODO: delete
-        #frame.auto_update()
+        # frame.auto_update()
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)

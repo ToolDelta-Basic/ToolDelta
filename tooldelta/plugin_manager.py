@@ -177,4 +177,5 @@ class PluginManager:
         if name != dirname:
             raise AssertionError(f"插件名: {name} 与文件夹名({dirname}) 不一致") from None
 
+
 plugin_manager = PluginManager()

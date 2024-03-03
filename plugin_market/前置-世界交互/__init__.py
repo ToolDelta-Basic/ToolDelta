@@ -6,6 +6,7 @@ import time
 @plugins.add_plugin_as_api("前置-世界交互")
 class GameInteractive(PluginAPI, Plugin):
     name = "前置-世界交互"
+
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()

@@ -19,7 +19,7 @@ class BasicFunctionLib(Plugin, PluginAPI):
     name = "基本插件功能库"
     author = "SuperScript"
     description = "提供额外的方法用于获取游戏数据"
-    
+
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
@@ -35,7 +35,6 @@ class BasicFunctionLib(Plugin, PluginAPI):
         if player in self.waitmsg_req:
             self.waitmsg_result[player] = EXC_PLAYER_LEAVE
             self.waitmsg_req.remove(player)
-
 
     # -------------- API ---------------
     def getScore(self, scoreboardNameToGet: str, targetNameToGet: str) -> int:
@@ -208,5 +207,6 @@ class BasicFunctionLib(Plugin, PluginAPI):
         "返回命令执行是否成功"
         res = self.game_ctrl.sendwscmd(cmd, True, timeout).SuccessCount
         return bool(res)
+
 
 EXC_PLAYER_LEAVE = IOError("Player left when waiting msg.")
