@@ -99,7 +99,7 @@ class PluginManager:
                     return
                 else:
                     plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
-                    shutil.rmtree(plugin_dir)
+                    shutil.rmtree(plugin_dir + ("+disabled" if not plugin.is_enabled else ""))
                     Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
                     self.pop_plugin_reg_data(plugin)
                     input()
