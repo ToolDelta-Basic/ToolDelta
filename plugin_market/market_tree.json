@@ -15,7 +15,7 @@
       },
       "plugin-type": "classic"
     },
-    "控制台执行MCFB指令": {
+    "控制台执行MC指令": {
       "author": "SuperScript",
       "version": "0.0.2",
       "description": "可以在控制台让机器人执行指令, 特殊指令等",
