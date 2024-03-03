@@ -1,3 +1,4 @@
+import signal
 import time
 from tooldelta import builtins
 from tooldelta.frame import PRG_NAME, Frame
@@ -10,10 +11,10 @@ from tooldelta.plugin_load.injected_plugin import movent
 frame = Frame()
 plugins = PluginGroup(frame, PRG_NAME)
 game_control = GameCtrl(frame)
-
+def signal_handler(*arg):pass # 排除信号中断
+signal.signal(signal.SIGINT, signal_handler)
 
 def start_tool_delta(exit_directly=True):
-    global frame
     # 初始化系统
     try:
         # TODO: delete
@@ -33,7 +34,7 @@ def start_tool_delta(exit_directly=True):
         game_control.set_listen_packets()
         raise frame.launcher.launch()
     except (KeyboardInterrupt, SystemExit):
-        pass
+        traceback.print_exc()
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
 

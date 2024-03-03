@@ -523,25 +523,33 @@ class Frame:
                     self.plugin_market_url
                 ),
             )
-            try:
-                while 1:
-                    rsp = input()
-                    for _, _, func, triggers in self.consoleMenu:
-                        if not rsp:
-                            continue
-                        if rsp.split()[0] in triggers:
-                            res = _try_execute_console_cmd(func, rsp, 0, None)
-                            if res == -1:
-                                return
-                        else:
-                            for tri in triggers:
-                                if rsp.startswith(tri):
-                                    res = _try_execute_console_cmd(func, rsp, 1, tri)
-                                    if res == -1:
-                                        return
-            except (EOFError, KeyboardInterrupt):
-                Print.print_inf("使用 Ctrl+C 退出中...")
-                self.system_exit()
+            while 1:
+                rsp=''
+                while True:
+                    res = sys.stdin.read(1)
+                    if res == '\n':  # 如果是换行符，则输出当前输入并清空输入
+                        break
+                    elif res == '\x08':  # 如果是退格符，则删除最后一个字符
+                        rsp = rsp[:-1]
+                    elif res == '':
+                        Print.print_inf("使用 Ctrl+C 退出中...")
+                        self.system_exit()
+                        return
+                    else:
+                        rsp += res
+                for _, _, func, triggers in self.consoleMenu:
+                    if not rsp:
+                        continue
+                    if rsp.split()[0] in triggers:
+                        res = _try_execute_console_cmd(func, rsp, 0, None)
+                        if res == -1:
+                            return
+                    else:
+                        for tri in triggers:
+                            if rsp.startswith(tri):
+                                res = _try_execute_console_cmd(func, rsp, 1, tri)
+                                if res == -1:
+                                    return
 
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
@@ -560,7 +568,7 @@ class Frame:
         time.sleep(0.5)
         self.launcher.status = SysStatus.NORMAL_EXIT
         self.launcher.exit_event.set()
-        return -1
+
 
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
