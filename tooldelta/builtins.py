@@ -166,6 +166,8 @@ class Builtins:
                 file: 文件名
                 default: 不为None时: 当文件不存在则创建一个空文件, 使用default给出的json字典写入文件.
             """
+            if file.endswith(".json"):
+                file = file[:-5]
             filepath = os.path.join("data", plugin_name, f"{file}.json")
             os.makedirs(os.path.join("data", plugin_name), exist_ok=True)
             try:

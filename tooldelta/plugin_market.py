@@ -8,6 +8,7 @@ import tempfile
 from . import urlmethod
 from .builtins import Builtins
 from .color_print import Print
+from .plugin_manager import PluginRegData
 from typing import Dict
 
 if platform.system().lower() == "windows":
@@ -37,29 +38,6 @@ def _get_json_from_url(url: str):
         raise Exception(f"服务器返回了不正确的答复: {resp}")
 
 
-class PluginMaketPluginData:
-    def __init__(self, name: str, plugin_data: dict):
-        self.name: str = name
-        self.version: tuple = tuple(int(i) for i in plugin_data["version"].split("."))
-        self.author: str = plugin_data["author"]
-        self.plugin_type: str = plugin_data["plugin-type"]
-        self.description: str = plugin_data["description"]
-        self.pre_plugins: dict[str, str] = plugin_data["pre-plugins"]
-
-    @property
-    def version_str(self):
-        return ".".join(str(i) for i in self.version)
-
-    @property
-    def plugin_type_str(self):
-        return {
-            "classic": "组合式",
-            "injected": "注入式",
-            "dotcs": "DotCS",
-            "unknown": "未知类型",
-        }.get(self.plugin_type, "unknown")
-
-
 class PluginMarket:
     def enter_plugin_market(self, source_url: str):
         test_mode = False
@@ -87,7 +65,7 @@ class PluginMarket:
                 now_page = int(now_index / 8) + 1
                 for i in range(now_index, now_index + 8):
                     if i in range(all_indexes):
-                        plugin_data = PluginMaketPluginData(
+                        plugin_data = PluginRegData(
                             plugins_list[i][0], plugins_list[i][1]
                         )
                         Print.print_inf(
@@ -117,7 +95,7 @@ class PluginMarket:
                     if res:
                         if res in range(1, all_indexes + 1):
                             r = self.choice_plugin(
-                                PluginMaketPluginData(
+                                PluginRegData(
                                     plugins_list[res - 1][0], plugins_list[res - 1][1]
                                 ),
                                 market_datas["MarketPlugins"],
@@ -142,7 +120,7 @@ class PluginMarket:
         os.system(shlex.quote(CLS_CMD))
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
 
-    def choice_plugin(self, plugin_data: PluginMaketPluginData, all_plugins_dict: dict):
+    def choice_plugin(self, plugin_data: PluginRegData, all_plugins_dict: dict):
         pre_plugins_str = (
             ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()]) or "无"
         )
@@ -165,14 +143,14 @@ class PluginMarket:
 
     def download_plugin(
         self,
-        plugin_data: PluginMaketPluginData,
-        all_plugins_dict: Dict[str, PluginMaketPluginData],
+        plugin_data: PluginRegData,
+        all_plugins_dict: Dict[str, str],
     ):
         download_paths = self.find_dirs(plugin_data)
         for plugin_name, _ in plugin_data.pre_plugins.items():
             Print.print_inf(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
             self.download_plugin(
-                PluginMaketPluginData(plugin_name, all_plugins_dict[plugin_name]),
+                PluginRegData(plugin_name, all_plugins_dict[plugin_name]),
                 all_plugins_dict,
             )
         cache_dir = tempfile.mkdtemp()
@@ -222,7 +200,7 @@ class PluginMarket:
             # Clean up cache directory
             shutil.rmtree(cache_dir)
 
-    def find_dirs(self, plugin_data: PluginMaketPluginData):
+    def find_dirs(self, plugin_data: PluginRegData):
         try:
             data = _get_json_from_url(
                 _url_join(self.plugins_download_url, "directory.json")
@@ -240,6 +218,5 @@ class PluginMarket:
         except Exception as err:
             Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
             return
-
 
 market = PluginMarket()
