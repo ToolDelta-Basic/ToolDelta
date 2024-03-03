@@ -16,7 +16,6 @@ from .basic_mods import (
     requests,
     platform,
     subprocess,
-    re,
     getpass,
     hashlib,
 )
@@ -529,7 +528,6 @@ class Frame:
                 rsp=''
                 while True:
                     res = sys.stdin.read(1)
-                    print(res)
                     if res == '\n':  # 如果是换行符，则输出当前输入并清空输入
                         break
                     if res == '':
