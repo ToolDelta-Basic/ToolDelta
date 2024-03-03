@@ -227,6 +227,6 @@ class PluginMarket:
         src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
         return _get_json_from_url(
             _url_join(src_url, "latest_versions.json")
-        )[plugin_type].get(plugin_name)
+        )[plugin_type + "_plugin"].get(plugin_name)
 
 market = PluginMarket()

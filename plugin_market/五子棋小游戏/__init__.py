@@ -8,7 +8,7 @@ from tooldelta import Plugin, Frame, plugins
 
 @plugins.add_plugin
 class SuperScript_GobangBasic(Plugin):
-    name = "五子棋"
+    name = "五子棋小游戏"
     author = "SuperScript"
     version = (0, 0, 2)
     """
