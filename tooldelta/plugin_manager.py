@@ -94,12 +94,16 @@ class PluginManager:
         }[plugin.plugin_type]
         match input(Print.clean_fmt("§f请选择选项: ")):
             case "1":
-                r = input(Print.clean_fmt("§c删除插件操作不可逆, 请输入y, 其他取消: ")).lower()
+                r = input(
+                    Print.clean_fmt("§c删除插件操作不可逆, 请输入y, 其他取消: ")
+                ).lower()
                 if r != "y":
                     return
                 else:
                     plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
-                    shutil.rmtree(plugin_dir + ("+disabled" if not plugin.is_enabled else ""))
+                    shutil.rmtree(
+                        plugin_dir + ("+disabled" if not plugin.is_enabled else "")
+                    )
                     Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
                     self.pop_plugin_reg_data(plugin)
                     input()
@@ -154,7 +158,8 @@ class PluginManager:
         else:
             return res[0]
 
-    def search_plugin_by_kw(self, kws: list[str], plugins: list[PluginRegData]):
+    @staticmethod
+    def search_plugin_by_kw(kws: list[str], plugins: list[PluginRegData]):
         res = []
         for plugin in plugins:
             if all(kw in plugin.name for kw in kws):
@@ -254,8 +259,8 @@ class PluginManager:
                 if i.replace("+disabled", "") not in reg_dict[k]:
                     f_plugins.append(PluginRegData(i, {"plugin-type": k}, False))
         return f_plugins + reg_list
-
-    def make_plugin_icon(self, plugin: PluginRegData):
+    @staticmethod
+    def make_plugin_icon(plugin: PluginRegData):
         ico_colors = {"dotcs": "§6", "classic": "§b", "injected": "§d"}
         return (
             ico_colors.get(plugin.plugin_type, "§7")

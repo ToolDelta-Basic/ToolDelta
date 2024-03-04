@@ -80,7 +80,8 @@ class Frame:
             Print.print_err("启动参数错误")
             raise SystemExit
 
-    def if_token(self):
+    @staticmethod
+    def if_token():
         if not os.path.isfile("fbtoken"):
             Print.print_err(
                 "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
@@ -204,7 +205,8 @@ class Frame:
         except Exception as err:
             Print.print_err(f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}")
 
-    def auto_update(self):
+    @staticmethod
+    def auto_update():
         # 对ToolDelta进行自动更新
         try:
             latest_version = requests.get(
@@ -566,7 +568,6 @@ class Frame:
                 pass
         time.sleep(0.5)
         self.launcher.exit_event.set()
-
 
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
