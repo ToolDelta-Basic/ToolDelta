@@ -149,6 +149,14 @@
       "limit_launcher": null,
       "pre-plugins": {},
       "plugin-type": "classic"
+    },
+    "tpa传送": {
+      "author": "wling",
+      "version": "0.0.1",
+      "description": "玩家互传，方便快捷！",
+      "limit_launcher": null,
+      "pre-plugins": {},
+      "plugin-type": "injected"
     }
   }
 }
