@@ -8,7 +8,7 @@ from tooldelta.plugin_load.injected_plugin.movent import (
 
 __plugin_meta__ = {
     "name": "tpa传送",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "wling",
 }
 
@@ -28,35 +28,33 @@ class tpa:
     def start(self):
         rawText(
             self.playersend,
-            display +
-            "已向玩家 §l%s§r 发起传送请求, 对方有 §l%d§r 秒的时间接受请求."
+            display
+            + "已向玩家 §l%s§r 发起传送请求, 对方有 §l%d§r 秒的时间接受请求."
             % (self.playerrecv, self.time),
         )
         rawText(
             self.playerrecv,
-            display +
-            "收到 §l%s§r 发来的传送请求, 你有 §l%d§r 秒的时间接受请求."
+            display
+            + "收到 §l%s§r 发来的传送请求, 你有 §l%d§r 秒的时间接受请求."
             % (self.playersend, self.time),
         )
         tpaRequests.append(self)
         rawText(
             self.playerrecv,
-            display +
-            "输入§c.tpa acc §r接受对方请求, 将对方传来\n输入§c.tpa dec §r拒绝对方请求",
+            display
+            + "输入§c.tpa acc §r接受对方请求, 将对方传来\n输入§c.tpa dec §r拒绝对方请求",
         )
 
     def accept(self):
         sendcmd(f"/tp {self.playersend} {self.playerrecv}")
         rawText(
             self.playersend,
-            display +
-            f"§l{self.playerrecv}§r 已接受你的传送请求.",
+            display + f"§l{self.playerrecv}§r 已接受你的传送请求.",
         )
 
         rawText(
             self.playerrecv,
-            display +
-            f"你已接受 §l{self.playersend}§r 的传送请求.",
+            display + f"你已接受 §l{self.playersend}§r 的传送请求.",
         )
 
         tpaRequests.remove(self)
@@ -64,14 +62,12 @@ class tpa:
     def decline(self):
         rawText(
             self.playersend,
-            display +
-            f"§c§l{self.playerrecv}§r§c 已拒绝你的传送请求.",
+            display + f"§c§l{self.playerrecv}§r§c 已拒绝你的传送请求.",
         )
 
         rawText(
             self.playerrecv,
-            display +
-            f"§c你已拒绝 §l{self.playersend}§r§c 的传送请求.",
+            display + f"§c你已拒绝 §l{self.playersend}§r§c 的传送请求.",
         )
 
         tpaRequests.remove(self)
@@ -79,14 +75,12 @@ class tpa:
     def outdate(self):
         rawText(
             self.playersend,
-            display +
-            f"§c你发给 §l{self.playerrecv}§r§c 的传送请求已过期.",
+            display + f"§c你发给 §l{self.playerrecv}§r§c 的传送请求已过期.",
         )
 
         rawText(
             self.playerrecv,
-            display +
-            f"§c§l{self.playersend}§r§c 发来的传送请求已过期.",
+            display + f"§c§l{self.playersend}§r§c 发来的传送请求已过期.",
         )
 
         tpaRequests.remove(self)
@@ -94,12 +88,6 @@ class tpa:
 
 @player_message()
 async def tpaCommand(playername, msg):
-    if msg == ".help" or msg == ".help ":
-        sendcmd(
-            "/tellraw "
-            + playername
-            + r""" {"rawtext":[{"text":"输入§c.tpa§r查看玩家互传(选人版)帮助"}]}"""
-        )
     if msg[0:4] == ".tpa":
         if msg == ".tpa" or msg == ".tpa ":
             sendcmd(
@@ -115,8 +103,8 @@ async def tpaCommand(playername, msg):
                 for i in tpaRequests:
                     rawText(
                         playername,
-                        display +
-                        "请求§l§c%d§r: §l%s§r 发送给 §l%s§r, 剩余时间: §l%d§r s"
+                        display
+                        + "请求§l§c%d§r: §l%s§r 发送给 §l%s§r, 剩余时间: §l%d§r s"
                         % (tpaIndex, i.playersend, i.playerrecv, i.time),
                     )
                     tpaIndex += 1
