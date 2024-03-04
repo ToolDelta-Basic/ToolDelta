@@ -83,7 +83,7 @@ class SuperScript_GobangBasic(Plugin):
 
     def getRoom(self, player: str):
         for _k in self.rooms:
-            if self.rooms[_k].playerA == player or self.rooms[_k].playerB == player:
+            if player in (self.rooms[_k].playerA, self.rooms[_k].playerB):
                 return _k
         return None
 
