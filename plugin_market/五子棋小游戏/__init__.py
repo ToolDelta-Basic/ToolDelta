@@ -48,7 +48,7 @@ class SuperScript_GobangBasic(Plugin):
             time_min, time_sec = divmod(
                 int(time.time() + self.timeleft - self.startTime), 60
             )
-            return "%02d ： %02d" % (time_min, time_sec)
+            return f"{time_min}:{time_sec}"
 
         def PID(self, player: str):
             return (
@@ -129,7 +129,7 @@ class SuperScript_GobangBasic(Plugin):
         gc = self.game_ctrl
         gc.say_to(_1P, "§7§l> §r§6正在等待对方同意请求..")
         gc.say_to(_2P, f"§7§l> §r§e{_1P}§f向你发送了五子棋对弈邀请 ！")
-        gc.say_to(_2P, f"§7§l> §r§a输入wzq y同意， §c输入wzq n拒绝")
+        gc.say_to(_2P, "§7§l> §r§a输入wzq y同意， §c输入wzq n拒绝")
         waitStartTime = time.time()
         self.waitingCache[_2P] = None
         while 1:

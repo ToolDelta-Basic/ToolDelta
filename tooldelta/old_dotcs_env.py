@@ -63,7 +63,7 @@ def get_dotcs_env(__F, print_ins):
                 if self.func.__class__.__name__ != "str":
                     self.func(self)
                 else:
-                    exec("%s(self)" % self.func)
+                    exec(f"{self.func}(self)")
             except Exception as err:
                 traceback.print_exc()
             except SystemExit as err:
@@ -90,7 +90,7 @@ def get_dotcs_env(__F, print_ins):
     def getTarget(sth: str, timeout: bool | int = 1) -> list:
         if not sth.startswith("@"):
             raise Exception("Minecraft Target Selector is not correct.")
-        result = sendcmd("/tell @s get%s" % sth, True, timeout)["OutputMessages"][0][
+        result = sendcmd(f"/tell @s get{sth}", True, timeout)["OutputMessages"][0][
             "Parameters"
         ][1][3:]
         if ", " not in result:
@@ -100,9 +100,7 @@ def get_dotcs_env(__F, print_ins):
         return result.split(", ")
 
     def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int:
-        resultList = sendcmd("/scoreboard players list %s" % targetNameToGet, True)[
-            "OutputMessages"
-        ]
+        resultList = sendcmd(f"/scoreboard players list {targetNameToGet}", True)["OutputMessages"]
         result = {}
         result2 = {}
         for i in resultList:
@@ -133,7 +131,7 @@ def get_dotcs_env(__F, print_ins):
                 return result[targetNameToGet]
             return result[targetNameToGet][scoreboardNameToGet]
         except KeyError as err:
-            raise Exception("Failed to get score: %s" % str(err))
+            raise Exception(f"Failed to get score: {str(err)}")
 
     def getPos(targetNameToGet: str, timeout: float | int = 1) -> dict:
         if (
@@ -142,9 +140,7 @@ def get_dotcs_env(__F, print_ins):
             and (not targetNameToGet.startswith("@a"))
         ):
             raise Exception("Player not found.")
-        result = sendcmd("/querytarget %s" % targetNameToGet, True, timeout)[
-            "OutputMessages"
-        ][0]
+        result = sendcmd(f"/querytarget {targetNameToGet}", True, timeout)["OutputMessages"][0]
         if result["Success"] is False:
             raise Exception("Failed to get the position.")
         resultList = json.loads(result["Parameters"][0])
@@ -155,9 +151,9 @@ def get_dotcs_env(__F, print_ins):
             y = i["position"]["y"] - 1.6200103759765
             z = i["position"]["z"]
             position = {
-                "x": float("%.2f" % x),
-                "y": float("%.2f" % y),
-                "z": float("%.2f" % z),
+                "x": float(f"{x:.2f}"),
+                "y": float(f"{y:.2f}"),
+                "z": float(f"{z:.2f}"),
             }
             dimension = i["dimension"]
             yRot = i["yRot"]
@@ -181,9 +177,7 @@ def get_dotcs_env(__F, print_ins):
             and (not targetName.startswith("@a"))
         ):
             raise Exception("Player not found.")
-        result = sendcmd(
-            "/clear %s %s %d 0" % (targetName, itemName, itemSpecialID), True
-        )
+        result = sendcmd(f"/clear {targetName} {itemName} {itemSpecialID} 0", True)
         if result["OutputMessages"][0]["Message"] == "commands.generic.syntax":
             raise Exception("Item name error.")
         if result["OutputMessages"][0]["Message"] == "commands.clear.failure.no.items":
@@ -191,18 +185,14 @@ def get_dotcs_env(__F, print_ins):
         return int(result["OutputMessages"][0]["Parameters"][1])
 
     def getStatus(statusName: str):
-        if not os.path.isfile("data/dotcs_status_%s.txt" % statusName):
+        if not os.path.isfile(f"data/{statusName}.txt"):
             return None
-        with open(
-            "data/dotcs_status_%s.txt" % statusName, "r", encoding="utf-8"
-        ) as file:
+        with open(f"data/{statusName}.txt", "r", encoding="utf-8") as file:
             status = file.read()
         return status
 
     def setStatus(statusName: str, status):
-        with open(  # skipcq: PTC-W6004
-            "data/dotcs_status_%s.txt" % statusName, "w", encoding="utf-8"
-        ) as file:
+        with open(f"data/{statusName}.txt", "w", encoding="utf-8") as file:
             file.write(str(status))
 
     def getPlayerData(dataName: str, playerName: str, writeNew):

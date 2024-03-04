@@ -42,26 +42,20 @@ async def _(playername, msg):
         with open(config_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         if playername not in data:
-            tellrawText('@a[name="%s"]' % playername, "§l§4ERROR§r", "§c未找到记录.")
+            tellrawText(f'@a[name="{playername}"]', "§l§4ERROR§r", "§c未找到记录.")
             return
         deathData = data[playername]
         tp(
-            '@a[name="%s"]' % playername,
+            f'@a[name="{playername}"]',
             x=deathData["position"]["x"],
             y=deathData["position"]["y"],
             z=deathData["position"]["z"],
             dimension=deathData["dimension"],
         )
         tellrawText(
-            '@a[name="%s"]' % playername,
+            f'@a[name="{playername}"]',
             "§l死亡点记录§r",
-            "已传送到上次死亡点: [§l%s§r, (§l%s§r, §l%s§r, §l%s§r)]."
-            % (
-                translateDim(deathData["dimension"]),
-                deathData["position"]["x"],
-                deathData["position"]["y"],
-                deathData["position"]["z"],
-            ),
+            f"已传送到上次死亡点: [§l{translateDim(deathData['dimension'])}§r, (§l{deathData['position']['x']}§r, §l{deathData['position']['y']}§r, §l{deathData['position']['z']}§r)]."
         )
         data[playername] = deathData
         with open(config_path, "w", encoding="utf-8") as f:
@@ -82,10 +76,9 @@ async def _(playername, killer):
         deathTimeDelta = deathTime - deathData_old["time"]
         if deathTimeDelta < LOG_DEATH_TIME:
             tellrawText(
-                '@a[name="%s"]' % playername,
+                f'@a[name="{playername}"]',
                 "§l§4ERROR§r",
-                "§c时间间隔过短, 未保存此次记录. (冷却时间: §l%d§r§cs)"
-                % (LOG_DEATH_TIME - deathTimeDelta),
+                f"§c时间间隔过短, 未保存此次记录. (冷却时间: §l{LOG_DEATH_TIME - deathTimeDelta}§r§cs)"
             )
             return
 
