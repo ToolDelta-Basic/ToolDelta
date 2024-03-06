@@ -6,7 +6,6 @@ from . import (
 )
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .texts import texts_zh_cn
 from .basic_mods import (
     Callable,
     os,
@@ -29,6 +28,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .plugin_load.PluginGroup import PluginGroup
+from .game_texts import Game_Texts
 from .urlmethod import download_file_multithreading, test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union, TextIO
@@ -447,6 +447,7 @@ class Frame:
         os.makedirs("status", exist_ok=True)
         os.makedirs("data/status", exist_ok=True)
         os.makedirs("data/players", exist_ok=True)
+        os.makedirs("data/game_texts", exist_ok=True)
 
     @staticmethod
     def fbtokenFix():
@@ -609,7 +610,7 @@ from .plugin_load.injected_plugin import (
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
-        self.Game_Data = texts_zh_cn.texts
+        self.Game_Data = Game_Texts()
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
