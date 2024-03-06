@@ -19,7 +19,7 @@ class BasicFunctionLib(Plugin, PluginAPI):
     name = "基本插件功能库"
     author = "SuperScript"
     description = "提供额外的方法用于获取游戏数据"
-    
+
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
@@ -36,12 +36,11 @@ class BasicFunctionLib(Plugin, PluginAPI):
             self.waitmsg_result[player] = EXC_PLAYER_LEAVE
             self.waitmsg_req.remove(player)
 
-
     # -------------- API ---------------
     def getScore(self, scoreboardNameToGet: str, targetNameToGet: str) -> int:
         "获取玩家计分板分数 (计分板名, 玩家/计分板项名) 获取失败引发异常"
         resultList = self.game_ctrl.sendwscmd(
-            "/scoreboard players list %s" % targetNameToGet, True
+            f"/scoreboard players list {targetNameToGet}", True
         ).OutputMessages
         result = {}
         result2 = {}
@@ -73,7 +72,7 @@ class BasicFunctionLib(Plugin, PluginAPI):
                 return result[targetNameToGet]
             return result[targetNameToGet][scoreboardNameToGet]
         except KeyError as err:
-            raise Exception("Failed to get score: %s" % str(err))
+            raise Exception(f"Failed to get score: {err}")
 
     def getPos(self, targetNameToGet: str, timeout: float | int = 1) -> dict:
         """
@@ -116,9 +115,9 @@ class BasicFunctionLib(Plugin, PluginAPI):
                 else i["position"]["z"] - 1
             )
             position = {
-                "x": float("%.2f" % x),
-                "y": float("%.2f" % y),
-                "z": float("%.2f" % z),
+                "x": float(f"{x:.2f}"),
+                "y": float(f"{y:.2f}"),
+                "z": float(f"{z:.2f}"),
             }
             dimension = i["dimension"]
             yRot = i["yRot"]
@@ -144,7 +143,7 @@ class BasicFunctionLib(Plugin, PluginAPI):
         ):
             raise Exception("Player not found.")
         result = self.game_ctrl.sendwscmd(
-            "/clear %s %s %d 0" % (targetName, itemName, itemSpecialID), True
+            f"/clear {targetName} {itemName} {itemSpecialID} 0", True
         )
         if result.OutputMessages[0].Message == "commands.generic.syntax":
             raise Exception("Item name error.")
@@ -157,10 +156,11 @@ class BasicFunctionLib(Plugin, PluginAPI):
         if not sth.startswith("@"):
             raise Exception("Minecraft Target Selector is not correct.")
         result = (
-            self.game_ctrl.sendwscmd("/testfor %s" % sth, True, timeout)
+            self.game_ctrl.sendwscmd(f"/testfor {sth}", True, timeout)
             .OutputMessages[0]
             .Parameters
         )
+
         if result:
             result = result[0]
             return result.split(", ")
@@ -208,5 +208,6 @@ class BasicFunctionLib(Plugin, PluginAPI):
         "返回命令执行是否成功"
         res = self.game_ctrl.sendwscmd(cmd, True, timeout).SuccessCount
         return bool(res)
+
 
 EXC_PLAYER_LEAVE = IOError("Player left when waiting msg.")

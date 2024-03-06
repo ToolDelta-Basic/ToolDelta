@@ -6,6 +6,10 @@ import time
 @plugins.add_plugin_as_api("前置-世界交互")
 class GameInteractive(PluginAPI, Plugin):
     name = "前置-世界交互"
+    author = "SuperScript"
+    description = "前置插件, 提供世界交互功能的数据包, etc."
+    version = (0, 0, 1)
+
     def __init__(self, frame: Frame):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()

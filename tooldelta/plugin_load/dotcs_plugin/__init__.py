@@ -1,5 +1,6 @@
-from ..classic_plugin import Plugin
-from ...color_print import Print
+from tooldelta.plugin_load.classic_plugin import Plugin
+from tooldelta.color_print import Print
+from tooldelta.plugin_load import plugin_is_enabled
 import re
 import os
 import sys
@@ -136,6 +137,8 @@ def read_plugin_from_old(plugin_grp, module_env: dict):
     files = os.listdir(PLUGIN_PATH)
     files.sort()
     for file in files:
+        if not plugin_is_enabled(file):
+            continue
         try:
             if file.endswith(".py"):
                 Print.print_inf(f"§6载入DotCS插件: {file.strip('.py')}", end="\r")

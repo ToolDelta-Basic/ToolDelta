@@ -7,7 +7,7 @@ from tooldelta.plugin_load.injected_plugin.movent import (
 
 
 __plugin_meta__ = {
-    "name": "玩家提及",
+    "name": "@玩家",
     "version": "0.0.2",
     "description": "当有人提及你时，会收到提醒",
     "author": "wling",

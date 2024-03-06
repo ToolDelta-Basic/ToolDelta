@@ -4,7 +4,8 @@ import time
 
 @plugins.add_plugin
 class Display32KShulkerBox(Plugin):
-    name = "检测32k盒子并反制"
+    name = "32k盒子显示"
+    description = "检测32k盒子并反制"
     author = "SuperScript"
     version = (0, 0, 2)
 
@@ -29,11 +30,7 @@ class Display32KShulkerBox(Plugin):
     @plugins.add_packet_listener(56)
     def box_get(self, jsonPkt):
         if "Items" in jsonPkt["NBTData"]:
-            shulkerBoxPos = "%d %d %d" % (
-                jsonPkt["Position"][0],
-                jsonPkt["Position"][1],
-                jsonPkt["Position"][2],
-            )
+            shulkerBoxPos = f"{jsonPkt['Position'][0]} {jsonPkt['Position'][1]} {jsonPkt['Position'][2]}"
             shulkerx, shulkery, shulkerz = jsonPkt["Position"][0:3]
             shulkerBoxItemList = jsonPkt["NBTData"]["Items"]
             ench32kName = []
@@ -53,22 +50,20 @@ class Display32KShulkerBox(Plugin):
                 except:
                     playerNearest = "未找到"
                 self.game_ctrl.sendcmd(
-                    "/structure save %s %s %s disk"
-                    % (structID, shulkerBoxPos, shulkerBoxPos)
+                    f"/structure save {structID} {shulkerBoxPos} {shulkerBoxPos} disk"
                 )
-                self.game_ctrl.sendcmd("/setblock %s bedrock" % shulkerBoxPos)
+                self.game_ctrl.sendcmd(f"/setblock {shulkerBoxPos} bedrock")
                 self.game_ctrl.say_to(
                     "@a",
-                    text="§4警报 §c发现坐标§e(%s)§c的32k潜影盒，已自动保存并清除，最近玩家：%s，结构方块结构名："
-                    % (shulkerBoxPos.replace(" ", ","), playerNearest),
+                    text=f"§4警报 §c发现坐标§e({shulkerBoxPos.replace(' ', ',')})§c的32k潜影盒，已自动保存并清除，最近玩家：{playerNearest}，结构方块结构名：",
                 )
-                self.game_ctrl.sendcmd("/tag %s add ban" % playerNearest)
+                self.game_ctrl.sendcmd(f"/tag {playerNearest} add ban")
                 self.game_ctrl.say_to(
                     "@a[m=1]", text="§6" + structID + "§6，给予玩家的标签是ban"
                 )
                 self.ban_sys.ban(playerNearest, time.time() + 1000000000, "使用 32k 潜影盒")
                 Print.print_war(
-                    "!!! 发现含32k的潜影盒, 坐标: %s, 结构id: %s" % (shulkerBoxPos, structID)
+                    f"!!! 发现含32k的潜影盒, 坐标: {shulkerBoxPos}, 结构id: {structID}"
                 )
                 self.write32kBox(structID)
 
@@ -77,10 +72,10 @@ class Display32KShulkerBox(Plugin):
         if boxes.strip():
             for i in boxes:
                 self.game_ctrl.sendcmd(
-                    "/execute %s ~~~ structure load %s ~~~" % (player, i)
+                    f"/execute {player} ~~~ structure load {i} ~~~"
                 )
                 self.game_ctrl.sendcmd(
-                    "/execute %s ~~~ setblock ~~~ air 0 destroy" % player
+                    f"/execute {player} ~~~ setblock ~~~ air 0 destroy"
                 )
                 self.game_ctrl.sendcmd("/structure delete " + i)
                 time.sleep(0.05)

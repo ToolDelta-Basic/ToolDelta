@@ -1,20 +1,22 @@
-import shlex
 import requests
 import json
 import os
 import platform
 import shutil
 import tempfile
-from . import urlmethod
-from .builtins import Builtins
-from .color_print import Print
-from .plugin_manager import PluginRegData
+from tooldelta import urlmethod
+from tooldelta.builtins import Builtins
+from tooldelta.color_print import Print
+from tooldelta.plugin_load import PluginRegData
+from tooldelta.cfg import Cfg
 from typing import Dict
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"
 else:
     CLS_CMD = "clear"
+
+clear_screen = lambda: os.system(CLS_CMD)
 
 
 def _path_dir(path: str):
@@ -39,26 +41,18 @@ def _get_json_from_url(url: str):
 
 
 class PluginMarket:
-    def enter_plugin_market(self, source_url: str):
-        test_mode = False
+    def enter_plugin_market(self, source_url: str = None):
         Print.print_inf("正在连接到插件市场..")
         try:
-            if not test_mode:
-                market_datas = _get_json_from_url(
-                    _url_join(source_url, "market_tree.json")
-                )
-            else:
-                with open("plugin_market/market_tree.json", "r", encoding="utf-8") as f:
-                    market_datas = json.load(f)
-            plugins_list: list = list(market_datas["MarketPlugins"].items())
-            self.plugins_download_url = market_datas["DownloadRefURL"]
+            market_datas = self.get_datas_from_market(source_url)
+            plugins_list = list(market_datas["MarketPlugins"].items())
             all_indexes = len(plugins_list)
             now_index = 0
             sum_pages = int((all_indexes - 1) / 8) + 1
             now_page = 0
             last_operation = ""
             while True:
-                os.system(shlex.quote(CLS_CMD))
+                clear_screen()
                 Print.print_inf(
                     market_datas["SourceName"] + ": " + market_datas["Greetings"]
                 )
@@ -117,14 +111,23 @@ class PluginMarket:
         except Exception as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             return
-        os.system(shlex.quote(CLS_CMD))
+        clear_screen()
         Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
+
+    def get_datas_from_market(self, source_url: str = None):
+        if source_url is None:
+            source_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
+        market_datas = _get_json_from_url(
+            _url_join(source_url, "market_tree.json")
+        )
+        self.plugins_download_url = market_datas["DownloadRefURL"]
+        return market_datas
 
     def choice_plugin(self, plugin_data: PluginRegData, all_plugins_dict: dict):
         pre_plugins_str = (
             ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()]) or "无"
         )
-        os.system(shlex.quote(CLS_CMD))
+        clear_screen()
         Print.print_inf(
             f"{plugin_data.name} v{plugin_data.version_str}", need_log=False
         )
@@ -195,6 +198,9 @@ class PluginMarket:
                     )
                     os.makedirs(os.path.dirname(target_file), exist_ok=True)
                     shutil.move(source_file, target_file)
+            from tooldelta.plugin_manager import plugin_manager
+            # 注册插件
+            plugin_manager.push_plugin_reg_data(plugin_data)   
             Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             # Clean up cache directory
@@ -219,5 +225,14 @@ class PluginMarket:
             Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
             return
 
+    @staticmethod
+    def get_latest_plugin_version(plugin_type: str, plugin_name: str):
+        try:
+            src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
+        except:
+            src_url = "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market"
+        return _get_json_from_url(
+            _url_join(src_url, "latest_versions.json")
+        )[plugin_type + "_plugin"].get(plugin_name)
 
 market = PluginMarket()

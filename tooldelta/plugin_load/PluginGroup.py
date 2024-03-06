@@ -9,7 +9,6 @@ from tooldelta.plugin_load import (
 )
 from tooldelta.plugin_load.classic_plugin import Plugin, PluginAPI
 
-
 import asyncio
 import importlib
 import threading
@@ -180,7 +179,7 @@ class PluginGroup:
         if not any(self.dotcs_repeat_threadings.values()):
             return
         Print.print_inf(
-            f"开始运行 {sum([len(funcs) for funcs in self.dotcs_repeat_threadings.values()])} 个原dotcs计划任务方法"
+            f"开始运行 {sum(len(funcs) for funcs in self.dotcs_repeat_threadings.values())} 个原dotcs计划任务方法"
         )
         while 1:
             time.sleep(1)

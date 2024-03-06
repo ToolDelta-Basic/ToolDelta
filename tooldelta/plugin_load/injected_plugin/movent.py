@@ -166,7 +166,7 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
     if not sth.startswith("@"):
         raise Exception("Minecraft Target Selector is not correct.")
     result = (
-        game_control.sendwscmd("/testfor %s" % sth, True, timeout)
+        game_control.sendwscmd(f"/testfor {sth}", True, timeout)
         .OutputMessages[0]
         .Parameters
     )
@@ -227,9 +227,9 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         y = i["position"]["y"] - 1.6200103759765
         z = i["position"]["z"] if i["position"]["z"] >= 0 else i["position"]["z"] - 1
         position = {
-            "x": float("%.2f" % x),
-            "y": float("%.2f" % y),
-            "z": float("%.2f" % z),
+            "x": float(f"{x:.2f}"),
+            "y": float(f"{y:.2f}"),
+            "z": float(f"{z:.2f}"),
         }
         dimension = i["dimension"]
         yRot = i["yRot"]
@@ -264,7 +264,7 @@ def countdown(delay: int | float, msg: str | None = None) -> None:
             delay = delayStop - time.time()
         else:
             delay = 0
-        Print.print_inf("%s: %.2fs" % (msg, delay), end="\r")
+        Print.print_inf(f"{msg}: {delay:.2f}s", end="\r")
         time.sleep(0.01)
     print("", end="\n")
 

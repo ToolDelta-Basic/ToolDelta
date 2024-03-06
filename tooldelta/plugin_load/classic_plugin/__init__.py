@@ -2,11 +2,12 @@ import importlib
 import os
 import sys
 import traceback
-from ...color_print import Print
-from ...builtins import Builtins
-from ...cfg import Cfg
-from ...plugin_manager import plugin_manager
-from ..funcs import unzip_plugin
+from tooldelta.color_print import Print
+from tooldelta.builtins import Builtins
+from tooldelta.cfg import Cfg
+from tooldelta.plugin_manager import plugin_manager
+from tooldelta.plugin_load.funcs import unzip_plugin
+from tooldelta.plugin_load import plugin_is_enabled
 
 
 class Plugin:
@@ -27,6 +28,8 @@ class PluginAPI:
 def read_plugin_from_new(plugin_grp, root_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/ToolDelta组合式插件")
     for plugin_dir in os.listdir(PLUGIN_PATH):
+        if not plugin_is_enabled(plugin_dir):
+            continue
         if (
             not os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir.strip(".zip")))
             and os.path.isfile(os.path.join(PLUGIN_PATH, plugin_dir))

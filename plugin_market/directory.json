@@ -2,19 +2,20 @@
     "": [
         "README.md",
         "get_directory.py",
+        "latest_versions.json",
         "directory.json",
         "market_tree.json"
     ],
     "@玩家": [
         "__init__.py"
     ],
+    "tpa传送": [
+        "__init__.py"
+    ],
     "封禁系统": [
         "__init__.py"
     ],
     "地图画导入": [
-        "__init__.py"
-    ],
-    "控制台执行MCFB指令": [
         "__init__.py"
     ],
     "发言频率": [
@@ -39,6 +40,9 @@
         "__init__.py"
     ],
     "基本插件功能库": [
+        "__init__.py"
+    ],
+    "控制台执行MC指令": [
         "__init__.py"
     ],
     "五子棋小游戏": [

@@ -7,6 +7,7 @@ class BanSystem(Plugin, PluginAPI):
     name = "封禁系统"
     author = "SuperScript"
     version = (0, 0, 1)
+    description = "便捷美观地封禁玩家, 同时也是一个前置插件"
     BAN_DATA_DEFAULT = {"BanTo": 0, "Reason": ""}
 
     def __init__(self, frame: Frame):

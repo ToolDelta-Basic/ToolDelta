@@ -10,4 +10,4 @@ COPY . /app/
 RUN pip3 install --no-cache-dir  . && \
     rm -rf /app/*
 
-CMD ["python", "-c", "import tooldelta; tooldelta.start_tool_delta()"]
+CMD ["python", "-c", "from tooldelta.launch_options import client_title; client_title()"]

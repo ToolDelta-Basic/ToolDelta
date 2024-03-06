@@ -15,7 +15,6 @@ from .basic_mods import (
     requests,
     platform,
     subprocess,
-    re,
     getpass,
     hashlib,
 )
@@ -33,6 +32,8 @@ from .urlmethod import download_file_multithreading, test_site_latency
 from .sys_args import sys_args_to_dict
 from typing import List, Union, TextIO
 
+import tooldelta
+
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
 #  GameCtrl: 负责对接游戏
@@ -48,8 +49,7 @@ Config = _Cfg()
 
 class Frame:
     # 系统框架
-    class SystemVersionException(OSError):
-        ...
+    class SystemVersionException(OSError): ...
 
     class FrameBasic:
         system_version = VERSION
@@ -79,7 +79,8 @@ class Frame:
             Print.print_err("启动参数错误")
             raise SystemExit
 
-    def if_token(self):
+    @staticmethod
+    def if_token():
         if not os.path.isfile("fbtoken"):
             Print.print_err(
                 "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
@@ -104,11 +105,15 @@ class Frame:
             hash_obj: hashlib._Hash = hashlib.sha256()
             username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
             hash_obj.update(
-                getpass.getpass(Print.fmt_info("请输入密码(已隐藏):", "§6 密码 ")).encode()
+                getpass.getpass(
+                    Print.fmt_info("请输入密码(已隐藏):", "§6 密码 ")
+                ).encode()
             )
             __password: str = hash_obj.hexdigest()
             __mfa_code: str = getpass.getpass(
-                Print.fmt_info("请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  ")
+                Print.fmt_info(
+                    "请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  "
+                )
             )
             Authorization: str = requests.get(url=FastBuilderApi[1], timeout=5).text
             repo: requests.Response = requests.post(
@@ -201,9 +206,12 @@ class Frame:
                 with open("fbtoken", "w", encoding="utf-8") as f:
                     f.write(self.token)
         except Exception as err:
-            Print.print_err(f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}")
+            Print.print_err(
+                f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}"
+            )
 
-    def auto_update(self):
+    @staticmethod
+    def auto_update():
         # 对ToolDelta进行自动更新
         try:
             latest_version = requests.get(
@@ -214,9 +222,13 @@ class Frame:
                 if ".py" in os.path.basename(
                     __file__
                 ) and ".pyc" not in os.path.basename(__file__):
-                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
+                    Print.print_load(
+                        f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!"
+                    )
                     return True
-                Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!")
+                Print.print_load(
+                    f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!"
+                )
                 tooldelta_url = f"https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
                 url = (
                     f"https://gh.ddlc.top//ToolDelta-linux"
@@ -243,7 +255,9 @@ class Frame:
                     iter(test_site_latency({"url": url, "mirror_url": mirror_urls}))
                 )
                 if not fastest_url:
-                    Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
+                    Print.print_war(
+                        "在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!"
+                    )
                     return True
                 download_file_multithreading(fastest_url[0], file_path)
                 if os.path.exists(file_path):
@@ -257,10 +271,11 @@ class Frame:
                             and ("ToolDelta" in files or "tooldelta" in files)
                         )
                     upgrade_script = (
-                        open("upgrade.sh", "w")
+                        open("upgrade.sh", "w", encoding="utf-8")
                         if platform.system() == "Linux"
-                        else open("upgrade.bat", "w")
+                        else open("upgrade.bat", "w", encoding="utf-8")
                     )
+
                     temp_shell = (
                         f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi'
                         if platform.system() == "Linux"
@@ -268,14 +283,19 @@ class Frame:
                     )
                     upgrade_script.write(temp_shell)
                     upgrade_script.close()
-                    subprocess.Popen(
-                        "sh upgrade.sh", cwd=os.getcwd(), shell=True
-                    ) if platform.system() == "Linux" else subprocess.Popen(
-                        "upgrade.bat", cwd=os.getcwd(), shell=True
+                    upgrade_process = (
+                        subprocess.Popen("sh upgrade.sh", cwd=os.getcwd(), shell=True)
+                        if platform.system() == "Linux"
+                        else subprocess.Popen(
+                            "upgrade.bat", cwd=os.getcwd(), shell=True
+                        )
                     )
+                    upgrade_process.communicate()
                     sys.exit()
             else:
-                Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新!")
+                Print.print_suc(
+                    f"检测成功,当前为最新版本 -> {current_version}，无需更新!"
+                )
         except Exception as err:
             Print.print_war(
                 f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新! {err}"
@@ -319,9 +339,13 @@ class Frame:
             Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
             while True:
                 if Login_method.isdigit() == False:
-                    Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 "))
+                    Login_method = input(
+                        Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 ")
+                    )
                 elif int(Login_method) > 2 or int(Login_method) < 1:
-                    Login_method = input(Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 "))
+                    Login_method = input(
+                        Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 ")
+                    )
                 else:
                     break
             if Login_method == "1":
@@ -343,7 +367,9 @@ class Frame:
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(public_launcher) + 1
             ):
-                raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
+                raise Config.ConfigError(
+                    "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
+                )
         except Config.ConfigError as err:
             r = self.upgrade_cfg(CFG)
             if r:
@@ -354,9 +380,16 @@ class Frame:
         if self.serverNumber == "0":
             while 1:
                 try:
-                    self.serverNumber = input(Print.fmt_info("请输入租赁服号: ", "§b 输入 "))
+                    self.serverNumber = input(
+                        Print.fmt_info("请输入租赁服号: ", "§b 输入 ")
+                    )
                     self.serverPasswd = (
-                        input(Print.fmt_info("请输入租赁服密码(没有请直接回车): ", "§b 输入 ")) or "0"
+                        input(
+                            Print.fmt_info(
+                                "请输入租赁服密码(没有请直接回车): ", "§b 输入 "
+                            )
+                        )
+                        or "0"
                     )
                     std = CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
@@ -381,7 +414,9 @@ class Frame:
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        launcher: Callable = public_launcher[cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1][1]
+        launcher: Callable = public_launcher[
+            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+        ][1]
         self.fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
@@ -399,7 +434,9 @@ class Frame:
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
         if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg_keys:
-            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = "https://api.fastbuilder.pro"
+            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = (
+                "https://api.fastbuilder.pro"
+            )
             need_upgrade_cfg = True
         if "是否记录日志" not in old_cfg_keys:
             old_cfg["是否记录日志"] = False
@@ -514,7 +551,10 @@ class Frame:
                 self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
-                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
+                ["exit"],
+                None,
+                f"退出并关闭{PRG_NAME}",
+                lambda _: tooldelta.safe_jump(out_task=True),
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -524,25 +564,31 @@ class Frame:
                     self.plugin_market_url
                 ),
             )
-            try:
-                while 1:
-                    rsp = input()
-                    for _, _, func, triggers in self.consoleMenu:
-                        if not rsp:
-                            continue
-                        if rsp.split()[0] in triggers:
-                            res = _try_execute_console_cmd(func, rsp, 0, None)
-                            if res == -1:
-                                return
-                        else:
-                            for tri in triggers:
-                                if rsp.startswith(tri):
-                                    res = _try_execute_console_cmd(func, rsp, 1, tri)
-                                    if res == -1:
-                                        return
-            except (EOFError, KeyboardInterrupt):
-                Print.print_inf("使用 Ctrl+C 退出中...")
-                self.system_exit()
+            while 1:
+                rsp = ""
+                while True:
+                    res = sys.stdin.read(1)
+                    if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
+                        break
+                    if res == "":
+                        Print.print_inf("使用 Ctrl+C 退出中...")
+                        self.launcher.status = SysStatus.NORMAL_EXIT
+                        self.system_exit()
+                        return
+                    rsp += res
+                for _, _, func, triggers in self.consoleMenu:
+                    if not rsp:
+                        continue
+                    if rsp.split()[0] in triggers:
+                        res = _try_execute_console_cmd(func, rsp, 0, None)
+                        if res == -1:
+                            return
+                    else:
+                        for tri in triggers:
+                            if rsp.startswith(tri):
+                                res = _try_execute_console_cmd(func, rsp, 1, tri)
+                                if res == -1:
+                                    return
 
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
@@ -559,9 +605,7 @@ class Frame:
             except:
                 pass
         time.sleep(0.5)
-        self.launcher.status = SysStatus.NORMAL_EXIT
         self.launcher.exit_event.set()
-        return -1
 
     def _get_old_dotcs_env(self):
         # 获取 dotcs 的插件环境
@@ -659,21 +703,9 @@ class GameCtrl:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining:
-                self.players_uuid[playername] = player["UUID"]
-                (
+                if playername not in self.allplayers:
                     self.allplayers.append(playername)
-                    if playername not in self.allplayers
-                    else None
-                )
-                if not self.requireUUIDPacket:
-                    Print.print_inf(f"§e{playername} 加入了游戏, UUID: {player['UUID']}")
-                    asyncio.run(execute_player_join(playername))
-                    plugin_group.execute_player_join(
-                        playername, self.linked_frame.on_plugin_err
-                    )
-                else:
-                    self.bot_name = pkt["Entries"][0]["Username"]
-                    self.requireUUIDPacket = False
+                    return
             else:
                 for k in self.players_uuid:
                     if self.players_uuid[k] == player["UUID"]:
@@ -682,7 +714,8 @@ class GameCtrl:
                 else:
                     Print.print_war("无法获取PlayerList中玩家名字")
                     continue
-                self.allplayers.remove(playername) if playername != "???" else None
+                if playername != "???":
+                    self.allplayers.remove(playername)
                 Print.print_inf(f"§e{playername} 退出了游戏")
                 asyncio.run(execute_player_left(playername))
                 plugin_group.execute_player_leave(
@@ -781,13 +814,17 @@ class GameCtrl:
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语
         Print.print_suc(
-            "初始化完成, 在线玩家: " + ", ".join(self.allplayers) + ", 机器人ID: " + self.bot_name
+            "初始化完成, 在线玩家: "
+            + ", ".join(self.allplayers)
+            + ", 机器人ID: "
+            + self.bot_name
         )
         time.sleep(0.5)
         self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
         self.say_to(
             "@a",
-            "§l§7[§f!§7] §r§f北京时间 " + datetime.datetime.now().strftime("§a%H§f : §a%M"),
+            "§l§7[§f!§7] §r§f北京时间 "
+            + datetime.datetime.now().strftime("§a%H§f : §a%M"),
         )
         self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")

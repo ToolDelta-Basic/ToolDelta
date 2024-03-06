@@ -8,7 +8,7 @@ from tooldelta import Plugin, Frame, plugins
 
 @plugins.add_plugin
 class SuperScript_GobangBasic(Plugin):
-    name = "五子棋"
+    name = "五子棋小游戏"
     author = "SuperScript"
     version = (0, 0, 2)
     """
@@ -48,7 +48,7 @@ class SuperScript_GobangBasic(Plugin):
             time_min, time_sec = divmod(
                 int(time.time() + self.timeleft - self.startTime), 60
             )
-            return "%02d ： %02d" % (time_min, time_sec)
+            return f"{time_min}:{time_sec}"
 
         def PID(self, player: str):
             return (
@@ -83,7 +83,7 @@ class SuperScript_GobangBasic(Plugin):
 
     def getRoom(self, player: str):
         for _k in self.rooms:
-            if self.rooms[_k].playerA == player or self.rooms[_k].playerB == player:
+            if player in (self.rooms[_k].playerA, self.rooms[_k].playerB):
                 return _k
         return None
 
@@ -129,7 +129,7 @@ class SuperScript_GobangBasic(Plugin):
         gc = self.game_ctrl
         gc.say_to(_1P, "§7§l> §r§6正在等待对方同意请求..")
         gc.say_to(_2P, f"§7§l> §r§e{_1P}§f向你发送了五子棋对弈邀请 ！")
-        gc.say_to(_2P, f"§7§l> §r§a输入wzq y同意， §c输入wzq n拒绝")
+        gc.say_to(_2P, "§7§l> §r§a输入wzq y同意， §c输入wzq n拒绝")
         waitStartTime = time.time()
         self.waitingCache[_2P] = None
         while 1:

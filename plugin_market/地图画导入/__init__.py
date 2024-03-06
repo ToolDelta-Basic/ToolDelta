@@ -1,3 +1,4 @@
+from email.mime import base
 from tooldelta import Plugin, plugins, Print
 from tooldelta.frame import Frame
 
@@ -7,6 +8,11 @@ import time
 
 @plugins.add_plugin
 class MapArtImporter(Plugin):
+    name = "地图画导入"
+    version = (0, 0, 3)
+    author = "SuperScript"
+    description = "导入图片到租赁服"
+
     def __init__(self, frame: Frame):
         self.color_cache = {}
         self.color_mapping = {}
@@ -90,6 +96,19 @@ class MapArtImporter(Plugin):
                         neBlock, neBlock_spec = self.get_nearest_color_block(
                             rget, gget, bget
                         )
+                        if (
+                            neBlock == "light_weighted_pressure_plate"
+                            and neBlock_spec == 7
+                        ):
+                            scmd(
+                                f"/setblock {re_xpos + limx} {baseYP} {re_zpos + limz} sponge 0"
+                            )
+                            baseYP += 1
+                            scmd(
+                                f"/setblock {re_xpos + limx} {baseYP} {re_zpos + limz} {neBlock} {neBlock_spec}"
+                            )
+                            baseYP -= 1
+                            continue
                         scmd(
                             f"/setblock {re_xpos + limx} {baseYP} {re_zpos + limz} {neBlock} {neBlock_spec}"
                         )

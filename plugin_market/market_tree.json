@@ -15,7 +15,7 @@
       },
       "plugin-type": "classic"
     },
-    "控制台执行MCFB指令": {
+    "控制台执行MC指令": {
       "author": "SuperScript",
       "version": "0.0.2",
       "description": "可以在控制台让机器人执行指令, 特殊指令等",
@@ -54,7 +54,7 @@
       "limit_launcher": null,
       "pre-plugins": {
         "聊天栏菜单": "0.0.4",
-        "库-基本组件API": "0.0.1"
+        "基本插件功能库": "0.0.1"
       },
       "plugin-type": "classic"
     },
@@ -104,7 +104,7 @@
     },
     "地图画导入": {
       "author": "SuperScript",
-      "version": "0.0.1",
+      "version": "0.0.3",
       "description": "导入像素画, 支持多种图片格式, 还可以自定义地图画大小",
       "limit_launcher": null,
       "pre-plugins": {
@@ -120,7 +120,7 @@
       "pre-plugins": {
         "聊天栏菜单": "0.0.1",
         "封禁系统": "0.0.1",
-        "库-基本组件API": "0.0.1"
+        "基本插件功能库": "0.0.1"
       },
       "plugin-type": "classic"
     },
@@ -149,6 +149,14 @@
       "limit_launcher": null,
       "pre-plugins": {},
       "plugin-type": "classic"
+    },
+    "tpa传送": {
+      "author": "wling",
+      "version": "0.0.2",
+      "description": "玩家互传，方便快捷！",
+      "limit_launcher": null,
+      "pre-plugins": {},
+      "plugin-type": "injected"
     }
   }
 }

@@ -40,8 +40,8 @@ case ${PLANTFORM} in
     ;;
 esac
 cat > $install_dir/main.py << EOF
-from tooldelta import start_tool_delta
-start_tool_delta(exit_directly=True)
+from tooldelta.launch_options import client_title
+client_title()
 EOF
 if ln -s "$install_dir/start.sh" $executable; then
     echo "快捷指令 '$shortcut_command' 创建成功。"

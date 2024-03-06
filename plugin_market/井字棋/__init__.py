@@ -100,14 +100,7 @@ class JZQStage:
 
     def stage_display(self, index: list, playername: str, end=False):
         sendcmd(
-            "/title {player} actionbar §e§l井字棋\n§b时间: §c{minute}§f:§c{second}§r §6落子:{turn} {iftimedout}\n§l{stage}".format(
-                player=playername,
-                minute="**" if end else self.Timer() // 60,
-                second="**" if end else self.Timer() % 60,
-                turn="§a✔" if Game_JZQ.轮流() == index.index(playername) else "§c✘",
-                stage=Game_JZQ.display(),
-                iftimedout="§c时间到!" if self.Timer() == 0 else "",
-            )
+            f"/title {playername} actionbar §e§l井字棋\n§b时间: §c{'**' if end else self.Timer() // 60}§f:§c{'**' if end else self.Timer() % 60}§r §6落子:{'§a✔' if Game_JZQ.轮流() == index.index(playername) else '§c✘'}\n§l{Game_JZQ.display()}{'' if self.Timer() != 0 else '§c时间到!'}"
         )
 
 
@@ -154,19 +147,17 @@ async def _(playername: str, msg: str):
                             Game_JZQ.轮流(True)
                             rawText(
                                 i[Game_JZQ.轮流()],
-                                "§a井字棋§f>> §6对方已落子: §e({x}, {y})§6 到你啦!".format(
-                                    x=x_xpos, y=y_ypos
-                                ),
+                                f"§a井字棋§f>> §6对方已落子: §e({x_xpos}, {y_ypos})§6 到你啦!"
                             )
                             if Game_JZQ.判定():
                                 Game_JZQ.stage_display(i, playername)
-                                sendcmd("/title %s title §e井字棋" % playername)
-                                sendcmd("/title %s subtitle §a祝贺!你赢了!" % playername)
+                                sendcmd(f"/title {playername} title §e井字棋")
+                                sendcmd(f"/title {playername} subtitle §a祝贺!你赢了!")
 
                                 nexPlayer = i[Game_JZQ.轮流()]
                                 Game_JZQ.stage_display(i, nexPlayer)
-                                sendcmd("/title %s title §e井字棋" % nexPlayer)
-                                sendcmd("/title %s subtitle §7惜败.." % nexPlayer)
+                                sendcmd(f"/title {nexPlayer} title §e井字棋")
+                                sendcmd(f"/title {nexPlayer} subtitle §7惜败..")
                                 JZQ_Rooms.remove(i)
                                 Game_JZQ.重置(True)
                                 continue

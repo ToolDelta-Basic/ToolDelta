@@ -8,6 +8,7 @@ class WorldEdit(Plugin):
     author = "SuperScript"
     version = (0, 0, 2)
     name = "简易建造"
+    description = "以更方便的方法在租赁服进行创作, 输入.we help查看说明"
 
     def __init__(self, frame: Frame):
         self.frame = frame
@@ -44,10 +45,8 @@ class WorldEdit(Plugin):
                 )
                 try:
                     signPlayerName = self.getTarget(
-                        "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
-                    )[
-                        0
-                    ]  # [x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
+                        f"@a[x={placeX}, y={placeY}, z={placeZ}, c=1, r=10]"
+                    )[0]
                 except Exception as err:
                     signPlayerName = ""
                     self.game_ctrl.say_to("@a", "§cCan't execute because " + str(err))
@@ -56,12 +55,11 @@ class WorldEdit(Plugin):
                 self.getZ = int(jsonPkt["NBTData"]["z"])
                 if signPlayerName in self.getTarget("@a[m=1]"):
                     self.game_ctrl.sendcmd(
-                        "/setblock %d %d %d air 0 destroy"
-                        % (self.getX, self.getY, self.getZ)
+                        f"/setblock {self.getX} {self.getY} {self.getZ} air 0 destroy"
                     )
                     self.game_ctrl.say_to(
                         signPlayerName,
-                        "§a设置第一点: %d, %d, %d" % (self.getX, self.getY, self.getZ),
+                        f"§a设置第一点: {self.getX}, {self.getY}, {self.getZ}",
                     )
 
             elif (
@@ -77,7 +75,7 @@ class WorldEdit(Plugin):
                 )
                 try:
                     signPlayerName = self.getTarget(
-                        "@a[x=%d, y=%d, z=%d, c=1, r=10]" % (placeX, placeY, placeZ)
+                        f"@a[x={placeX}, y={placeY}, z={placeZ}, c=1, r=10]"
                     )[0]
                     getXend = int(jsonPkt["NBTData"]["x"])
                     getYend = int(jsonPkt["NBTData"]["y"])
@@ -91,15 +89,7 @@ class WorldEdit(Plugin):
                         if not self.getX:
                             raise AssertionError
                         self.game_ctrl.sendcmd(
-                            "/fill {} {} {} {} {} {} {}".format(
-                                self.getX,
-                                self.getY,
-                                self.getZ,
-                                getXend,
-                                getYend,
-                                getZend,
-                                blockData,
-                            )
+                            f"/fill {self.getX} {self.getY} {self.getZ} {getXend} {getYend} {getZend} {blockData}"
                         )
                         self.game_ctrl.say_to(
                             signPlayerName, "§c§lWorldEdit§r>> §a填充完成"
@@ -120,12 +110,7 @@ class WorldEdit(Plugin):
                     if not self.getX:
                         raise AssertionError
                     signPlayerName = self.getTarget(
-                        "@a[x=%d, y=%d, z=%d, c=1, r=10]"
-                        % (
-                            jsonPkt["NBTData"]["x"],
-                            jsonPkt["NBTData"]["y"],
-                            jsonPkt["NBTData"]["z"],
-                        )
+                        f"@a[x={jsonPkt['NBTData']['x']}, y={jsonPkt['NBTData']['y']}, z={jsonPkt['NBTData']['z']}, c=1, r=10]"
                     )[0]
                     if signPlayerName in self.getTarget("@a[m=1]"):
                         self.frame.createThread(
