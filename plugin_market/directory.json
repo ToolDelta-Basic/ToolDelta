@@ -1,45 +1,45 @@
 {
     "": [
-        "README.md",
-        "get_directory.py",
-        "latest_versions.json",
         "directory.json",
-        "market_tree.json"
-    ],
-    "@玩家": [
-        "__init__.py"
-    ],
-    "tpa传送": [
-        "__init__.py"
-    ],
-    "封禁系统": [
-        "__init__.py"
+        "latest_versions.json",
+        "README.md",
+        "market_tree.json",
+        "get_directory.py"
     ],
     "地图画导入": [
-        "__init__.py"
-    ],
-    "发言频率": [
         "__init__.py"
     ],
     "自定义聊天栏菜单": [
         "__init__.py"
     ],
-    "聊天栏菜单": [
-        "__init__.py"
-    ],
-    "32k盒子显示": [
-        "__init__.py"
-    ],
-    "井字棋": [
+    "封禁系统": [
         "__init__.py"
     ],
     "简易建造": [
         "__init__.py"
     ],
+    "维度传送": [
+        "__init__.py"
+    ],
+    "死亡返回": [
+        "__init__.py"
+    ],
+    "发言频率": [
+        "__init__.py"
+    ],
+    "32k盒子显示": [
+        "__init__.py"
+    ],
     "清空玩家末影箱": [
         "__init__.py"
     ],
-    "基本插件功能库": [
+    "井字棋": [
+        "__init__.py"
+    ],
+    "tpa传送": [
+        "__init__.py"
+    ],
+    "聊天栏菜单": [
         "__init__.py"
     ],
     "控制台执行MC指令": [
@@ -48,13 +48,13 @@
     "五子棋小游戏": [
         "__init__.py"
     ],
+    "@玩家": [
+        "__init__.py"
+    ],
+    "基本插件功能库": [
+        "__init__.py"
+    ],
     "前置-世界交互": [
-        "__init__.py"
-    ],
-    "维度传送": [
-        "__init__.py"
-    ],
-    "死亡返回": [
         "__init__.py"
     ]
 }
