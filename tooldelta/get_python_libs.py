@@ -37,7 +37,7 @@ def check_pip():
                 "global.index-url",
                 "https://pypi.tuna.tsinghua.edu.cn/simple",
             ],
-            shell=True,
+            # shell=True,
             stdout=PIPE,
             stderr=PIPE,
         )
