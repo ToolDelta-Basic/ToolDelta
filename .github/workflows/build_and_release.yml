@@ -38,6 +38,16 @@ jobs:
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
+      - name: Combine Certificates
+        run: |
+          openssl pkcs12 -export -out ToolDelta.pfx -inkey ToolDelta.pvk -in ToolDelta.cer -certfile ToolDelta.spc -passout pass:${{ secrets.PFX_PASSWORD }}
+
+      - name: Sign Binaries
+        run: |
+          if [ ${{ matrix.os }} == 'windows-latest' ]; then
+            signtool sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
+          fi
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
