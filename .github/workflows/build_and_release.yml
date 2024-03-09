@@ -41,7 +41,7 @@ jobs:
       - name: Combine Certificates
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            openssl pkcs12 -export -out ToolDelta.pfx -inkey ToolDelta.pvk -in ToolDelta.cer -certfile ToolDelta.spc -passout pass:${{ secrets.PFX_PASSWORD }}
+            openssl pkcs12 -export -out ToolDelta.pfx -inkey .cert/ToolDelta.pvk -in .cert/ToolDelta.cer -certfile .cert/ToolDelta.spc -passout pass:${{ secrets.PFX_PASSWORD }}
           fi
 
       - name: Sign Binaries
