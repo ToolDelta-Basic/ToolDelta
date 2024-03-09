@@ -45,7 +45,7 @@ jobs:
             ./cert2spc.exe ToolDelta.cer ToolDelta.spc
             ./certmgr.exe -add -c ToolDelta.spc -s root -r localMachine
             ./pvk2pfx.exe -pvk ToolDelta.pvk -pi ${{ secrets.CERTIFICATE_PASSWORD }} -spc ToolDelta.spc -pfx ToolDelta.pfx
-            ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} dist/*
+            ./signtool.exe sign /v /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /tr dist/*
           fi
 
       - name: Release
