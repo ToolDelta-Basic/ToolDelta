@@ -41,7 +41,8 @@ jobs:
       - name: Install WindowsSDK &&  Sign Binaries
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            choco install windows-sdk-10-version -y
+            curl -o sdksetup.exe https://download.microsoft.com/download/d/9/6/d968e973-c27d-4d17-ae51-fc7a98d9b0d3/windowssdk/winsdksetup.exe
+            .\sdksetup.exe /install /quiet /norestart
             signtool sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
           fi
 
