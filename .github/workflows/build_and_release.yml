@@ -41,7 +41,7 @@ jobs:
       - name: Sign Binaries
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            cd .tools && ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
+            cd .tools/ && ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
           fi
 
       - name: Release
