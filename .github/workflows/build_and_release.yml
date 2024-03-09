@@ -38,10 +38,10 @@ jobs:
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
-      - name: Install OpenSSL && Combine Certificates && Sign Binaries
+      - name: Combine Certificates && Sign Binaries
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-          cd .tools/ && ./cert2spc.exe ToolDelta.cer ToolDelta.spc && ./certmgr.exe -add -c ToolDelta.spc -s -r localMachine ToolDelta && ./pvk2pfx.exe -pvk ToolDelta.pvk -spc ToolDelta.spc -pfx ToolDelta.pfx -pi ${{secrets.PFX_PASSWORD}} && ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} dist/*.exe
+          cd .tools/ && ./cert2spc.exe ToolDelta.cer ToolDelta.spc && ./certmgr.exe -add -c ToolDelta.spc -s -r localMachine ToolDelta && ./pvk2pfx.exe -pvk ToolDelta.pvk -spc ToolDelta.spc -pfx ToolDelta.pfx -po ${{secrets.PFX_PASSWORD}} && ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} dist/*.exe
           fi
 
       - name: Release
