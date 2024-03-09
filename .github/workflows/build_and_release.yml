@@ -39,12 +39,14 @@ jobs:
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
       - name: Combine Certificates
+        shell: cmd
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
             pvk2pfx -pvk .cert\ToolDelta.pvk -spc .cert\ToolDelta.spc -pfx .cert\ToolDelta.pfx -po ${{secrets.PFX_PASSWORD}}
           fi
 
       - name: Sign Binaries
+        shell: cmd
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
             signtool sign /f .cert/ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
