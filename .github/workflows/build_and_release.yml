@@ -41,7 +41,6 @@ jobs:
       - name: Install OpenSSL
         run: |
           choco install openssl.light -y
-          refreshenv
 
       - name: Combine Certificates
         run: |
