@@ -41,7 +41,7 @@ jobs:
       - name: Combine Certificates
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            pvk2pfx -pvk .cert\ToolDelta.pvk -spc .cert\ToolDelta.spc -pfx .cert\ToolDelta.pfx -po ${{env:PFX_PASSWORD}}
+            pvk2pfx -pvk .cert\ToolDelta.pvk -spc .cert\ToolDelta.spc -pfx .cert\ToolDelta.pfx -po ${{secrets.PFX_PASSWORD}}
           fi
 
       - name: Sign Binaries
