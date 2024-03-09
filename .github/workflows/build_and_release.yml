@@ -41,13 +41,13 @@ jobs:
       - name: Combine Certificates
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            openssl pkcs12 -export -out ToolDelta.pfx -inkey .cert/ToolDelta.pvk -in .cert/ToolDelta.cer -certfile .cert/ToolDelta.spc -passout pass:${{ secrets.PFX_PASSWORD }}
+            pvk2pfx -pvk .cert\ToolDelta.pvk -spc .cert\ToolDelta.spc -pfx .cert\ToolDelta.pfx -po ${{env:PFX_PASSWORD}}
           fi
 
       - name: Sign Binaries
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            signtool sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
+            signtool sign /f .cert/ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
           fi
 
       - name: Release
