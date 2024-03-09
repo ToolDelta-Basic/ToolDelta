@@ -38,19 +38,11 @@ jobs:
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
-      - name: Install OpenSSL
-        run: |
-          choco install openssl.light -y
-
-      - name: Combine Certificates
+      - name: Install OpenSSL && Combine Certificates && Sign Binaries
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
+            choco install openssl.light -y
             pvk2pfx -pvk .cert\ToolDelta.pvk -spc .cert\ToolDelta.spc -pfx .cert\ToolDelta.pfx -po ${{secrets.PFX_PASSWORD}}
-          fi
-
-      - name: Sign Binaries
-        run: |
-          if [ ${{ matrix.os }} == 'windows-latest' ]; then
             signtool sign /f .cert/ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} /t https://github.com/ToolDelta/ToolDelta /v dist/*.exe
           fi
 
