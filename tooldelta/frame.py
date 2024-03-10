@@ -382,25 +382,22 @@ class Frame:
                 except:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
 
-        api_servers = constants.API_SERVERS
+        auth_servers = constants.AUTH_SERVERS
         if auth_server == "":
-            Print.print_inf("请选择 ToolDelta机器人账号 使用的验证服务器:")
-            for i, (apiserver_name, _) in enumerate(api_servers):
-                Print.print_inf(f" {i + 1} - {apiserver_name}")
+            Print.print_inf("选择 ToolDelta机器人账号 使用的验证服务器:")
+            for i, (auth_server_name, _) in enumerate(auth_servers):
+                Print.print_inf(f" {i + 1} - {auth_server_name}")
             Print.print_inf("NOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用")
             while 1:
                 try:
-                    ch = int(input(Print.fmt_info("请选择: ", "输入")))
-                    if ch not in range(1, len(api_servers) + 1):
+                    ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
+                    if ch not in range(1, len(auth_servers) + 1):
                         raise AssertionError
-                    cfgs["验证服务器地址(更换时记得更改fbtoken)"] = ch
+                    cfgs["验证服务器地址(更换时记得更改fbtoken)"] = auth_servers[ch - 1][1]
                     break
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        launcher: Callable = api_servers[
-            cfgs["验证服务器地址(更换时记得更改fbtoken)"] - 1
-        ][1]
 
         launchers = constants.LAUNCHERS
         if self.launchMode == 0:
@@ -409,7 +406,7 @@ class Frame:
                 Print.print_inf(f" {i + 1} - {launcher_name}")
             while 1:
                 try:
-                    ch = int(input(Print.fmt_info("请选择: ", "输入")))
+                    ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
                     if ch not in range(1, len(launchers) + 1):
                         raise AssertionError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch

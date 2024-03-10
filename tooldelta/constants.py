@@ -41,7 +41,7 @@ FB_APIS = [
     "https://api.fastbuilder.pro",
 ]
 
-API_SERVERS = [
+AUTH_SERVERS = [
     ("FastBuilder 官方验证服务器", "https://api.fastbuilder.pro"),
     ("咕咕酱 FB验证服务器", "https://liliya233.uk"),
 ]
