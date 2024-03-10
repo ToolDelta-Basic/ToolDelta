@@ -12,6 +12,7 @@ from tooldelta.plugin_load import plugin_is_enabled
 
 # 定义插件处理函数列表
 player_message_funcs = {}
+player_prejoin_funcs = {}
 player_join_funcs = {}
 player_left_funcs = {}
 player_death_funcs = {}
@@ -22,6 +23,14 @@ init_plugin_funcs = {}
 def player_message(priority=None):
     def decorator(func):
         player_message_funcs[func] = priority
+        return func
+
+    return decorator
+
+
+def player_prejoin(priority=None):
+    def decorator(func):
+        player_prejoin_funcs[func] = priority
         return func
 
     return decorator
@@ -143,7 +152,8 @@ async def execute_death_message(playername, killer):
 async def execute_player_join(playername):
     await execute_asyncio_task(player_join_funcs, playername)
 
-
+async def execute_player_prejoin(playername):
+    await execute_asyncio_task(player_prejoin_funcs, playername)
 async def execute_player_left(playername):
     await execute_asyncio_task(player_left_funcs, playername)
 

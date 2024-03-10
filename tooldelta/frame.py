@@ -43,6 +43,7 @@ from .plugin_load.injected_plugin import (
     execute_death_message,
     execute_init,
     execute_player_join,
+    execute_player_prejoin,
     execute_player_left,
     execute_player_message,
     execute_repeat,
@@ -387,13 +388,17 @@ class Frame:
             Print.print_inf("选择 ToolDelta机器人账号 使用的验证服务器:")
             for i, (auth_server_name, _) in enumerate(auth_servers):
                 Print.print_inf(f" {i + 1} - {auth_server_name}")
-            Print.print_inf("NOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用")
+            Print.print_inf(
+                "NOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用"
+            )
             while 1:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
                     if ch not in range(1, len(auth_servers) + 1):
                         raise AssertionError
-                    cfgs["验证服务器地址(更换时记得更改fbtoken)"] = auth_servers[ch - 1][1]
+                    cfgs["验证服务器地址(更换时记得更改fbtoken)"] = auth_servers[
+                        ch - 1
+                    ][1]
                     break
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
@@ -631,6 +636,7 @@ class Frame:
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")
 
+
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
@@ -683,6 +689,7 @@ class GameCtrl:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining:
+                Print.print_inf(f"§e{playername} 加入了游戏")
                 if playername not in self.allplayers:
                     self.allplayers.append(playername)
                     return
@@ -697,10 +704,10 @@ class GameCtrl:
                 if playername != "???":
                     self.allplayers.remove(playername)
                 Print.print_inf(f"§e{playername} 退出了游戏")
-                asyncio.run(execute_player_left(playername))
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
+                asyncio.run(execute_player_left(playername))
 
     def process_text_packet(self, pkt: dict, plugin_grp: PluginGroup):
         # 处理9号数据包的消息, 因特殊原因将一些插件事件放到此处理
@@ -711,8 +718,14 @@ class GameCtrl:
                     plugin_grp.execute_player_prejoin(
                         player, self.linked_frame.on_plugin_err
                     )
+                    asyncio.run(execute_player_prejoin(player))
                 if pkt["Message"] == "§e%multiplayer.player.join":
                     player = pkt["Parameters"][0]
+                    plugin_grp.execute_player_join(
+                        player, self.linked_frame.on_plugin_err
+                    )
+                    asyncio.run(execute_player_join(player))
+
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
@@ -739,19 +752,19 @@ class GameCtrl:
                     asyncio.run(execute_death_message(pkt["Parameters"][0], killer))
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
-                asyncio.run(execute_player_message(player, msg))
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
+                asyncio.run(execute_player_message(player, msg))
 
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
-                asyncio.run(execute_player_message(player, msg))
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
+                asyncio.run(execute_player_message(player, msg))
             case 9:
                 msg = pkt["Message"]
                 try:
