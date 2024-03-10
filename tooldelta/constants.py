@@ -2,6 +2,7 @@ from typing import List
 from tooldelta.launch_cli import FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 from tooldelta.cfg import Cfg
 
+PLUGIN_MARKET_SOURCE_OFFICIAL = "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
 
 LAUNCHERS: List[
     tuple[str, type[FrameFBConn | FrameNeOmg | FrameNeOmgRemote]]
@@ -16,14 +17,16 @@ LAUNCHERS: List[
         FrameNeOmgRemote,
     ),
 ]
+
 LAUNCH_CFG: dict = {
     "服务器号": 0,
     "密码": 0,
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
     "验证服务器地址(更换时记得更改fbtoken)": "",
     "是否记录日志": True,
-    "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market",
+    "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL,
 }
+
 LAUNCH_CFG_STD: dict = {
     "服务器号": int,
     "密码": int,

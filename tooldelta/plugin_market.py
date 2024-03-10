@@ -9,6 +9,7 @@ from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_load import PluginRegData
 from tooldelta.cfg import Cfg
+from tooldelta.constants import PLUGIN_MARKET_SOURCE_OFFICIAL
 from typing import Dict
 
 if platform.system().lower() == "windows":
@@ -232,7 +233,7 @@ class PluginMarket:
         try:
             src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
         except:
-            src_url = "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market"
+            src_url = PLUGIN_MARKET_SOURCE_OFFICIAL
         return _get_json_from_url(
             _url_join(src_url, "latest_versions.json")
         )[plugin_type + "_plugin"].get(plugin_name)
