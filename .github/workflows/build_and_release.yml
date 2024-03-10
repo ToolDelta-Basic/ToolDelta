@@ -46,7 +46,7 @@ jobs:
             mv dist/* .tools/dist/
             cd .tools/
             for file in dist/*.exe; do
-              ./signtool.exe sign /fd sha1 /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} "$file"
+              ./signtool.exe sign /fd certHash /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} /t http://timestamp.digicert.com "$file"
             done
             cd ../
             mv .tools/dist/* dist/
