@@ -1,3 +1,10 @@
+import asyncio
+import importlib
+import threading
+import time
+import traceback
+from typing import Any, Callable, Type
+
 from tooldelta.basic_mods import dotcs_module_env
 from tooldelta.color_print import Print
 from tooldelta.get_python_libs import get_single_lib
@@ -7,14 +14,7 @@ from tooldelta.plugin_load import (
     dotcs_plugin,
     injected_plugin,
 )
-from tooldelta.plugin_load.classic_plugin import Plugin, PluginAPI
-
-import asyncio
-import importlib
-import threading
-import time
-import traceback
-from typing import Any, Callable, Type
+from tooldelta.plugin_load.classic_plugin import Plugin
 
 
 class PluginGroup:
@@ -46,7 +46,7 @@ class PluginGroup:
         self.old_dotcs_env = {}
         self.dotcs_global_vars = {}
         self.packet_funcs: dict[str, list[Callable]] = {}
-        self.plugins_api: dict[str, PluginAPI] = {}
+        self.plugins_api: dict[str, Plugin] = {}
         self.excType = 0
         self.PRG_NAME = ""
         self._broadcast_evts = {}
@@ -122,20 +122,12 @@ class PluginGroup:
 
         return deco
 
-    def add_plugin_api(self, apiName: str):
-        def _add_api(api: Type[PluginAPI]):
-            if not PluginAPI.__subclasscheck__(api):
-                raise AssertionError(1, "插件API类必须继承PluginAPI类")
-            self.pluginAPI_added_cache.append((apiName, api))
-
-        return _add_api
-
     def add_plugin_as_api(self, apiName: str):
-        def _add_plugin_2_api(api_plugin: Type[PluginAPI]):
-            if not PluginAPI.__subclasscheck__(api_plugin):
+        def _add_plugin_2_api(api_plugin: Type[Plugin]):
+            if not Plugin.__subclasscheck__(api_plugin):
                 raise AssertionError(
                     1,
-                    "API插件API类必须继承PluginAPI类和Plugin类",
+                    "API插件API类必须继承Plugin类",
                 )
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
@@ -144,7 +136,7 @@ class PluginGroup:
 
     def get_plugin_api(
         self, apiName: str, min_version: tuple | None = None
-    ) -> PluginAPI:
+    ) -> Plugin:
         api = self.plugins_api.get(apiName)
         if api:
             if min_version and api.version < min_version:

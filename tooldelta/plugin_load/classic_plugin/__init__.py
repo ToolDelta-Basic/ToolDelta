@@ -11,19 +11,14 @@ from tooldelta.plugin_load import plugin_is_enabled
 
 
 class Plugin:
-    name = "<未命名插件>"
+    name = None
     version = (0, 0, 1)
     author = "?"
     description = "..."
-
-
-class PluginAPI:
-    name = "<未命名插件api>"
-    version = (0, 0, 1)
-
-    def __init__(self, _):
-        raise Exception("需要初始化__init__方法")
-
+    
+    @property
+    def data_path(self):
+        return os.path.join("插件数据文件", self.name)
 
 def read_plugin_from_new(plugin_grp, root_env: dict):
     PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件/ToolDelta组合式插件")
@@ -59,6 +54,8 @@ def read_plugin_from_new(plugin_grp, root_env: dict):
                     continue
                 assert plugin_grp.plugin_added_cache["plugin"] is not None, 2
                 plugin = plugin_grp.plugin_added_cache["plugin"]
+                if plugin.name == None:
+                    raise ValueError(f"插件主类 {plugin.__name__} 需要作者名")
                 plugin_body: Plugin = plugin(plugin_grp.linked_frame)
                 plugin_grp.plugins.append([plugin_body.name, plugin_body])
                 _v0, _v1, _v2 = plugin_body.version  # type: ignore
