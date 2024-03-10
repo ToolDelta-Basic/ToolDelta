@@ -1,5 +1,5 @@
 from tooldelta.color_print import Print
-from tooldelta.start_tool_delta import start_tool_delta
+from tooldelta.starter import start_tool_delta
 from tooldelta.plugin_manager import plugin_manager
 from tooldelta.plugin_market import market
 from tooldelta.sys_args import sys_args_to_dict

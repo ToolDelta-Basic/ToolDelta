@@ -47,7 +47,7 @@ class StandardFrame:
         self.status = SysStatus.LOADING
         self.system_type = platform.uname().system
         self.inject_events = []
-        self.packet_handler = None
+        self.packet_handler: Callable | None = None
         self.need_listen_packets = {9, 63, 79}
         self._launcher_listener = None
         self.exit_event = threading.Event()

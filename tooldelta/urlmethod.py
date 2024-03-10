@@ -48,7 +48,6 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
     response.raise_for_status()
     with open(save_dir + ".tmp", "rb+") as dwnf:
         dwnf.seek(start_byte)
-        total_bytes = end_byte - start_byte + 1
         downloaded_bytes = 0
         for chunk in response.iter_content(chunk_size=8192):
             dwnf.write(chunk)

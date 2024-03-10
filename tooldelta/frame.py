@@ -1,12 +1,17 @@
-from . import (
+from typing import List, Union
+
+import tooldelta
+from tooldelta import (
+    constants,
     builtins,
     old_dotcs_env,
     plugin_market,
     sys_args,
 )
-from .get_tool_delta_version import get_tool_delta_version
-from .color_print import Print
-from .basic_mods import (
+
+from tooldelta.get_tool_delta_version import get_tool_delta_version
+from tooldelta.color_print import Print
+from tooldelta.basic_mods import (
     Callable,
     os,
     sys,
@@ -18,33 +23,44 @@ from .basic_mods import (
     getpass,
     hashlib,
 )
-from .cfg import Cfg as _Cfg
-from .launch_cli import (
+
+from tooldelta.cfg import Cfg as _Cfg
+from tooldelta.logger import publicLogger
+from tooldelta.plugin_load.PluginGroup import PluginGroup
+from tooldelta.game_texts import Game_Texts
+from tooldelta.urlmethod import download_file_multithreading, test_site_latency
+from tooldelta.sys_args import sys_args_to_dict
+from tooldelta.launch_cli import (
     FrameFBConn,
     FrameNeOmg,
     FrameNeOmgRemote,
     SysStatus,
 )
-from .logger import publicLogger
-from .plugin_load.PluginGroup import PluginGroup
-from .game_texts import Game_Texts
-from .urlmethod import download_file_multithreading, test_site_latency
-from .sys_args import sys_args_to_dict
-from typing import List, Union, TextIO
 
-import tooldelta
+from .basic_mods import asyncio, datetime, json
+from .packets import PacketIDS
+from .plugin_load.injected_plugin import (
+    execute_death_message,
+    execute_init,
+    execute_player_join,
+    execute_player_left,
+    execute_player_message,
+    execute_repeat,
+    safe_jump,
+)
+
+sys_args_dict = sys_args_to_dict(sys.argv)
+createThread = builtins.Builtins.createThread
+PRG_NAME = "ToolDelta"
+VERSION = get_tool_delta_version()
+Builtins = builtins.Builtins
+Config = _Cfg()
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
 #  GameCtrl: 负责对接游戏
 #    - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (TLSP, etc.))
 #  PluginGroup: 负责管理和运行插件
-
-
-PRG_NAME = "ToolDelta"
-VERSION = get_tool_delta_version()
-Builtins = builtins.Builtins
-Config = _Cfg()
 
 
 class Frame:
@@ -61,7 +77,7 @@ class Frame:
     PRG_NAME = PRG_NAME
     sys_data = FrameBasic()
     serverNumber: str = ""
-    serverPasswd: int
+    serverPasswd: str
     launchMode: int = 0
     consoleMenu = []
     link_game_ctrl = None
@@ -95,13 +111,7 @@ class Frame:
 
     def login_fbuc(self) -> requests.Response:
         try:
-            FastBuilderApi: list = [
-                "https://api.fastbuilder.pro/api/phoenix/login",
-                "https://api.fastbuilder.pro/api/new",
-                "https://api.fastbuilder.pro/api/api",
-                "https://api.fastbuilder.pro/api/login",
-                "https://api.fastbuilder.pro",
-            ]
+            
             hash_obj: hashlib._Hash = hashlib.sha256()
             username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
             hash_obj.update(
@@ -115,9 +125,9 @@ class Frame:
                     "请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  "
                 )
             )
-            Authorization: str = requests.get(url=FastBuilderApi[1], timeout=5).text
+            Authorization: str = requests.get(url=constants.FB_APIS[1], timeout=5).text
             repo: requests.Response = requests.post(
-                url=FastBuilderApi[3],
+                url=constants.FB_APIS[3],
                 data=json.dumps(
                     {
                         "username": username,
@@ -146,8 +156,8 @@ class Frame:
             else:
                 with_perfix: dict = json.loads(
                     requests.get(
-                        url=FastBuilderApi[2],
-                        data=json.dumps({"with_prefix": FastBuilderApi[4]}),
+                        url=constants.FB_APIS[2],
+                        data=json.dumps({"with_prefix": constants.FB_APIS[4]}),
                         timeout=5,
                         headers={
                             "Content-Type": "application/json",
@@ -157,7 +167,7 @@ class Frame:
                 )
                 fetch_announcements: dict = json.loads(
                     requests.get(
-                        url=FastBuilderApi[4] + with_perfix["fetch_announcements"],
+                        url=constants.FB_APIS[4] + with_perfix["fetch_announcements"],
                         timeout=5,
                         headers={
                             "Content-Type": "application/json",
@@ -167,7 +177,7 @@ class Frame:
                 )
                 fetch_profile: dict = json.loads(
                     requests.get(
-                        url=FastBuilderApi[4] + with_perfix["fetch_profile"],
+                        url=constants.FB_APIS[4] + with_perfix["fetch_profile"],
                         timeout=5,
                         headers={
                             "Content-Type": "application/json",
@@ -177,7 +187,7 @@ class Frame:
                 )
                 get_helper_status: dict = json.loads(
                     requests.get(
-                        url=FastBuilderApi[4] + with_perfix["get_helper_status"],
+                        url=constants.FB_APIS[4] + with_perfix["get_helper_status"],
                         timeout=5,
                         headers={
                             "Content-Type": "application/json",
@@ -195,7 +205,7 @@ class Frame:
                     "get_helper_status": get_helper_status,
                 }
                 self.token = requests.get(
-                    url=FastBuilderApi[4] + with_perfix["get_phoenix_token"],
+                    url=constants.FB_APIS[4] + with_perfix["get_phoenix_token"],
                     data=json.dumps({"secret": f"{Authorization}"}),
                     timeout=5,
                     headers={
@@ -227,7 +237,7 @@ class Frame:
                     )
                     return True
                 Print.print_load(
-                    f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta!"
+                    f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta"
                 )
                 tooldelta_url = f"https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
                 url = (
@@ -294,57 +304,28 @@ class Frame:
                     sys.exit()
             else:
                 Print.print_suc(
-                    f"检测成功,当前为最新版本 -> {current_version}，无需更新!"
+                    f"检测成功,当前为最新版本 -> {current_version}，无需更新"
                 )
         except Exception as err:
             Print.print_war(
-                f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新! {err}"
+                f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新: {err}"
             )
 
     def read_cfg(self):
         # 读取启动配置等
-        public_launcher: List[
-            tuple[str, type[FrameFBConn | FrameNeOmg | FrameNeOmgRemote]]
-        ] = [
-            (
-                "FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)",
-                FrameFBConn,
-            ),
-            ("NeOmega 框架 (NeOmega模式, 租赁服适应性强, 推荐)", FrameNeOmg),
-            (
-                "NeOmega 框架 (NeOmega连接模式, 需要先启动对应的neOmega接入点)",
-                FrameNeOmgRemote,
-            ),
-        ]
-        CFG: dict = {
-            "服务器号": 0,
-            "密码": 0,
-            "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
-            "验证服务器地址(更换时记得更改fbtoken)": "https://api.fastbuilder.pro",
-            "是否记录日志": True,
-            "插件市场源": "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta/main/plugin_market",
-        }
-        CFG_STD: dict = {
-            "服务器号": int,
-            "密码": int,
-            "启动器启动模式(请不要手动更改此项, 改为0可重置)": Config.NNInt,
-            "验证服务器地址(更换时记得更改fbtoken)": str,
-            "是否记录日志": bool,
-            "插件市场源": str,
-        }
         if not os.path.isfile("fbtoken"):
             Print.print_inf(
-                "请选择登陆方法:\n 1 - 使用账号密码(登陆成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r"
+                "请选择登录方法:\n 1 - 使用账号密码(登录成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r"
             )
             Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
             while True:
                 if Login_method.isdigit() == False:
                     Login_method = input(
-                        Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 ")
+                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
                     )
                 elif int(Login_method) > 2 or int(Login_method) < 1:
                     Login_method = input(
-                        Print.fmt_info("输入不合法!请输入正确的数值:", "§6 警告 ")
+                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
                     )
                 else:
                     break
@@ -355,9 +336,9 @@ class Frame:
             else:
                 self.if_token()
 
-        Config.default_cfg("ToolDelta基本配置.json", CFG)
+        Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
-            cfgs = Config.get_cfg("ToolDelta基本配置.json", CFG_STD)
+            cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
@@ -365,13 +346,13 @@ class Frame:
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
-                1, len(public_launcher) + 1
+                1, len(constants.LAUNCHERS) + 1
             ):
                 raise Config.ConfigError(
                     "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
                 )
         except Config.ConfigError as err:
-            r = self.upgrade_cfg(CFG)
+            r = self.upgrade_cfg(constants.LAUNCH_CFG)
             if r:
                 Print.print_war("配置文件未升级, 已自动升级, 请重启 ToolDelta")
             else:
@@ -391,7 +372,7 @@ class Frame:
                         )
                         or "0"
                     )
-                    std = CFG.copy()
+                    std = constants.LAUNCH_CFG.copy()
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
                     Config.default_cfg("ToolDelta基本配置.json", std, True)
@@ -400,21 +381,43 @@ class Frame:
                     break
                 except:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
+
+        api_servers = constants.API_SERVERS
+        if auth_server == "":
+            Print.print_inf("请选择 ToolDelta机器人账号 使用的验证服务器:")
+            for i, (apiserver_name, _) in enumerate(api_servers):
+                Print.print_inf(f" {i + 1} - {apiserver_name}")
+            Print.print_inf("NOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用")
+            while 1:
+                try:
+                    ch = int(input(Print.fmt_info("请选择: ", "输入")))
+                    if ch not in range(1, len(api_servers) + 1):
+                        raise AssertionError
+                    cfgs["验证服务器地址(更换时记得更改fbtoken)"] = ch
+                    break
+                except (ValueError, AssertionError):
+                    Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
+            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+        launcher: Callable = api_servers[
+            cfgs["验证服务器地址(更换时记得更改fbtoken)"] - 1
+        ][1]
+
+        launchers = constants.LAUNCHERS
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式(之后可在ToolDelta启动配置更改):")
-            for i, (launcher_name, _) in enumerate(public_launcher):
+            for i, (launcher_name, _) in enumerate(launchers):
                 Print.print_inf(f" {i + 1} - {launcher_name}")
             while 1:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "输入")))
-                    if ch not in range(1, len(public_launcher) + 1):
+                    if ch not in range(1, len(launchers) + 1):
                         raise AssertionError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                     break
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        launcher: Callable = public_launcher[
+        launcher: Callable = launchers[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]
         self.fbtokenFix()
@@ -434,9 +437,7 @@ class Frame:
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
         if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg_keys:
-            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = (
-                "https://api.fastbuilder.pro"
-            )
+            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = ""
             need_upgrade_cfg = True
         if "是否记录日志" not in old_cfg_keys:
             old_cfg["是否记录日志"] = False
@@ -633,24 +634,6 @@ class Frame:
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息.")
 
-
-sys_args_dict = sys_args_to_dict(sys.argv)
-createThread = Builtins.createThread
-
-from .builtins import Builtins
-from .basic_mods import asyncio, datetime, json
-from .packets import PacketIDS
-from .plugin_load.injected_plugin import (
-    execute_death_message,
-    execute_init,
-    execute_player_join,
-    execute_player_left,
-    execute_player_message,
-    execute_repeat,
-    safe_jump,
-)
-
-
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
@@ -695,7 +678,7 @@ class GameCtrl:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
-        self.linked_frame.linked_plugin_group.processPacketFunc(pkt_type, pkt)
+        self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
 
     def process_player_list(self, pkt, plugin_group: PluginGroup):
         # 处理玩家进出事件
