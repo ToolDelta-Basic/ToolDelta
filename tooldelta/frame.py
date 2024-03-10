@@ -749,7 +749,11 @@ class GameCtrl:
                         pkt["Message"],
                         self.linked_frame.on_plugin_err,
                     )
-                    asyncio.run(execute_death_message(pkt["Parameters"][0], killer))
+                    asyncio.run(
+                        execute_death_message(
+                            pkt["Parameters"][0], killer, pkt["Message"]
+                        )
+                    )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 plugin_grp.execute_player_message(

@@ -1,5 +1,6 @@
 import asyncio
 from concurrent.futures import thread
+from dataclasses import dataclass
 import os
 import sys
 import importlib
@@ -140,22 +141,34 @@ async def execute_repeat():
         Print.print_suc("重复任务 repeat_task 已退出！")
 
 
+@dataclass(order=True)
+class player_name:
+    playername: str
+
+@dataclass(order=True)
+class player_message_info(player_name):
+    message: str
+@dataclass(order=True)
+class player_death_info(player_name):
+    message: str
+    killer: str = None
 # 处理玩家消息并执行插件
 async def execute_player_message(playername, message):
-    await execute_asyncio_task(player_message_funcs, playername, message)
+    await execute_asyncio_task(player_message_funcs, player_message_info(playername=playername, message=message))
 
 
-async def execute_death_message(playername, killer):
-    await execute_asyncio_task(player_death_funcs, playername, killer)
+async def execute_death_message(playername, killer, message):
+    await execute_asyncio_task(player_death_funcs,player_death_info(playername=playername, killer=killer, message=message))
 
 
 async def execute_player_join(playername):
-    await execute_asyncio_task(player_join_funcs, playername)
+    await execute_asyncio_task(player_join_funcs, player_name(playername=playername))
 
 async def execute_player_prejoin(playername):
-    await execute_asyncio_task(player_prejoin_funcs, playername)
+    await execute_asyncio_task(player_prejoin_funcs, player_name(playername=playername))
+
 async def execute_player_left(playername):
-    await execute_asyncio_task(player_left_funcs, playername)
+    await execute_asyncio_task(player_left_funcs, player_name(playername=playername))
 
 
 async def load_plugin_file(file):
