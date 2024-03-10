@@ -38,11 +38,11 @@ jobs:
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
-      - name: Combine Certificates && Sign Binaries
-        run: |
-          if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            ./signtool.exe sign /fd certHash /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} /t http://timestamp.digicert.com ToolDelta-windows.exe
-          fi
+      # - name: Combine Certificates && Sign Binaries
+      #   run: |
+      #     if [ ${{ matrix.os }} == 'windows-latest' ]; then
+      #       ./signtool.exe sign /fd certHash /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} /t http://timestamp.digicert.com ToolDelta-windows.exe
+      #     fi
 
       - name: Release
         uses: softprops/action-gh-release@v1
