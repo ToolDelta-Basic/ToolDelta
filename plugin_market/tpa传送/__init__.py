@@ -8,7 +8,7 @@ from tooldelta.plugin_load.injected_plugin.movent import (
 
 __plugin_meta__ = {
     "name": "tpa传送",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "author": "wling",
 }
 
@@ -88,14 +88,16 @@ class tpa:
 
 @player_message()
 async def tpaCommand(playername, msg):
-    if msg[0:4] == ".tpa":
-        if msg == ".tpa" or msg == ".tpa ":
-            sendcmd(
-                "/tellraw "
-                + playername
-                + r""" {"rawtext":[{"text":"<§aMelon§eBot§r> \n玩家互传(选人版)  帮助菜单\n输入§c.tpa list §r查询目前的玩家传送请求\n输入§c.tpa <玩家名称> §r向对方发起传送请求\n输入§c.tpa acc §r接受对方请求, 将对方传来\n输入§c.tpa dec §r拒绝对方请求"}]}"""
+    if msg.startswith(".tpa"):
+        if msg == ".tpa":
+            rawText(
+                playername,
+                display
+                + "\n玩家互传(选人版)  帮助菜单\n输入§c.tpa list §r查询目前的玩家传送请求\n输入§c.tpa <玩家名称> §r向对方发起传送请求\n输入§c.tpa acc §r接受对方请求, 将对方传来\n输入§c.tpa dec §r拒绝对方请求",
             )
-        elif msg == ".tpa list" or msg == ".tpa list ":
+            return
+        arg = msg.split(" ")[1]
+        if arg == "list":
             if len(tpaRequests) == 0:
                 rawText(playername, display + "暂无请求.")
             else:
@@ -108,7 +110,7 @@ async def tpaCommand(playername, msg):
                         % (tpaIndex, i.playersend, i.playerrecv, i.time),
                     )
                     tpaIndex += 1
-        elif msg == ".tpa acc" or msg == ".tpa acc ":
+        elif arg == "acc":
             tpaBeRequested = False
             for i in tpaRequests:
                 if playername == i.playerrecv:
@@ -117,7 +119,7 @@ async def tpaCommand(playername, msg):
                     break
             if not (tpaBeRequested):
                 tellrawText(playername, "§l§4ERROR§r", "§c你没有待处理的请求.")
-        elif msg == ".tpa dec" or msg == ".tpa dec ":
+        elif arg == "dec":
             tpaBeRequested = False
             for i in tpaRequests:
                 if playername == i.playerrecv:
@@ -128,7 +130,7 @@ async def tpaCommand(playername, msg):
                 tellrawText(playername, "§l§4ERROR§r", "§c你没有待处理的请求.")
         else:
             playerTpaFound = []
-            playerTpaToSearch = msg.split(".tpa ")[1]
+            playerTpaToSearch = arg
             for i in get_all_player():
                 if playerTpaToSearch == i:
                     playerTpaFound = [i]
