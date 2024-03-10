@@ -47,7 +47,7 @@ jobs:
             ./cert2spc.exe ToolDelta.cer ToolDelta.spc
             ./certmgr.exe -add -c ToolDelta.spc -s root -r localMachine
             ./pvk2pfx.exe -pvk ToolDelta.pvk -pi ${{ secrets.CERTIFICATE_PASSWORD }} -spc ToolDelta.spc -pfx ToolDelta.pfx -f
-            ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} dict/*
+            ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} "${CRTDIR}/.tools/dist/*.exe"
             cd ../
             mv "${CRTDIR}/.tools/dist/*" "${CRTDIR}/dist/"
           fi
