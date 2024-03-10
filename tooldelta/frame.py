@@ -737,7 +737,7 @@ class GameCtrl:
                     #     ]
                     #     filled_message = death_message.format(*filled_parameters)
                     #     Print.print_inf(filled_message)
-                    print(pkt["Message"])
+                    Print.print_inf(f"§c{pkt['Parameters'][0]} 死亡了")
 
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
