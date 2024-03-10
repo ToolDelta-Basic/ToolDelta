@@ -1,9 +1,9 @@
 import time
-from tooldelta import plugins, Plugin, PluginAPI, Frame, Builtins, Print, Config
+from tooldelta import plugins, Plugin, Frame, Builtins, Print, Config
 
 
 @plugins.add_plugin_as_api("封禁系统")
-class BanSystem(Plugin, PluginAPI):
+class BanSystem(Plugin):
     name = "封禁系统"
     author = "SuperScript"
     version = (0, 0, 1)

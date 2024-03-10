@@ -1,10 +1,10 @@
-from tooldelta import PluginAPI, plugins, Frame, Plugin
+from tooldelta import plugins, Frame, Plugin
 import time
 
 
 # 使用 api = plugins.get_plugin_api("前置-世界交互") 来获取到这个api
 @plugins.add_plugin_as_api("前置-世界交互")
-class GameInteractive(PluginAPI, Plugin):
+class GameInteractive(Plugin):
     name = "前置-世界交互"
     author = "SuperScript"
     description = "前置插件, 提供世界交互功能的数据包, etc."

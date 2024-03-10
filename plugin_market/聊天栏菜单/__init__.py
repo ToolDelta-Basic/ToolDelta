@@ -1,4 +1,4 @@
-from tooldelta import plugins, Plugin, PluginAPI, Frame, Builtins, Config
+from tooldelta import plugins, Plugin, Frame, Builtins, Config
 
 from dataclasses import dataclass
 from typing import Callable
@@ -18,7 +18,7 @@ class ChatbarTriggers:
 
 # 使用 api = plugins.get_plugin_api("聊天栏菜单") 来获取到这个api
 @plugins.add_plugin_as_api("聊天栏菜单")
-class ChatbarMenu(Plugin, PluginAPI):
+class ChatbarMenu(Plugin):
     """
     使用如下方法对接到这个组件:
 

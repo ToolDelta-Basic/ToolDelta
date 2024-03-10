@@ -1,6 +1,6 @@
 import json
 import time
-from tooldelta import Plugin, PluginAPI, plugins, Frame
+from tooldelta import Plugin, plugins, Frame
 
 
 def find_key_from_value(dic, val):
@@ -14,7 +14,7 @@ plugins.checkSystemVersion((0, 1, 8))
 
 
 @plugins.add_plugin_as_api("基本插件功能库")
-class BasicFunctionLib(Plugin, PluginAPI):
+class BasicFunctionLib(Plugin):
     version = (0, 0, 3)
     name = "基本插件功能库"
     author = "SuperScript"
