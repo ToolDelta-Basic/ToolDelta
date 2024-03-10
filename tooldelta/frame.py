@@ -716,14 +716,15 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    death_message = self.Game_Data.get(pkt["Message"], None)
-                    if death_message:
-                        filled_parameters = [
-                            self.Game_Data.get(param.replace("%", ""), param)
-                            for param in pkt["Parameters"]
-                        ]
-                        filled_message = death_message.format(*filled_parameters)
-                        Print.print_inf(filled_message)
+                    # death_message = self.Game_Data.get(pkt["Message"], None)
+                    # if death_message:
+                    #     filled_parameters = [
+                    #         self.Game_Data.get(param.replace("%", ""), param)
+                    #         for param in pkt["Parameters"]
+                    #     ]
+                    #     filled_message = death_message.format(*filled_parameters)
+                    #     Print.print_inf(filled_message)
+                    print(pkt["Message"])
 
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
