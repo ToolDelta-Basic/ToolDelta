@@ -208,6 +208,7 @@ class PluginManager:
         return False
 
     def auto_register_plugin(self, plugin_type, p_data):
+        # 自动注册插件信息, 不允许直接调用
         match plugin_type:
             case "classic":
                 self.push_plugin_reg_data(
@@ -250,6 +251,7 @@ class PluginManager:
                 Print.print_err("不合法的注册插件: " + plugin_type)
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData):
+        # 向插件注册表推送插件注册信息
         r = JsonIO.readFileFrom(
             "主系统核心数据", self.plugin_reg_data_path, self.default_reg_data
         )
@@ -257,11 +259,13 @@ class PluginManager:
         JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
 
     def pop_plugin_reg_data(self, plugin_data: PluginRegData):
+        # 从插件注册表删除插件注册信息
         r = JsonIO.readFileFrom("主系统核心数据", self.plugin_reg_data_path)
         del r[plugin_data.plugin_type][plugin_data.name]
         JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
 
     def get_plugin_reg_name_dict_and_datas(self):
+        # 返回一个表示插件所在类别下的全部已注册插件的列表, 和全部已注册插件的插件注册信息列表
         r0: dict[str, list[str]] = {"dotcs": [], "classic": [], "injected": []}
         r = JsonIO.readFileFrom(
             "主系统核心数据", self.plugin_reg_data_path, self.default_reg_data
@@ -280,7 +284,7 @@ class PluginManager:
         return r0, res
 
     def get_2_compare_plugins_reg(self):
-        "返回一个全注册插件的列表"
+        # 返回一个全注册插件的列表
         f_plugins: list[PluginRegData] = []
         reg_dict, reg_list = self.get_plugin_reg_name_dict_and_datas()
         for p, k in {
