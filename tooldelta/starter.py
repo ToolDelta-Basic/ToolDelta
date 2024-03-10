@@ -11,13 +11,15 @@ from tooldelta.plugin_load.injected_plugin import movent
 frame = Frame()
 plugins = PluginGroup(frame, PRG_NAME)
 game_control = GameCtrl(frame)
-def signal_handler(*arg):pass # 排除信号中断
+def signal_handler(*arg):
+    # 排除信号中断
+    pass 
 signal.signal(signal.SIGINT, signal_handler)
 
 def start_tool_delta():
     # 初始化系统
     try:
-        # TODO: delete
+        # TODO: 自动更新需要时间间隔
         # frame.auto_update()
         frame.welcome()
         frame.basic_operation()

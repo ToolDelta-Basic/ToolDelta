@@ -14,6 +14,7 @@ else:
 clear_screen = lambda: os.system(CLS_CMD)
 
 class PluginRegData:
+    # 插件注册信息类
     def __init__(self, name: str, plugin_data: dict = None, is_registered=True, is_enabled=True):
         if plugin_data is None:
             plugin_data = {}
@@ -64,6 +65,7 @@ class PluginManager:
     _plugin_datas_cache = []
 
     def manage_plugins(self):
+        # 进入插件管理界面
         while 1:
             clear_screen()
             plugins = self.list_plugins_list()
@@ -85,6 +87,7 @@ class PluginManager:
                     self.plugin_operation(res)
 
     def plugin_operation(self, plugin: PluginRegData):
+        # 对插件进行操作
         description_fixed = plugin.description.replace('\n', '\n    ')
         clear_screen()
         Print.clean_print(f"§d插件名: §f{plugin.name}")

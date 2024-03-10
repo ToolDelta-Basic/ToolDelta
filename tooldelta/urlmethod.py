@@ -97,7 +97,7 @@ def download_file_singlethreaded(
 
 def download_file_multithreading(
     url: str, save_dir: str, num_threads: int = 8, ignore_warnings: bool = False
-) -> None:
+):
     filesize = get_file_size(url)
     if filesize is None:
         download_file_singlethreaded(url=url, save_dir=save_dir)

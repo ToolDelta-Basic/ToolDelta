@@ -4,8 +4,8 @@ import threading
 import ctypes
 import traceback
 
-
 def get_dotcs_env(__F, print_ins):
+    # 为旧版 DotCS 插件提供原生环境
     sendcmd = lambda cmd, waitForResp=False, timeout=30: (
         __F.link_game_ctrl.sendcmd(cmd, waitForResp, timeout).as_dict
         if waitForResp
