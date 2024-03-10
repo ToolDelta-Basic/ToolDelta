@@ -112,7 +112,7 @@ class PluginMarket:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             return
         clear_screen()
-        Print.print_suc("已从插件市场返回 ToolDelta 控制台.")
+        Print.clean_print("§a已从插件市场返回 ToolDelta 控制台.")
 
     def get_datas_from_market(self, source_url: str = None):
         if source_url is None:
@@ -201,7 +201,7 @@ class PluginMarket:
             from tooldelta.plugin_manager import plugin_manager
             # 注册插件
             plugin_manager.push_plugin_reg_data(plugin_data)   
-            Print.print_suc(f"成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
+            Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             # Clean up cache directory
             shutil.rmtree(cache_dir)
