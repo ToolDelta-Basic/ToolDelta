@@ -634,7 +634,7 @@ class Frame:
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
-        self.Game_Data = Game_Texts()
+        # self.Game_Data = Game_Texts()
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
@@ -850,12 +850,12 @@ class GameCtrl:
         """
         self.sendwocmd(f"title {target} actionbar {text}")
 
-    def get_game_data(self):
-        """
-        获取minecraft信息数据
+    # def get_game_data(self):
+    #     """
+    #     获取minecraft信息数据
 
-        返回参数:
-            库: zh_ch
-                变量: texts: achievement、color、commands、death、disconnect、effect、enchantment、entity、feature、gameMode、item、potion、tile、packets:{id:name}
-        """
-        return self.Game_Data
+    #     返回参数:
+    #         库: zh_ch
+    #             变量: texts: achievement、color、commands、death、disconnect、effect、enchantment、entity、feature、gameMode、item、potion、tile、packets:{id:name}
+    #     """
+    #     return self.Game_Data
