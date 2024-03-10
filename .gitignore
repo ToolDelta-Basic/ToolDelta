@@ -141,7 +141,7 @@ dmypy.json
 插件文件/
 插件配置文件/
 日志文件/
-data/
+插件数据文件/
 status/
 _Plugin_Data/
 neo-omega-kernel/
