@@ -74,7 +74,9 @@ class PluginManager:
             elif r.lower() == "q":
                 return
             elif r.lower() == "u":
-                self.update_all_plugins(self.get_plugin_reg_name_dict_and_datas()[1])
+                self.update_all_plugins(
+                    self.get_plugin_reg_name_dict_and_datas()[1]
+                )
             else:
                 res = self.search_plugin(r, plugins)
                 if res is None:

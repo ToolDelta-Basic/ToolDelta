@@ -144,7 +144,7 @@
     },
     "聊天栏菜单": {
       "author": "SuperScript",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "description": "所有使用到聊天栏菜单的组件的前置组件",
       "limit_launcher": null,
       "pre-plugins": {},

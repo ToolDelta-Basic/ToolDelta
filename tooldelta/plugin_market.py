@@ -150,7 +150,7 @@ class PluginMarket:
         all_plugins_dict: Dict[str, str],
     ):
         download_paths = self.find_dirs(plugin_data)
-        for plugin_name, _ in plugin_data.pre_plugins.items():
+        for plugin_name in plugin_data.pre_plugins:
             Print.print_inf(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
             self.download_plugin(
                 PluginRegData(plugin_name, all_plugins_dict[plugin_name]),
@@ -202,7 +202,7 @@ class PluginMarket:
             # 注册插件
             plugin_manager.push_plugin_reg_data(PluginRegData(
                 plugin_data.name, all_plugins_dict[plugin_data.name]
-            ))   
+            ))
             Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             # Clean up cache directory
