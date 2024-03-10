@@ -1,6 +1,7 @@
 from tooldelta import plugins, Frame, Plugin
 import time
 
+plugins.checkSystemVersion((0, 3, 20))
 
 # 使用 api = plugins.get_plugin_api("前置-世界交互") 来获取到这个api
 @plugins.add_plugin_as_api("前置-世界交互")

@@ -10,12 +10,12 @@ def find_key_from_value(dic, val):
             return k
 
 
-plugins.checkSystemVersion((0, 1, 8))
+plugins.checkSystemVersion((0, 1, 9))
 
 
 @plugins.add_plugin_as_api("基本插件功能库")
 class BasicFunctionLib(Plugin):
-    version = (0, 0, 3)
+    version = (0, 0, 5)
     name = "基本插件功能库"
     author = "SuperScript"
     description = "提供额外的方法用于获取游戏数据"

@@ -126,7 +126,7 @@
     },
     "基本插件功能库": {
       "author": "SuperScript",
-      "version": "0.0.1",
+      "version": "0.0.5",
       "description": "所有使用基本组件API的插件的前置",
       "limit_launcher": null,
       "pre-plugins": {},
@@ -144,7 +144,7 @@
     },
     "聊天栏菜单": {
       "author": "SuperScript",
-      "version": "0.0.4",
+      "version": "0.1.10",
       "description": "所有使用到聊天栏菜单的组件的前置组件",
       "limit_launcher": null,
       "pre-plugins": {},

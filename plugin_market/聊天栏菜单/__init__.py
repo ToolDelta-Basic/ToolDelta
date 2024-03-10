@@ -3,7 +3,7 @@ from tooldelta import plugins, Plugin, Frame, Builtins, Config
 from dataclasses import dataclass
 from typing import Callable
 
-plugins.checkSystemVersion((0, 1, 8))
+plugins.checkSystemVersion((0, 3, 20))
 
 
 @dataclass
@@ -34,7 +34,7 @@ class ChatbarMenu(Plugin):
 
     name = "聊天栏菜单"
     author = "SuperScript"
-    version = (0, 0, 4)
+    version = (0, 1, 10)
     description = "前置插件, 提供聊天栏菜单功能"
     DEFAULT_CFG = {
         "help菜单样式": {
