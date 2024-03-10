@@ -71,7 +71,7 @@ class Frame:
         system_version = VERSION
         max_connect_fb_time = 60
         connect_fb_start_time = time.time()
-        data_path = "data/"
+        data_path = "插件数据文件/"
 
     createThread = ClassicThread = Builtins.createThread
     PRG_NAME = PRG_NAME
@@ -480,9 +480,9 @@ class Frame:
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
         os.makedirs("status", exist_ok=True)
-        os.makedirs("data/status", exist_ok=True)
-        os.makedirs("data/players", exist_ok=True)
-        os.makedirs("data/game_texts", exist_ok=True)
+        os.makedirs("插件数据文件/status", exist_ok=True)
+        os.makedirs("插件数据文件/players", exist_ok=True)
+        os.makedirs("插件数据文件/game_texts", exist_ok=True)
 
     @staticmethod
     def fbtokenFix():

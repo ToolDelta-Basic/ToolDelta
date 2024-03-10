@@ -159,7 +159,7 @@ class Builtins:
         def readFileFrom(plugin_name: str, file: str, default: dict = None):
             """
             使用插件便捷地读取一个json文件,
-            这个文件应在 data/<plugin_name>/<file>文件夹内, 文件夹不存在时也会自动创建
+            这个文件应在 插件数据文件/<plugin_name>/<file>文件夹内, 文件夹不存在时也会自动创建
 
             参数:
                 plugin_name: 插件名
@@ -168,8 +168,8 @@ class Builtins:
             """
             if file.endswith(".json"):
                 file = file[:-5]
-            filepath = os.path.join("data", plugin_name, f"{file}.json")
-            os.makedirs(os.path.join("data", plugin_name), exist_ok=True)
+            filepath = os.path.join("插件数据文件", plugin_name, f"{file}.json")
+            os.makedirs(os.path.join("插件数据文件", plugin_name), exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
                     with open(filepath, "w", encoding="utf-8") as f:
@@ -197,8 +197,8 @@ class Builtins:
                 file: 文件名
                 obj: 任何合法的JSON类型 例如 dict/list/str/bool/int/float
             """
-            os.makedirs(f"data/{plugin_name}", exist_ok=True)
-            with open(f"data/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
+            os.makedirs(f"插件数据文件/{plugin_name}", exist_ok=True)
+            with open(f"插件数据文件/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
                 Builtins.SimpleJsonDataReader.SafeJsonDump(obj, f)
 
     @staticmethod
