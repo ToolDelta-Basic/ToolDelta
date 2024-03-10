@@ -44,7 +44,7 @@ jobs:
             CRTDIR=$(pwd)
             mv "${CRTDIR}/dist/" "${CRTDIR}/.tools/dist"
             cd .tools/
-            ./signtool.exe sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} "${CRTDIR}/.tools/dist/*.exe"
+            signtool sign /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} "${CRTDIR}/.tools/dist/*.exe"
             cd ../
             mv "${CRTDIR}/.tools/dist/" "${CRTDIR}/dist/"
           fi
