@@ -13,7 +13,7 @@ plugins = PluginGroup(frame, PRG_NAME)
 game_control = GameCtrl(frame)
 def signal_handler(*arg):
     # 排除信号中断
-    pass 
+    pass
 signal.signal(signal.SIGINT, signal_handler)
 
 def start_tool_delta():

@@ -1,37 +1,38 @@
 import time
 import ujson as json
-from typing import Any
-from tooldelta.frame import Frame, GameCtrl
+from typing import TYPE_CHECKING, Any
 from typing import Optional
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput
+if TYPE_CHECKING:
+    from tooldelta.frame import Frame, GameCtrl
 
 
-def check_avaliable(sth: GameCtrl) -> Optional[AttributeError]:
+def check_avaliable(sth: "GameCtrl") -> Optional[AttributeError]:
     """
-    检查给定的 GameCtrl 对象是否可用
+    检查给定的 "GameCtrl" 对象是否可用
 
     参数:
-        sth: 要检查的 GameCtrl 对象
+        sth: 要检查的 "GameCtrl" 对象
     """
     if sth is None:
         raise AttributeError(f"无法使用 {sth.__class__.__name__}, 因为其还未被初始化")
 
 
-game_control: GameCtrl
-frame: Frame
+game_control: "GameCtrl"
+movent_frame: "Frame"
 
 
-def set_frame(my_frame: Frame) -> None:
+def set_frame(my_Frame: "Frame") -> None:
     """
     全局初始化框架
 
     参数:
-        my_frame: 要设置的框架对象
+        my_"Frame": 要设置的框架对象
     """
-    global frame, game_control  # pylint: disable=global-statement
-    frame = my_frame
-    game_control = my_frame.get_game_control()
+    global movent_frame, game_control  # pylint: disable=global-statement
+    movent_frame = my_Frame
+    game_control = my_Frame.get_game_control()
 
 
 def sendcmd(
@@ -149,9 +150,9 @@ def is_op(playername: str) -> bool | None:
     check_avaliable(game_control)
     if playername not in get_all_player():
         return False
-    # 检测框架是否为FrameNeOmg
-    if frame.launcher.is_op is not None:
-        return frame.launcher.is_op(playername)
+    # 检测框架是否为"Frame"NeOmg
+    if movent_frame.launcher.is_op is not None:
+        return movent_frame.launcher.is_op(playername)
 
 
 def getTarget(sth: str, timeout: bool | int = 5) -> list:

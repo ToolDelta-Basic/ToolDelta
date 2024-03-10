@@ -111,7 +111,7 @@ class Frame:
 
     def login_fbuc(self) -> requests.Response:
         try:
-            
+
             hash_obj: hashlib._Hash = hashlib.sha256()
             username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
             hash_obj.update(
