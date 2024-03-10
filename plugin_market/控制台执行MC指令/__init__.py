@@ -8,7 +8,7 @@ plugins.checkSystemVersion((0, 1, 8))
 class ConsoleCommands(Plugin):
     name = "控制台执行MC指令"
     author = "SuperScript"
-    version = (0, 0, 1)
+    version = (0, 0, 2)
 
     def __init__(self, frame: Frame):
         self.frame = frame

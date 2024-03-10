@@ -12,13 +12,13 @@ from tooldelta.plugin_load.injected_plugin.movent import (
 
 __plugin_meta__ = {
     "name": "死亡返回",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "author": "wling/7912",
 }
 
 
 LOG_DEATH_TIME = 30  # 记录最小频率 (秒)
-plugin_path = r"data/死亡返回"
+plugin_path = r"插件数据文件/死亡返回"
 config_path = plugin_path + r"/死亡位置.json"
 os.makedirs(plugin_path, exist_ok=True)
 if not os.path.isfile(config_path):
