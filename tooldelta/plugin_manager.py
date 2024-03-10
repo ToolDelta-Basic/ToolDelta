@@ -67,11 +67,14 @@ class PluginManager:
         while 1:
             clear_screen()
             plugins = self.list_plugins_list()
-            r = input(Print.clean_fmt("§f输入§cq§f退出, 或输入插件关键词进行选择\n(空格可分隔关键词):"))
+            Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
+            r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
             if r.strip() == "":
                 continue
             elif r.lower() == "q":
                 return
+            elif r.lower() == "u":
+                self.update_all_plugins(self.get_plugin_reg_name_dict_and_datas()[1])
             else:
                 res = self.search_plugin(r, plugins)
                 if res is None:
@@ -82,7 +85,7 @@ class PluginManager:
     def plugin_operation(self, plugin: PluginRegData):
         description_fixed = plugin.description.replace('\n', '\n    ')
         clear_screen()
-        Print.clean_print(f"§d插件信息: §f{plugin.name}")
+        Print.clean_print(f"§d插件名: §f{plugin.name}")
         Print.clean_print(f" - 版本: {plugin.version_str}")
         Print.clean_print(f" - 作者: {plugin.author}")
         Print.clean_print(f" 描述: {description_fixed}")
@@ -139,6 +142,31 @@ class PluginManager:
                 Print.clean_print(f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}")
         self.push_plugin_reg_data(plugin)
         input()
+
+    def update_all_plugins(self, plugins: list[PluginRegData]):
+        market_datas = self.latest_version = market.get_datas_from_market()["MarketPlugins"]
+        need_updates: list[tuple[PluginRegData, str]] = []
+        for i in plugins:
+            s_data = market_datas.get(i.name)
+            if s_data is None:
+                continue
+            elif i.version_str != s_data["version"]:
+                need_updates.append((i, s_data["version"]))
+        if need_updates:
+            clear_screen()
+            Print.clean_print("§f以下插件可进行更新:")
+            for plugin, v in need_updates:
+                Print.clean_print(f" - {plugin.name} §6{i.version_str}§f -> §a{v}")
+            r = input(Print.clean_fmt("§f输入§a y §f开始更新, §c n §f取消: ")).strip().lower()
+            if r == "y":
+                for plugin, v in need_updates:
+                    market.download_plugin(plugin, market_datas)
+                Print.clean_print("§a全部插件已更新完成")
+            else:
+                Print.clean_print("§6已取消插件更新.")
+            input("[Enter键继续...]")
+        else:
+            input(Print.clean_fmt("§a无可更新的插件. [Enter键继续]"))
 
     def search_plugin(self, resp, plugins):
         res = self.search_plugin_by_kw(resp.split(" "), plugins)
@@ -273,7 +301,6 @@ class PluginManager:
         texts = []
         for plugin in plugins:
             texts.append(self.make_plugin_icon(plugin))
-        slen = len(texts)
         lfts = []
         rgts = []
         for i, t in enumerate(texts):
@@ -282,8 +309,8 @@ class PluginManager:
             else:
                 rgts.append(t)
         for i, t in enumerate(lfts):
-            if i + 1 in range(len(rgts)):
-                Print.clean_print("§f" + Print.align(t, 35) + "§f" + Print.align(rgts[i + 1]))
+            if i in range(len(rgts)):
+                Print.clean_print("§f" + Print.align(t, 35) + "§f" + Print.align(rgts[i]))
             else:
                 Print.clean_print("§f" + Print.align(t, 35))
 

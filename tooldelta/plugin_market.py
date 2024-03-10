@@ -42,7 +42,7 @@ def _get_json_from_url(url: str):
 
 class PluginMarket:
     def enter_plugin_market(self, source_url: str = None):
-        Print.print_inf("正在连接到插件市场..")
+        Print.clean_print("§6正在连接到插件市场..")
         try:
             market_datas = self.get_datas_from_market(source_url)
             plugins_list = list(market_datas["MarketPlugins"].items())
@@ -69,10 +69,10 @@ class PluginMarket:
                     else:
                         Print.print_inf("")
                 Print.print_inf(f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页")
-                Print.print_inf("§f输入插件序号选择插件, 以查看详情", need_log=False)
+                Print.print_inf("§f输入插件序号选中插件并查看其下载页", need_log=False)
                 last_operation = (
                     (
-                        input(Print.fmt_info("回车键继续上次操作, §bq§f 退出, 请输入:", "§f 输入 "))
+                        input(Print.fmt_info("§f回车键继续上次操作, §bq§f退出, 请输入:", "§f 输入 "))
                         or last_operation
                     )
                     .lower()
@@ -200,7 +200,9 @@ class PluginMarket:
                     shutil.move(source_file, target_file)
             from tooldelta.plugin_manager import plugin_manager
             # 注册插件
-            plugin_manager.push_plugin_reg_data(plugin_data)   
+            plugin_manager.push_plugin_reg_data(PluginRegData(
+                plugin_data.name, all_plugins_dict[plugin_data.name]
+            ))   
             Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             # Clean up cache directory
