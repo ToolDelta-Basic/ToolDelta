@@ -41,9 +41,7 @@ jobs:
       - name: Combine Certificates && Sign Binaries
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
-            for file in dist/*.exe; do
-              ./signtool.exe sign /fd certHash /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} /t http://timestamp.digicert.com "$file"
-            done
+            ./signtool.exe sign /fd certHash /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} /t http://timestamp.digicert.com ToolDelta-windows.exe
           fi
 
       - name: Release
