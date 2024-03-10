@@ -42,12 +42,13 @@ jobs:
         run: |
           if [ ${{ matrix.os }} == 'windows-latest' ]; then
             CRTDIR=$(pwd)
-            mv "${CRTDIR}/dist/" "${CRTDIR}/.tools/dist"
+            mv dist/* .tools/dist/
             cd .tools/
-            ls
-            ./signtool.exe sign /fd sha1 /f ToolDelta.pfx /p ${{ secrets.CERTIFICATE_PASSWORD }} "${CRTDIR}/.tools/dist/*.exe"
+            for file in dist/*.exe; do
+              ./signtool.exe sign /fd sha1 /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} "$file"
+            done
             cd ../
-            mv "${CRTDIR}/.tools/dist/" "${CRTDIR}/dist/"
+            mv .tools/dist/* dist/
           fi
 
       - name: Release
