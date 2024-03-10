@@ -220,25 +220,33 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     else:
         resultList = parameter
     result = {}
-    for i in resultList:
-        if game_control.players_uuid is None:
-            raise AttributeError("Failed to get the players_uuid.")
-        targetName = find_key_from_value(game_control.players_uuid, i["uniqueId"])
-        x = i["position"]["x"] if i["position"]["x"] >= 0 else i["position"]["x"] - 1
-        y = i["position"]["y"] - 1.6200103759765
-        z = i["position"]["z"] if i["position"]["z"] >= 0 else i["position"]["z"] - 1
-        position = {
-            "x": float(f"{x:.2f}"),
-            "y": float(f"{y:.2f}"),
-            "z": float(f"{z:.2f}"),
-        }
-        dimension = i["dimension"]
-        yRot = i["yRot"]
-        result[targetName] = {
-            "dimension": dimension,
-            "position": position,
-            "yRot": yRot,
-        }
+
+    if game_control.players_uuid is None:
+        raise AttributeError("Failed to get the players_uuid.")
+    targetName = targetNameToGet
+    x = (
+        parameter[0]["position"]["x"]
+        if parameter[0]["position"]["x"] >= 0
+        else parameter[0]["position"]["x"] - 1
+    )
+    y = parameter[0]["position"]["y"] - 1.6200103759765
+    z = (
+        parameter[0]["position"]["z"]
+        if parameter[0]["position"]["z"] >= 0
+        else parameter[0]["position"]["z"] - 1
+    )
+    position = {
+        "x": float(f"{x:.2f}"),
+        "y": float(f"{y:.2f}"),
+        "z": float(f"{z:.2f}"),
+    }
+    dimension = parameter[0]["dimension"]
+    yRot = parameter[0]["yRot"]
+    result[targetName] = {
+        "dimension": dimension,
+        "position": position,
+        "yRot": yRot,
+    }
     if targetNameToGet == "@a":
         return result
     if len(result) != 1:
