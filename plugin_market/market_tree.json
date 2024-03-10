@@ -126,7 +126,7 @@
     },
     "基本插件功能库": {
       "author": "SuperScript",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "description": "所有使用基本组件API的插件的前置",
       "limit_launcher": null,
       "pre-plugins": {},
