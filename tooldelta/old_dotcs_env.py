@@ -185,43 +185,43 @@ def get_dotcs_env(__F, print_ins):
         return int(result["OutputMessages"][0]["Parameters"][1])
 
     def getStatus(statusName: str):
-        if not os.path.isfile(f"data/{statusName}.txt"):
+        if not os.path.isfile(f"插件数据文件/{statusName}.txt"):
             return None
-        with open(f"data/{statusName}.txt", "r", encoding="utf-8") as file:
+        with open(f"插件数据文件/{statusName}.txt", "r", encoding="utf-8") as file:
             status = file.read()
         return status
 
     def setStatus(statusName: str, status):
-        with open(f"data/{statusName}.txt", "w", encoding="utf-8") as file:
+        with open(f"插件数据文件/{statusName}.txt", "w", encoding="utf-8") as file:
             file.write(str(status))
 
     def getPlayerData(dataName: str, playerName: str, writeNew):
         try:
             with open(
-                f"data/players/{playerName}.json", "r", encoding="utf-8"
+                f"插件数据文件/players/{playerName}.json", "r", encoding="utf-8"
             ) as f:  # skipcq: PTC-W6004
                 j = json.load(f)[dataName]
             return j
         except KeyError:
-            with open(f"data/players/{playerName}.json", "r", encoding="utf-8") as f:
+            with open(f"插件数据文件/players/{playerName}.json", "r", encoding="utf-8") as f:
                 j = json.load(f)
             j[dataName] = writeNew
-            with open(f"data/players/{playerName}.json", "w", encoding="utf-8") as f:
+            with open(f"插件数据文件/players/{playerName}.json", "w", encoding="utf-8") as f:
                 json.dump(j, f)
         except FileNotFoundError:
-            with open(f"data/players/{playerName}.json", "w", encoding="utf-8") as f:
+            with open(f"插件数据文件/players/{playerName}.json", "w", encoding="utf-8") as f:
                 json.dump({dataName: writeNew}, f)
         return None
 
     def setPlayerData(dataName: str, playerName: str, dataValue, writeNew: str = ""):
-        if os.path.isfile(f"data/players/{playerName}.json"):
-            with open(f"data/players/{playerName}.json", "r", encoding="utf-8") as f:
+        if os.path.isfile(f"插件数据文件/players/{playerName}.json"):
+            with open(f"插件数据文件/players/{playerName}.json", "r", encoding="utf-8") as f:
                 j = json.load(f)
             j[dataName] = dataValue
-            with open(f"data/players/{playerName}.json", "w", encoding="utf-8") as f:
+            with open(f"插件数据文件/players/{playerName}.json", "w", encoding="utf-8") as f:
                 json.dump(j, f)
         else:
-            with open(f"data/players/{playerName}.json", "w", encoding="utf-8") as f:
+            with open(f"插件数据文件/players/{playerName}.json", "w", encoding="utf-8") as f:
                 json.dump({dataName: dataValue}, f)
 
     return locals()
