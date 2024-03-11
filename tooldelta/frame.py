@@ -221,96 +221,51 @@ class Frame:
                 f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}"
             )
 
-    @staticmethod
-    def auto_update():
-        # 对ToolDelta进行自动更新
-        try:
-            latest_version = requests.get(
-                "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"
-            ).json()["tag_name"]
-            current_version = ".".join(map(str, get_tool_delta_version()[:3]))
-            if latest_version != current_version:
-                if ".py" in os.path.basename(
-                    __file__
-                ) and ".pyc" not in os.path.basename(__file__):
-                    Print.print_load(
-                        f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!"
-                    )
-                    return True
-                Print.print_load(
-                    f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta"
-                )
-                tooldelta_url = f"github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
-                url = (
-                    f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-linux"
-                    if platform.system() == "Linux"
-                    else f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-windows.exe"
-                )
-                mirror_urls = (
-                    [
-                        f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux",
-                        f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux",
-                    ]
-                    if platform.system() == "Linux"
-                    else [
-                        f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe",
-                        f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe",
-                    ]
-                )
-                file_path = (
-                    os.path.join(os.getcwd(), "ToolDelta-linux_new")
-                    if platform.system() == "Linux"
-                    else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
-                )
-                fastest_url = next(
-                    iter(test_site_latency({"url": url, "mirror_url": mirror_urls}))
-                )
-                if not fastest_url:
-                    Print.print_war(
-                        "在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!"
-                    )
-                    return True
-                download_file_multithreading(fastest_url[0], file_path)
-                if os.path.exists(file_path):
-                    if platform.system() == "Windows":
-                        win_old_tool_delta_path = next(
-                            os.path.join(filewalks[0], files)
-                            for filewalks in os.walk(os.getcwd(), topdown=False)
-                            for files in filewalks[2]
-                            if ".exe" in files
-                            and "new" not in files
-                            and ("ToolDelta" in files or "tooldelta" in files)
-                        )
-                    upgrade_script = (
-                        open("upgrade.sh", "w", encoding="utf-8")
-                        if platform.system() == "Linux"
-                        else open("upgrade.bat", "w", encoding="utf-8")
-                    )
 
-                    temp_shell = (
-                        f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi'
-                        if platform.system() == "Linux"
-                        else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {win_old_tool_delta_path}"
-                    )
-                    upgrade_script.write(temp_shell)
-                    upgrade_script.close()
-                    upgrade_process = (
-                        subprocess.Popen("sh upgrade.sh", cwd=os.getcwd(), shell=True)
-                        if platform.system() == "Linux"
-                        else subprocess.Popen(
-                            "upgrade.bat", cwd=os.getcwd(), shell=True
-                        )
-                    )
-                    upgrade_process.communicate()
-                    sys.exit()
-            else:
-                Print.print_suc(
-                    f"检测成功,当前为最新版本 -> {current_version}，无需更新"
-                )
-        except Exception as err:
-            Print.print_war(
-                f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新: {err}"
-            )
+    class ToolDeltaUpdater:
+        def __init__(self):
+            self.auto_update()
+
+        def auto_update(self):
+            try:
+                latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
+                current_version = ".".join(map(str, get_tool_delta_version()[:3]))
+
+                if latest_version == current_version:
+                    Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新")
+                    return
+
+                if ".py" in os.path.basename(__file__) and ".pyc" not in os.path.basename(__file__):
+                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
+                else:
+                    Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta")
+                    tooldelta_url = f"github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
+                    url = f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-linux" if platform.system() == "Linux" else f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-windows.exe"
+                    mirror_urls = [f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux", f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux"] if platform.system() == "Linux" else [f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe", f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe"]
+                    file_path = os.path.join(os.getcwd(), "ToolDelta-linux_new") if platform.system() == "Linux" else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
+                    fastest_url = next(iter(test_site_latency({"url": url, "mirror_url": mirror_urls})))
+
+                    if not fastest_url:
+                        Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
+                        return
+
+                    download_file_multithreading(fastest_url[0], file_path)
+
+                    if os.path.exists(file_path):
+                        if platform.system() == "Windows":
+                            win_old_tool_delta_path = next(os.path.join(filewalks[0], files) for filewalks in os.walk(os.getcwd(), topdown=False) for files in filewalks[2] if ".exe" in files and "new" not in files and ("ToolDelta" in files or "tooldelta" in files))
+
+                        upgrade_script_path = "upgrade.sh" if platform.system() == "Linux" else "upgrade.bat"
+                        with open(upgrade_script_path, "w", encoding="utf-8") as upgrade_script:
+                            temp_shell = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {win_old_tool_delta_path}"
+                            upgrade_script.write(temp_shell)
+
+                        upgrade_process = subprocess.Popen(f"sh {upgrade_script_path}" if platform.system() == "Linux" else f"{upgrade_script_path}", cwd=os.getcwd(), shell=True)
+                        upgrade_process.communicate()
+                        sys.exit()
+
+            except Exception as err:
+                Print.print_war(f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新: {err}")
 
     def read_cfg(self):
         # 读取启动配置等

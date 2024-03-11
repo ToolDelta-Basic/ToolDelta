@@ -20,7 +20,7 @@ def start_tool_delta():
     # 初始化系统
     try:
         # TODO: 自动更新需要时间间隔
-        threading.Thread(target=frame.auto_update,name="Auto_update").start()
+        threading.Thread(target=frame.ToolDeltaUpdater,name="Auto_update").start()
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)
