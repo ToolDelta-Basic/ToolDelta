@@ -3,7 +3,7 @@ import time
 from tooldelta import builtins
 from tooldelta.frame import PRG_NAME, Frame
 from tooldelta.frame import GameCtrl
-from tooldelta.basic_mods import os, traceback
+from tooldelta.basic_mods import os, traceback, threading
 from tooldelta.color_print import Print
 from tooldelta.plugin_load.PluginGroup import PluginGroup
 from tooldelta.plugin_load.injected_plugin import movent
@@ -20,7 +20,7 @@ def start_tool_delta():
     # 初始化系统
     try:
         # TODO: 自动更新需要时间间隔
-        # frame.auto_update()
+        threading.Thread(target=frame.auto_update,name="Auto_update").start()
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)

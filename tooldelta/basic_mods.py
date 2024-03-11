@@ -25,6 +25,9 @@ try:
     import getpass
     import pymysql
     import websockets
+    import tarfile
+    import gzip
+    import importlib
     import ujson
     import hashlib
     import base64

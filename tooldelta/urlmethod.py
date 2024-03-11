@@ -61,8 +61,10 @@ def download_file_singlethreaded(
     with requests.get(url, stream=True, timeout=10) as res:
         res.raise_for_status()
         filesize = get_file_size(url)
-        if filesize < 256 and not ignore_warnings:
-            Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
+        try:
+            if filesize < 256 and not ignore_warnings:
+                Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
+        except TypeError:pass
         chunk_size = 8192
         nowsize = 0
         succ = False

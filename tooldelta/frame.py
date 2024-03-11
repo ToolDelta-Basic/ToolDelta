@@ -27,7 +27,7 @@ from tooldelta.basic_mods import (
 from tooldelta.cfg import Cfg as _Cfg
 from tooldelta.logger import publicLogger
 from tooldelta.plugin_load.PluginGroup import PluginGroup
-from tooldelta.game_texts import Game_Texts
+from tooldelta.game_texts import GameTextsLoader
 from tooldelta.urlmethod import download_file_multithreading, test_site_latency
 from tooldelta.sys_args import sys_args_to_dict
 from tooldelta.launch_cli import (
@@ -240,9 +240,9 @@ class Frame:
                 Print.print_load(
                     f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta"
                 )
-                tooldelta_url = f"https://github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
+                tooldelta_url = f"github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
                 url = (
-                    f"https://gh.ddlc.top//ToolDelta-linux"
+                    f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-linux"
                     if platform.system() == "Linux"
                     else f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-windows.exe"
                 )
@@ -640,7 +640,7 @@ class Frame:
 class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
-        # self.Game_Data = Game_Texts()
+        self.Game_Data = GameTextsLoader().game_texts_data
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
@@ -729,15 +729,14 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    # death_message = self.Game_Data.get(pkt["Message"], None)
-                    # if death_message:
-                    #     filled_parameters = [
-                    #         self.Game_Data.get(param.replace("%", ""), param)
-                    #         for param in pkt["Parameters"]
-                    #     ]
-                    #     filled_message = death_message.format(*filled_parameters)
-                    #     Print.print_inf(filled_message)
-                    Print.print_inf(f"§c{pkt['Parameters'][0]} 死亡了")
+                    death_message = self.Game_Data.get(pkt["Message"], None)
+                    if death_message:
+                        filled_parameters = [
+                            self.Game_Data.get(param.replace("%", ""), param)
+                            for param in pkt["Parameters"]
+                        ]
+                        filled_message = death_message.format(*filled_parameters)
+                        Print.print_inf(filled_message)
 
                     if len(pkt["Parameters"]) >= 2:
                         killer = pkt["Parameters"][1]
@@ -868,12 +867,10 @@ class GameCtrl:
         """
         self.sendwocmd(f"title {target} actionbar {text}")
 
-    # def get_game_data(self):
-    #     """
-    #     获取minecraft信息数据
+    def get_game_data(self):
+        """
+        获取minecraft信息数据
 
-    #     返回参数:
-    #         库: zh_ch
-    #             变量: texts: achievement、color、commands、death、disconnect、effect、enchantment、entity、feature、gameMode、item、potion、tile、packets:{id:name}
-    #     """
-    #     return self.Game_Data
+        返回类型: dict
+        """
+        return self.Game_Data
