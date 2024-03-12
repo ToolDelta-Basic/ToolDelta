@@ -20,6 +20,7 @@ from tooldelta.basic_mods import (
     requests,
     platform,
     subprocess,
+    threading,
     getpass,
     hashlib,
 )
@@ -225,6 +226,11 @@ class Frame:
     class ToolDeltaUpdater:
         def __init__(self):
             self.auto_update()
+            self.start_auto_update_thread()
+
+        def start_auto_update_thread(self):
+            # 每24小时检查一次更新
+            threading.Timer(24 * 60 * 60, self.auto_update).start()
 
         def auto_update(self):
             try:
@@ -232,9 +238,8 @@ class Frame:
                 current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
                 if latest_version == current_version:
-                    Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新")
+                    # Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新")
                     return
-
                 if ".py" in os.path.basename(__file__) and ".pyc" not in os.path.basename(__file__):
                     Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
                 else:
@@ -257,7 +262,7 @@ class Frame:
 
                         upgrade_script_path = "upgrade.sh" if platform.system() == "Linux" else "upgrade.bat"
                         with open(upgrade_script_path, "w", encoding="utf-8") as upgrade_script:
-                            temp_shell = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {win_old_tool_delta_path}"
+                            temp_shell = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {os.path.basename(win_old_tool_delta_path)}"
                             upgrade_script.write(temp_shell)
 
                         upgrade_process = subprocess.Popen(f"sh {upgrade_script_path}" if platform.system() == "Linux" else f"{upgrade_script_path}", cwd=os.getcwd(), shell=True)
