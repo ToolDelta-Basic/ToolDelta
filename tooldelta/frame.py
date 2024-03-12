@@ -262,12 +262,11 @@ class Frame:
 
                         upgrade_script_path = "upgrade.sh" if platform.system() == "Linux" else "upgrade.bat"
                         with open(upgrade_script_path, "w", encoding="utf-8") as upgrade_script:
-                            temp_shell = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)}\nelse\n  exit\nfi' if platform.system() == "Linux" else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {os.path.basename(win_old_tool_delta_path)}"
+                            temp_shell = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)} -l 1\nelse\n  exit\nfi' if platform.system() == "Linux" else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {os.path.basename(win_old_tool_delta_path)}"
                             upgrade_script.write(temp_shell)
-
+                        threading.Thread(target=tooldelta.safe_jump, kwargs={"exit_directly": True}).start()
                         upgrade_process = subprocess.Popen(f"sh {upgrade_script_path}" if platform.system() == "Linux" else f"{upgrade_script_path}", cwd=os.getcwd(), shell=True)
                         upgrade_process.communicate()
-                        sys.exit()
 
             except Exception as err:
                 Print.print_war(f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新: {err}")

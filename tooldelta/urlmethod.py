@@ -109,31 +109,32 @@ def download_file_multithreading(
         download_file_singlethreaded(url=url, save_dir=save_dir)
     chunk_size = filesize // num_threads  # 每个线程下载的块大小
     with open(save_dir + ".tmp", "wb") as dwnf:
-        with tqdm(
-            total=filesize,
-            unit="B",
-            unit_scale=True,
-            desc=Print.fmt_info("", "§a 下载 §r"),
-            ncols=80,
-        ) as pbar:
+        with Print.lock:
+            with tqdm(
+                total=filesize,
+                unit="B",
+                unit_scale=True,
+                desc=Print.fmt_info("", "§a 下载 §r"),
+                ncols=80,
+            ) as pbar:
 
-            def update_progress(downloaded_bytes: int) -> None:
-                pbar.update(downloaded_bytes)
+                def update_progress(downloaded_bytes: int) -> None:
+                    pbar.update(downloaded_bytes)
 
-            with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                futures = []
-                for i in range(num_threads):
-                    start_byte = i * chunk_size
-                    end_byte = start_byte + chunk_size - 1
-                    if i == num_threads - 1:
-                        end_byte = filesize - 1
-                    future = executor.submit(
-                        download_file_chunk, url, start_byte, end_byte, save_dir
-                    )
-                    future.add_done_callback(lambda f: update_progress(f.result()))
-                    futures.append(future)
-                for future in futures:
-                    future.result()
+                with ThreadPoolExecutor(max_workers=num_threads) as executor:
+                    futures = []
+                    for i in range(num_threads):
+                        start_byte = i * chunk_size
+                        end_byte = start_byte + chunk_size - 1
+                        if i == num_threads - 1:
+                            end_byte = filesize - 1
+                        future = executor.submit(
+                            download_file_chunk, url, start_byte, end_byte, save_dir
+                        )
+                        future.add_done_callback(lambda f: update_progress(f.result()))
+                        futures.append(future)
+                    for future in futures:
+                        future.result()
     shutil.move(save_dir + ".tmp", save_dir)
 
 
@@ -144,7 +145,6 @@ def download_unknown_file(url: str, save_dir: str) -> None:
 
     with open(save_dir, "wb") as f:
         f.write(resp.content)
-
 
 def test_site_latency(Da: dict) -> list:
     tmp_speed = {}
@@ -158,7 +158,6 @@ def test_site_latency(Da: dict) -> list:
 
     sorted_speed = sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
     return sorted_speed
-
 
 def measure_latencyt(url: str) -> Union[float, int]:
     try:
