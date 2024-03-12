@@ -243,9 +243,8 @@ class Frame:
                 if ".py" in os.path.basename(__file__) and ".pyc" not in os.path.basename(__file__):
                     Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
                 else:
-                    Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta")
                     tooldelta_url = f"github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
-                    url = f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-linux" if platform.system() == "Linux" else f"https://gh.ddlc.top/{tooldelta_url}/ToolDelta-windows.exe"
+                    url = f"https://gh.con.sh/{tooldelta_url}/ToolDelta-linux" if platform.system() == "Linux" else f"https://gh.con.sh/{tooldelta_url}/ToolDelta-windows.exe"
                     mirror_urls = [f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux", f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux"] if platform.system() == "Linux" else [f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe", f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe"]
                     file_path = os.path.join(os.getcwd(), "ToolDelta-linux_new") if platform.system() == "Linux" else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
                     fastest_url = next(iter(test_site_latency({"url": url, "mirror_url": mirror_urls})))
@@ -254,6 +253,7 @@ class Frame:
                         Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
                         return
 
+                    with Print.lock:Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta")
                     download_file_multithreading(fastest_url[0], file_path)
 
                     if os.path.exists(file_path):

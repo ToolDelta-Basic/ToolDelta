@@ -149,25 +149,31 @@ def download_unknown_file(url: str, save_dir: str) -> None:
 def test_site_latency(Da: dict) -> list:
     tmp_speed = {}
     urls = [Da["url"]] + Da["mirror_url"]
+    
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(measure_latencyt, url) for url in urls]
+        
         for future, url in zip(as_completed(futures), urls):
-            latency = future.result()
-            if latency != -1:
-                tmp_speed[url] = latency
+            try:
+                latency = future.result(timeout=5)
+                if latency != -1:
+                    tmp_speed[url] = latency
+            except Exception as e:
+                Print.print_war(f"Error measuring latency for {url}: {e}")
 
     sorted_speed = sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
     return sorted_speed
 
-def measure_latencyt(url: str) -> Union[float, int]:
+def measure_latencyt(url: str) -> float:
     try:
         st = pyspeedtest.SpeedTest(
             re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", url).group()
         )
-        download_speed = st.download()  # / 1000000  # # 转换为兆字节/秒 （取消）
+        download_speed = st.download()  # / 1000000  # 转换为兆字节/秒
         return download_speed
-    except Exception:
-        return -1  # 返回-1表示测速失败
+    except Exception as e:
+        Print.print_war(f"Error measuring latency for {url}: {e}")
+        return -1.0  # 返回-1表示测速失败
 
 
 def get_free_port(start: int = 8080, end: int = 65535) -> int:
