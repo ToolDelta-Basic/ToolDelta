@@ -12,7 +12,7 @@ class GameTextsLoader(object):
         self.game_texts_data: Dict[str, str] = self.load_data()
 
     def get_latest_version(self) -> str:
-        return re.match(r"(\d+\.\d+\.\d+)", requests.get("https://mirror.ghproxy.com/.githubusercontent.com/ToolDelta/ToolDelta-Game_Texts/releases/latest").json()["tag_name"]).group()
+        return re.match(r"(\d+\.\d+\.\d+)", requests.get("https://api.github.com/repos/ToolDelta/ToolDelta-Game_Texts/releases/latest").json()["tag_name"]).group()
 
     def check_initial_run(self) -> None:
         version_file_path: str = os.path.join(self.base_path, "version")
