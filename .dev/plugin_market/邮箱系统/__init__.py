@@ -1,10 +1,10 @@
-from tooldelta import Plugin, PluginAPI, plugins, Frame, Builtins
+from tooldelta import Plugin, plugins, Frame, Builtins, Config
 
 JsonIO = Builtins.SimpleJsonDataReader
 
 
 @plugins.add_plugin_as_api("邮箱系统")
-class MailSystem(Plugin, PluginAPI):
+class MailSystem(Plugin):
     class Mail:
         def __init__(
             self,
@@ -12,7 +12,7 @@ class MailSystem(Plugin, PluginAPI):
             sender: str,
             date: int,
             content: str,
-            give_items: dict[str, int] = None,
+            give_items: dict[str, tuple[int, int]] = None,
             exe_cmds: list[str] = None,
             func_hooks_and_args: dict[str, tuple] = None,
         ):
@@ -44,11 +44,33 @@ class MailSystem(Plugin, PluginAPI):
         self.gc = f.get_game_control()
         self.hooks = {}
 
+    def read_cfg(self):
+        CFG_STD = {
+            "收到邮件提示": str,
+        }
+        CFG_DEFAULT = {
+            "收到邮件提示": "§7[§f!§7] §f收到新邮件: [邮件标题省略]"
+        }
+        self.cfg = Config.getPluginConfigAndVersion(
+            self.name, CFG_STD, CFG_DEFAULT
+        )
+        self.mail_notice = self.cfg["收到邮件提示"]
+
+    # ------- API ---------
+
     def add_func_hook(self, hook_name: str, func):
         self.hooks[hook_name] = func
 
     def send(self, who: str, mail: Mail):
-        self._store_mail(mail)
+        self._store_mail(who, mail)
+        if who in self.gc.allplayers:
+            self.gc.say_to(who, Builtins.SimpleFmt(
+                {"[邮箱标题省略]": mail.title[:20] + "..",
+                "[邮箱标题]": mail.title},
+                self.mail_notice
+            ))
+
+    # -----------------------
 
     @staticmethod
     def _valid_name(name: str, it):
@@ -64,3 +86,11 @@ class MailSystem(Plugin, PluginAPI):
         m.title = valid_name
         old[valid_name] = m.dump()
         JsonIO.writeFileTo("邮箱系统-玩家邮箱", who, old)
+
+    def _execute_mail(self, who: str, mail: Mail):
+        for itemid, (count, specid) in mail.give_items.items():
+            self.gc.sendwocmd(f"/give @a[name={who}] {itemid} {count} {specid}")
+        for cmd in mail.exec_cmds:
+            self.gc.sendwocmd(Builtins.SimpleFmt({"[玩家名]": who}, cmd))
+        for funchook, args in mail.func_hooks_and_args.items():
+            self.hooks[funchook](*args)

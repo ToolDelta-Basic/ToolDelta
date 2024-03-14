@@ -374,16 +374,16 @@ class Compiler(Plugin):
                         continue
                     case 5:
                         time.sleep(cmd[1])
-                    case 13:
+                    case 6:
                         seq1, seq2 = cmd[1]
                         old = tmpjson.read(path)
                         old[seq2] = loc_vars[seq1]
                         tmpjson.write(path, old)
-                    case 14:
+                    case 7:
                         seq1, seq2 = cmd[1]
                         old = tmpjson.read(path)
                         loc_vars[seq1] = old.get(seq2)
-                    case 15:
+                    case 8:
                         seq1, op, seq2, seq3 = cmd[1]
                         op = (
                             lambda x, y:x+y,
