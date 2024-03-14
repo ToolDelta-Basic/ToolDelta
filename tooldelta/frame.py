@@ -602,7 +602,7 @@ class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
         frame.basic_operation()
-        #self.Game_Data = GameTextsLoader().game_texts_data
+        self.Game_Data = GameTextsLoader().game_texts_data
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
