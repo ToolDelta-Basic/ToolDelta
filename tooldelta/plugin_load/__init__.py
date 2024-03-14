@@ -56,7 +56,7 @@ class PluginRegData:
     @property
     def plugin_type_str(self):
         return {
-            "classic": "组合式",
+            "classic": "主类式",
             "injected": "注入式",
             "dotcs": "DotCS",
             "unknown": "未知类型",
