@@ -91,13 +91,12 @@ class _Print:
 
 
     @staticmethod
-    def align(self, text: str, length=15):
-        with self.lock:
-            l = len(text)
-            for char in text:
-                if not char.isascii():
-                    l += 1
-            return text + " " * (length - l)
+    def align(text: str, length=15):
+        l = len(text)
+        for char in text:
+            if not char.isascii():
+                l += 1
+        return text + " " * (length - l)
 
     @staticmethod
     def _strike(text: str):

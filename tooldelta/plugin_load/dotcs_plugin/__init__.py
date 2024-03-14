@@ -171,6 +171,7 @@ def read_plugins(plugin_grp, module_env: dict):
                     plugin_grp.plugins_funcs[k].append(v)
                 plugin_grp.add_plugin(plugin)
                 plugin_grp.dotcs_plugin_loaded_num += 1
+                plugin_grp.loaded_plugins_name.append(plugin_name)
                 Print.print_suc(f"§a成功载入插件 §2<DotCS> §a{plugin.name}")
         except Exception as err:
             try:

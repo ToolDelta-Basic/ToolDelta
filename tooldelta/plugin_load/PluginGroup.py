@@ -3,11 +3,14 @@ import importlib
 import threading
 import time
 import traceback
+import asyncio
 from typing import Any, Callable, Type
 
+from tooldelta import constants
 from tooldelta.basic_mods import dotcs_module_env
 from tooldelta.color_print import Print
 from tooldelta.get_python_libs import get_single_lib
+from tooldelta.plugin_load.classic_plugin import Plugin
 from tooldelta.plugin_load import (
     classic_plugin,
     dotcs_plugin,
@@ -17,8 +20,6 @@ from tooldelta.plugin_load import (
     PluginAPINotFoundError,
     PluginAPIVersionError
 )
-from tooldelta.plugin_load.classic_plugin import Plugin
-
 
 class PluginGroup:
     plugins: list[Plugin] = []
@@ -26,7 +27,7 @@ class PluginGroup:
         "on_def": [],
         "on_inject": [],
         "on_player_prejoin": [],
-        "on_player_join": [],
+        "on_player_join": [],   
         "on_player_message": [],
         "on_player_death": [],
         "on_player_leave": [],
@@ -34,21 +35,22 @@ class PluginGroup:
     plugin_added_cache = {"plugin": None, "packets": []}
     pluginAPI_added_cache = []
 
-    def __init__(self, frame, PRG_NAME):
+    def __init__(self):
         self.listen_packet_ids = set()
         self.old_dotcs_env = {}
         self.dotcs_global_vars = {}
         self.packet_funcs: dict[str, list[Callable]] = {}
         self.plugins_api: dict[str, Plugin] = {}
         self.excType = 0
-        self.PRG_NAME = ""
         self._broadcast_evts = {}
         self.dotcs_plugin_loaded_num = 0
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
-        self.linked_frame = frame
-        self.PRG_NAME = PRG_NAME
         self.dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
+        self.loaded_plugins_name = []
+
+    def set_frame(self, frame):
+        self.linked_frame = frame
 
     @staticmethod
     def require(module_name: str, pip_name=""):
@@ -63,10 +65,19 @@ class PluginGroup:
             classic_plugin.read_plugins(self)
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
-        except Exception as err:
+        except Exception:
             err_str = '\n'.join(traceback.format_exc().split('\n')[1:])
             Print.print_err(f"加载插件出现问题: \n{err_str}")
             raise SystemExit
+        
+    def load_plugin_hot(self, plugin_name: str, plugin_type: str):
+        if plugin_type == "dotcs":
+            Print.print_war("暂时无法热载入DotCS插件")
+        elif plugin_type == "classic":
+            classic_plugin.load_plugin(plugin_name)
+        elif plugin_type == "injected":
+            asyncio.run(injected_plugin.load_plugin_file(plugin_name))
+        Print.print_suc(f"成功热加载插件: {plugin_name}")
 
     def add_broadcast_listener(self, evt_name: str):
         "将下面的方法作为一个广播事件接收器"
@@ -76,7 +87,6 @@ class PluginGroup:
                 self._broadcast_evts[evt_name].append(func)
             else:
                 self._broadcast_evts[evt_name] = [func]
-
         return deco
 
     def broadcastEvt(self, evt_name: str, **kwargs) -> list[Any] | None:
@@ -124,6 +134,7 @@ class PluginGroup:
                 )
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
+            return api_plugin
 
         return _add_plugin_2_api
 
@@ -283,3 +294,5 @@ class PluginGroup:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False
+
+plugin_group = PluginGroup()

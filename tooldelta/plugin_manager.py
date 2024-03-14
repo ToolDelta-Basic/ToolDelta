@@ -3,6 +3,11 @@ import os, platform, shutil
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_market import market
+from tooldelta.constants import (
+    TOOLDELTA_DOTCSEMU_PLUGIN,
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_INJECTED_PLUGIN
+)
 
 JsonIO = Builtins.SimpleJsonDataReader
 
@@ -52,7 +57,7 @@ class PluginRegData:
     @property
     def plugin_type_str(self):
         return {
-            "classic": "组合式",
+            "classic": "主类式",
             "injected": "注入式",
             "dotcs": "DotCS",
             "unknown": "未知类型",
@@ -96,9 +101,9 @@ class PluginManager:
         Print.clean_print(f" 描述: {description_fixed}")
         Print.clean_print(f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}")
         f_dirname = {
-            "dotcs": "原DotCS插件",
-            "classic": "ToolDelta组合式插件",
-            "injected": "ToolDelta注入式插件"
+            "dotcs": TOOLDELTA_DOTCSEMU_PLUGIN,
+            "classic": TOOLDELTA_CLASSIC_PLUGIN,
+            "injected": TOOLDELTA_INJECTED_PLUGIN
         }[plugin.plugin_type]
         match input(Print.clean_fmt("§f请选择选项: ")):
             case "1":
@@ -270,6 +275,11 @@ class PluginManager:
         r = JsonIO.readFileFrom(
             "主系统核心数据", self.plugin_reg_data_path, self.default_reg_data
         )
+        f_dirname = {
+            "dotcs": TOOLDELTA_DOTCSEMU_PLUGIN,
+            "classic": TOOLDELTA_CLASSIC_PLUGIN,
+            "injected": TOOLDELTA_INJECTED_PLUGIN
+        }
         res: list[PluginRegData] = []
         for _, r1 in r.items():
             for k, v in r1.items():
@@ -279,8 +289,9 @@ class PluginManager:
                     )
                 v.update({"name": k})
                 p = PluginRegData(k, v)
-                res.append(p)
-                r0[p.plugin_type].append(p.name)
+                if os.path.exists(os.path.join("插件文件", f_dirname[p.plugin_type], p.name)):
+                    res.append(p)
+                    r0[p.plugin_type].append(p.name)
         return r0, res
 
     def get_2_compare_plugins_reg(self):
@@ -288,9 +299,9 @@ class PluginManager:
         f_plugins: list[PluginRegData] = []
         reg_dict, reg_list = self.get_plugin_reg_name_dict_and_datas()
         for p, k in {
-            "原DotCS插件": "dotcs",
-            "ToolDelta组合式插件": "classic",
-            "ToolDelta注入式插件": "injected",
+            TOOLDELTA_DOTCSEMU_PLUGIN: "dotcs",
+            TOOLDELTA_CLASSIC_PLUGIN: "classic",
+            TOOLDELTA_INJECTED_PLUGIN: "injected",
         }.items():
             for i in os.listdir(os.path.join("插件文件", p)):
                 if i.replace("+disabled", "") not in reg_dict[k]:

@@ -25,6 +25,7 @@ plugin_group_cache = [None]
 def read_plugins(plugin_grp):
     plugin_group_cache[0] = plugin_grp
     PLUGIN_PATH = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
+    sys.path.append(os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN))
     for plugin_dir in os.listdir(PLUGIN_PATH):
         if not plugin_is_enabled(plugin_dir):
             continue
@@ -43,21 +44,20 @@ def read_plugins(plugin_grp):
         if os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir)):
             sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
             load_plugin(plugin_dir)
-            
+            plugin_grp.loaded_plugins_name.append(plugin_dir)
     
-def load_plugin(plugin_dir: str):
+def load_plugin(plugin_dirname: str):
     plugin_grp = plugin_group_cache[0]
     plugin_grp.plugin_added_cache["plugin"] = None
     plugin_grp.plugin_added_cache["packets"].clear()
     plugin_grp.pluginAPI_added_cache.clear()
     try:
         if os.path.isfile(
-            os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "__init__.py")
+            os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dirname, "__init__.py")
         ):
-            sys.path.append(os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN))
-            importlib.__import__(plugin_dir)
+            importlib.__import__(plugin_dirname)
         else:
-            Print.print_war(f"{plugin_dir} 文件夹 未发现插件文件, 跳过加载")
+            Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件, 跳过加载")
             return
         Builtins.simpleAssert(
             plugin_grp.plugin_added_cache["plugin"] is not None, 
@@ -117,21 +117,21 @@ def load_plugin(plugin_dir: str):
                         plugin_grp.linked_frame
                     )
             # 自动注册插件到插件管理器
-        plugin_manager.test_name_same(plugin_ins.name, plugin_dir)
+        plugin_manager.test_name_same(plugin_ins.name, plugin_dirname)
         if not plugin_manager.plugin_is_registered("classic", plugin_ins.name):
             plugin_manager.auto_register_plugin("classic", plugin_ins)
     except NotValidPluginError as err:
-        f"插件 {plugin_dir} 不合法: {err.args[0]}"
+        Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")
         raise SystemExit
     except Cfg.ConfigError as err:
-        Print.print_err(f"插件 {plugin_dir} 配置文件报错：{err}")
+        Print.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
         Print.print_err("你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
         raise SystemExit
     except Builtins.SimpleJsonDataReader.DataReadError as err:
-        Print.print_err(f"插件 {plugin_dir} 读取数据失败: {err}")
+        Print.print_err(f"插件 {plugin_dirname} 读取数据失败: {err}")
     except plugin_grp.linked_frame.SystemVersionException:
-        Print.print_err(f"插件 {plugin_dir} 需要更高版本的ToolDelta加载: {err}")
+        Print.print_err(f"插件 {plugin_dirname} 需要更高版本的ToolDelta加载: {err}")
     except Exception as err:
-        Print.print_err(f"加载插件 {plugin_dir} 出现问题, 报错如下: ")
+        Print.print_err(f"加载插件 {plugin_dirname} 出现问题, 报错如下: ")
         Print.print_err("§c" + traceback.format_exc())
         raise SystemExit

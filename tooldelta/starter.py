@@ -5,11 +5,11 @@ from tooldelta.frame import PRG_NAME, Frame
 from tooldelta.frame import GameCtrl
 from tooldelta.basic_mods import os, traceback, threading
 from tooldelta.color_print import Print
-from tooldelta.plugin_load.PluginGroup import PluginGroup
+from tooldelta.plugin_load.PluginGroup import plugin_group
 from tooldelta.plugin_load.injected_plugin import movent
 
 frame = Frame()
-plugins = PluginGroup(frame, PRG_NAME)
+plugin_group.set_frame(frame)
 game_control = GameCtrl(frame)
 def signal_handler(*arg):
     # 排除信号中断
@@ -24,12 +24,12 @@ def start_tool_delta():
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)
-        frame.set_plugin_group(plugins)
+        frame.set_plugin_group(plugin_group)
         movent.set_frame(frame)
         frame.read_cfg()
         game_control.init_funcs()
-        plugins.read_all_plugins()
-        frame.plugin_load_finished(plugins)
+        plugin_group.read_all_plugins()
+        frame.plugin_load_finished(plugin_group)
         builtins.tmpjson_save_thread()
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()

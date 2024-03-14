@@ -525,7 +525,7 @@ class Frame:
                 None,
                 "进入插件市场",
                 lambda _: plugin_market.market.enter_plugin_market(
-                    self.plugin_market_url
+                    self.plugin_market_url, in_game=True
                 ),
             )
             while 1:

@@ -4,12 +4,19 @@ import os
 import platform
 import shutil
 import tempfile
+import traceback
+import time
 from tooldelta import urlmethod
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_load import PluginRegData
 from tooldelta.cfg import Cfg
-from tooldelta.constants import PLUGIN_MARKET_SOURCE_OFFICIAL
+from tooldelta.constants import (
+    PLUGIN_MARKET_SOURCE_OFFICIAL,
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_DOTCSEMU_PLUGIN,
+    TOOLDELTA_INJECTED_PLUGIN
+)
 from typing import Dict
 
 if platform.system().lower() == "windows":
@@ -42,7 +49,7 @@ def _get_json_from_url(url: str):
 
 
 class PluginMarket:
-    def enter_plugin_market(self, source_url: str = None):
+    def enter_plugin_market(self, source_url: str = None, in_game = False):
         Print.clean_print("§6正在连接到插件市场..")
         try:
             market_datas = self.get_datas_from_market(source_url)
@@ -55,7 +62,8 @@ class PluginMarket:
             while True:
                 clear_screen()
                 Print.print_inf(
-                    market_datas["SourceName"] + ": " + market_datas["Greetings"]
+                    market_datas["SourceName"] + ": " + market_datas["Greetings"],
+                    need_log=False
                 )
                 now_page = int(now_index / 8) + 1
                 for i in range(now_index, now_index + 8):
@@ -65,11 +73,11 @@ class PluginMarket:
                         )
                         Print.print_inf(
                             f" {i + 1}. §e{plugin_data.name} §av{plugin_data.version_str} §b@{plugin_data.author} §d{plugin_data.plugin_type_str}插件",
-                            need_log=False,
+                            need_log=False
                         )
                     else:
                         Print.print_inf("")
-                Print.print_inf(f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页")
+                Print.print_inf(f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页", need_log=False)
                 Print.print_inf("§f输入插件序号选中插件并查看其下载页", need_log=False)
                 last_operation = (
                     (
@@ -89,17 +97,38 @@ class PluginMarket:
                     res = Builtins.try_int(last_operation)
                     if res:
                         if res in range(1, all_indexes + 1):
-                            r = self.choice_plugin(
-                                PluginRegData(
-                                    plugins_list[res - 1][0], plugins_list[res - 1][1]
-                                ),
+                            plugin_data = PluginRegData(
+                                plugins_list[res - 1][0], plugins_list[res - 1][1]
+                            )
+                            ok, pres = self.choice_plugin(
+                                plugin_data,
                                 market_datas["MarketPlugins"],
                             )
-                            if r:
-                                Print.print_inf("下载插件后重启ToolDelta才能生效", need_log=False)
+                            if ok:
+                                if in_game:
+                                    from tooldelta.plugin_load.PluginGroup import plugin_group
+                                    if plugin_data.name not in plugin_group.loaded_plugins_name:
+                                        resp = input(
+                                            Print.fmt_info(f"§f可以直接热加载该插件: {plugin_data.name}, 是否加载(§aY§f/§cN§f): ")
+                                        ).strip().lower()
+                                        if resp == "y":
+                                            for i in pres:
+                                                if i not in plugin_group.loaded_plugins_name:
+                                                    try:
+                                                        plugin_group.load_plugin_hot(i.name, i.plugin_type)
+                                                    except BaseException as err:
+                                                        Print.print_err(f"插件热加载出现问题: {err}")
+                                    else:
+                                        Print.print_inf("插件已存在, 若要更新版本, 请重启 ToolDelta", need_log=False)
+                                        r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
+                                else:
+                                    Print.print_inf("下载插件后重启ToolDelta才能生效", need_log=False)
                                 r = input(Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场"))
                                 if r.lower() == "q":
                                     break
+                            else:
+                                Print.print_inf("已取消.", need_log=False)
+                                time.sleep(1)
                         else:
                             Print.print_err("超出序号范围")
                 if now_index >= all_indexes:
@@ -109,8 +138,12 @@ class PluginMarket:
         except KeyError as err:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
             return
-        except Exception as err:
+        except requests.RequestException as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
+            return
+        except Exception as err:
+            Print.print_err(f"获取插件市场插件出现问题")
+            Print.print_err(traceback.format_exc())
             return
         clear_screen()
         Print.clean_print("§a已从插件市场返回 ToolDelta 控制台.")
@@ -141,19 +174,21 @@ class PluginMarket:
         Print.print_inf("", need_log=False)
         res = input(Print.fmt_info("§f下载 = §aY§f, 取消 = §cN§f, 请输入:")).lower().strip()
         if res == "y":
-            self.download_plugin(plugin_data, all_plugins_dict)
-            return True
-        return False
+            pres = self.download_plugin(plugin_data, all_plugins_dict)
+            pres.reverse()
+            return True, pres
+        return False, None
 
     def download_plugin(
         self,
         plugin_data: PluginRegData,
         all_plugins_dict: Dict[str, str],
     ):
+        pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
         for plugin_name in plugin_data.pre_plugins:
             Print.print_inf(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
-            self.download_plugin(
+            pres += self.download_plugin(
                 PluginRegData(plugin_name, all_plugins_dict[plugin_name]),
                 all_plugins_dict,
             )
@@ -169,13 +204,15 @@ class PluginMarket:
                 match plugin_data.plugin_type:
                     case "classic":
                         download_path = os.path.join(
-                            os.getcwd(), "插件文件", "ToolDelta组合式插件"
+                            "插件文件", TOOLDELTA_CLASSIC_PLUGIN
                         )
                     case "dotcs":
-                        download_path = os.path.join(os.getcwd(), "插件文件", "原DotCS插件")
+                        download_path = os.path.join(
+                            "插件文件", TOOLDELTA_DOTCSEMU_PLUGIN
+                        )
                     case "injected":
                         download_path = os.path.join(
-                            os.getcwd(), "插件文件", "ToolDelta注入式插件"
+                            "插件文件", TOOLDELTA_INJECTED_PLUGIN
                         )
                     case _:
                         raise Exception(
@@ -207,6 +244,7 @@ class PluginMarket:
             Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             shutil.rmtree(cache_dir)
+        return pres
 
     def find_dirs(self, plugin_data: PluginRegData):
         try:
