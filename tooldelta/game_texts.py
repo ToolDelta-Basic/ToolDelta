@@ -4,7 +4,7 @@ from typing import Dict
 from .color_print import Print
 from glob import glob
 
-class GameTextsLoader:
+class GameTextsLoader(object):
     def __init__(self) -> None:
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
@@ -65,3 +65,7 @@ class GameTextsLoader:
         except Exception as err:
             Print.print_war(f"Error extracting data archive: {err}")
             return False
+
+class Game_Texts_Handle(object):
+    def __init__(self, Game_Data: dict) -> None:
+        pass
