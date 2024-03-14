@@ -380,7 +380,7 @@ class OutputMessage:
 
 @dataclass
 class CommandOutput:
-    CommandOrigin: Optional[CommandOrigin] = None
+    CommandOrigin: Optional["CommandOrigin"] = None
     OutputType: int = 0
     SuccessCount: int = 0
     OutputMessages: Optional[List[OutputMessage]] = None
@@ -722,6 +722,7 @@ class ThreadOmega:
                 packetTypeName = retriever
                 if packetTypeName == "":
                     print("'', ignored")
+                    # TODO: some bugs
                 listeners = self._packet_listeners.get(packetTypeName, [])
                 if len(listeners) == 0:
                     LIB.OmitEvent()
