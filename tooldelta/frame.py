@@ -437,9 +437,11 @@ class Frame:
     @staticmethod
     def basic_operation():
         # 初始化文件夹
+        if os.path.isdir("插件文件/ToolDelta组合式插件"):
+            os.rename("插件文件/ToolDelta组合式插件", f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}")
         os.makedirs("插件文件/原DotCS插件", exist_ok=True)
-        os.makedirs("插件文件/ToolDelta注入式插件", exist_ok=True)
-        os.makedirs("插件文件/ToolDelta组合式插件", exist_ok=True)
+        os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
+        os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
@@ -600,7 +602,7 @@ class GameCtrl:
     # 游戏连接和交互部分
     def __init__(self, frame: Frame):
         frame.basic_operation()
-        self.Game_Data = GameTextsLoader().game_texts_data
+        #self.Game_Data = GameTextsLoader().game_texts_data
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []

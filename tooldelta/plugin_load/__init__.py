@@ -4,6 +4,20 @@ NON_FUNC = lambda *_: None
 class PluginSkip(EOFError):
     ...
 
+class NotValidPluginError(AssertionError):
+    # 仅加载插件时引发, 不是合法插件的报错
+    ...
+
+class PluginAPINotFoundError(ModuleNotFoundError):
+    def __init__(self, name):
+        self.name = name
+
+class PluginAPIVersionError(ModuleNotFoundError):
+    def __init__(self, name, m_ver, n_ver):
+        self.name = name
+        self.m_ver = m_ver
+        self.n_ver = n_ver
+
 class PluginRegData:
     def __init__(self, name: str, plugin_data: dict = None, is_registered=True, is_enabled=True):
         if plugin_data is None:

@@ -48,3 +48,6 @@ AUTH_SERVERS = [
     ("FastBuilder 官方验证服务器", "https://api.fastbuilder.pro"),
     ("咕咕酱 FB验证服务器", "https://liliya233.uk"),
 ]
+
+TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
+TOOLDELTA_INJECTED_PLUGIN = "ToolDelta注入式插件"

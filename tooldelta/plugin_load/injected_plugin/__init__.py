@@ -8,7 +8,11 @@ import threading
 
 from tooldelta.color_print import Print
 from tooldelta.plugin_manager import plugin_manager
-from tooldelta.plugin_load import plugin_is_enabled
+from tooldelta.plugin_load import (
+    plugin_is_enabled, 
+    PluginAPINotFoundError, 
+    PluginAPIVersionError
+)
 
 
 # 定义插件处理函数列表
@@ -172,19 +176,25 @@ async def execute_player_left(playername):
 
 
 async def load_plugin_file(file):
-    # 导入插件模块
-    module_name = file
-    sys.path.append(os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件"))
-    plugin_module = importlib.import_module(module_name)
-    meta_data = create_plugin_metadata(
-        getattr(plugin_module, "__plugin_meta__", {"name": module_name})
-    )
-    # 获取插件元数据
-    plugin_manager.test_name_same(meta_data.name, file)
-    if not plugin_manager.plugin_is_registered("injected", meta_data.name):
-        plugin_manager.auto_register_plugin("injected", meta_data)
-    return meta_data
-
+    try:
+        # 导入插件模块
+        module_name = file
+        sys.path.append(os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件"))
+        plugin_module = importlib.import_module(module_name)
+        meta_data = create_plugin_metadata(
+            getattr(plugin_module, "__plugin_meta__", {"name": module_name})
+        )
+        # 获取插件元数据
+        plugin_manager.test_name_same(meta_data.name, file)
+        if not plugin_manager.plugin_is_registered("injected", meta_data.name):
+            plugin_manager.auto_register_plugin("injected", meta_data)
+        return meta_data
+    except PluginAPIVersionError as err:
+        Print.print_err(f"插件 {file} 加载出现问题: 需要 {err.name} 的API最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")
+        raise
+    except PluginAPINotFoundError as err:
+        Print.print_err(f"插件 {file} 加载出现问题: 需要前置插件API {err.name}")
+        raise
 
 class PluginMetadata:
     def __init__(

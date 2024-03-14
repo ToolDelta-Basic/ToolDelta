@@ -20,7 +20,7 @@ def start_tool_delta():
     # 初始化系统
     try:
         # TODO: 自动更新需要时间间隔
-        threading.Thread(target=frame.ToolDeltaUpdater,name="Auto_update").start()
+        builtins.Builtins.createThread(frame.ToolDeltaUpdater, usage="Auto_update")
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)
@@ -30,7 +30,6 @@ def start_tool_delta():
         game_control.init_funcs()
         plugins.read_all_plugins()
         frame.plugin_load_finished(plugins)
-        plugins.execute_def(frame.on_plugin_err)
         builtins.tmpjson_save_thread()
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()

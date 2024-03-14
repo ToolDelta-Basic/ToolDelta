@@ -206,7 +206,6 @@ class PluginMarket:
             ))
             Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
-            # Clean up cache directory
             shutil.rmtree(cache_dir)
 
     def find_dirs(self, plugin_data: PluginRegData):

@@ -9,25 +9,18 @@ from tooldelta.basic_mods import dotcs_module_env
 from tooldelta.color_print import Print
 from tooldelta.get_python_libs import get_single_lib
 from tooldelta.plugin_load import (
-    NON_FUNC,
     classic_plugin,
     dotcs_plugin,
     injected_plugin,
+    NON_FUNC,
+    NotValidPluginError,
+    PluginAPINotFoundError,
+    PluginAPIVersionError
 )
 from tooldelta.plugin_load.classic_plugin import Plugin
 
 
 class PluginGroup:
-    class PluginAPINotFoundError(ModuleNotFoundError):
-        def __init__(self, name):
-            self.name = name
-
-    class PluginAPIVersionError(ModuleNotFoundError):
-        def __init__(self, name, m_ver, n_ver):
-            self.name = name
-            self.m_ver = m_ver
-            self.n_ver = n_ver
-
     plugins: list[Plugin] = []
     plugins_funcs: dict[str, list] = {
         "on_def": [],
@@ -56,7 +49,6 @@ class PluginGroup:
         self.linked_frame = frame
         self.PRG_NAME = PRG_NAME
         self.dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
-        self.linked_frame.linked_plugin_group = self
 
     @staticmethod
     def require(module_name: str, pip_name=""):
@@ -67,11 +59,13 @@ class PluginGroup:
 
     def read_all_plugins(self):
         try:
-            dotcs_plugin.read_plugin_from_old(self, dotcs_module_env)
-            classic_plugin.read_plugin_from_new(self, {})
+            dotcs_plugin.read_plugins(self, dotcs_module_env)
+            classic_plugin.read_plugins(self)
+            self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
         except Exception as err:
-            Print.print_err(f"加载插件出现问题: {err}")
+            err_str = '\n'.join(traceback.format_exc().split('\n')[1:])
+            Print.print_err(f"加载插件出现问题: \n{err_str}")
             raise SystemExit
 
     def add_broadcast_listener(self, evt_name: str):
@@ -102,11 +96,11 @@ class PluginGroup:
     def add_plugin(self, plugin):
         try:
             if not Plugin.__subclasscheck__(plugin):
-                raise AssertionError(1, f"插件主类必须继承Plugin类 而不是 {plugin}")
+                raise NotValidPluginError(f"插件主类必须继承Plugin类 而不是 {plugin}")
         except TypeError:
             if not Plugin.__subclasscheck__(type(plugin)):
-                raise AssertionError(
-                    1, f"插件主类必须继承Plugin类 而不是 {plugin.__class__.__name__}"
+                raise NotValidPluginError(
+                    f"插件主类必须继承Plugin类 而不是 {plugin.__class__.__name__}"
                 )
         self.plugin_added_cache["plugin"] = plugin
         return plugin
@@ -125,9 +119,8 @@ class PluginGroup:
     def add_plugin_as_api(self, apiName: str):
         def _add_plugin_2_api(api_plugin: Type[Plugin]):
             if not Plugin.__subclasscheck__(api_plugin):
-                raise AssertionError(
-                    1,
-                    "API插件API类必须继承Plugin类",
+                raise NotValidPluginError(
+                    "API插件主类必须继承Plugin类"
                 )
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
@@ -140,9 +133,9 @@ class PluginGroup:
         api = self.plugins_api.get(apiName)
         if api:
             if min_version and api.version < min_version:
-                raise self.PluginAPIVersionError(apiName, min_version, api.version)
+                raise PluginAPIVersionError(apiName, min_version, api.version)
             return api
-        raise self.PluginAPINotFoundError(apiName)
+        raise PluginAPINotFoundError(apiName)
 
     def checkSystemVersion(self, need_vers: tuple[int, int, int]):
         if need_vers > self.linked_frame.sys_data.system_version:
@@ -208,10 +201,10 @@ class PluginGroup:
         for name, func in self.plugins_funcs["on_def"]:
             try:
                 func()
-            except PluginGroup.PluginAPINotFoundError as err:
+            except PluginAPINotFoundError as err:
                 Print.print_err(f"插件 {name} 需要包含该种接口的前置组件: {err.name}")
                 raise SystemExit
-            except PluginGroup.PluginAPIVersionError as err:
+            except PluginAPIVersionError as err:
                 Print.print_err(
                     f"插件 {name} 需要该前置组件 {err.name} 版本: {err.m_ver}, 但是现有版本过低: {err.n_ver}"
                 )
