@@ -639,11 +639,13 @@ class GameCtrl:
 
     @Builtins.run_as_new_thread
     def packet_handler(self, pkt_type: int, pkt: dict):
+        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
+        if is_skiped:
+            return
         if pkt_type == PacketIDS.PlayerList:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
-        self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
 
     def process_player_list(self, pkt, plugin_group: PluginGroup):
         # 处理玩家进出事件
