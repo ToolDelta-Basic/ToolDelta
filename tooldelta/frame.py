@@ -649,12 +649,16 @@ class GameCtrl:
 
     def process_player_list(self, pkt, plugin_group: PluginGroup):
         # 处理玩家进出事件
+        res = self.launcher.get_players_and_uuids()
+        if res:
+            self.allplayers = list(res.keys())
+            self.players_uuid.update(res)
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
-                if playername not in self.allplayers:
+                if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
                     return
             else:
@@ -665,7 +669,7 @@ class GameCtrl:
                 else:
                     Print.print_war("无法获取PlayerList中玩家名字")
                     continue
-                if playername != "???":
+                if playername != "???" and not res:
                     self.allplayers.remove(playername)
                 Print.print_inf(f"§e{playername} 退出了游戏")
                 plugin_group.execute_player_leave(
@@ -742,7 +746,7 @@ class GameCtrl:
                     pass
 
     def Inject(self):
-        # 载入游戏时的初始化
+        # 载入游戏时的初始化）
         res = self.launcher.get_players_and_uuids()
         if res:
             self.allplayers = list(res.keys())
@@ -751,8 +755,8 @@ class GameCtrl:
             while 1:
                 try:
                     self.allplayers = (
-                        self.sendwscmd("/testfor @a", True)
-                        .OutputMessages[0]
+                        self.sendwscmd("/list", True)
+                        .OutputMessages[1]
                         .Parameters[0]
                         .split(", ")
                     )

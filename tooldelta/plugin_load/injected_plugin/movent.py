@@ -302,7 +302,7 @@ def getTickingAreaList() -> dict | AttributeError:
         AttributeError: 获取 tickingarea 列表失败
     """
     result = {}
-    cmd = sendcmd("/tickingarea list all-dimensions", True)
+    cmd = sendwscmd("/tickingarea list all-dimensions", True)
     if cmd is not None:
         resultList = cmd.OutputMessages
     else:
