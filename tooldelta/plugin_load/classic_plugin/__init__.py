@@ -15,11 +15,11 @@ class Plugin:
     version = (0, 0, 1)
     author = "?"
     description = "..."
-    
+
     @property
     def data_path(self):
         return os.path.join("插件数据文件", self.name)
-    
+
 plugin_group_cache = [None]
 
 def read_plugins(plugin_grp):
@@ -45,7 +45,7 @@ def read_plugins(plugin_grp):
             sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
             load_plugin(plugin_dir)
             plugin_grp.loaded_plugins_name.append(plugin_dir)
-    
+
 def load_plugin(plugin_dirname: str):
     plugin_grp = plugin_group_cache[0]
     plugin_grp.plugin_added_cache["plugin"] = None
@@ -60,7 +60,7 @@ def load_plugin(plugin_dirname: str):
             Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件, 跳过加载")
             return
         Builtins.simpleAssert(
-            plugin_grp.plugin_added_cache["plugin"] is not None, 
+            plugin_grp.plugin_added_cache["plugin"] is not None,
             NotValidPluginError("需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用")
         )
         plugin = plugin_grp.plugin_added_cache["plugin"]
