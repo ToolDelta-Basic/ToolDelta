@@ -222,7 +222,6 @@ class Frame:
                 f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}"
             )
 
-
     class ToolDeltaUpdater:
         def __init__(self):
             self.auto_update()
@@ -234,42 +233,99 @@ class Frame:
 
         def auto_update(self):
             try:
-                latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
+                latest_version = requests.get(
+                    "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"
+                ).json()["tag_name"]
                 current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
                 if latest_version == current_version:
                     # Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新")
                     return
-                if ".py" in os.path.basename(__file__) and ".pyc" not in os.path.basename(__file__):
-                    Print.print_load(f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!")
+                if ".py" in os.path.basename(
+                    __file__
+                ) and ".pyc" not in os.path.basename(__file__):
+                    Print.print_load(
+                        f"检测到最新版本 -> {latest_version}，请及时拉取最新版本代码!"
+                    )
                 else:
                     tooldelta_url = f"github.com/ToolDelta/ToolDelta/releases/download/{latest_version}"
-                    url = f"https://gh.con.sh/{tooldelta_url}/ToolDelta-linux" if platform.system() == "Linux" else f"https://gh.con.sh/{tooldelta_url}/ToolDelta-windows.exe"
-                    mirror_urls = [f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux", f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux"] if platform.system() == "Linux" else [f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe", f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe"]
-                    file_path = os.path.join(os.getcwd(), "ToolDelta-linux_new") if platform.system() == "Linux" else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
-                    fastest_url = next(iter(test_site_latency({"url": url, "mirror_url": mirror_urls})))
+                    url = (
+                        f"https://gh.con.sh/{tooldelta_url}/ToolDelta-linux"
+                        if platform.system() == "Linux"
+                        else f"https://gh.con.sh/{tooldelta_url}/ToolDelta-windows.exe"
+                    )
+                    mirror_urls = (
+                        [
+                            f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux",
+                            f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux",
+                        ]
+                        if platform.system() == "Linux"
+                        else [
+                            f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe",
+                            f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe",
+                        ]
+                    )
+                    file_path = (
+                        os.path.join(os.getcwd(), "ToolDelta-linux_new")
+                        if platform.system() == "Linux"
+                        else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
+                    )
+                    fastest_url = next(
+                        iter(test_site_latency({"url": url, "mirror_url": mirror_urls}))
+                    )
 
                     if not fastest_url:
-                        Print.print_war("在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!")
+                        Print.print_war(
+                            "在检测源速度时出现异常，所有镜像源以及官方源均无法访问，请检查网络是否正常!"
+                        )
                         return
 
-                    with Print.lock:Print.print_load(f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta")
+                    with Print.lock:
+                        Print.print_load(
+                            f"检测到最新版本 -> {latest_version}，正在下载最新版本的ToolDelta"
+                        )
                     download_file_multithreading(fastest_url[0], file_path)
 
                     if os.path.exists(file_path):
                         if platform.system() == "Windows":
-                            win_old_tool_delta_path = next(os.path.join(filewalks[0], files) for filewalks in os.walk(os.getcwd(), topdown=False) for files in filewalks[2] if ".exe" in files and "new" not in files and ("ToolDelta" in files or "tooldelta" in files))
+                            win_old_tool_delta_path = next(
+                                os.path.join(filewalks[0], files)
+                                for filewalks, _, files in os.walk(os.getcwd())
+                                if any(".exe" in file and "new" not in file and ("ToolDelta" in file or "tooldelta" in file) for file in files)
+                            )
 
-                        upgrade_script_path = "upgrade.sh" if platform.system() == "Linux" else "upgrade.bat"
-                        with open(upgrade_script_path, "w", encoding="utf-8") as upgrade_script:
-                            temp_shell = f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)} -l 1\nelse\n  exit\nfi' if platform.system() == "Linux" else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {os.path.basename(win_old_tool_delta_path)}"
+                        upgrade_script_path = (
+                            "upgrade.sh"
+                            if platform.system() == "Linux"
+                            else "upgrade.bat"
+                        )
+                        with open(
+                            upgrade_script_path, "w", encoding="utf-8"
+                        ) as upgrade_script:
+                            temp_shell = (
+                                f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)} -l 1\nelse\n  exit\nfi'
+                                if platform.system() == "Linux"
+                                else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {os.path.basename(win_old_tool_delta_path)}"
+                            )
                             upgrade_script.write(temp_shell)
-                        threading.Thread(target=tooldelta.safe_jump, kwargs={"exit_directly": True}).start()
-                        upgrade_process = subprocess.Popen(f"sh {upgrade_script_path}" if platform.system() == "Linux" else f"{upgrade_script_path}", cwd=os.getcwd(), shell=True)
+                        threading.Thread(
+                            target=tooldelta.safe_jump, kwargs={"exit_directly": True}
+                        ).start()
+                        upgrade_process = subprocess.Popen(
+                            (
+                                f"sh {upgrade_script_path}"
+                                if platform.system() == "Linux"
+                                else f"{upgrade_script_path}"
+                            ),
+                            cwd=os.getcwd(),
+                            shell=True,
+                        )
                         upgrade_process.communicate()
 
             except Exception as err:
-                Print.print_war(f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新: {err}")
+                Print.print_war(
+                    f"在检测最新版本或更新ToolDelta至最新版本时出现异常，ToolDelta将会在下次启动时重新更新: {err}"
+                )
 
     def read_cfg(self):
         # 读取启动配置等
@@ -438,7 +494,10 @@ class Frame:
     def basic_operation():
         # 初始化文件夹
         if os.path.isdir("插件文件/ToolDelta组合式插件"):
-            os.rename("插件文件/ToolDelta组合式插件", f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}")
+            os.rename(
+                "插件文件/ToolDelta组合式插件",
+                f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}",
+            )
         os.makedirs("插件文件/原DotCS插件", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
@@ -534,7 +593,7 @@ class Frame:
                     res = sys.stdin.read(1)
                     if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
                         break
-                    if res == "":
+                    if res == "" or res == "^C":
                         Print.print_inf("使用 Ctrl+C 退出中...")
                         self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()
@@ -662,11 +721,11 @@ class GameCtrl:
                     self.allplayers.append(playername)
                     return
             else:
-                for k in self.players_uuid:
-                    if self.players_uuid[k] == player["UUID"]:
-                        playername = k
-                        break
-                else:
+                playername = next(
+                    (k for k, v in self.players_uuid.items() if v == player["UUID"]),
+                    None,
+                )
+                if playername is None:
                     Print.print_war("无法获取PlayerList中玩家名字")
                     continue
                 if playername != "???" and not res:
@@ -739,9 +798,9 @@ class GameCtrl:
             case 9:
                 msg = pkt["Message"]
                 try:
-                    Print.print_inf(
-                        "".join([i["text"] for i in json.loads(msg)["rawtext"]])
-                    )
+                    msg_text = json.loads(msg)["rawtext"]
+                    msg_text = "".join([i["text"] for i in msg_text])
+                    Print.print_inf(msg_text)
                 except:
                     pass
 
