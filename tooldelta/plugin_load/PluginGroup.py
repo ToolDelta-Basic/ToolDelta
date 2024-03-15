@@ -27,7 +27,7 @@ class PluginGroup:
         "on_def": [],
         "on_inject": [],
         "on_player_prejoin": [],
-        "on_player_join": [],   
+        "on_player_join": [],
         "on_player_message": [],
         "on_player_death": [],
         "on_player_leave": [],
@@ -69,7 +69,7 @@ class PluginGroup:
             err_str = '\n'.join(traceback.format_exc().split('\n')[1:])
             Print.print_err(f"加载插件出现问题: \n{err_str}")
             raise SystemExit
-        
+
     def load_plugin_hot(self, plugin_name: str, plugin_type: str):
         if plugin_type == "dotcs":
             Print.print_war("暂时无法热载入DotCS插件")
@@ -146,7 +146,7 @@ class PluginGroup:
             if min_version and api.version < min_version:
                 raise PluginAPIVersionError(apiName, min_version, api.version)
             return api
-        raise PluginAPINotFoundError(apiName)
+        raise PluginAPINotFoundError(f"无法找到API插件：{apiName}")
 
     def checkSystemVersion(self, need_vers: tuple[int, int, int]):
         if need_vers > self.linked_frame.sys_data.system_version:
