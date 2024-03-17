@@ -431,8 +431,7 @@ def examplefunc2():
     res, err = Compiler(Frame()).script_parse(example)
     if err:
         raise err
-    else:
-        print(res)
+    print(res)
 
 if __name__ == "__main__":
     examplefunc2()
