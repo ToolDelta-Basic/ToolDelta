@@ -28,7 +28,7 @@ from tooldelta.basic_mods import (
 from tooldelta.cfg import Cfg as _Cfg
 from tooldelta.logger import publicLogger
 from tooldelta.plugin_load.PluginGroup import PluginGroup
-from tooldelta.game_texts import GameTextsLoader, Game_Texts_Handle
+from tooldelta.game_texts import GameTextsLoader
 from tooldelta.urlmethod import download_file_multithreading, test_site_latency
 from tooldelta.sys_args import sys_args_to_dict
 from tooldelta.launch_cli import (
@@ -835,7 +835,6 @@ class GameCtrl:
         asyncio.run(execute_init())
         Print.print_suc("初始化注入式函数init任务执行完毕")
         self.inject_welcome()
-        Game_Texts_Handle(self.Game_Data)
 
     def inject_welcome(self):
         # 载入游戏后的欢迎提示语

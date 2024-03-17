@@ -65,7 +65,3 @@ class GameTextsLoader:
         except Exception as err:
             Print.print_war(f"Error extracting data archive: {err}")
             return False
-
-class Game_Texts_Handle:
-    def __init__(self, Game_Data: dict) -> None:
-        raise NotImplementedError()
