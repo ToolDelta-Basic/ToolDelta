@@ -135,7 +135,8 @@ class Compiler(Plugin):
             assert len(args) == nlen, f"需要参数数量 {nlen} 个， 实际上 {len(args)} 个"
         def _simple_assert_ln(ln):
             # 简单地判断代码行数是否合法
-            assert ln in scr_lines_register, f"不存在第 {int(ln, 16)} 行代码"
+            if ln not in scr_lines_register:
+                raise AssertionError(f"不存在第 {int(ln, 16)} 行代码")
         _get_var_type = lambda varname : loc_vars_register.get(varname)
         _easy_hex = lambda x: hex(x)[2:]
         try:
@@ -167,7 +168,8 @@ class Compiler(Plugin):
                         _add_cmp(1, scr_lines_finder[seq1])
                         # 跳转到 <代码行数>
                     case "执行" | "执行指令":
-                        assert len(args) > 1, "执行命令 至少需要2个参数"
+                        if len(args) <= 1:
+                            raise AssertionError("执行命令 至少需要2个参数")
                         seq1 = " ".join(args[1:])
                         _add_cmp(2, seq1)
                         # 执行 <mc指令>
@@ -176,8 +178,10 @@ class Compiler(Plugin):
                         md: 0=const_int, 1=const_str, 2=等待聊天栏输入, 3=等待聊天栏输入纯数字, 4=玩家计分板分数, 5=玩家坐标 
                         md2: 0=int, 1=str 
                         """
-                        assert len(args) > 2, "设定命令 至少需要2个参数"
-                        assert args[2] == "为", "语法错误"
+                        if len(args) <= 2:
+                            raise AssertionError("设定命令 至少需要2个参数")
+                        if args[2] != "为":
+                            raise AssertionError("语法错误")
                         seq1 = args[1]
                         seq2 = args[3]
                         res = None
@@ -208,7 +212,8 @@ class Compiler(Plugin):
                             md2 = 0
                         else:
                             raise AssertionError(f"无法识别的表达式: " + " ".join(args[3:]))
-                        assert not(loc_vars_register.get(seq1)is not None and loc_vars_register.get(seq1) != md2), "变量类型已被定义, 无法更改"
+                        if (loc_vars_register.get(seq1)is not None and loc_vars_register.get(seq1) != md2):
+                            raise AssertionError("变量类型已被定义, 无法更改")
                         loc_vars_register[seq1] = md2
                         _add_cmp(3, [md, md2, seq1, res])
                         # 设定变量 设定模式, 变量类型, 变量名[, 值]
@@ -217,9 +222,10 @@ class Compiler(Plugin):
                         _simple_assert_len(args, 6)
                         seq1 = args[1]
                         seq2 = args[3]
-                        assert _get_var_type(seq1) is not None and _get_var_type(seq2) is not None, (
-                            f"变量 {seq1} 或 变量 {seq2} 还没有被设定 (判断语句中暂时无法直接使用非变量, 你可以先设定变量)"
-                        )
+                        if not (_get_var_type(seq1) is not None and _get_var_type(seq2) is not None):
+                            raise AssertionError(
+                                f"变量 {seq1} 或 变量 {seq2} 还没有被设定 (判断语句中暂时无法直接使用非变量, 你可以先设定变量)"
+                            )
                         match args[2]:
                             case "=" | "==": args[2] = 0
                             case "!=" | "=!": args[2] = 1
@@ -229,9 +235,10 @@ class Compiler(Plugin):
                             case ">=": args[2] = 5
                             case _:
                                 raise AssertionError("判断操作符只能为 <, >, ==, <=, >= !=")
-                        assert args[4].startswith("成立=跳转到") and args[5].startswith("不成立=跳转到"), (
-                            "判断命令: 第5、6个参数应为： 成立=跳转到<脚本行数>, 不成立=跳转到<脚本行数>"
-                        )
+                        if not (args[4].startswith("成立=跳转到") and args[5].startswith("不成立=跳转到")):
+                            raise AssertionError(
+                                "判断命令: 第5、6个参数应为： 成立=跳转到<脚本行数>, 不成立=跳转到<脚本行数>"
+                            )
                         if args[2] in [2, 3, 4, 5] and (_get_var_type(seq1) != 0 or _get_var_type(seq2) != 0):
                             raise AssertionError("判断命令: 暂时只能比较数值变量大小")
                         try:
@@ -247,26 +254,33 @@ class Compiler(Plugin):
                         _simple_assert_len(args, 2)
                         try:
                             seq1 = float(args[1])
-                            assert seq1 > 0
+                            if seq1 <= 0:
+                                raise AssertionError
                         except:
                             raise AssertionError(f"等待命令 参数应为正整数, 为秒数")
                         _add_cmp(5, seq1)
                     case "导出变量" | "存储变量":
                         _simple_assert_len(args, 4)
-                        assert args[2] == "->", "导出个人变量格式应为 内存变量名 -> 磁盘变量名"
-                        assert args[1] in loc_vars_register, f"变量 {args[1]} 未定义, 不能使用, 请先设定"
+                        if args[2] != "->":
+                            raise AssertionError("导出个人变量格式应为 内存变量名 -> 磁盘变量名")
+                        if args[1] not in loc_vars_register:
+                            raise AssertionError(f"变量 {args[1]} 未定义, 不能使用, 请先设定")
                         _add_cmp(6, (args[1], args[3]))
                     case "读取变量":
                         _simple_assert_len(args, 6)
-                        assert args[2] == "<-" and args[4] == "类型为" and args[5] in ["数值", "字符串"], "读取个人变量格式应为 内存变量名 <- 磁盘变量名 类型为 数字/字符串"
+                        if not (args[2] == "<-" and args[4] == "类型为" and args[5] in ["数值", "字符串"]):
+                            raise AssertionError("读取个人变量格式应为 内存变量名 <- 磁盘变量名 类型为 数字/字符串")
                         _add_cmp(7, (args[1], args[3]))
                         loc_vars_register[args[1]] = ["数值", "字符串"].index(args[5])
                     case "简单运算":
                         # var1 <- var2 () var3
                         _simple_assert_len(args, 6)
-                        assert args[2] == "<-" and args[4] in ["+", "-", "*", "/", "%"], f"格式不正确: 应为 变量 <- 变量1 运算符 变量2"
-                        assert args[3] in loc_vars_register and args[5] in loc_vars_register, f"变量 {args[3]} 或 {args[5]} 未定义, 不能使用, 请先设定"
-                        assert loc_vars_register[args[3]] == loc_vars_register[args[5]] == 0, "只能对数值型变量进行运算"
+                        if not (args[2] == "<-" and args[4] in ["+", "-", "*", "/", "%"]):
+                            raise AssertionError(f"格式不正确: 应为 变量 <- 变量1 运算符 变量2")
+                        if not (args[3] in loc_vars_register and args[5] in loc_vars_register):
+                            raise AssertionError(f"变量 {args[3]} 或 {args[5]} 未定义, 不能使用, 请先设定")
+                        if not loc_vars_register[args[3]] == loc_vars_register[args[5]] == 0:
+                            raise AssertionError("只能对数值型变量进行运算")
                         loc_vars_register[args[1]] = 0
                         _add_cmp(8, (args[1], ["+", "-", "*", "/", "%"].index(args[4]), args[3], args[5]))
                     case _:
