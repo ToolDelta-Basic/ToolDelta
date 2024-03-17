@@ -298,11 +298,6 @@ class Compiler(Plugin):
         """"
         执行传入的指令码
         """
-        #last_save_pos = tmpjson.read(self.get_player_plot_path(player))["plots_progress"].get(plot_name)
-        #if last_save_pos is not None:
-        #    pointer = last_save_pos
-        #else:
-        #    pointer = 0
         if pre_variables.get("玩家名") is not None:
             player = pre_variables.get("玩家名")
             path = self.get_player_plot_path(player)
