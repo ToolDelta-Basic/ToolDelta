@@ -78,9 +78,9 @@ class PluginManager:
             r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
             if r.strip() == "":
                 continue
-            elif r.lower() == "q":
+            if r.lower() == "q":
                 return
-            elif r.lower() == "u":
+            if r.lower() == "u":
                 self.update_all_plugins(
                     self.get_plugin_reg_name_dict_and_datas()[1]
                 )
@@ -112,15 +112,14 @@ class PluginManager:
                 ).lower()
                 if r != "y":
                     return
-                else:
-                    plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
-                    shutil.rmtree(
-                        plugin_dir + ("+disabled" if not plugin.is_enabled else "")
-                    )
-                    Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
-                    self.pop_plugin_reg_data(plugin)
-                    input()
-                    return
+                plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
+                shutil.rmtree(
+                    plugin_dir + ("+disabled" if not plugin.is_enabled else "")
+                )
+                Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
+                self.pop_plugin_reg_data(plugin)
+                input()
+                return
             case "2":
                 latest_version = market.get_latest_plugin_version(plugin.plugin_type, plugin.name)
                 if latest_version is None:
@@ -160,7 +159,7 @@ class PluginManager:
             s_data = market_datas.get(i.name)
             if s_data is None:
                 continue
-            elif i.version_str != s_data["version"]:
+            if i.version_str != s_data["version"]:
                 need_updates.append((i, s_data["version"]))
         if need_updates:
             clear_screen()
@@ -183,7 +182,7 @@ class PluginManager:
         if res == []:
             Print.clean_print("§c没有任何已安装插件匹配得上关键词")
             return None
-        elif len(res) > 1:
+        if len(res) > 1:
             Print.clean_print("§a☑ §f关键词查找到的插件:")
             for i, plugin in enumerate(res):
                 Print.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
@@ -191,10 +190,8 @@ class PluginManager:
             if r is None or r not in range(1, len(res) + 1):
                 Print.clean_print("§c序号无效, 回车键继续")
                 return None
-            else:
-                return res[r - 1]
-        else:
-            return res[0]
+            return res[r - 1]
+        return res[0]
 
     @staticmethod
     def search_plugin_by_kw(kws: list[str], plugins: list[PluginRegData]):

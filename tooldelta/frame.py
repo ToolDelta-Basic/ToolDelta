@@ -335,7 +335,7 @@ class Frame:
             )
             Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
             while True:
-                if Login_method.isdigit() == False:
+                if Login_method.isdigit() is False:
                     Login_method = input(
                         Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
                     )
@@ -593,7 +593,7 @@ class Frame:
                     res = sys.stdin.read(1)
                     if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
                         break
-                    if res == "" or res == "^C":
+                    if res in ("", "^C"):
                         Print.print_inf("使用 Ctrl+C 退出中...")
                         self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()

@@ -11,7 +11,7 @@ class NES_Music_Studio(Plugin):
 
         def format_seq(self, seqs):
             return []
-        
+
         def playsound(self, seq, cmd_fmt):
             ...
 

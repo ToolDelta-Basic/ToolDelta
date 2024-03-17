@@ -261,9 +261,7 @@ class Builtins:
 
     @staticmethod
     def try_int(arg: Any) -> Optional[int]:
-        """
-        尝试将提供的参数化为int类型并返回, 否则返回None
-        """
+        """尝试将提供的参数化为int类型并返回, 否则返回None"""
         try:
             return int(arg)
         except:
