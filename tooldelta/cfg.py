@@ -170,7 +170,7 @@ class Cfg:
             raise ValueError(
                 f'JSON键 "{fromkey}"未曾遇到过的类型: {standard.__class__.__name__}, 另外两个参数 standard={standard}, val={val}'
             )
-    
+
     def check_dict_2(self, pattern: dict, jsondict: dict):
         """
         按照给定的标准配置样式比对传入的配置文件jsondict, 对不上则引发相应异常

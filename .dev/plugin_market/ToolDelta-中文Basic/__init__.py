@@ -80,7 +80,7 @@ class Compiler(Plugin):
         for k, v in re_list2:
             res[k] = v
         return res
-    
+
     def on_def(self):
         self.funclib = plugins.get_plugin_api("基本插件功能库")
 
@@ -107,7 +107,7 @@ class Compiler(Plugin):
     def make_dirs(self):
         os.makedirs(os.path.join(self.data_path, "player_vars"), exist_ok = True)
         os.makedirs(os.path.join(self.data_path, "脚本文件"))
-    
+
     def script_parse(self, scripts: str, pre_variables_reg = None):
         """
         将脚本编译为执行器可以执行的命令序列.
@@ -279,7 +279,7 @@ class Compiler(Plugin):
             return cmp_scripts, None
         except AssertionError as err:
             return None, AssertionError(f"第{ln}行 出现问题: {err}")
-        
+
     def execute_script(self, script_name: str, pre_variables: None | dict = None):
         """"
         执行传入的指令码
@@ -398,7 +398,7 @@ class Compiler(Plugin):
             Print.print_war(f"玩家 {player} 在脚本执行结束之前退出了游戏")
         except self.ScriptExit:
             ...
-        
+
     @staticmethod
     def var_replace(loc_vars: dict[str, object], sub: str):
         myrule = re.compile(r"(\[变量:([^\]]*)\])")

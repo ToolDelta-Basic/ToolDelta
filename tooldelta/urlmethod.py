@@ -149,10 +149,10 @@ def download_unknown_file(url: str, save_dir: str) -> None:
 def test_site_latency(Da: dict) -> list:
     tmp_speed = {}
     urls = [Da["url"]] + Da["mirror_url"]
-    
+
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(measure_latencyt, url) for url in urls]
-        
+
         for future, url in zip(as_completed(futures), urls):
             try:
                 latency = future.result(timeout=5)
