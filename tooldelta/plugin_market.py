@@ -142,7 +142,7 @@ class PluginMarket:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             return
         except Exception as err:
-            Print.print_err(f"获取插件市场插件出现问题")
+            Print.print_err("获取插件市场插件出现问题")
             Print.print_err(traceback.format_exc())
             return
         clear_screen()

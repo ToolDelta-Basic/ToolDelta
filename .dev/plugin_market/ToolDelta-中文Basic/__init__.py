@@ -211,7 +211,7 @@ class Compiler(Plugin):
                             md = 6
                             md2 = 0
                         else:
-                            raise AssertionError(f"无法识别的表达式: " + " ".join(args[3:]))
+                            raise AssertionError("无法识别的表达式: " + " ".join(args[3:]))
                         if (loc_vars_register.get(seq1)is not None and loc_vars_register.get(seq1) != md2):
                             raise AssertionError("变量类型已被定义, 无法更改")
                         loc_vars_register[seq1] = md2
@@ -257,7 +257,7 @@ class Compiler(Plugin):
                             if seq1 <= 0:
                                 raise AssertionError
                         except:
-                            raise AssertionError(f"等待命令 参数应为正整数, 为秒数")
+                            raise AssertionError("等待命令 参数应为正整数, 为秒数")
                         _add_cmp(5, seq1)
                     case "导出变量" | "存储变量":
                         _simple_assert_len(args, 4)
@@ -276,7 +276,7 @@ class Compiler(Plugin):
                         # var1 <- var2 () var3
                         _simple_assert_len(args, 6)
                         if not (args[2] == "<-" and args[4] in ["+", "-", "*", "/", "%"]):
-                            raise AssertionError(f"格式不正确: 应为 变量 <- 变量1 运算符 变量2")
+                            raise AssertionError("格式不正确: 应为 变量 <- 变量1 运算符 变量2")
                         if not (args[3] in loc_vars_register and args[5] in loc_vars_register):
                             raise AssertionError(f"变量 {args[3]} 或 {args[5]} 未定义, 不能使用, 请先设定")
                         if not loc_vars_register[args[3]] == loc_vars_register[args[5]] == 0:

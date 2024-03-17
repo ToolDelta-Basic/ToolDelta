@@ -153,7 +153,7 @@ class Frame:
                 self.if_token()
             if not repo_success:
                 if "Invalid username, password, or MFA code." in repo_message:
-                    Print.print_war(f"登陆失败，无效的用户名、密码或MFA代码!")
+                    Print.print_war("登陆失败，无效的用户名、密码或MFA代码!")
                     self.login_fbuc()
             else:
                 with_perfix: dict = json.loads(
