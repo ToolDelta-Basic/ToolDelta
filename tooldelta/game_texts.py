@@ -58,11 +58,10 @@ class GameTextsLoader:
 
     def extract_data_archive(self, zip_path: str) -> bool:
         try:
-            with gzip.open(zip_path, 'rb') as f_in:
-                with tarfile.open(fileobj=f_in, mode='r') as tar:
-                    tar.extractall(self.base_path)
-                    open(os.path.join(self.base_path, "src_tree.json"), 'w').write(json.dumps(tar.getnames()))
-                    return True
+            with gzip.open(zip_path, 'rb') as f_in, tarfile.open(fileobj=f_in, mode='r') as tar:
+                tar.extractall(self.base_path)
+                open(os.path.join(self.base_path, "src_tree.json"), 'w').write(json.dumps(tar.getnames()))
+                return True
         except Exception as err:
             Print.print_war(f"Error extracting data archive: {err}")
             return False
