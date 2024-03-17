@@ -9,7 +9,8 @@ class NES_Music_Studio(Plugin):
     class SoundChip:
         channels_count = 0
 
-        def format_seq(self, seqs):
+        @staticmethod
+        def format_seq(seqs):
             return []
 
         def playsound(self, seq, cmd_fmt):

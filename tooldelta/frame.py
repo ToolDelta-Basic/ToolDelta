@@ -231,7 +231,8 @@ class Frame:
             # 每24小时检查一次更新
             threading.Timer(24 * 60 * 60, self.auto_update).start()
 
-        def auto_update(self):
+        @staticmethod
+        def auto_update():
             try:
                 latest_version = requests.get(
                     "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"

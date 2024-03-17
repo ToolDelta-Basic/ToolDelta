@@ -11,7 +11,8 @@ class GameTextsLoader(object):
         self.start_auto_update_thread()
         self.game_texts_data: Dict[str, str] = self.load_data()
 
-    def get_latest_version(self) -> str:
+    @staticmethod
+    def get_latest_version() -> str:
         return re.match(r"(\d+\.\d+\.\d+)", requests.get("https://api.github.com/repos/ToolDelta/ToolDelta-Game_Texts/releases/latest", verify=False).json()["tag_name"]).group()
 
     def check_initial_run(self) -> None:
