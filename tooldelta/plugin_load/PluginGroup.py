@@ -48,6 +48,7 @@ class PluginGroup:
         self.injected_plugin_loaded_num = 0
         self.dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
         self.loaded_plugins_name = []
+        self.linked_frame = None
 
     def set_frame(self, frame):
         self.linked_frame = frame
@@ -106,7 +107,14 @@ class PluginGroup:
             return callback_list
         return None
 
-    def add_plugin(self, plugin):
+    def test_plugin(self, plugin: Plugin):
+        if self.linked_frame is None:
+            # 很可能是直接单独运行此插件的代码.
+            Print.clean_print(f"插件主类信息({plugin.name}): ")
+            Print.clean_print(f" - 作者: {plugin.author}\n - 版本: {plugin.version}")
+            Print.clean_print(f" - 数据包监听: {', '.join(str(i) for i in self.listen_packet_ids)}")
+
+    def add_plugin(self, plugin: Plugin):
         try:
             if not Plugin.__subclasscheck__(plugin):
                 raise NotValidPluginError(f"插件主类必须继承Plugin类 而不是 {plugin}")
@@ -116,6 +124,7 @@ class PluginGroup:
                     f"插件主类必须继承Plugin类 而不是 {plugin.__class__.__name__}"
                 )
         self.plugin_added_cache["plugin"] = plugin
+        self.test_plugin(plugin)
         return plugin
 
     def add_packet_listener(self, pktID):
@@ -137,6 +146,7 @@ class PluginGroup:
                 )
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
+            self.test_plugin(api_plugin)
             return api_plugin
 
         return _add_plugin_2_api

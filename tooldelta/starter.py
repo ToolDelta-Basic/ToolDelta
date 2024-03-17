@@ -1,7 +1,7 @@
 import signal
 import time
 from tooldelta import builtins
-from tooldelta.frame import PRG_NAME, Frame
+from tooldelta.frame import Frame
 from tooldelta.frame import GameCtrl
 from tooldelta.basic_mods import os, traceback, threading
 from tooldelta.color_print import Print
@@ -34,7 +34,8 @@ def start_tool_delta():
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
         raise frame.launcher.launch()
-    except (KeyboardInterrupt, SystemExit):pass
+    except (KeyboardInterrupt, SystemExit):
+        pass
     except:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
 

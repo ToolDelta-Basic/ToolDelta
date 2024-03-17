@@ -856,8 +856,11 @@ class ThreadOmega:
         return self._packet_id_to_name_mapping[requires]
 
     def listen_packets(
-        self, targets: Union[str, List[str]], callback: Callable[[str, Any], None]
+        self, targets: Union[str, List[str]], callback: Callable[[str, Any], None], clr_datas = False
     ):
+        if clr_datas:
+            for k in self._packet_listeners.copy().keys():
+                self._packet_listeners[k].clear()
         if isinstance(targets, str):
             targets = [targets]
         if isinstance(targets, int):
