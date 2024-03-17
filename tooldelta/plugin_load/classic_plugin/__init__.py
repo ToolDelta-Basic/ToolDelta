@@ -46,7 +46,7 @@ def read_plugins(plugin_grp):
             load_plugin(plugin_dir)
             plugin_grp.loaded_plugins_name.append(plugin_dir)
 
-def load_plugin(plugin_dirname: str):
+def load_plugin(plugin_dirname: str, hot_load = False):
     plugin_grp = plugin_group_cache[0]
     plugin_grp.plugin_added_cache["plugin"] = None
     plugin_grp.plugin_added_cache["packets"].clear()
@@ -120,6 +120,7 @@ def load_plugin(plugin_dirname: str):
         plugin_manager.test_name_same(plugin_ins.name, plugin_dirname)
         if not plugin_manager.plugin_is_registered("classic", plugin_ins.name):
             plugin_manager.auto_register_plugin("classic", plugin_ins)
+        return plugin_ins
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")
         raise SystemExit
@@ -135,3 +136,4 @@ def load_plugin(plugin_dirname: str):
         Print.print_err(f"加载插件 {plugin_dirname} 出现问题, 报错如下: ")
         Print.print_err("§c" + traceback.format_exc())
         raise SystemExit
+    return None

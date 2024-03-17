@@ -71,12 +71,15 @@ class PluginGroup:
             raise SystemExit
 
     def load_plugin_hot(self, plugin_name: str, plugin_type: str):
+        plugin = None
         if plugin_type == "dotcs":
             Print.print_war("暂时无法热载入DotCS插件")
         elif plugin_type == "classic":
-            classic_plugin.load_plugin(plugin_name)
+            plugin = classic_plugin.load_plugin(plugin_name, True)
         elif plugin_type == "injected":
             asyncio.run(injected_plugin.load_plugin_file(plugin_name))
+        if plugin is not None:
+            plugin.on_def()
         Print.print_suc(f"成功热加载插件: {plugin_name}")
 
     def add_broadcast_listener(self, evt_name: str):
