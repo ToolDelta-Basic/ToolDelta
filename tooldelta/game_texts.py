@@ -4,14 +4,15 @@ from typing import Dict
 from .color_print import Print
 from glob import glob
 
-class GameTextsLoader(object):
+class GameTextsLoader:
     def __init__(self) -> None:
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
         self.start_auto_update_thread()
         self.game_texts_data: Dict[str, str] = self.load_data()
 
-    def get_latest_version(self) -> str:
+    @staticmethod
+    def get_latest_version() -> str:
         return re.match(r"(\d+\.\d+\.\d+)", requests.get("https://api.github.com/repos/ToolDelta/ToolDelta-Game_Texts/releases/latest", verify=False).json()["tag_name"]).group()
 
     def check_initial_run(self) -> None:
@@ -57,15 +58,14 @@ class GameTextsLoader(object):
 
     def extract_data_archive(self, zip_path: str) -> bool:
         try:
-            with gzip.open(zip_path, 'rb') as f_in:
-                with tarfile.open(fileobj=f_in, mode='r') as tar:
-                    tar.extractall(self.base_path)
-                    open(os.path.join(self.base_path, "src_tree.json"), 'w').write(json.dumps(tar.getnames()))
-                    return True
+            with gzip.open(zip_path, 'rb') as f_in, tarfile.open(fileobj=f_in, mode='r') as tar:
+                tar.extractall(self.base_path)
+                open(os.path.join(self.base_path, "src_tree.json"), 'w').write(json.dumps(tar.getnames()))
+                return True
         except Exception as err:
             Print.print_war(f"Error extracting data archive: {err}")
             return False
 
-class Game_Texts_Handle(object):
+class Game_Texts_Handle:
     def __init__(self, Game_Data: dict) -> None:
-        pass
+        raise NotImplementedError()

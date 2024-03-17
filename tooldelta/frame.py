@@ -153,7 +153,7 @@ class Frame:
                 self.if_token()
             if not repo_success:
                 if "Invalid username, password, or MFA code." in repo_message:
-                    Print.print_war(f"登陆失败，无效的用户名、密码或MFA代码!")
+                    Print.print_war("登陆失败，无效的用户名、密码或MFA代码!")
                     self.login_fbuc()
             else:
                 with_perfix: dict = json.loads(
@@ -231,7 +231,8 @@ class Frame:
             # 每24小时检查一次更新
             threading.Timer(24 * 60 * 60, self.auto_update).start()
 
-        def auto_update(self):
+        @staticmethod
+        def auto_update():
             try:
                 latest_version = requests.get(
                     "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"
@@ -756,7 +757,7 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    death_message = self.Game_Data.get(pkt["Message"], None)
+                    death_message = self.Game_Data.get(pkt["Message"])
                     if death_message:
                         filled_parameters = [
                             self.Game_Data.get(param.replace("%", ""), param)

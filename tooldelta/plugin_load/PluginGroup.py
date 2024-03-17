@@ -70,7 +70,8 @@ class PluginGroup:
             Print.print_err(f"加载插件出现问题: \n{err_str}")
             raise SystemExit
 
-    def load_plugin_hot(self, plugin_name: str, plugin_type: str):
+    @staticmethod
+    def load_plugin_hot(plugin_name: str, plugin_type: str):
         plugin = None
         if plugin_type == "dotcs":
             Print.print_war("暂时无法热载入DotCS插件")

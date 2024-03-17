@@ -1,4 +1,6 @@
-import os, platform, shutil
+import os
+import platform
+import shutil
 
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
