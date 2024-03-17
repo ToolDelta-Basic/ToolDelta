@@ -80,7 +80,7 @@ class PluginManager:
                 continue
             if r.lower() == "q":
                 return
-            elif r.lower() == "u":
+            if r.lower() == "u":
                 self.update_all_plugins(
                     self.get_plugin_reg_name_dict_and_datas()[1]
                 )
