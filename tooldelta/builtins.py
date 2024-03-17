@@ -41,6 +41,21 @@ class Builtins:
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
 
+        def get_id(self):
+            if hasattr(self, '_thread_id'):
+                return self._thread_id
+            for id, thread in threading._active.items():
+                if thread is self:
+                    return id
+
+        def stop(self):
+            self.stopping = True
+            thread_id = self.get_id()
+            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
+            if res > 1:
+                ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+                Print.print_err("§c终止线程失败")
+
     createThread = ClassicThread
 
     class TMPJson:
