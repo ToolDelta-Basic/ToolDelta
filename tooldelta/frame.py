@@ -593,7 +593,7 @@ class Frame:
                     res = sys.stdin.read(1)
                     if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
                         break
-                    if res == "" or res == "^C":
+                    if res in ("", "^C"):
                         Print.print_inf("使用 Ctrl+C 退出中...")
                         self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()
