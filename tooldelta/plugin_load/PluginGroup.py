@@ -3,7 +3,6 @@ import importlib
 import threading
 import time
 import traceback
-import asyncio
 from typing import Any, Callable, Type
 
 from tooldelta import constants
