@@ -78,7 +78,7 @@ class PluginManager:
             r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
             if r.strip() == "":
                 continue
-            elif r.lower() == "q":
+            if r.lower() == "q":
                 return
             elif r.lower() == "u":
                 self.update_all_plugins(
@@ -159,7 +159,7 @@ class PluginManager:
             s_data = market_datas.get(i.name)
             if s_data is None:
                 continue
-            elif i.version_str != s_data["version"]:
+            if i.version_str != s_data["version"]:
                 need_updates.append((i, s_data["version"]))
         if need_updates:
             clear_screen()
