@@ -757,7 +757,7 @@ class GameCtrl:
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
-                    death_message = self.Game_Data.get(pkt["Message"], None)
+                    death_message = self.Game_Data.get(pkt["Message"])
                     if death_message:
                         filled_parameters = [
                             self.Game_Data.get(param.replace("%", ""), param)
