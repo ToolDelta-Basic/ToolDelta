@@ -1,7 +1,5 @@
-from hmac import new
 import platform
 import os
-from poplib import CR
 import shlex
 import subprocess
 import time
@@ -9,7 +7,9 @@ import json
 import requests
 import ujson
 import random
-from typing import Callable, Optional
+import asyncio
+import aiohttp
+from typing import Callable
 
 from .color_print import Print
 from .urlmethod import download_file_singlethreaded, get_free_port
@@ -21,6 +21,11 @@ from . import fbconn
 import threading
 
 import tooldelta
+
+
+async def fetch(session, url):
+    async with session.get(url) as response:
+        return await response.read()
 
 
 class SysStatus:
@@ -348,11 +353,12 @@ class FrameNeOmg(StandardFrame):
 
     def __init__(self, serverNumber, password, fbToken, auth_server):
         super().__init__(serverNumber, password, fbToken, auth_server)
+
         self.status = None
         self.launch_event = threading.Event()
         self.injected = False
         self.omega = None
-        self.download_libs()
+        asyncio.run(self.download_libs())
         self.init_all_functions()
         self.status = SysStatus.LOADING
         self.secret_exit_key = ""
@@ -424,15 +430,18 @@ class FrameNeOmg(StandardFrame):
             while True:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig in ("", "SIGNAL: exit"):
-                    with Print.lock:Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                    with Print.lock:
+                        Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
                 elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
-                    with Print.lock:Print.print_with_info("§a机器人已退出", "§b NOMG ")
+                    with Print.lock:
+                        Print.print_with_info("§a机器人已退出", "§b NOMG ")
                     continue
-                with Print.lock:Print.print_with_info(msg_orig, "§b NOMG ")
+                with Print.lock:
+                    Print.print_with_info(msg_orig, "§b NOMG ")
 
         Builtins.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
 
@@ -464,56 +473,77 @@ class FrameNeOmg(StandardFrame):
             return Exception("NeOmega 已崩溃")
         return SystemError("未知的退出状态")
 
-    def download_libs(self):
+    async def download_libs(self):
         try:
-            res = json.loads(
-                requests.get(
-                    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"
-                ).text
-            )
-            use_mirror = res["Mirror"][0]
+            async with aiohttp.ClientSession() as session:
+                res_text = await fetch(
+                    session,
+                    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json",
+                )
+                res = json.loads(res_text.decode("utf-8"))
+                use_mirror = res.get("Mirror", [""])[0]
         except Exception as err:
             Print.print_err(f"获取依赖库表出现问题: {err}")
             raise SystemExit
+
         self.sys_machine = platform.machine().lower()
-        if self.sys_machine == "x86_64":
-            self.sys_machine = "amd64"
-        elif self.sys_machine == "aarch64":
-            self.sys_machine = "arm64"
-        if "TERMUX_VERSION" in os.environ:
-            sys_info_fmt = f"Android:{self.sys_machine.lower()}"
-        else:
-            sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
-        source_dict = res[sys_info_fmt]
-        commit_file_path, commit_url = list(res["Commit"].items())[0]
-        commit_remote = requests.get(
-            use_mirror + "/raw.githubusercontent.com/" + commit_url
-        ).text
+        self.sys_machine = (
+            "amd64"
+            if self.sys_machine == "x86_64"
+            else "arm64" if self.sys_machine == "aarch64" else self.sys_machine
+        )
+        sys_info_fmt = (
+            f"Android:{self.sys_machine.lower()}"
+            if "TERMUX_VERSION" in os.environ
+            else f"{platform.uname().system}:{self.sys_machine.lower()}"
+        )
+        source_dict = res.get(sys_info_fmt, {})
+
+        commit_file_path, commit_url = next(
+            iter(res.get("Commit", {}).items()), (None, None)
+        )
+        if not commit_file_path or not commit_url:
+            Print.print_err("未找到提交文件路径或URL")
+            raise SystemExit
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                use_mirror + "/raw.githubusercontent.com/" + commit_url
+            ) as response:
+                commit_remote = await response.text()
+
         commit_local = ""
         commit_file_path = os.path.join(os.getcwd(), commit_file_path)
-        if not os.path.isfile(commit_file_path):
-            replace_file = True
-        else:
+        replace_file = False
+        if os.path.isfile(commit_file_path):
             with open(commit_file_path, "r", encoding="utf-8") as f:
                 commit_local = f.read()
-        replace_file = False
-        if commit_local != commit_remote:
-            Print.print_war("依赖库版本过期, 将重新下载")
-            replace_file = True
-        for k, v in source_dict.items():
-            pathdir = os.path.join(os.getcwd(), k)
-            url = use_mirror + "/https://raw.githubusercontent.com/" + v
-            if not os.path.isfile(pathdir) or replace_file:
-                Print.print_inf(f"正在下载依赖库 {pathdir} ...")
-                try:
-                    download_file_singlethreaded(url, pathdir)
-                except Exception as err:
-                    Print.print_err(f"下载依赖库出现问题: {err}")
-                    raise SystemExit
+
+            replace_file = commit_local != commit_remote
+
+            if replace_file:
+                Print.print_war("依赖库版本过期, 将重新下载" + f"{commit_local}-> {commit_remote}")
+
+        tasks = []
+        async with aiohttp.ClientSession() as session:
+            for k, v in source_dict.items():
+                pathdir = os.path.join(os.getcwd(), k)
+                url = use_mirror + "/https://raw.githubusercontent.com/" + v
+                if not os.path.isfile(pathdir) or replace_file:
+                    Print.print_inf(f"正在下载依赖库 {pathdir} ...")
+                    tasks.append(fetch(session, url))
+
+            results = await asyncio.gather(*tasks)
+
+            for i, result in enumerate(results):
+                k = list(source_dict.keys())[i]
+                pathdir = os.path.join(os.getcwd(), k)
+                if not os.path.exists(pathdir) or replace_file:
+                    with open(pathdir, "wb") as f:
+                        f.write(result)
+
         if replace_file:
-            with open(
-                os.path.join(os.getcwd(), commit_file_path), "w", encoding="utf-8"
-            ) as f:
+            with open(commit_file_path, "wb") as f:
                 f.write(commit_remote)
             Print.print_suc("已完成依赖更新！")
 
