@@ -191,8 +191,7 @@ class PluginManager:
                 Print.clean_print("§c序号无效, 回车键继续")
                 return None
             return res[r - 1]
-        else:
-            return res[0]
+        return res[0]
 
     @staticmethod
     def search_plugin_by_kw(kws: list[str], plugins: list[PluginRegData]):
