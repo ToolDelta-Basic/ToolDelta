@@ -335,7 +335,7 @@ class Frame:
             )
             Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
             while True:
-                if Login_method.isdigit() == False:
+                if Login_method.isdigit() is False:
                     Login_method = input(
                         Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
                     )

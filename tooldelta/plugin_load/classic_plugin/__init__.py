@@ -64,7 +64,7 @@ def load_plugin(plugin_dirname: str, hot_load = False):
             NotValidPluginError("需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用")
         )
         plugin = plugin_grp.plugin_added_cache["plugin"]
-        if plugin.name == None:
+        if plugin.name is None:
             raise ValueError(f"插件主类 {plugin.__name__} 需要作者名")
         plugin_ins: Plugin = plugin(plugin_grp.linked_frame)
         plugin_grp.plugins.append([plugin_ins.name, plugin_ins])
