@@ -13,7 +13,7 @@ class NES_Music_Studio(Plugin):
             return []
 
         def playsound(self, seq, cmd_fmt):
-            ...
+            raise NotImplementedError()
 
     class C_2A03(SoundChip):
         ...

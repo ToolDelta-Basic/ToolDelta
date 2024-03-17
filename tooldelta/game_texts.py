@@ -68,4 +68,4 @@ class GameTextsLoader(object):
 
 class Game_Texts_Handle(object):
     def __init__(self, Game_Data: dict) -> None:
-        pass
+        raise NotImplementedError()
