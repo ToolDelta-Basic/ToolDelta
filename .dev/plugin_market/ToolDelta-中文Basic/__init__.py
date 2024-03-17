@@ -1,4 +1,6 @@
-import re, time, os
+import re
+import time
+import os
 from typing import Callable
 
 from tooldelta import Frame, Plugin, plugins, Config, Builtins, Print
