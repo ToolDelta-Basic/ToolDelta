@@ -137,7 +137,7 @@ class Compiler(Plugin):
             # 简单地判断代码行数是否合法
             if ln not in scr_lines_register:
                 raise AssertionError(f"不存在第 {int(ln, 16)} 行代码")
-        _get_var_type = lambda varname : loc_vars_register.get(varname)
+        _get_var_type = loc_vars_register.get
         _easy_hex = lambda x: hex(x)[2:]
         try:
             rawlines = scripts.splitlines()
