@@ -254,7 +254,7 @@ class Compiler(Plugin):
                     case "导出变量" | "存储变量":
                         _simple_assert_len(args, 4)
                         assert args[2] == "->", "导出个人变量格式应为 内存变量名 -> 磁盘变量名"
-                        assert args[1] in loc_vars_register.keys(), f"变量 {args[1]} 未定义, 不能使用, 请先设定"
+                        assert args[1] in loc_vars_register, f"变量 {args[1]} 未定义, 不能使用, 请先设定"
                         _add_cmp(6, (args[1], args[3]))
                     case "读取变量":
                         _simple_assert_len(args, 6)
@@ -265,12 +265,12 @@ class Compiler(Plugin):
                         # var1 <- var2 () var3
                         _simple_assert_len(args, 6)
                         assert args[2] == "<-" and args[4] in ["+", "-", "*", "/", "%"], f"格式不正确: 应为 变量 <- 变量1 运算符 变量2"
-                        assert args[3] in loc_vars_register.keys() and args[5] in loc_vars_register.keys(), f"变量 {args[3]} 或 {args[5]} 未定义, 不能使用, 请先设定"
+                        assert args[3] in loc_vars_register and args[5] in loc_vars_register, f"变量 {args[3]} 或 {args[5]} 未定义, 不能使用, 请先设定"
                         assert loc_vars_register[args[3]] == loc_vars_register[args[5]] == 0, "只能对数值型变量进行运算"
                         loc_vars_register[args[1]] = 0
                         _add_cmp(8, (args[1], ["+", "-", "*", "/", "%"].index(args[4]), args[3], args[5]))
                     case _:
-                        if args[0] in self.reg_cmds_with_checkers.keys():
+                        if args[0] in self.reg_cmds_with_checkers:
                             cmd = args[0]
                             self.reg_cmds_with_checkers[cmd](len(args))
                             _add_cmp(hash(cmd), None if len(args) == 1 else args[1:])

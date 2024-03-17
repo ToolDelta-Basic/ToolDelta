@@ -859,7 +859,7 @@ class ThreadOmega:
         self, targets: Union[str, List[str]], callback: Callable[[str, Any], None], clr_datas = False
     ):
         if clr_datas:
-            for k in self._packet_listeners.copy().keys():
+            for k in self._packet_listeners.copy():
                 self._packet_listeners[k].clear()
         if isinstance(targets, str):
             targets = [targets]
