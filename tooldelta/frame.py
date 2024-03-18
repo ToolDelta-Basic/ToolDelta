@@ -101,7 +101,7 @@ class Frame:
     def if_token():
         if not os.path.isfile("fbtoken"):
             Print.print_err(
-                "请到FB官网 user.fastbuilder.pro 下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
+                "请到对应的验证服务器官网下载FBToken, 并放在本目录中, 或者在下面输入fbtoken"
             )
             fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
             if fbtoken:
@@ -111,116 +111,145 @@ class Frame:
                 Print.print_err("未输入fbtoken, 无法继续")
                 raise SystemExit
 
-    def login_fbuc(self) -> requests.Response:
-        try:
-
-            hash_obj: hashlib._Hash = hashlib.sha256()
-            username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
-            hash_obj.update(
-                getpass.getpass(
-                    Print.fmt_info("请输入密码(已隐藏):", "§6 密码 ")
-                ).encode()
-            )
-            __password: str = hash_obj.hexdigest()
-            __mfa_code: str = getpass.getpass(
-                Print.fmt_info(
-                    "请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  "
-                )
-            )
-            Authorization: str = requests.get(url=constants.FB_APIS[1], timeout=5).text
-            repo: requests.Response = requests.post(
-                url=constants.FB_APIS[3],
-                data=json.dumps(
-                    {
-                        "username": username,
-                        "password": __password,
-                        "mfa_code": __mfa_code,
-                    },
-                    ensure_ascii=False,
-                ),
-                headers={
-                    "Content-Type": "application/json",
-                    "authorization": f"Bearer {Authorization}",
+    def login_gugu(self) -> requests.Response:
+        hash_obj: hashlib._Hash = hashlib.sha256()
+        username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
+        hash_obj.update(
+            getpass.getpass(Print.fmt_info("请输入密码(已隐藏):", "§6 密码 ")).encode()
+        )
+        __password: str = hash_obj.hexdigest()
+        Authorization: str = requests.get(url=constants.GUGU_APIS[1], timeout=5).text
+        repo: requests.Response = requests.post(
+            url=constants.GUGU_APIS[0],
+            data=json.dumps(
+                {
+                    "client_public_key": "",
+                    "server_code": "::DRY::",
+                    "server_passcode": "::DRY::",
+                    "username": username,
+                    "password": __password,
                 },
+                ensure_ascii=False,
+            ),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {Authorization}",
+            },timeout=5
+        )
+        repo_text: dict = json.loads(repo.text)
+        if repo.status_code != 200:
+            Print.print_war(
+                f"请求Api接口失败，将自动使用Token登陆!状态码:{repo.status_code}，返回值:{repo.text}"
             )
-            repo_text: dict = json.loads(repo.text)
-            repo_message: str = repo_text["message"]
-            repo_success: bool = repo_text["success"]
-            if repo.status_code != 200:
-                Print.print_war(
-                    f"请求Api接口失败，将自动使用Token登陆!状态码:{repo.status_code}，返回值:{repo.text}"
-                )
-                self.if_token()
-            if not repo_success:
-                if "Invalid username, password, or MFA code." in repo_message:
-                    Print.print_war("登陆失败，无效的用户名、密码或MFA代码!")
-                    self.login_fbuc()
-            else:
-                with_perfix: dict = json.loads(
-                    requests.get(
-                        url=constants.FB_APIS[2],
-                        data=json.dumps({"with_prefix": constants.FB_APIS[4]}),
-                        timeout=5,
-                        headers={
-                            "Content-Type": "application/json",
-                            "authorization": f"Bearer {Authorization}",
-                        },
-                    ).text
-                )
-                fetch_announcements: dict = json.loads(
-                    requests.get(
-                        url=constants.FB_APIS[4] + with_perfix["fetch_announcements"],
-                        timeout=5,
-                        headers={
-                            "Content-Type": "application/json",
-                            "authorization": f"Bearer {Authorization}",
-                        },
-                    ).text
-                )
-                fetch_profile: dict = json.loads(
-                    requests.get(
-                        url=constants.FB_APIS[4] + with_perfix["fetch_profile"],
-                        timeout=5,
-                        headers={
-                            "Content-Type": "application/json",
-                            "authorization": f"Bearer {Authorization}",
-                        },
-                    ).text
-                )
-                get_helper_status: dict = json.loads(
-                    requests.get(
-                        url=constants.FB_APIS[4] + with_perfix["get_helper_status"],
-                        timeout=5,
-                        headers={
-                            "Content-Type": "application/json",
-                            "authorization": f"Bearer {Authorization}",
-                        },
-                    ).text
-                )
-                self.UserInfo: dict = {
-                    "isadmin": repo_text["isadmin"],
-                    "blc": fetch_profile["blc"],
-                    "cn_username": fetch_profile["cn_username"],
-                    "phoenix_otp": fetch_profile["phoenix_otp"],
-                    "points": fetch_profile["points"],
-                    "slots": fetch_profile["slots"],
-                    "get_helper_status": get_helper_status,
-                }
-                self.token = requests.get(
-                    url=constants.FB_APIS[4] + with_perfix["get_phoenix_token"],
-                    data=json.dumps({"secret": f"{Authorization}"}),
+            self.if_token()
+        self.token = repo_text["token"]
+        with open("fbtoken", "w", encoding="utf-8") as f:
+            f.write(self.token)
+
+    def login_fbuc(self) -> requests.Response:
+        hash_obj: hashlib._Hash = hashlib.sha256()
+        username: str = input(Print.fmt_info("请输入账号:", "§6 账号 "))
+        hash_obj.update(
+            getpass.getpass(
+                Print.fmt_info("请输入密码(已隐藏):", "§6 密码 ")
+            ).encode()
+        )
+        __password: str = hash_obj.hexdigest()
+        __mfa_code: str = getpass.getpass(
+            Print.fmt_info(
+                "请输入双重验证码(已隐藏)(如未设置请直接回车):", "§6 MFA  "
+            )
+        )
+        Authorization: str = requests.get(url=constants.FB_APIS[1], timeout=5).text
+        repo: requests.Response = requests.post(
+            url=constants.FB_APIS[3],
+            data=json.dumps(
+                {
+                    "username": username,
+                    "password": __password,
+                    "mfa_code": __mfa_code,
+                },
+                ensure_ascii=False,
+            ),
+            headers={
+                "Content-Type": "application/json",
+                "authorization": f"Bearer {Authorization}",
+            },
+        )
+        repo_text: dict = json.loads(repo.text)
+        repo_message: str = repo_text["message"]
+        repo_success: bool = repo_text["success"]
+        if repo.status_code != 200:
+            Print.print_war(
+                f"请求Api接口失败，将自动使用Token登陆!状态码:{repo.status_code}，返回值:{repo.text}"
+            )
+            self.if_token()
+        if not repo_success:
+            if "Invalid username, password, or MFA code." in repo_message:
+                Print.print_war("登陆失败，无效的用户名、密码或MFA代码!")
+                self.login_fbuc()
+        else:
+            with_perfix: dict = json.loads(
+                requests.get(
+                    url=constants.FB_APIS[2],
+                    data=json.dumps({"with_prefix": constants.FB_APIS[4]}),
                     timeout=5,
                     headers={
                         "Content-Type": "application/json",
                         "authorization": f"Bearer {Authorization}",
                     },
                 ).text
-                with open("fbtoken", "w", encoding="utf-8") as f:
-                    f.write(self.token)
-        except Exception as err:
-            Print.print_err(
-                f"使用账号密码登陆的过程中出现异常!可能由网络环境导致! {err}"
             )
+            fetch_announcements: dict = json.loads(
+                requests.get(
+                    url=constants.FB_APIS[4] + with_perfix["fetch_announcements"],
+                    timeout=5,
+                    headers={
+                        "Content-Type": "application/json",
+                        "authorization": f"Bearer {Authorization}",
+                    },
+                ).text
+            )
+            fetch_profile: dict = json.loads(
+                requests.get(
+                    url=constants.FB_APIS[4] + with_perfix["fetch_profile"],
+                    timeout=5,
+                    headers={
+                        "Content-Type": "application/json",
+                        "authorization": f"Bearer {Authorization}",
+                    },
+                ).text
+            )
+            get_helper_status: dict = json.loads(
+                requests.get(
+                    url=constants.FB_APIS[4] + with_perfix["get_helper_status"],
+                    timeout=5,
+                    headers={
+                        "Content-Type": "application/json",
+                        "authorization": f"Bearer {Authorization}",
+                    },
+                ).text
+            )
+            self.UserInfo: dict = {
+                "isadmin": repo_text["isadmin"],
+                "blc": fetch_profile["blc"],
+                "cn_username": fetch_profile["cn_username"],
+                "phoenix_otp": fetch_profile["phoenix_otp"],
+                "points": fetch_profile["points"],
+                "slots": fetch_profile["slots"],
+                "get_helper_status": get_helper_status,
+            }
+            self.token = requests.get(
+                url=constants.FB_APIS[4] + with_perfix["get_phoenix_token"],
+                data=json.dumps({"secret": f"{Authorization}"}),
+                timeout=5,
+                headers={
+                    "Content-Type": "application/json",
+                    "authorization": f"Bearer {Authorization}",
+                },
+            ).text
+            with open("fbtoken", "w", encoding="utf-8") as f:
+                f.write(self.token)
 
     class ToolDeltaUpdater:
         def __init__(self):
@@ -292,7 +321,12 @@ class Frame:
                             win_old_tool_delta_path = next(
                                 os.path.join(filewalks[0], files)
                                 for filewalks, _, files in os.walk(os.getcwd())
-                                if any(".exe" in file and "new" not in file and ("ToolDelta" in file or "tooldelta" in file) for file in files)
+                                if any(
+                                    ".exe" in file
+                                    and "new" not in file
+                                    and ("ToolDelta" in file or "tooldelta" in file)
+                                    for file in files
+                                )
                             )
 
                         upgrade_script_path = (
@@ -329,29 +363,6 @@ class Frame:
                 )
 
     def read_cfg(self):
-        # 读取启动配置等
-        if not os.path.isfile("fbtoken"):
-            Print.print_inf(
-                "请选择登录方法:\n 1 - 使用账号密码(登录成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r"
-            )
-            Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
-            while True:
-                if Login_method.isdigit() is False:
-                    Login_method = input(
-                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
-                    )
-                elif int(Login_method) > 2 or int(Login_method) < 1:
-                    Login_method = input(
-                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
-                    )
-                else:
-                    break
-            if Login_method == "1":
-                self.login_fbuc()
-            elif Login_method == "2":
-                self.if_token()
-            else:
-                self.if_token()
 
         Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
@@ -419,7 +430,33 @@ class Frame:
                 except (ValueError, AssertionError):
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-
+            # 读取启动配置等
+        if not os.path.isfile("fbtoken"):
+            Print.print_inf(
+                "请选择登录方法:\n 1 - 使用账号密码(登录成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r"
+            )
+            Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
+            while True:
+                if Login_method.isdigit() is False:
+                    Login_method = input(
+                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
+                    )
+                elif int(Login_method) > 2 or int(Login_method) < 1:
+                    Login_method = input(
+                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
+                    )
+                else:
+                    break
+            if Login_method == "1":
+                match cfgs["验证服务器地址(更换时记得更改fbtoken)"]:
+                    case "https://liliya233.uk":
+                        self.login_gugu()
+                    case "https://api.fastbuilder.pro":
+                        self.login_fbuc()
+            elif Login_method == "2":
+                self.if_token()
+            else:
+                self.if_token()
         launchers = constants.LAUNCHERS
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式(之后可在ToolDelta启动配置更改):")
@@ -447,7 +484,6 @@ class Frame:
             fbtoken,
             auth_server,
         )
-
 
     @staticmethod
     def upgrade_cfg(cfg_std):

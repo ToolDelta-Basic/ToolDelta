@@ -17,7 +17,7 @@ from .builtins import Builtins
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
 
-from . import fbconn
+from .fb_conn import fbconn
 import threading
 
 import tooldelta

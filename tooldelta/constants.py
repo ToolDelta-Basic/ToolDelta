@@ -32,7 +32,7 @@ LAUNCH_CFG_STD: dict = {
     "密码": int,
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": Cfg.NNInt,
     "验证服务器地址(更换时记得更改fbtoken)": str,
-    "是否记录日志": bool, 
+    "是否记录日志": bool,
     "插件市场源": str,
 }
 
@@ -42,6 +42,13 @@ FB_APIS = [
     "https://api.fastbuilder.pro/api/api",
     "https://api.fastbuilder.pro/api/login",
     "https://api.fastbuilder.pro",
+]
+
+
+GUGU_APIS = [
+    "https://liliya233.uk/api/phoenix/login",
+    "https://liliya233.uk/api/new",
+    "https://liliya233.uk",
 ]
 
 AUTH_SERVERS = [
