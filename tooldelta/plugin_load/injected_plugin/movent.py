@@ -290,7 +290,6 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     res = sendwscmd(f"/testforblock {x} {y} {z} air", True)
     if res.SuccessCount:
         return "air"
-    print(res.OutputMessages[0].Parameters)
     return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
 

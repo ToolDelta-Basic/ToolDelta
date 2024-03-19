@@ -882,13 +882,8 @@ class GameCtrl:
             + self.bot_name
         )
         time.sleep(0.5)
-        self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!")
-        self.say_to(
-            "@a",
-            "§l§7[§f!§7] §r§f北京时间 "
-            + datetime.datetime.now().strftime("§a%H§f : §a%M"),
-        )
-        self.say_to("@a", "§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
+        self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!\n§l§7[§f!§7] §r§f北京时间 "
+            + datetime.datetime.now().strftime("§a%H§f : §a%M") + "\n§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
         self.sendcmd("/tag @s add robot")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
