@@ -758,6 +758,10 @@ class GameCtrl:
                 if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
                     return
+                plugin_group.execute_player_join(
+                    playername, self.linked_frame.on_plugin_err
+                )
+                asyncio.run(execute_player_join(player))
             else:
                 playername = next(
                     (k for k, v in self.players_uuid.items() if v == player["UUID"]),
@@ -784,15 +788,6 @@ class GameCtrl:
                         player, self.linked_frame.on_plugin_err
                     )
                     asyncio.run(execute_player_prejoin(player))
-                if pkt["Message"] == "§e%multiplayer.player.join":
-                    player = pkt["Parameters"][0]
-                    plugin_grp.execute_player_join(
-                        player, self.linked_frame.on_plugin_err
-                    )
-                    asyncio.run(execute_player_join(player))
-
-                elif pkt["Message"] == "§e%multiplayer.player.left":
-                    player = pkt["Parameters"][0]
                 elif pkt["Message"].startswith("death."):
                     death_message = self.Game_Data.get(pkt["Message"])
                     if death_message:
