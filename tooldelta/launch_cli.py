@@ -543,8 +543,9 @@ class FrameNeOmg(StandardFrame):
                         f.write(result)
 
         if replace_file:
-            with open(commit_file_path, "wb") as f:
-                f.write(commit_remote)
+            # 写入commit_remote，文字写入
+            with open(commit_file_path, "wb",encoding="utf-8") as f:
+                f.write(commit_remote.encode("utf-8"))
             Print.print_suc("已完成依赖更新！")
 
     def get_players_and_uuids(self):
