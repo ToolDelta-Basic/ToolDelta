@@ -114,6 +114,13 @@ class PluginGroup:
             Print.clean_print(f" - 作者: {plugin.author}\n - 版本: {plugin.version}")
             Print.clean_print(f" - 数据包监听: {', '.join(str(i) for i in self.listen_packet_ids)}")
 
+    def help(self, plugin: Plugin):
+        plugin_docs = "<plugins.help>: " + plugin.name + "开放的API接口说明:\n"
+        for attr_name, attr in plugin.__dict__.items():
+            if not attr_name.startswith("__") and getattr(attr, "__doc__") is not None:
+                plugin_docs += "\n §a" + attr_name + ":§f\n    " + attr.__doc__.replace("\n", "\n    ")
+        Print.clean_print(plugin_docs)
+
     def add_plugin(self, plugin: Plugin):
         try:
             if not Plugin.__subclasscheck__(plugin):
