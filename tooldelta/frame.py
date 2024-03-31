@@ -4,7 +4,6 @@ import tooldelta
 from tooldelta import (
     constants,
     builtins,
-    old_dotcs_env,
     plugin_market,
     sys_args,
 )
@@ -84,7 +83,6 @@ class Frame:
     consoleMenu = []
     link_game_ctrl = None
     link_plugin_group = None
-    old_dotcs_threadinglist = []
     on_plugin_err = staticmethod(
         lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     )
@@ -525,7 +523,7 @@ class Frame:
     def plugin_load_finished(plugins: PluginGroup):
         # 插件成功载入提示
         Print.print_suc(
-            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin_loaded_num}§a 个注入式插件, §f{plugins.dotcs_plugin_loaded_num}§a 个DotCS插件"
+            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin_loaded_num}§a 个注入式插件"
         )
 
     @staticmethod
@@ -536,7 +534,6 @@ class Frame:
                 "插件文件/ToolDelta组合式插件",
                 f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}",
             )
-        os.makedirs("插件文件/原DotCS插件", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
@@ -668,9 +665,6 @@ class Frame:
         time.sleep(0.5)
         self.launcher.exit_event.set()
 
-    def _get_old_dotcs_env(self):
-        # 获取 dotcs 的插件环境
-        return old_dotcs_env.get_dotcs_env(self, Print)
 
     def get_console_menus(self):
         # 获取所有控制台命令菜单

@@ -58,7 +58,6 @@ class PluginRegData:
         return {
             "classic": "主类式",
             "injected": "注入式",
-            "dotcs": "DotCS",
             "unknown": "未知类型",
         }.get(self.plugin_type, "未知类型")
 

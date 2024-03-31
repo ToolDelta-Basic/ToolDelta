@@ -56,6 +56,5 @@ AUTH_SERVERS = [
     ("咕咕酱 FB验证服务器", "https://liliya233.uk"),
 ]
 
-TOOLDELTA_DOTCSEMU_PLUGIN = "原DotCS插件"
 TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
 TOOLDELTA_INJECTED_PLUGIN = "ToolDelta注入式插件"

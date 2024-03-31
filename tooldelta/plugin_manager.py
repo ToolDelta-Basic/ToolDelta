@@ -6,7 +6,6 @@ from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_market import market
 from tooldelta.constants import (
-    TOOLDELTA_DOTCSEMU_PLUGIN,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN
 )
@@ -61,14 +60,13 @@ class PluginRegData:
         return {
             "classic": "主类式",
             "injected": "注入式",
-            "dotcs": "DotCS",
             "unknown": "未知类型",
         }.get(self.plugin_type, "未知类型")
 
 
 class PluginManager:
     plugin_reg_data_path = "插件注册表"
-    default_reg_data = {"dotcs": {}, "classic": {}, "injected": {}, "unknown": {}}
+    default_reg_data = {"classic": {}, "injected": {}, "unknown": {}}
     _plugin_datas_cache = []
 
     def manage_plugins(self):
@@ -103,7 +101,6 @@ class PluginManager:
         Print.clean_print(f" 描述: {description_fixed}")
         Print.clean_print(f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}")
         f_dirname = {
-            "dotcs": TOOLDELTA_DOTCSEMU_PLUGIN,
             "classic": TOOLDELTA_CLASSIC_PLUGIN,
             "injected": TOOLDELTA_INJECTED_PLUGIN
         }[plugin.plugin_type]
@@ -239,18 +236,6 @@ class PluginManager:
                         },
                     )
                 )
-            case "dotcs":
-                assert isinstance(p_data, dict), "Not a valid dotcs plugin"
-                self.push_plugin_reg_data(
-                    PluginRegData(
-                        p_data.get("name", "未命名插件"),
-                        {
-                            "name": p_data.get("name", "未命名插件"),
-                            "author": p_data.get("author", "unknown"),
-                            "plugin-type": "dotcs",
-                        },
-                    )
-                )
             case _:
                 Print.print_err("不合法的注册插件: " + plugin_type)
 
@@ -270,12 +255,11 @@ class PluginManager:
 
     def get_plugin_reg_name_dict_and_datas(self):
         # 返回一个表示插件所在类别下的全部已注册插件的列表, 和全部已注册插件的插件注册信息列表
-        r0: dict[str, list[str]] = {"dotcs": [], "classic": [], "injected": []}
+        r0: dict[str, list[str]] = {"classic": [], "injected": []}
         r = JsonIO.readFileFrom(
             "主系统核心数据", self.plugin_reg_data_path, self.default_reg_data
         )
         f_dirname = {
-            "dotcs": TOOLDELTA_DOTCSEMU_PLUGIN,
             "classic": TOOLDELTA_CLASSIC_PLUGIN,
             "injected": TOOLDELTA_INJECTED_PLUGIN
         }
@@ -298,7 +282,6 @@ class PluginManager:
         f_plugins: list[PluginRegData] = []
         reg_dict, reg_list = self.get_plugin_reg_name_dict_and_datas()
         for p, k in {
-            TOOLDELTA_DOTCSEMU_PLUGIN: "dotcs",
             TOOLDELTA_CLASSIC_PLUGIN: "classic",
             TOOLDELTA_INJECTED_PLUGIN: "injected",
         }.items():
@@ -308,7 +291,7 @@ class PluginManager:
         return f_plugins + reg_list
     @staticmethod
     def make_plugin_icon(plugin: PluginRegData):
-        ico_colors = {"dotcs": "§6", "classic": "§b", "injected": "§d"}
+        ico_colors = { "classic": "§b", "injected": "§d"}
         return (
             ico_colors.get(plugin.plugin_type, "§7")
             + "■ "

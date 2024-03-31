@@ -5,14 +5,11 @@ import time
 import traceback
 from typing import Any, Callable, Type
 
-from tooldelta import constants
-from tooldelta.basic_mods import dotcs_module_env
 from tooldelta.color_print import Print
 from tooldelta.get_python_libs import get_single_lib
 from tooldelta.plugin_load.classic_plugin import Plugin
 from tooldelta.plugin_load import (
     classic_plugin,
-    dotcs_plugin,
     injected_plugin,
     NON_FUNC,
     NotValidPluginError,
@@ -36,16 +33,12 @@ class PluginGroup:
 
     def __init__(self):
         self.listen_packet_ids = set()
-        self.old_dotcs_env = {}
-        self.dotcs_global_vars = {}
         self.packet_funcs: dict[str, list[Callable]] = {}
         self.plugins_api: dict[str, Plugin] = {}
         self.excType = 0
         self._broadcast_evts = {}
-        self.dotcs_plugin_loaded_num = 0
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
-        self.dotcs_repeat_threadings = {"1s": [], "10s": [], "30s": [], "1m": []}
         self.loaded_plugins_name = []
         self.linked_frame = None
 
@@ -61,7 +54,6 @@ class PluginGroup:
 
     def read_all_plugins(self):
         try:
-            dotcs_plugin.read_plugins(self, dotcs_module_env)
             classic_plugin.read_plugins(self)
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
@@ -73,9 +65,7 @@ class PluginGroup:
     @staticmethod
     def load_plugin_hot(plugin_name: str, plugin_type: str):
         plugin = None
-        if plugin_type == "dotcs":
-            Print.print_war("暂时无法热载入DotCS插件")
-        elif plugin_type == "classic":
+        if plugin_type == "classic":
             plugin = classic_plugin.load_plugin(plugin_name, True)
         elif plugin_type == "injected":
             asyncio.run(injected_plugin.load_plugin_file(plugin_name))
@@ -184,49 +174,6 @@ class PluginGroup:
         else:
             self.packet_funcs[str(packetType)] = [func]
 
-    def execute_dotcs_repeat(self):
-        "启动dotcs插件的循环执行模式插件事件"
-        threading.Thread(target=self.run_dotcs_repeat_funcs).start()
-
-    def run_dotcs_repeat_funcs(self):
-        lastTime10s = 0
-        lastTime30s = 0
-        lastTime1m = 0
-        if not any(self.dotcs_repeat_threadings.values()):
-            return
-        Print.print_inf(
-            f"开始运行 {sum(len(funcs) for funcs in self.dotcs_repeat_threadings.values())} 个原dotcs计划任务方法"
-        )
-        while 1:
-            time.sleep(1)
-            nowTime = time.time()
-            if nowTime - lastTime1m > 60:
-                for fname, func in self.dotcs_repeat_threadings["1m"]:
-                    try:
-                        # A strong desire to remove "try" block !!
-                        func()
-                    except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务1min)报错: {err}")
-                lastTime1m = nowTime
-            if nowTime - lastTime30s > 30:
-                for fname, func in self.dotcs_repeat_threadings["30s"]:
-                    try:
-                        func()
-                    except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务30s)报错: {err}")
-                lastTime30s = nowTime
-            if nowTime - lastTime10s > 10:
-                for fname, func in self.dotcs_repeat_threadings["10s"]:
-                    try:
-                        func()
-                    except Exception as err:
-                        Print.print_err(f"原dotcs插件 <{fname}> (计划任务10s)报错: {err}")
-                lastTime10s = nowTime
-            for fname, func in self.dotcs_repeat_threadings["1s"]:
-                try:
-                    func()
-                except Exception as err:
-                    Print.print_err(f"原dotcs插件 <{fname}> (计划任务1s) 报错: {err}")
 
     def execute_def(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
         for name, func in self.plugins_funcs["on_def"]:

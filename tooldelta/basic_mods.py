@@ -55,26 +55,3 @@ except ModuleNotFoundError as err:
     import rich
 
 from typing import Callable
-
-dotcs_module_env = {
-    "time": time,
-    "os": os,
-    "json": json,
-    "threading": threading,
-    "requests": requests,
-    "traceback": traceback,
-    "qrcode": qrcode,
-    "psutil": psutil,
-    "pymysql": pymysql,
-    "socket": socket,
-    "websockets": websockets,
-    "datetime": datetime,
-    "random": random,
-    "math": math,
-    "platform": platform,
-    "subprocess": subprocess,
-    "base64": base64,
-    "asyncio": asyncio,
-    "sys": sys,
-    "rich": rich,
-}

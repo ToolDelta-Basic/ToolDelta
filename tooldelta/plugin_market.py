@@ -14,7 +14,6 @@ from tooldelta.cfg import Cfg
 from tooldelta.constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_DOTCSEMU_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN
 )
 from typing import Dict
@@ -205,10 +204,6 @@ class PluginMarket:
                     case "classic":
                         download_path = os.path.join(
                             "插件文件", TOOLDELTA_CLASSIC_PLUGIN
-                        )
-                    case "dotcs":
-                        download_path = os.path.join(
-                            "插件文件", TOOLDELTA_DOTCSEMU_PLUGIN
                         )
                     case "injected":
                         download_path = os.path.join(
