@@ -113,6 +113,22 @@ class Builtins:
             raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
         @staticmethod
+        def get(path: str):
+            """
+            直接获取缓存区的该虚拟路径的JSON, 不使用copy
+            WARNING: 如果你不知道有什么后果, 请老老实实使用`read(...)`而不是`get(...)`!
+
+            参数:
+                path: 文件的虚拟路径
+            """
+            if path in jsonPathTmp:
+                val = jsonPathTmp.get(path)[1]
+                if isinstance(val, (list, dict)):
+                    val = copy.deepcopy(val)
+                return val
+            raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
+
+        @staticmethod
         def write(path: str, obj: Any):
             """
             对缓存区的该虚拟路径的文件进行写操作, 这将会覆盖之前的内容

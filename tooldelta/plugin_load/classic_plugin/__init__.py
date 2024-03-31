@@ -17,7 +17,7 @@ class Plugin:
     description = "..."
 
     @property
-    def data_path(self):
+    def data_path(self) -> str:
         return os.path.join("插件数据文件", self.name)
 
 plugin_group_cache = [None]
