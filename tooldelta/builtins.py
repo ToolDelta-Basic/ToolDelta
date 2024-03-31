@@ -5,6 +5,7 @@ import threading
 import traceback
 import copy
 import ctypes
+import time
 from typing import Any, Dict, List, Tuple, Optional
 
 event_pool = {"tmpjson_save": threading.Event()}
@@ -128,6 +129,7 @@ class Builtins:
                 return val
             raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
+
         @staticmethod
         def write(path: str, obj: Any):
             """
@@ -141,6 +143,13 @@ class Builtins:
                 jsonPathTmp[path] = [True, obj]
             else:
                 raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
+
+        @staticmethod
+        def read_as_tmp(path: str, needFileExists: bool = True, timeout: int = 60):
+            if (path not in jsonUnloadPathTmp) and not (path in jsonPathTmp):
+                jsonUnloadPathTmp[path] = timeout + int(time.time())
+                Builtins.TMPJson.loadPathJson(path, needFileExists)
+            return Builtins.TMPJson.read(path)
 
         @staticmethod
         def cancel_change(path):
@@ -269,7 +278,7 @@ class Builtins:
         """
 
         def thread_fun(*args: Tuple, **kwargs: Any) -> None:
-            Builtins.createThread(func, args=args, **kwargs)
+            Builtins.createThread(func, usage="简易线程方法:"+func.__name__, args=args, **kwargs)
 
         return thread_fun
 
@@ -379,22 +388,28 @@ def safe_close():
     event_pool["tmpjson_save"].set()
     event_flags_pool["tmpjson_save"] = False
 
-
 def _tmpjson_save_thread():
     evt = event_pool["tmpjson_save"]
+    secs = 0
     while 1:
-        evt.wait(60)
-        for k, (isChanged, dat) in jsonPathTmp.copy().items():
-            if isChanged:
-                Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
-                jsonPathTmp[k][0] = False
+        evt.wait(2)
+        secs += 2
+        if secs >= 60:
+            secs = 0
+            for k, (isChanged, dat) in jsonPathTmp.copy().items():
+                if isChanged:
+                    Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
+                    jsonPathTmp[k][0] = False
+        for k, v in jsonUnloadPathTmp.copy().items():
+            if time.time() - v > 0:
+                Builtins.TMPJson.unloadPathJson(k)
+                del jsonUnloadPathTmp[k]
         if not event_flags_pool["tmpjson_save"]:
             return
 
 
 def tmpjson_save_thread():
     Builtins.createThread(_tmpjson_save_thread)
-
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
     if not Builtins.player_in_dialogue(player):
@@ -413,3 +428,4 @@ def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
 
 jsonPathTmp = {}
 in_dialogue_list = []
+jsonUnloadPathTmp = {}

@@ -358,7 +358,9 @@ class FrameNeOmg(StandardFrame):
         self.launch_event = threading.Event()
         self.injected = False
         self.omega = None
-        asyncio.run(self.download_libs())
+        download_libs_thr = self.download_libs()
+        if download_libs_thr is not None:
+            asyncio.run(self.download_libs())
         self.init_all_functions()
         self.status = SysStatus.LOADING
         self.secret_exit_key = ""
