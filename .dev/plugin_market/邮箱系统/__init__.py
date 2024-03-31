@@ -77,7 +77,7 @@ class MailSystem(Plugin):
         counter = 0
         while name in it:
             counter += 1
-            name = name.replace("(%d)" % (counter - 1), "") + "(%d)" % counter
+            name = name.replace(f"({(counter - 1)})", "") +f"({counter})"
         return name
 
     def _store_mail(self, who: str, m: Mail):
