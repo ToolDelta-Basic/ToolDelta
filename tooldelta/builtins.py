@@ -68,7 +68,7 @@ class Builtins:
 
             参数:
                 path: 作为文件的磁盘内路径的同时也会作为在缓存区的虚拟路径
-                needFileExists: 默认为 True, 为 False 时, 若文件路径不存在, 就会自动创建一个文件.
+                needFileExists: 默认为 True, 为 False 时, 若文件路径不存在, 就会自动创建一个文件, 且默认值为null
             """
             if path in jsonPathTmp:
                 return
@@ -124,8 +124,6 @@ class Builtins:
             """
             if path in jsonPathTmp:
                 val = jsonPathTmp.get(path)[1]
-                if isinstance(val, (list, dict)):
-                    val = copy.deepcopy(val)
                 return val
             raise Exception("json路径未初始化, 不能进行读取和写入操作: " + path)
 
@@ -146,10 +144,36 @@ class Builtins:
 
         @staticmethod
         def read_as_tmp(path: str, needFileExists: bool = True, timeout: int = 60):
+            """
+            读取json文件并将其从磁盘加载到缓存区, 以便一段时间内能快速读写.
+            推荐使用.
+
+            参数:
+                path: 作为文件的磁盘内路径的同时也会作为在缓存区的虚拟路径
+                needFileExists: 默认为 True, 为 False 时, 若文件路径不存在, 就会自动创建一个文件, 且写入默认值null
+                timeout: 多久没有再进行读取操作时卸载缓存
+            """
             if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Builtins.TMPJson.loadPathJson(path, needFileExists)
             return Builtins.TMPJson.read(path)
+
+        @staticmethod
+        def write_as_tmp(path: str, obj: Any, needFileExists: bool = True, timeout: int = 60):
+            """
+            写入json文件并将其从磁盘加载到缓存区, 以便一段时间内能快速读写.
+            推荐使用.
+
+            参数:
+                path: 作为文件的磁盘内路径的同时也会作为在缓存区的虚拟路径
+                obj: 任何合法的JSON类型 例如 dict/list/str/bool/int/float
+                needFileExists: 默认为 True, 为 False 时, 若文件路径不存在, 就会自动创建一个文件, 且写入默认值null
+                timeout: 多久没有再进行读取操作时卸载缓存
+            """
+            if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
+                jsonUnloadPathTmp[path] = timeout + int(time.time())
+                Builtins.TMPJson.loadPathJson(path, needFileExists)
+            Builtins.TMPJson.write(obj)
 
         @staticmethod
         def cancel_change(path):
@@ -169,7 +193,7 @@ class Builtins:
 
             参数:
                 obj: json对象.
-                fp: 由open(...)打开的文件读写口 或 文件路径.
+                fp: 由 `open(...)` 打开的文件读写口 或 文件路径.
             """
             if isinstance(fp, str):
                 with open(fp, "w", encoding="utf-8") as file:

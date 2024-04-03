@@ -52,7 +52,6 @@ from .plugin_load.injected_plugin import (
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 createThread = builtins.Builtins.createThread
-PRG_NAME = "ToolDelta"
 VERSION = get_tool_delta_version()
 Builtins = builtins.Builtins
 Config = _Cfg()
@@ -75,7 +74,7 @@ class Frame:
         data_path = "插件数据文件/"
 
     createThread = ClassicThread = Builtins.createThread
-    PRG_NAME = PRG_NAME
+    PRG_NAME = constants.PRG_NAME
     sys_data = FrameBasic()
     serverNumber: str = ""
     serverPasswd: str
@@ -501,22 +500,21 @@ class Frame:
             Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
         return need_upgrade_cfg
 
-    @staticmethod
-    def welcome():
+    def welcome(self):
         # 欢迎提示
         Print.print_with_info(
-            f"§d{PRG_NAME} Panel Embed By SuperScript", Print.INFO_LOAD
+            f"§d{self.PRG_NAME} Panel Embed By SuperScript", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+            f"§d{self.PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} 项目地址: https://github.com/ToolDelta", Print.INFO_LOAD
+            f"§d{self.PRG_NAME} 项目地址: https://github.com/ToolDelta", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
+            f"§d{self.PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
         )
-        Print.print_with_info(f"§d{PRG_NAME} Panel 已启动", Print.INFO_LOAD)
+        Print.print_with_info(f"§d{self.PRG_NAME} Panel 已启动", Print.INFO_LOAD)
 
     @staticmethod
     def plugin_load_finished(plugins: PluginGroup):
@@ -610,7 +608,7 @@ class Frame:
             self.add_console_cmd_trigger(
                 ["exit"],
                 None,
-                f"退出并关闭{PRG_NAME}",
+                f"退出并关闭{self.PRG_NAME}",
                 lambda _: tooldelta.safe_jump(out_task=True),
             )
             self.add_console_cmd_trigger(

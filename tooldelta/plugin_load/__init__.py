@@ -19,6 +19,7 @@ class PluginAPIVersionError(ModuleNotFoundError):
         self.n_ver = n_ver
 
 class PluginRegData:
+    "插件注册表信息"
     def __init__(self, name: str, plugin_data: dict = None, is_registered=True, is_enabled=True):
         if plugin_data is None:
             plugin_data = {}

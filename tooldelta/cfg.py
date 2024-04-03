@@ -238,7 +238,7 @@ class Cfg:
         参数:
             cfg: 默认的CFG配置文件
         返回:
-            标准cfg样式
+            标准cfg样式, 用于 checkDict
         """
         if isinstance(cfg, dict):
             res = {}

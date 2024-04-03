@@ -2,6 +2,8 @@ from typing import List
 from tooldelta.launch_cli import FrameFBConn, FrameNeOmg, FrameNeOmgRemote
 from tooldelta.cfg import Cfg
 
+PRG_NAME = "ToolDelta"
+
 PLUGIN_MARKET_SOURCE_OFFICIAL = "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
 
 LAUNCHERS: List[
