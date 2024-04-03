@@ -225,11 +225,44 @@ class Cfg:
                 try:
                     self.check_auto(single_type, value, fromkey)
                     return
-                except:
+                except Exception as err:
                     pass
             raise self.ConfigValueError(
                 f"JSON列表的值 \"{fromkey}\" 类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in pattern)}, 实际上为 {_CfgShowType(value)}"
             )
+
+    def auto_to_std(self, cfg):
+        """
+        自动以默认配置文件生成标准配置文件格式.
+
+        参数:
+            cfg: 默认的CFG配置文件
+        返回:
+            标准cfg样式
+        """
+        if isinstance(cfg, dict):
+            res = {}
+            for k, v in cfg.items():
+                if isinstance(v, (dict, list)):
+                    res[k] = self.auto_to_std(v)
+                elif isinstance(v, (str, int, float, bool)):
+                    res[k] = type(v)
+            return res
+        elif isinstance(cfg, list):
+            setting_types = []
+            for v in cfg:
+                if isinstance(v, (dict, list)):
+                    t = self.auto_to_std(v)
+                else:
+                    t = type(v)
+                if t not in setting_types:
+                    setting_types.append(t)
+            if len(setting_types) == 1:
+                return [r"%list", setting_types[0]]
+            else:
+                return [r"%list", setting_types]
+        else:
+            raise ValueError("auto_to_std() 仅接受 dict 与 list 参数")
 
     checkDict = check_dict_2
 
@@ -237,9 +270,11 @@ class Cfg:
 if __name__ == "__main__":
     # Test Part
     try:
-        test_cfg = 12
-        a_std = [int, [r"%list", str]]
-        Cfg().check_auto(a_std, test_cfg)
+        test_cfg = [{"b": 1}]
+        a = [1, 2, 3, {"b": True}]
+        std = Cfg().auto_to_std(a)
+        print(std)
+        Cfg().check_auto(std, test_cfg)
     except Cfg.ConfigError:
         import traceback
 

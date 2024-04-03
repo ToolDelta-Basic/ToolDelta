@@ -10,11 +10,19 @@ from tooldelta.plugin_load.funcs import unzip_plugin
 from tooldelta.plugin_load import plugin_is_enabled, NotValidPluginError
 from tooldelta.constants import TOOLDELTA_CLASSIC_PLUGIN
 
+if 0:
+    # define Frame
+    from tooldelta.frame import Frame
+
 class Plugin:
     name = None
     version = (0, 0, 1)
     author = "?"
     description = "..."
+
+    def __init__(self, frame: "Frame"):
+        self.frame = frame
+        self.game_ctrl = frame.get_game_control()
 
     @property
     def data_path(self) -> str:
