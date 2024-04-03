@@ -474,7 +474,8 @@ class FrameNeOmg(StandardFrame):
             use_mirror = res["Mirror"][0]
         except Exception as err:
             Print.print_err(f"获取依赖库表出现问题: {err}")
-            raise SystemExit
+            self.update_status(SysStatus.CRASHED_EXIT)
+            return
         self.sys_machine = platform.machine().lower()
         if self.sys_machine == "x86_64":
             self.sys_machine = "amd64"
@@ -491,29 +492,30 @@ class FrameNeOmg(StandardFrame):
         ).text
         commit_local = ""
         commit_file_path = os.path.join(os.getcwd(), commit_file_path)
-        if not os.path.isfile(commit_file_path):
-            replace_file = True
-        else:
+        replace_file = False
+        if os.path.isfile(commit_file_path):
             with open(commit_file_path, "r", encoding="utf-8") as f:
                 commit_local = f.read()
-        replace_file = False
-        if commit_local != commit_remote:
-            Print.print_war("依赖库版本过期, 将重新下载")
+            if commit_local != commit_remote:
+                Print.print_war("依赖库版本过期, 将重新下载")
+                replace_file = True
+        else:
             replace_file = True
         for k, v in source_dict.items():
             pathdir = os.path.join(os.getcwd(), k)
             url = use_mirror + "/https://raw.githubusercontent.com/" + v
             if not os.path.isfile(pathdir) or replace_file:
-                Print.print_inf(f"正在下载依赖库 {pathdir} ...")
+                Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
                 try:
                     download_file_singlethreaded(url, pathdir)
                 except Exception as err:
                     Print.print_err(f"下载依赖库出现问题: {err}")
-                    raise SystemExit
+                    self.update_status(SysStatus.CRASHED_EXIT)
+                    return
         if replace_file:
             # 写入commit_remote，文字写入
-            with open(commit_file_path, "wb",encoding="utf-8") as f:
-                f.write(commit_remote.encode("utf-8"))
+            with open(commit_file_path, "w",encoding="utf-8") as f:
+                f.write(commit_remote)
             Print.print_suc("已完成依赖更新！")
 
     def get_players_and_uuids(self):
