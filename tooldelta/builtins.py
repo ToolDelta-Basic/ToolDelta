@@ -146,7 +146,7 @@ class Builtins:
 
         @staticmethod
         def read_as_tmp(path: str, needFileExists: bool = True, timeout: int = 60):
-            if (path not in jsonUnloadPathTmp) and not (path in jsonPathTmp):
+            if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Builtins.TMPJson.loadPathJson(path, needFileExists)
             return Builtins.TMPJson.read(path)
