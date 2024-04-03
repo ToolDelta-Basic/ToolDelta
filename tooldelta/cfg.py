@@ -248,7 +248,7 @@ class Cfg:
                 elif isinstance(v, (str, int, float, bool)):
                     res[k] = type(v)
             return res
-        elif isinstance(cfg, list):
+        if isinstance(cfg, list):
             setting_types = []
             for v in cfg:
                 if isinstance(v, (dict, list)):

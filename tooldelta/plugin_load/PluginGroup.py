@@ -107,8 +107,8 @@ class PluginGroup:
             Print.clean_print(
                 f" - 数据包监听: {', '.join(str(i) for i in self.listen_packet_ids)}"
             )
-
-    def help(self, plugin: Plugin):
+    @staticmethod
+    def help(plugin: Plugin):
         plugin_docs = "<plugins.help>: " + plugin.name + "开放的API接口说明:\n"
         for attr_name, attr in plugin.__dict__.items():
             if not attr_name.startswith("__") and attr.__doc__ is not None:
