@@ -41,5 +41,5 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
-          message: "[AUTO] Generate Directory JSON"
+          message: "[AUTO] Lock Poetry Files"
           add: "poetry.lock"
