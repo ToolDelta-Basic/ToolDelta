@@ -164,7 +164,7 @@ class PluginManager:
             clear_screen()
             Print.clean_print("§f以下插件可进行更新:")
             for plugin, v in need_updates:
-                Print.clean_print(f" - {plugin.name} §6{i.version_str}§f -> §a{v}")
+                Print.clean_print(f" - {plugin.name} §6{plugin.version_str}§f -> §a{v}")
             r = input(Print.clean_fmt("§f输入§a y §f开始更新, §c n §f取消: ")).strip().lower()
             if r == "y":
                 for plugin, v in need_updates:

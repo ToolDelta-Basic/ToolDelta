@@ -48,11 +48,9 @@ class MailSystem(Plugin):
         CFG_STD = {
             "收到邮件提示": str,
         }
-        CFG_DEFAULT = {
-            "收到邮件提示": "§7[§f!§7] §f收到新邮件: [邮件标题省略]"
-        }
-        self.cfg = Config.getPluginConfigAndVersion(
-            self.name, CFG_STD, CFG_DEFAULT
+        CFG_DEFAULT = {"收到邮件提示": "§7[§f!§7] §f收到新邮件: [邮件标题省略]"}
+        self.cfg, _ = Config.getPluginConfigAndVersion(
+            "邮箱系统", CFG_STD, CFG_DEFAULT, (0, 0, 1)
         )
         self.mail_notice = self.cfg["收到邮件提示"]
 
@@ -64,11 +62,16 @@ class MailSystem(Plugin):
     def send(self, who: str, mail: Mail):
         self._store_mail(who, mail)
         if who in self.gc.allplayers:
-            self.gc.say_to(who, Builtins.SimpleFmt(
-                {"[邮箱标题省略]": mail.title[:20] + "..",
-                "[邮箱标题]": mail.title},
-                self.mail_notice
-            ))
+            self.gc.say_to(
+                who,
+                Builtins.SimpleFmt(
+                    {
+                        "[邮箱标题省略]": mail.title[:20] + "..",
+                        "[邮箱标题]": mail.title,
+                    },
+                    self.mail_notice,
+                ),
+            )
 
     # -----------------------
 
@@ -77,7 +80,7 @@ class MailSystem(Plugin):
         counter = 0
         while name in it:
             counter += 1
-            name = name.replace(f"({(counter - 1)})", "") +f"({counter})"
+            name = name.replace(f"({(counter - 1)})", "") + f"({counter})"
         return name
 
     def _store_mail(self, who: str, m: Mail):

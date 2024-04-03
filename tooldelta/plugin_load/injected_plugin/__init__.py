@@ -9,11 +9,13 @@ import threading
 from tooldelta.color_print import Print
 from tooldelta.plugin_manager import plugin_manager
 from tooldelta.plugin_load import (
-    plugin_is_enabled, 
-    PluginAPINotFoundError, 
+    plugin_is_enabled,
+    PluginAPINotFoundError,
     PluginAPIVersionError
 )
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from tooldelta.plugin_load.PluginGroup import PluginGroup
 
 # 定义插件处理函数列表
 player_message_funcs = {}
@@ -225,7 +227,7 @@ def create_plugin_metadata(metadata_dict: dict):
     return PluginMetadata(name, author, description, version, usage, homepage)
 
 
-async def load_plugin(plugin_grp):
+async def load_plugin(plugin_grp: "PluginGroup"):
     tasks = []
 
     # 读取本目录下的文件夹名字
@@ -235,6 +237,7 @@ async def load_plugin(plugin_grp):
             continue
         if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
             plugin_grp.injected_plugin_loaded_num += 1
+            plugin_grp.loaded_plugins_name.append(file)
             task = asyncio.create_task(load_plugin_file(file))
             tasks.append(task)
 
@@ -243,7 +246,6 @@ async def load_plugin(plugin_grp):
     for task in tasks:
         plugin_metadata = await task
         all_plugin_metadata.append(plugin_metadata)
-        plugin_grp.loaded_plugins_name.append(file)
 
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:

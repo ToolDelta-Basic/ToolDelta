@@ -14,8 +14,9 @@ if 0:
     # define Frame
     from tooldelta.frame import Frame
 
+
 class Plugin:
-    name = None
+    name: str = ""
     version = (0, 0, 1)
     author = "?"
     description = "..."
@@ -28,7 +29,9 @@ class Plugin:
     def data_path(self) -> str:
         return os.path.join("插件数据文件", self.name)
 
+
 plugin_group_cache = [None]
+
 
 def read_plugins(plugin_grp):
     plugin_group_cache[0] = plugin_grp
@@ -54,14 +57,17 @@ def read_plugins(plugin_grp):
             load_plugin(plugin_dir)
             plugin_grp.loaded_plugins_name.append(plugin_dir)
 
-def load_plugin(plugin_dirname: str, hot_load = False):
+
+def load_plugin(plugin_dirname: str, hot_load=False):
     plugin_grp = plugin_group_cache[0]
     plugin_grp.plugin_added_cache["plugin"] = None
     plugin_grp.plugin_added_cache["packets"].clear()
     plugin_grp.pluginAPI_added_cache.clear()
     try:
         if os.path.isfile(
-            os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dirname, "__init__.py")
+            os.path.join(
+                "插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dirname, "__init__.py"
+            )
         ):
             importlib.__import__(plugin_dirname)
         else:
@@ -69,7 +75,9 @@ def load_plugin(plugin_dirname: str, hot_load = False):
             return
         Builtins.simpleAssert(
             plugin_grp.plugin_added_cache["plugin"] is not None,
-            NotValidPluginError("需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用")
+            NotValidPluginError(
+                "需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用"
+            ),
         )
         plugin = plugin_grp.plugin_added_cache["plugin"]
         if plugin.name is None:
@@ -79,31 +87,31 @@ def load_plugin(plugin_dirname: str, hot_load = False):
         _v0, _v1, _v2 = plugin_ins.version  # type: ignore
         if hasattr(plugin_ins, "on_def"):
             plugin_grp.plugins_funcs["on_def"].append(
-            [plugin_ins.name, plugin_ins.on_def]
+                [plugin_ins.name, plugin_ins.on_def]
             )
         if hasattr(plugin_ins, "on_inject"):
             plugin_grp.plugins_funcs["on_inject"].append(
-            [plugin_ins.name, plugin_ins.on_inject]
+                [plugin_ins.name, plugin_ins.on_inject]
             )
         if hasattr(plugin_ins, "on_player_prejoin"):
             plugin_grp.plugins_funcs["on_player_prejoin"].append(
-            [plugin_ins.name, plugin_ins.on_player_prejoin]
+                [plugin_ins.name, plugin_ins.on_player_prejoin]
             )
         if hasattr(plugin_ins, "on_player_join"):
             plugin_grp.plugins_funcs["on_player_join"].append(
-            [plugin_ins.name, plugin_ins.on_player_join]
-        )
+                [plugin_ins.name, plugin_ins.on_player_join]
+            )
         if hasattr(plugin_ins, "on_player_message"):
             plugin_grp.plugins_funcs["on_player_message"].append(
-            [plugin_ins.name, plugin_ins.on_player_message]
+                [plugin_ins.name, plugin_ins.on_player_message]
             )
         if hasattr(plugin_ins, "on_player_death"):
             plugin_grp.plugins_funcs["on_player_death"].append(
-            [plugin_ins.name, plugin_ins.on_player_death]
+                [plugin_ins.name, plugin_ins.on_player_death]
             )
         if hasattr(plugin_ins, "on_player_leave"):
             plugin_grp.plugins_funcs["on_player_leave"].append(
-            [plugin_ins.name, plugin_ins.on_player_leave]
+                [plugin_ins.name, plugin_ins.on_player_leave]
             )
         Print.print_suc(
             f"成功载入插件 {plugin_ins.name} 版本: {_v0}.{_v1}.{_v2} 作者：{plugin_ins.author}"
@@ -121,9 +129,7 @@ def load_plugin(plugin_dirname: str, hot_load = False):
                     plugin_grp.plugins_api[_api] = plugin_ins
                 else:
                     (apiName, api) = _api
-                    plugin_grp.plugins_api[apiName] = api(
-                        plugin_grp.linked_frame
-                    )
+                    plugin_grp.plugins_api[apiName] = api(plugin_grp.linked_frame)
             # 自动注册插件到插件管理器
         plugin_manager.test_name_same(plugin_ins.name, plugin_dirname)
         if not plugin_manager.plugin_is_registered("classic", plugin_ins.name):

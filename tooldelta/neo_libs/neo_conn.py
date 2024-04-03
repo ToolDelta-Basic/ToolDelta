@@ -691,7 +691,10 @@ class ThreadOmega:
         self.start_new(self._react)
 
     def start_new(self, func: Callable, args: Iterable[Any] = ()):
-        thread_i = next(self._thread_counter)
+        try:
+            thread_i = next(self._thread_counter)
+        except StopIteration:
+            raise ValueError("thread counter overflow")
 
         def clean_up(*args):
             try:
@@ -807,7 +810,10 @@ class ThreadOmega:
         self, cmd: str, timeout: int = -1
     ) -> Optional[CommandOutput]:
         setter, getter = self._create_lock_and_result_setter()
-        retriever_id = next(self._cmd_callback_retriever_counter)
+        try:
+            retriever_id = next(self._cmd_callback_retriever_counter)
+        except StopIteration:
+            raise ValueError("retriever counter overflow")
         self._omega_cmd_callback_events[retriever_id] = setter
         SendWebSocketCommandNeedResponse(cmd, retriever_id)
         res = getter(timeout=timeout)
@@ -818,7 +824,10 @@ class ThreadOmega:
         self, cmd: str, timeout: int = -1
     ) -> Optional[CommandOutput]:
         setter, getter = self._create_lock_and_result_setter()
-        retriever_id = next(self._cmd_callback_retriever_counter)
+        try:
+            retriever_id = next(self._cmd_callback_retriever_counter)
+        except StopIteration:
+            raise ValueError("retriever counter overflow")
         self._omega_cmd_callback_events[retriever_id] = setter
         SendPlayerCommandNeedResponse(cmd, retriever_id)
         res = getter(timeout=timeout)
@@ -856,7 +865,10 @@ class ThreadOmega:
         return self._packet_id_to_name_mapping[requires]
 
     def listen_packets(
-        self, targets: Union[str, List[str]], callback: Callable[[str, Any], None], clr_datas = False
+        self,
+        targets: Union[str, List[str]],
+        callback: Callable[[str, Any], None],
+        clr_datas=False,
     ):
         if clr_datas:
             for k in self._packet_listeners.copy():
@@ -880,7 +892,7 @@ class ThreadOmega:
                     hit = True
                 try:
                     packetID = int(rt)
-                    packetType = self._packet_id_to_name_mapping(packetID)
+                    packetType = self._packet_id_to_name_mapping[packetID]
                     translate_targets[packetType] = False
                     hit = True
                 except:
@@ -975,7 +987,10 @@ class ThreadOmega:
         self, player_c_uuid: CString, timeout: int = -1
     ) -> Chat:
         setter, getter = self._create_lock_and_result_setter()
-        retrieverID = next(self._player_chat_intercept_callback_retriever_counter)
+        try:
+            retrieverID = next(self._player_chat_intercept_callback_retriever_counter)
+        except StopIteration:
+            raise ValueError("too many intercepts")
         self._player_chat_intercept_callback_events[retrieverID] = setter
         LIB.InterceptPlayerJustNextInput(player_c_uuid, toCString(retrieverID))
         res = getter(timeout=timeout)

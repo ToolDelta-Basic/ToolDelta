@@ -27,7 +27,7 @@ class Compiler(Plugin):
         self.compiled_scripts = {}
         self.make_dirs()
         self.evt_scripts = {
-            "injected": {}, 
+            "injected": {},
             "player_message": {},
             "player_join": {},
             "player_leave": {}
@@ -61,13 +61,13 @@ class Compiler(Plugin):
                 elif file == "玩家发言.txt":
                     with open(fopath + "/" + "玩家发言.txt", "r", encoding="utf-8") as f:
                         self.evt_scripts["player_message"], err = self.script_parse(f.read(), {"玩家名": 1, "消息": 1})
-            if err is None:
-                Print.print_suc(f"ToolDelta-中文Basic: 已加载脚本: {fopath}/{file}")
-            elif err == 0:
-                Print.print_war(f"ToolDelta-中文Basic: 脚本文件夹为空: {fopath}")
-            else:
-                Print.print_err(f"ToolDelta-中文Basic: 加载脚本 {fopath}/{file} 出现问题:\n" + str(err.args[0]))
-                raise SystemExit
+                if err is None:
+                    Print.print_suc(f"ToolDelta-中文Basic: 已加载脚本: {fopath}/{file}")
+                elif err == 0:
+                    Print.print_war(f"ToolDelta-中文Basic: 脚本文件夹为空: {fopath}")
+                else:
+                    Print.print_err(f"ToolDelta-中文Basic: 加载脚本 {fopath}/{file} 出现问题:\n" + str(err.args[0]))
+                    raise SystemExit
 
     def get_player_plot_path(self, player: str) -> str:
         return self.data_path + f"/player_vars/{player}.json"
@@ -156,8 +156,8 @@ class Compiler(Plugin):
                 now_line_counter += 1
         except Exception as err:
             return None, err
-        try:
-            for (ln, args) in sorted(scr_lines, key = lambda x: x[0]):
+        for (ln, args) in sorted(scr_lines, key = lambda x: x[0]):
+            try:
                 match args[0]:
                     case "结束":
                         _simple_assert_len(args, 1)
@@ -177,8 +177,8 @@ class Compiler(Plugin):
                         # 执行 <mc指令>
                     case "设定" | "设定变量":
                         """
-                        md: 0=const_int, 1=const_str, 2=等待聊天栏输入, 3=等待聊天栏输入纯数字, 4=玩家计分板分数, 5=玩家坐标 
-                        md2: 0=int, 1=str 
+                        md: 0=const_int, 1=const_str, 2=等待聊天栏输入, 3=等待聊天栏输入纯数字, 4=玩家计分板分数, 5=玩家坐标
+                        md2: 0=int, 1=str
                         """
                         if len(args) <= 2:
                             raise AssertionError("设定命令 至少需要2个参数")
@@ -292,9 +292,9 @@ class Compiler(Plugin):
                             _add_cmp(hash(cmd), None if len(args) == 1 else args[1:])
                         else:
                             raise AssertionError(f"无法被识别的指令: {args[0]}")
-            return cmp_scripts, None
-        except AssertionError as err:
-            return None, AssertionError(f"第{ln}行 出现问题: {err}")
+            except AssertionError as err:
+                return None, AssertionError(f"第{ln}行 出现问题: {err}")
+        return cmp_scripts, None
 
     def execute_script(self, script_name: str, pre_variables: None | dict = None):
         """"
