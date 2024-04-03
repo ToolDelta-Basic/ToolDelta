@@ -14,8 +14,9 @@ from tooldelta.plugin_load import (
     NON_FUNC,
     NotValidPluginError,
     PluginAPINotFoundError,
-    PluginAPIVersionError
+    PluginAPIVersionError,
 )
+
 
 class PluginGroup:
     plugins: list[Plugin] = []
@@ -58,7 +59,7 @@ class PluginGroup:
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
         except Exception:
-            err_str = '\n'.join(traceback.format_exc().split('\n')[1:])
+            err_str = "\n".join(traceback.format_exc().split("\n")[1:])
             Print.print_err(f"加载插件出现问题: \n{err_str}")
             raise SystemExit
 
@@ -81,6 +82,7 @@ class PluginGroup:
                 self._broadcast_evts[evt_name].append(func)
             else:
                 self._broadcast_evts[evt_name] = [func]
+
         return deco
 
     def broadcastEvt(self, evt_name: str, **kwargs) -> list[Any] | None:
@@ -102,14 +104,20 @@ class PluginGroup:
             # 很可能是直接单独运行此插件的代码.
             Print.clean_print(f"插件主类信息({plugin.name}): ")
             Print.clean_print(f" - 作者: {plugin.author}\n - 版本: {plugin.version}")
-            Print.clean_print(f" - 数据包监听: {', '.join(str(i) for i in self.listen_packet_ids)}")
+            Print.clean_print(
+                f" - 数据包监听: {', '.join(str(i) for i in self.listen_packet_ids)}"
+            )
 
-    @staticmethod
     def help(self, plugin: Plugin):
         plugin_docs = "<plugins.help>: " + plugin.name + "开放的API接口说明:\n"
         for attr_name, attr in plugin.__dict__.items():
-            if not attr_name.startswith("__") and getattr(attr, "__doc__") is not None:
-                plugin_docs += "\n §a" + attr_name + ":§f\n    " + attr.__doc__.replace("\n", "\n    ")
+            if not attr_name.startswith("__") and attr.__doc__ is not None:
+                plugin_docs += (
+                    "\n §a"
+                    + attr_name
+                    + ":§f\n    "
+                    + attr.__doc__.replace("\n", "\n    ")
+                )
         Print.clean_print(plugin_docs)
 
     def add_plugin(self, plugin: Plugin):
@@ -139,9 +147,7 @@ class PluginGroup:
     def add_plugin_as_api(self, apiName: str):
         def _add_plugin_2_api(api_plugin: Type[Plugin]):
             if not Plugin.__subclasscheck__(api_plugin):
-                raise NotValidPluginError(
-                    "API插件主类必须继承Plugin类"
-                )
+                raise NotValidPluginError("API插件主类必须继承Plugin类")
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
             self.test_plugin(api_plugin)
@@ -149,9 +155,7 @@ class PluginGroup:
 
         return _add_plugin_2_api
 
-    def get_plugin_api(
-        self, apiName: str, min_version: tuple | None = None
-    ) -> Plugin:
+    def get_plugin_api(self, apiName: str, min_version: tuple | None = None) -> Plugin:
         api = self.plugins_api.get(apiName)
         if api:
             if min_version and api.version < min_version:
@@ -261,5 +265,6 @@ class PluginGroup:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False
+
 
 plugin_group = PluginGroup()
