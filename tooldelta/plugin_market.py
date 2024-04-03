@@ -51,12 +51,13 @@ def _get_json_from_url(url: str):
 class PluginMarket:
     def enter_plugin_market(self, source_url: str = None, in_game = False):
         Print.clean_print("§6正在连接到插件市场..")
+        CTXS = 12
         try:
             market_datas = self.get_datas_from_market(source_url)
             plugins_list = list(market_datas["MarketPlugins"].items())
             all_indexes = len(plugins_list)
             now_index = 0
-            sum_pages = int((all_indexes - 1) / 8) + 1
+            sum_pages = int((all_indexes - 1) / CTXS) + 1
             now_page = 0
             last_operation = ""
             while True:
@@ -65,8 +66,8 @@ class PluginMarket:
                     market_datas["SourceName"] + ": " + market_datas["Greetings"],
                     need_log=False
                 )
-                now_page = int(now_index / 8) + 1
-                for i in range(now_index, now_index + 8):
+                now_page = int(now_index / CTXS) + 1
+                for i in range(now_index, now_index + CTXS):
                     if i in range(all_indexes):
                         plugin_data = PluginRegData(
                             plugins_list[i][0], plugins_list[i][1]
@@ -88,9 +89,9 @@ class PluginMarket:
                     .strip()
                 )
                 if last_operation == "+":
-                    now_index += 8
+                    now_index += CTXS
                 elif last_operation == "-":
-                    now_index -= 8
+                    now_index -= CTXS
                 elif last_operation == "q":
                     break
                 else:
@@ -134,7 +135,7 @@ class PluginMarket:
                 if now_index >= all_indexes:
                     now_index = 0
                 elif now_index < 0:
-                    now_index = max(all_indexes - 8, 0)
+                    now_index = max(now_index - CTXS, 0)
         except KeyError as err:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
             return
@@ -187,7 +188,7 @@ class PluginMarket:
         pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
         for plugin_name in plugin_data.pre_plugins:
-            Print.print_inf(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
+            Print.clean_print(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
             pres += self.download_plugin(
                 PluginRegData(plugin_name, all_plugins_dict[plugin_name]),
                 all_plugins_dict,

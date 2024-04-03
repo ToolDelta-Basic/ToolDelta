@@ -272,7 +272,10 @@ class PluginManager:
                     )
                 v.update({"name": k})
                 p = PluginRegData(k, v)
-                if os.path.exists(os.path.join("插件文件", f_dirname[p.plugin_type], p.name)):
+                if (
+                    os.path.exists(os.path.join("插件文件", f_dirname[p.plugin_type], p.name))
+                    or os.path.exists(os.path.join("插件文件", f_dirname[p.plugin_type], p.name + "+disabled"))
+                ):
                     res.append(p)
                     r0[p.plugin_type].append(p.name)
         return r0, res
