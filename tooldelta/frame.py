@@ -336,7 +336,7 @@ class Frame:
                             upgrade_script_path, "w", encoding="utf-8"
                         ) as upgrade_script:
                             temp_shell = (
-                                f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)} -l 1\nelse\n  exit\nfi'
+                                f'#!/bin/bash\nif [ -f "{file_path}" ];then\n  sleep 3\n  rm -f {os.getcwd()}/{os.path.basename(__file__)}\n  mv {os.getcwd()}/ToolDelta-linux_new {os.getcwd()}/{os.path.basename(__file__)}\n  /usr/bin/chmod 777 {os.path.basename(__file__)}\n  ./{os.path.basename(__file__)} -l 1\nelse\n  exit\nfi'
                                 if platform.system() == "Linux"
                                 else f"@echo off\ncd {os.getcwd()}\nif not exist {win_old_tool_delta_path} exit\ntimeout /T 3 /NOBREAK\ndel {win_old_tool_delta_path}\nren ToolDelta-windows_new.exe {os.path.basename(win_old_tool_delta_path)}\nstart {os.path.basename(win_old_tool_delta_path)}"
                             )
@@ -351,7 +351,6 @@ class Frame:
                                 else f"{upgrade_script_path}"
                             ),
                             cwd=os.getcwd(),
-                            shell=True,
                         )
                         upgrade_process.communicate()
 
@@ -664,7 +663,6 @@ class Frame:
                 pass
         time.sleep(0.5)
         self.launcher.exit_event.set()
-
 
     def get_console_menus(self):
         # 获取所有控制台命令菜单

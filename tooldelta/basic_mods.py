@@ -1,57 +1,36 @@
-# Manage libraries
-try:
-    import time
-    import os
-    import re
-    import sys
-    import threading
-    import json
-    import traceback
-    import datetime
-    import platform
-    import subprocess
-    import socket
-    import logging
-    import ctypes
-    import asyncio
-    import multiprocessing
-    import copy
-    import math
-    import random
-    import psutil
-    import pyspeedtest
-    import requests
-    import nbt
-    import qrcode
-    import getpass
-    import pymysql
-    import websockets
-    import tarfile
-    import gzip
-    import importlib
-    import ujson
-    import hashlib
-    import base64
-    import rich
-    import tqdm
-
-    sys.path.append(os.path.join(os.getcwd(), "libs"))
-
-except ModuleNotFoundError as err:
-    # 第一次部署该项目, 将会自动安装这些模块.
-    from . import get_python_libs
-
-    get_python_libs.try_install_libs(err)
-    import psutil
-    import requests
-    import nbt
-    import qrcode
-    import getpass
-    import pymysql
-    import websockets
-    import ujson
-    import hashlib
-    import base64
-    import rich
-
+import time
+import os
+import re
+import sys
+import threading
+import json
+import traceback
+import datetime
+import platform
+import subprocess
+import socket
+import logging
+import ctypes
+import asyncio
+import multiprocessing
+import copy
+import math
+import random
+import psutil
+import pyspeedtest
+import requests
+import nbt
+import qrcode
+import getpass
+import pymysql
+import websockets
+import tarfile
+import gzip
+import importlib
+import ujson
+import hashlib
+import base64
+import rich
+import tqdm
 from typing import Callable
+sys.path.append(os.path.join(os.getcwd(), "libs"))

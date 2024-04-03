@@ -6,7 +6,6 @@ import traceback
 from typing import Any, Callable, Type
 
 from tooldelta.color_print import Print
-from tooldelta.get_python_libs import get_single_lib
 from tooldelta.plugin_load.classic_plugin import Plugin
 from tooldelta.plugin_load import (
     classic_plugin,
@@ -45,13 +44,6 @@ class PluginGroup:
 
     def set_frame(self, frame):
         self.linked_frame = frame
-
-    @staticmethod
-    def require(module_name: str, pip_name=""):
-        try:
-            importlib.import_module(module_name)
-        except (ModuleNotFoundError, ImportError):
-            get_single_lib(pip_name if pip_name else module_name)
 
     def read_all_plugins(self):
         try:
