@@ -259,10 +259,8 @@ class Cfg:
                     setting_types.append(t)
             if len(setting_types) == 1:
                 return [r"%list", setting_types[0]]
-            else:
-                return [r"%list", setting_types]
-        else:
-            raise ValueError("auto_to_std() 仅接受 dict 与 list 参数")
+            return [r"%list", setting_types]
+        raise ValueError("auto_to_std() 仅接受 dict 与 list 参数")
 
     checkDict = check_dict_2
 
