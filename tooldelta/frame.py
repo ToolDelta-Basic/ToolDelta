@@ -260,7 +260,7 @@ class Frame:
                     std["服务器号"] = int(self.serverNumber)
                     std["密码"] = int(self.serverPasswd)
                     Config.default_cfg("ToolDelta基本配置.json", std, True)
-                    Print.print_suc("登陆配置设置成功")
+                    Print.print_suc("登录配置设置成功")
                     cfgs = std
                     break
                 except:
@@ -272,7 +272,7 @@ class Frame:
             for i, (auth_server_name, _) in enumerate(auth_servers):
                 Print.print_inf(f" {i + 1} - {auth_server_name}")
             Print.print_inf(
-                "NOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用"
+                "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用"
             )
             while 1:
                 try:
@@ -309,6 +309,9 @@ class Frame:
                         auths.login_liliya()
                     case "https://api.fastbuilder.pro":
                         auths.login_fbuc()
+                    case _:
+                        Print.print_err("暂无法登录该验证服务器")
+                        raise SystemExit
             elif Login_method == "2":
                 self.if_token()
             else:

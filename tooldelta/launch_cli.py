@@ -588,7 +588,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
             return SystemExit
-        Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点.")
+        Print.print_inf(f"将从端口 {openat_port} 连接至 neOmega 接入点(等待接入中).")
         self.set_omega(openat_port)
         Print.print_suc("已连接上 NEOMG 接入点进程.")
         pcks = [
