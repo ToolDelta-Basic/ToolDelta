@@ -1,7 +1,7 @@
 import os
 import platform
 import shutil
-
+import shlex
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_market import market
@@ -17,7 +17,7 @@ if platform.system().lower() == "windows":
 else:
     CLS_CMD = "clear"
 
-clear_screen = lambda: os.system(CLS_CMD)
+clear_screen = lambda: os.system(shlex.quote(CLS_CMD))
 
 class PluginRegData:
     # 插件注册信息类

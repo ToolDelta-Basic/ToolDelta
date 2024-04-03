@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import traceback
 import time
+import shlex
 from tooldelta import urlmethod
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
@@ -23,7 +24,7 @@ if platform.system().lower() == "windows":
 else:
     CLS_CMD = "clear"
 
-clear_screen = lambda: os.system(CLS_CMD)
+clear_screen = lambda: os.system(shlex.quote(CLS_CMD))
 
 
 def _path_dir(path: str):

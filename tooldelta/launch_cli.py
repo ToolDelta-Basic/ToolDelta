@@ -396,7 +396,7 @@ class FrameNeOmg(StandardFrame):
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
         if platform.uname().system.lower() == "linux":
-            os.system(f"chmod +x {shlex.quote(py_file_path)}")
+            os.system("chmod +x " + shlex.quote(py_file_path))
         # 只需要+x即可
         Print.print_inf(f"DEBUG: 将使用端口 {free_port}")
         self.neomg_proc = subprocess.Popen(
@@ -424,15 +424,18 @@ class FrameNeOmg(StandardFrame):
             while True:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig in ("", "SIGNAL: exit"):
-                    with Print.lock:Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                    with Print.lock:
+                        Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
                 elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
-                    with Print.lock:Print.print_with_info("§a机器人已退出", "§b NOMG ")
+                    with Print.lock:
+                        Print.print_with_info("§a机器人已退出", "§b NOMG ")
                     continue
-                with Print.lock:Print.print_with_info(msg_orig, "§b NOMG ")
+                with Print.lock:
+                    Print.print_with_info(msg_orig, "§b NOMG ")
 
         Builtins.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
 
@@ -514,7 +517,7 @@ class FrameNeOmg(StandardFrame):
                     return
         if replace_file:
             # 写入commit_remote，文字写入
-            with open(commit_file_path, "w",encoding="utf-8") as f:
+            with open(commit_file_path, "w", encoding="utf-8") as f:
                 f.write(commit_remote)
             Print.print_suc("已完成依赖更新！")
 
