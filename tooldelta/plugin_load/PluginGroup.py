@@ -104,6 +104,7 @@ class PluginGroup:
             Print.clean_print(f" - 作者: {plugin.author}\n - 版本: {plugin.version}")
             Print.clean_print(f" - 数据包监听: {', '.join(str(i) for i in self.listen_packet_ids)}")
 
+    @staticmethod
     def help(self, plugin: Plugin):
         plugin_docs = "<plugins.help>: " + plugin.name + "开放的API接口说明:\n"
         for attr_name, attr in plugin.__dict__.items():
@@ -173,7 +174,6 @@ class PluginGroup:
             self.packet_funcs[str(packetType)].append(func)
         else:
             self.packet_funcs[str(packetType)] = [func]
-
 
     def execute_def(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
         for name, func in self.plugins_funcs["on_def"]:
