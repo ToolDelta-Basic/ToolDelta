@@ -255,8 +255,8 @@ class Frame:
             self.start_auto_update_thread()
 
         def start_auto_update_thread(self):
-            # 每6小时检查一次更新
-            threading.Timer(6 * 60 * 60, self.auto_update).start()
+            # 每24小时检查一次更新
+            threading.Timer(24 * 60 * 60, self.auto_update).start()
 
         @staticmethod
         def auto_update():

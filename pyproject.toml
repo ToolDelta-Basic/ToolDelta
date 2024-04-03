@@ -25,7 +25,6 @@ pillow = "^10.2.0"
 shellescape = "^3.8.1"
 pyspeedtest = "1.2.7"
 tqdm = "4.66.2"
-aiohttp = "^3.9.3"
 
 [build-system]
 requires = ["poetry-core"]
