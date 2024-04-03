@@ -88,7 +88,7 @@ class Frame:
 
     @staticmethod
     def check_use_token(tok_name="", check_md=""):
-        res = sys_args.sys_args_to_dict(sys.argv)
+        res = sys_args.sys_args_to_dict()
         res = res.get(tok_name, 1)
         if (res == 1 and check_md) or res != check_md:
             Print.print_err("启动参数错误")
