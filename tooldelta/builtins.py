@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Tuple, Optional
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
-
+threads_list: list["Builtins.createThread"] = []
 
 class Builtins:
     class ThreadExit(SystemExit):
@@ -35,12 +35,15 @@ class Builtins:
             self.start()
 
         def run(self):
+            threads_list.append(self)
             try:
                 self.func(*self.all_args[0], **self.all_args[1])
             except Builtins.ThreadExit:
                 pass
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
+            finally:
+                threads_list.remove(self)
 
         def get_id(self):
             if hasattr(self, '_thread_id'):
@@ -264,6 +267,11 @@ class Builtins:
             os.makedirs(f"插件数据文件/{plugin_name}", exist_ok=True)
             with open(f"插件数据文件/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
                 Builtins.SimpleJsonDataReader.SafeJsonDump(obj, f)
+
+    @staticmethod
+    def get_threads_list():
+        "返回使用 createThread 创建的全线程列表."
+        return threads_list
 
     @staticmethod
     def SimpleFmt(kw: Dict[str, Any], __sub: str) -> str:

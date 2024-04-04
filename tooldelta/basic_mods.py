@@ -33,5 +33,6 @@ import hashlib
 import base64
 import rich
 import tqdm
+import psutil
 from typing import Callable
 sys.path.append(os.path.join(os.getcwd(), "libs"))
