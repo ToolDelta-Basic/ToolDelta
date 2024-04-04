@@ -38,7 +38,7 @@ class Builtins:
             threads_list.append(self)
             try:
                 self.func(*self.all_args[0], **self.all_args[1])
-            except Builtins.ThreadExit:
+            except (Builtins.ThreadExit, SystemExit):
                 pass
             except:
                 Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
