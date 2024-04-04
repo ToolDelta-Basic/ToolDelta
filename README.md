@@ -33,14 +33,15 @@ How to use?：[learn-use](https://tooldelta-wiki.tblstudio.cn/learn-use.html)
 
 Docker Image: [DockerHub](https://hub.docker.com/r/wlingzhenyu/tooldelta)
 
-## 直接下载 ToolDelta 可执行文件并运行
-<a href="https://github.com/ToolDelta/ToolDelta/releases">发行版 ToolDelta 下载点这里</a>
+## 如何运行
+ - 直接下载 ToolDelta 可执行文件并运行
+    - <a href="https://github.com/ToolDelta/ToolDelta/releases">发行版 ToolDelta 下载点这里</a>
 
-## 在 `pip` 安装 ToolDelta 并运行
-`pip install tooldelta`
-`echo "import tooldelta;tooldelta.client_title()"`
+ - 在 `pip` 安装 ToolDelta 并运行
+    - `pip install tooldelta`
+    - `echo "import tooldelta;tooldelta.client_title()"`
 
-# 在docker运行
-```bash
-docker run -v .:/app -t -i wlingzhenyu/tooldelta:latest
-```
+ - 在docker运行
+    ```bash
+    docker run -v .:/app -t -i wlingzhenyu/tooldelta:latest
+    ```
