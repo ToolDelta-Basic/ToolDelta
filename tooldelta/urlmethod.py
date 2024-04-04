@@ -10,8 +10,24 @@ from tqdm import tqdm
 import pyspeedtest
 import requests
 
-from .color_print import Print
+from tooldelta.color_print import Print
 
+def progress_bar(
+    current: float | int, total: float | int, length = 20, color1="§f", color2="§b"
+):
+    pc = round(current / total * length)
+    return Print.colormode_replace(
+        color1 + " " * pc + color2 + " " * (20 - pc) + "§r ", 7
+    )
+
+def download_progress_bar(
+    current_bytes: int, total_bytes: int, speed = 0
+):
+    bar = progress_bar(current_bytes, total_bytes)
+    b = f"{bar} {_pretty_kb(current_bytes)}B / {_pretty_kb(total_bytes)}B"
+    if speed != 0:
+        b += f"{_pretty_kb(speed)}B/s)    "
+    Print.print_with_info(b, "§a 下载 ", need_log=False, end = "\r")
 
 def _pretty_kb(n: int) -> str:
     if n >= 1048576:
@@ -22,12 +38,14 @@ def _pretty_kb(n: int) -> str:
 
 
 def _path_get_filename(path: str) -> Union[str, None]:
+    "从路径中获取最末尾的文件夹/文件名."
     if "/" not in path:
         return None
     return path.split("/")[-1]
 
 
 def _is_common_text_file(url_path: str) -> bool:
+    "是否为正常的文本文件(常见的)."
     return any(
         url_path.endswith(i)
         for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]
@@ -64,14 +82,15 @@ def download_file_singlethreaded(
         try:
             if filesize < 256 and not ignore_warnings:
                 Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
-        except TypeError:pass
+        except TypeError:
+            pass
         chunk_size = 8192
         nowsize = 0
         succ = False
         lastime = time.time()
         useSpeed = 0
         with open(save_dir + ".tmp", "wb") as dwnf:
-            for chk in res.iter_content(chunk_size=8192):
+            for chk in res.iter_content(chunk_size):
                 nowtime = time.time()
                 if nowtime != lastime:
                     useSpeed = chunk_size / (nowtime - lastime)
@@ -79,23 +98,12 @@ def download_file_singlethreaded(
                 nowsize += len(chk)
                 dwnf.write(chk)
                 if nowsize % 81920 == 0:  # 每下载 10 个数据块更新一次进度
-                    prgs = nowsize / filesize
-                    _tmp = int(prgs * 20)
-                    bar = Print.colormode_replace(
-                        "§f" + " " * _tmp + "§b" + " " * (20 - _tmp) + "§r ", 7
-                    )
-                    Print.print_with_info(
-                        f"{bar} {_pretty_kb(nowsize)}B / {_pretty_kb(filesize)}B ({_pretty_kb(useSpeed)}B/s)    ",
-                        "§a 下载 §r",
-                        end="\r",
-                        need_log=False,
-                    )
+                    download_progress_bar(nowsize, filesize, useSpeed)
         succ = True
         if succ:
             shutil.move(save_dir + ".tmp", save_dir)
         else:
             os.remove(save_dir + ".tmp")
-
 
 def download_file_multithreading(
     url: str, save_dir: str, num_threads: int = 8, ignore_warnings: bool = False
@@ -138,11 +146,16 @@ def download_file_multithreading(
 
 def download_unknown_file(url: str, save_dir: str) -> None:
     # 鉴于 Content-Length 不一定表示文件原始大小, 二进制文件与文本文件需要分开下载
+    # 否则显示的下载条会异常
     resp = requests.get(url, timeout=10)
     resp.raise_for_status()
-
-    with open(save_dir, "wb") as f:
-        f.write(resp.content)
+    # Bad..
+    if _is_common_text_file(save_dir):
+        # 文本文件, 体积可能不大
+        with open(save_dir, "wb") as f:
+            f.write(resp.content)
+    else:
+        download_file_singlethreaded(url, save_dir)
 
 def test_site_latency(Da: dict) -> list:
     tmp_speed = {}
