@@ -14,7 +14,7 @@
 <p align="center">
   <code>ToolDelta</code> 是依赖于 <code>PhoenixBuilder | NeOmega</code> 的多功能扩展组件，可以加载各种各样有趣的插件。  
   <code>ToolDelta</code> 可以使得你的 <b>中国版《我的世界》手机版租赁服</b> 的玩法和功能更加多样化。  
-  ToolDelta Wiki/用户指南: <a href="Wiki: https://tooldelta-wiki.tblstudio.cn/">ToolDelta Wiki</a>  
+  ToolDelta Wiki/用户指南: <a href="https://tooldelta-wiki.tblstudio.cn/">ToolDelta Wiki</a>  
   ToolDelta 交流群: 194838530  
 </p>
 
