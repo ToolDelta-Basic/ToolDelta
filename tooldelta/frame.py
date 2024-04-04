@@ -219,7 +219,6 @@ class Frame:
                 )
 
     def read_cfg(self):
-
         Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
             cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
@@ -278,12 +277,12 @@ class Frame:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
                     if ch not in range(1, len(auth_servers) + 1):
-                        raise AssertionError
+                        raise ValueError
                     cfgs["验证服务器地址(更换时记得更改fbtoken)"] = auth_servers[
                         ch - 1
                     ][1]
                     break
-                except (ValueError, AssertionError):
+                except ValueError:
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
             # 读取启动配置等
@@ -325,10 +324,10 @@ class Frame:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
                     if ch not in range(1, len(launchers) + 1):
-                        raise AssertionError
+                        raise ValueError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                     break
-                except (ValueError, AssertionError):
+                except ValueError:
                     Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         launcher: Callable = launchers[
@@ -399,7 +398,6 @@ class Frame:
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
-        os.makedirs("status", exist_ok=True)
         os.makedirs("插件数据文件/status", exist_ok=True)
         os.makedirs("插件数据文件/players", exist_ok=True)
         os.makedirs("插件数据文件/game_texts", exist_ok=True)
@@ -441,7 +439,7 @@ class Frame:
         Print.print_inf("§a以下是可选的菜单指令项: ")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
-                Print.print_inf(f" §e{' 或 '.join(triggers)} {arg_hint}  §f->  {usage}")
+                Print.print_inf(f" §e{' 或 '.join(triggers)} §b{arg_hint}  §f->  {usage}")
             else:
                 Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
@@ -488,8 +486,8 @@ class Frame:
                     res = sys.stdin.read(1)
                     if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
                         break
-                    if res in ("", "^C"):
-                        Print.print_inf("使用 Ctrl+C 退出中...")
+                    if res in ("", "^C", "^D"):
+                        Print.print_inf("按退出键退出中...")
                         self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()
                         return
