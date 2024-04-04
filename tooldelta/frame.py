@@ -226,6 +226,7 @@ class Frame:
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.plugin_market_url = cfgs["插件市场源"]
+            self.enable_inject_welcome = cfgs["启动时是否显示欢迎信息"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
@@ -235,7 +236,7 @@ class Frame:
                     "你不该随意修改启动器模式, 现在赶紧把它改回0吧"
                 )
         except Config.ConfigError as err:
-            r = self.upgrade_cfg(constants.LAUNCH_CFG)
+            r = self.upgrade_cfg()
             if r:
                 Print.print_war("配置文件未升级, 已自动升级, 请重启 ToolDelta")
             else:
@@ -344,20 +345,15 @@ class Frame:
         )
 
     @staticmethod
-    def upgrade_cfg(cfg_std):
+    def upgrade_cfg():
         # 升级本地的配置文件
         old_cfg = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
-        if "验证服务器地址(更换时记得更改fbtoken)" not in old_cfg_keys:
-            old_cfg["验证服务器地址(更换时记得更改fbtoken)"] = ""
-            need_upgrade_cfg = True
-        if "是否记录日志" not in old_cfg_keys:
-            old_cfg["是否记录日志"] = False
-            need_upgrade_cfg = True
-        if "插件市场源" not in old_cfg_keys:
-            old_cfg["插件市场源"] = cfg_std["插件市场源"]
-            need_upgrade_cfg = True
+        for k, v in constants.LAUNCH_CFG.items():
+            if k not in old_cfg_keys:
+                old_cfg[k] = v
+                need_upgrade_cfg = True
         if need_upgrade_cfg:
             Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
         return need_upgrade_cfg
@@ -728,8 +724,9 @@ class GameCtrl:
             + self.bot_name
         )
         time.sleep(0.5)
-        self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!\n§l§7[§f!§7] §r§f北京时间 "
-            + datetime.datetime.now().strftime("§a%H§f : §a%M") + "\n§l§7[§f!§7] §r§f输入.help获取更多帮助哦")
+        if self.linked_frame.enable_inject_welcome:
+            self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!\n§l§7[§f!§7] §r§f北京时间 "
+                + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.sendcmd("/tag @s add robot")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 

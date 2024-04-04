@@ -27,6 +27,7 @@ LAUNCH_CFG: dict = {
     "验证服务器地址(更换时记得更改fbtoken)": "",
     "是否记录日志": True,
     "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL,
+    "启动时是否显示欢迎信息": True
 }
 
 LAUNCH_CFG_STD: dict = {
@@ -36,6 +37,7 @@ LAUNCH_CFG_STD: dict = {
     "验证服务器地址(更换时记得更改fbtoken)": str,
     "是否记录日志": bool,
     "插件市场源": str,
+    "启动时是否显示欢迎信息": bool
 }
 
 FB_APIS = [
