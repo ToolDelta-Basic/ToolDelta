@@ -7,6 +7,7 @@ import json
 import traceback
 import datetime
 import platform
+import socketIO_client
 import subprocess
 import socket
 import logging
