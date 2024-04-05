@@ -667,7 +667,7 @@ class FrameNeOmgRemote(FrameNeOmg):
 class ToolDeltaCli(object):
     def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9001}) -> None:
         self.S_ADDRESSS:dict = address
-        self.SocketIO:socketio.Client = socketio.Client()
+        self.SocketIO = socketio.Client()
         self.data_received_event:threading.Event = threading.Event()
         self.connected_to_server:bool = True
         self.init_auth_v()
