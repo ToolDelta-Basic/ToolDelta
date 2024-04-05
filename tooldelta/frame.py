@@ -109,22 +109,23 @@ class Frame:
                 raise SystemExit
 
     class ToolDeltaUpdater:
-        def __init__(self):
-            self.auto_update()
+        def __init__(self, launcher):
+            self.launcher = launcher
+            self.auto_update(self.launcher)
             self.start_auto_update_thread()
 
         def start_auto_update_thread(self):
             # 每24小时检查一次更新
-            threading.Timer(24 * 60 * 60, self.auto_update).start()
+            threading.Timer(24 * 60 * 60, self.auto_update, args=(self.launcher)).start()
 
         @staticmethod
-        def auto_update():
+        def auto_update(launcher):
             try:
+                num:int = 0 # 初始化计次器数据
                 while True:
-                    try:
-                        if FrameNeOmg.TDC.self.SocketIO.connected:
-                            latest_version = FrameNeOmg.TDC.get_version_updates();break
-                    except:time.sleep(0.1)
+                    if launcher.TDC.SocketIO.connected:latest_version = launcher.TDC.get_version_updates();break
+                    else:time.sleep(0.1);num = num + 1
+                    if num >=50:latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"];break
 
                 current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 

@@ -671,7 +671,7 @@ class FrameNeOmgRemote(FrameNeOmg):
 
 class ToolDeltaCli(object):
     def __init__(self, address: dict = {"host": "tdaus.natapp1.cc", "port": 0}) -> None:
-    # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:
+    # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9001}) -> None:
         self.NoPort:bool = address.get("port", 0) == 0
         self.S_ADDRESSS:dict = address
         self.protocol:str = "http"
@@ -679,7 +679,6 @@ class ToolDeltaCli(object):
         self.SocketIO:socketio.Client = socketio.Client()
         self.data_received_event:threading.Event = threading.Event()
         self.connected_to_server:bool = True
-        self.init_auth_v()
         threading.Thread(target=self.conn_aus, name="SocketIO_Conn").start()
         while not self.SocketIO.connected and self.connected_to_server:time.sleep(0.1)
 
@@ -689,13 +688,14 @@ class ToolDeltaCli(object):
 
     def get_new_token(self) -> None:
         try:
-            response = requests.post(url=f'{self.url}/api/signin', data=json.dumps({"feature_code": self.feature_code}))
+            response = requests.post(url=f'{self.url}/api/signin', data=json.dumps({"feature_code": self.feature_code}), timeout= 5)
             if response.status_code == 200:
                 return response.text
         except requests.exceptions.ConnectionError as err:return "null"
 
     def conn_aus(self) -> None:
         try:
+            self.init_auth_v()
             self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
             Print.print_suc("ToolDelta成功连接到至Api服务器[Socket-IO]!")
             while True:
@@ -746,4 +746,4 @@ class ToolDeltaCli(object):
             self.SocketIO.emit('get_version_update', namespace='/api')
             self.data_received_event.wait()
             self.data_received_event.clear()
-            return self.latest_version_data
+            return self.latest_version_data["latest_version_str"]

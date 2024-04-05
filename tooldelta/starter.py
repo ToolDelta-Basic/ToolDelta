@@ -19,8 +19,6 @@ signal.signal(signal.SIGINT, signal_handler)
 def start_tool_delta():
     # 初始化系统
     try:
-        # TODO: 自动更新需要时间间隔
-        builtins.Builtins.createThread(frame.ToolDeltaUpdater, usage="自动更新 ToolDelta")
         frame.welcome()
         frame.basic_operation()
         frame.set_game_control(game_control)
@@ -33,6 +31,8 @@ def start_tool_delta():
         builtins.tmpjson_save_thread()
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
+        # TODO: 自动更新需要时间间隔
+        builtins.Builtins.createThread(frame.ToolDeltaUpdater, usage="自动更新 ToolDelta", launcher = frame.launcher)
         raise frame.launcher.launch()
     except (KeyboardInterrupt, SystemExit):
         pass
