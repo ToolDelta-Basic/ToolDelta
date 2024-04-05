@@ -234,6 +234,7 @@ class Cfg:
     def auto_to_std(self, cfg):
         """
         自动以默认配置文件生成标准配置文件格式.
+        注意: 不支持固定长度列表以及Cfg.NeccessaryKey与Cfg.Group的自动转换
 
         参数:
             cfg: 默认的CFG配置文件

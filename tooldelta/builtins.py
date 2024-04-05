@@ -41,7 +41,7 @@ class Builtins:
             except (Builtins.ThreadExit, SystemExit):
                 pass
             except:
-                Print.print_err(f"线程 {self.usage} 出错:\n" + traceback.format_exc())
+                Print.print_err(f"线程 {self.usage or self.func.__name__} 出错:\n" + traceback.format_exc())
             finally:
                 threads_list.remove(self)
 
@@ -441,7 +441,7 @@ def _tmpjson_save_thread():
 
 
 def tmpjson_save_thread():
-    Builtins.createThread(_tmpjson_save_thread)
+    Builtins.createThread(_tmpjson_save_thread, usage="JSON缓存文件定时保存")
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
     if not Builtins.player_in_dialogue(player):
