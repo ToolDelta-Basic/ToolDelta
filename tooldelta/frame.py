@@ -120,9 +120,12 @@ class Frame:
         @staticmethod
         def auto_update():
             try:
-                latest_version = requests.get(
-                    "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest"
-                ).json()["tag_name"]
+                while True:
+                    try:
+                        if FrameNeOmg.TDC.self.SocketIO.connected:
+                            latest_version = FrameNeOmg.TDC.get_version_updates();break
+                    except:time.sleep(0.1)
+
                 current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
                 if latest_version == current_version:

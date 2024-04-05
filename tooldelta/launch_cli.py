@@ -671,6 +671,7 @@ class FrameNeOmgRemote(FrameNeOmg):
 
 class ToolDeltaCli(object):
     def __init__(self, address: dict = {"host": "tdaus.natapp1.cc", "port": 0}) -> None:
+    # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:
         self.NoPort:bool = address.get("port", 0) == 0
         self.S_ADDRESSS:dict = address
         self.protocol:str = "http"
@@ -734,3 +735,15 @@ class ToolDeltaCli(object):
             return self.depend_table_data
         else:
             Print.print_war("Namespace /api is not connected yet. Please wait for connection.")
+
+    def get_version_updates(self) -> any:
+        if self.SocketIO.connected:
+            @self.SocketIO.on('version_updates', namespace='/api')
+            def handle_version_updates_data(data):
+                self.data_received_event.set()
+                self.latest_version_data = data
+
+            self.SocketIO.emit('get_version_update', namespace='/api')
+            self.data_received_event.wait()
+            self.data_received_event.clear()
+            return self.latest_version_data
