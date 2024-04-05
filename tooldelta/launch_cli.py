@@ -352,9 +352,9 @@ class FrameNeOmg(StandardFrame):
         super().__init__(serverNumber, password, fbToken, auth_server)
         self.status = None
         self.launch_event = threading.Event()
-        self.TDC = ToolDeltaCli()
         self.injected = False
         self.omega = None
+        self.TDC = None
         self.download_libs()
         self.init_all_functions()
         self.status = SysStatus.LOADING
@@ -385,6 +385,9 @@ class FrameNeOmg(StandardFrame):
                 if retries > 5:
                     Print.print_err("最大重试次数已达到")
                     raise SystemExit
+
+    def set_tooldelta_cli(self):
+        self.TDC = ToolDeltaCli()
 
     def start_neomega_proc(self):
         free_port = get_free_port(24016)
@@ -446,6 +449,7 @@ class FrameNeOmg(StandardFrame):
         self.secret_exit_key = hex(random.randint(10000, 99999))
 
     def launch(self):
+        self.set_tooldelta_cli()
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         self.msg_show()
@@ -667,7 +671,7 @@ class FrameNeOmgRemote(FrameNeOmg):
 class ToolDeltaCli(object):
     def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9001}) -> None:
         self.S_ADDRESSS:dict = address
-        self.SocketIO = socketio.Client()
+        self.SocketIO:socketio.Client = socketio.Client()
         self.data_received_event:threading.Event = threading.Event()
         self.connected_to_server:bool = True
         self.init_auth_v()
@@ -679,9 +683,11 @@ class ToolDeltaCli(object):
         self.token_ec:tuple= (self.feature_code, self.get_new_token())
 
     def get_new_token(self) -> None:
-        response = requests.post(url=f'http://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}/api/signin', data=json.dumps({"feature_code": self.feature_code}))
-        if response.status_code == 200:
-            return response.text
+        try:
+            response = requests.post(url=f'http://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}/api/signin', data=json.dumps({"feature_code": self.feature_code}))
+            if response.status_code == 200:
+                return response.text
+        except requests.exceptions.ConnectionError as err:return "null"
 
     def conn_aus(self) -> None:
         try:
@@ -700,7 +706,7 @@ class ToolDeltaCli(object):
         except Exception as err:
             Print.print_war("ToolDelta无法连接至Api服务器,将停止使用其提供的功能!")
             self.connected_to_server = False
-            self.reconnect_to_server()
+            threading.Thread(target=self.reconnect_to_server).start()
 
     def reconnect_to_server(self, interval=20):
         while not self.connected_to_server:

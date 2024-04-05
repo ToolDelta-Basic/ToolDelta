@@ -45,7 +45,7 @@ def safe_jump(*, out_task=True, exit_directly=True):
         frame.system_exit()
     frame.safe_close()
     if exit_directly:
-        for _ in range(3, 0, -1):
+        for _ in range(2, 0, -1):
             Print.print_war(f"{_}秒后强制退出...", end="\r")
             time.sleep(1)
         Print.print_war("0秒后强制退出...", end="\r")
