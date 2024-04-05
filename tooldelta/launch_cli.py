@@ -669,8 +669,11 @@ class FrameNeOmgRemote(FrameNeOmg):
         Print.print_inf("以 Remote 启动, 将不会检查库完整性")
 
 class ToolDeltaCli(object):
-    def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9001}) -> None:
+    def __init__(self, address: dict = {"host": "tdaus.natapp1.cc", "port": 0}) -> None:
+        self.NoPort:bool = address.get("port", 0) == 0
         self.S_ADDRESSS:dict = address
+        self.protocol:str = "http"
+        self.url:str = f'{self.protocol}://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}' if self.NoPort ==False else f'{self.protocol}://{self.S_ADDRESSS["host"]}'
         self.SocketIO:socketio.Client = socketio.Client()
         self.data_received_event:threading.Event = threading.Event()
         self.connected_to_server:bool = True
@@ -684,20 +687,20 @@ class ToolDeltaCli(object):
 
     def get_new_token(self) -> None:
         try:
-            response = requests.post(url=f'http://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}/api/signin', data=json.dumps({"feature_code": self.feature_code}))
+            response = requests.post(url=f'{self.url}/api/signin', data=json.dumps({"feature_code": self.feature_code}))
             if response.status_code == 200:
                 return response.text
         except requests.exceptions.ConnectionError as err:return "null"
 
     def conn_aus(self) -> None:
         try:
-            self.SocketIO.connect(f'http://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}', namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
+            self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
             Print.print_suc("ToolDelta成功连接到至Api服务器[Socket-IO]!")
             while True:
                 if not self.SocketIO.connected:
                     try:
                         self.init_auth_v()
-                        self.SocketIO.connect(f'http://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}', namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
+                        self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
                         Print.print_suc("ToolDelta与Api服务器断开连接,已重新连接成功!")
                     except:
                         Print.print_war("ToolDeltaApi服务器可能存在故障或当前网络环境异常，将停止使用ToolDeltaApi服务器!")
@@ -712,7 +715,7 @@ class ToolDeltaCli(object):
         while not self.connected_to_server:
             try:
                 self.init_auth_v()
-                self.SocketIO.connect(f'http://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}', namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
+                self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
                 Print.print_suc("ToolDelta成功重新连接至Api服务器!")
                 self.connected_to_server = True
             except Exception as err:
