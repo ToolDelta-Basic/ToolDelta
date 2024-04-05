@@ -388,7 +388,8 @@ class FrameNeOmg(StandardFrame):
                     raise SystemExit
 
     def set_tooldelta_cli(self):
-        self.TDC = ToolDeltaCli()
+        if type(self) == FrameNeOmg:
+            self.TDC = ToolDeltaCli()
 
     def start_neomega_proc(self):
         free_port = get_free_port(24016)
