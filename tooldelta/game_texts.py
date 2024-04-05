@@ -27,7 +27,7 @@ class GameTextsLoader:
         return re.match(
             r"(\d+\.\d+\.\d+)",
             requests.get(
-                "https://api.github.com/repos/ToolDelta/ToolDelta-Game_Texts/releases/latest"
+                "https://api.github.com/repos/ToolDelta/GameText/releases/latest"
             ).json()["tag_name"],
         ).group()
 
@@ -53,7 +53,7 @@ class GameTextsLoader:
 
     def download_and_extract(self, version):
         packets_url: str = (
-            f"https://hub.gitmirror.com/?q=https://github.com/ToolDelta/ToolDelta-Game_Texts/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
+            f"https://hub.gitmirror.com/?q=https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
         )
         archive_path = os.path.join(self.base_path, "ToolDelta_Game_Texts.tar.gz")
         download_file_singlethreaded(packets_url, archive_path)

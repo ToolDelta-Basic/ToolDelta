@@ -26,7 +26,7 @@ shellescape = "^3.8.1"
 pyspeedtest = "1.2.7"
 tqdm = "4.66.2"
 aiohttp = "^3.9.3"
-socketIO_client = "0.7.2"
+socketio = "0.2.1"
 
 [build-system]
 requires = ["poetry-core"]
