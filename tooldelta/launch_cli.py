@@ -355,6 +355,7 @@ class FrameNeOmg(StandardFrame):
         self.injected = False
         self.omega = None
         self.TDC = None
+        self.set_tooldelta_cli()
         self.download_libs()
         self.init_all_functions()
         self.status = SysStatus.LOADING
@@ -449,7 +450,6 @@ class FrameNeOmg(StandardFrame):
         self.secret_exit_key = hex(random.randint(10000, 99999))
 
     def launch(self):
-        self.set_tooldelta_cli()
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         self.msg_show()
