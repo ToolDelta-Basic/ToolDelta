@@ -163,3 +163,4 @@ neomega_*_access_point_*
 plugins/
 tooldelta/neo_libs/commit
 *.tmp
+tempCodeRunnerFile.python

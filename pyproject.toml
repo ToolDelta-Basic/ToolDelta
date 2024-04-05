@@ -27,6 +27,7 @@ pyspeedtest = "1.2.7"
 tqdm = "4.66.2"
 aiohttp = "^3.9.3"
 python-socketio = "5.11.1"
+flask = "^3.0.2"
 
 [build-system]
 requires = ["poetry-core"]
