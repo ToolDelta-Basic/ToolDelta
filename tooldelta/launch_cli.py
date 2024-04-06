@@ -7,6 +7,7 @@ import subprocess
 import uuid
 import time
 import json
+import ssl
 import requests
 import ujson
 import random
@@ -670,8 +671,8 @@ class FrameNeOmgRemote(FrameNeOmg):
         Print.print_inf("以 Remote 启动, 将不会检查库完整性")
 
 class ToolDeltaCli(object):
-    def __init__(self, address: dict = {"host": "tdaus.natapp1.cc", "port": 0}) -> None:
-    # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9001}) -> None:
+    def __init__(self, address: dict = {"host": "tdaus.tooldelta.fit", "port": 0}) -> None:
+    # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:
         self.NoPort:bool = address.get("port", 0) == 0
         self.S_ADDRESSS:dict = address
         self.protocol:str = "http"
