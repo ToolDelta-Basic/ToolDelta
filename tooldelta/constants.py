@@ -26,8 +26,7 @@ LAUNCH_CFG: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
     "验证服务器地址(更换时记得更改fbtoken)": "",
     "是否记录日志": True,
-    "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL,
-    "启动时是否显示欢迎信息": True
+    "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL
 }
 
 LAUNCH_CFG_STD: dict = {
@@ -36,8 +35,7 @@ LAUNCH_CFG_STD: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": Cfg.NNInt,
     "验证服务器地址(更换时记得更改fbtoken)": str,
     "是否记录日志": bool,
-    "插件市场源": str,
-    "启动时是否显示欢迎信息": bool
+    "插件市场源": str
 }
 
 FB_APIS = [

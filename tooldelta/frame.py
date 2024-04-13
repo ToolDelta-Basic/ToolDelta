@@ -230,7 +230,6 @@ class Frame:
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.plugin_market_url = cfgs["插件市场源"]
-            self.enable_inject_welcome = cfgs["启动时是否显示欢迎信息"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
@@ -727,10 +726,6 @@ class GameCtrl:
             + ", 机器人ID: "
             + self.bot_name
         )
-        time.sleep(0.5)
-        if self.linked_frame.enable_inject_welcome:
-            self.say_to("@a", "§l§7[§f!§7] §r§fToolDelta Enabled!\n§l§7[§f!§7] §r§f北京时间 "
-                + datetime.datetime.now().strftime("§a%H§f : §a%M"))
         self.sendcmd("/tag @s add robot")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
