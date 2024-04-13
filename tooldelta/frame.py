@@ -729,7 +729,7 @@ class GameCtrl:
                     pass
 
     def Inject(self):
-        # 载入游戏时的初始化）
+        # 载入游戏时的初始化
         res = self.launcher.get_players_and_uuids()
         if res:
             self.allplayers = list(res.keys())
