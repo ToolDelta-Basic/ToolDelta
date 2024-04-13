@@ -440,7 +440,7 @@ class Frame:
         Print.print_inf("§a以下是可选的菜单指令项: ")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
-                Print.print_inf(f" §e{' 或 '.join(triggers)} §b{arg_hint}  §f->  {usage}")
+                Print.print_inf(f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}")
             else:
                 Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
