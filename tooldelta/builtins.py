@@ -300,7 +300,7 @@ class Builtins:
             raise exc
 
     @staticmethod
-    def new_thread(func: Any) -> Any:
+    def thread_func(func: Any) -> Any:
         """
         在事件方法可能执行较久会造成堵塞时使用, 方便快捷地创建一个新线程, 例如:
 
@@ -314,7 +314,8 @@ class Builtins:
 
         return thread_fun
 
-    run_as_new_thread = new_thread
+    run_as_new_thread = thread_func
+    new_thread = thread_func
 
     @staticmethod
     def try_int(arg: Any) -> Optional[int]:

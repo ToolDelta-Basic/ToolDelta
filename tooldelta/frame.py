@@ -458,6 +458,31 @@ class Frame:
                 Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
 
+        @Builtins.thread_func
+        def _execute_mc_command_and_get_callback(cmd: str):
+            cmd = " ".join(cmd)
+            try:
+                result = self.link_game_ctrl.sendcmd(cmd, True, 10)
+                if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
+                    result.OutputMessages[0].Message == "commands.generic.unknown"
+                ):
+                    Print.print_err(f'未知的MC指令， 可能是指令格式有误： "{cmd}"')
+                else:
+                    jso = json.dumps(
+                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
+                    )
+                    if not result.SuccessCount:
+                        Print.print_war(f"指令执行失败: \n{jso}")
+                    else:
+                        Print.print_suc(f"指令执行成功: \n{jso}")
+            except IndexError:
+                if result.SuccessCount:
+                    Print.print_suc(
+                        f"指令执行成功: \n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
+                    )
+            except TimeoutError:
+                Print.print_err("[超时] 指令获取结果返回超时")
+
         def _console_cmd_thread():
             self.add_console_cmd_trigger(
                 ["?", "help", "帮助"],
@@ -477,6 +502,20 @@ class Frame:
                 "进入插件市场",
                 lambda _: plugin_market.market.enter_plugin_market(
                     self.plugin_market_url, in_game=True
+                ),
+            )
+            self.add_console_cmd_trigger(
+                ["/"],
+                "[指令]",
+                "执行MC指令",
+                _execute_mc_command_and_get_callback
+            )
+            self.add_console_cmd_trigger(
+                ["list"],
+                None,
+                "查询在线玩家",
+                lambda _: Print.print_inf(
+                    "在线玩家: " + ", ".join(self.link_game_ctrl.allplayers)
                 ),
             )
             while 1:
