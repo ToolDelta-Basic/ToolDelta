@@ -132,8 +132,7 @@ def load_plugin(plugin_dirname: str, hot_load=False):
                     plugin_grp.plugins_api[apiName] = api(plugin_grp.linked_frame)
             # 自动注册插件到插件管理器
         plugin_manager.test_name_same(plugin_ins.name, plugin_dirname)
-        if not plugin_manager.plugin_is_registered("classic", plugin_ins.name):
-            plugin_manager.auto_register_plugin("classic", plugin_ins)
+        plugin_manager.auto_register_plugin("classic", plugin_ins)
         return plugin_ins
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")

@@ -466,8 +466,6 @@ class FrameNeOmg(StandardFrame):
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        # bug expired
-        self.omega.listen_player_chat(lambda _, _2: None)
         Print.print_suc("NEOMEGA 接入已就绪!")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
