@@ -67,7 +67,18 @@ class PluginGroup:
         Print.print_suc(f"成功热加载插件: {plugin_name}")
 
     def add_broadcast_listener(self, evt_name: str):
-        "将下面的方法作为一个广播事件接收器"
+        """
+        将下面的方法作为一个广播事件接收器
+        装饰器参数:
+            evt_name: str, 事件类型
+        传入方法接受参数:
+            data: Any, 若事件带有附加参数, 则会传入附加参数, 否则传入None
+        返回参数: bool(是否阻断) [, Any(返回的数据, 会被广播事件源收集)]
+        原理:
+        方法1 广播: hi, what's ur name? 附加参数=english_only
+            方法2 接收到广播并被执行: 方法2(english_only) -> my name is Super. -> 收集表
+        事件1 获取到 收集表 作为返回: ["my name is Super."]
+        """
 
         def deco(func: Callable[[Any], bool]):
             if self._broadcast_evts.get(evt_name):
@@ -77,13 +88,19 @@ class PluginGroup:
 
         return deco
 
-    def broadcastEvt(self, evt_name: str, **kwargs) -> list[Any] | None:
-        "向全局广播一个特定事件, 可以传入附加信息参数"
+    def broadcastEvt(self, evt_name: str, data: Any = None) -> list[Any] | None:
+        """
+        向全局广播一个特定事件, 可以传入附加信息参数
+        参数:
+            evt_name: str, 事件名
+            **kwargs: 附加信息参数
+        返回: 收集到的数据的列表(如果接收到广播的方法返回了数据的话)
+        """
         callback_list = []
         res = self._broadcast_evts.get(evt_name)
         if res:
             for f in res:
-                interrupt, *res2 = f(**kwargs)
+                interrupt, *res2 = f(data)
                 if res2:
                     callback_list.append(res2)
                     if interrupt:

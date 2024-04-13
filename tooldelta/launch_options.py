@@ -1,3 +1,4 @@
+import os
 from tooldelta.color_print import Print
 from tooldelta.starter import start_tool_delta
 from tooldelta.plugin_manager import plugin_manager
@@ -24,3 +25,4 @@ def client_title():
             market.enter_plugin_market()
         case _:
             Print.clean_print("§c不合法的模式: " + r)
+    os._exit(0)

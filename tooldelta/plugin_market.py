@@ -69,11 +69,16 @@ class PluginMarket:
                 now_page = int(now_index / CTXS) + 1
                 for i in range(now_index, now_index + CTXS):
                     if i in range(all_indexes):
-                        plugin_data = PluginRegData(
-                            plugins_list[i][0], plugins_list[i][1]
-                        )
+                        plugin_name = plugins_list[i][0]
+                        plugin_basic_datas = plugins_list[i][1]
+                        if plugin_basic_datas['plugin-type'] == "classic":
+                            plugin_type = "类式"
+                        elif plugin_basic_datas['plugin-type'] == "injected":
+                            plugin_type = "注入式"
+                        else:
+                            plugin_type = plugin_basic_datas['plugin-type']
                         Print.print_inf(
-                            f" {i + 1}. §e{plugin_data.name} §av{plugin_data.version_str} §b@{plugin_data.author} §d{plugin_data.plugin_type_str}插件",
+                            f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} §b@{plugin_basic_datas['author']} §d{plugin_type}插件",
                             need_log=False
                         )
                     else:
@@ -98,9 +103,7 @@ class PluginMarket:
                     res = Builtins.try_int(last_operation)
                     if res:
                         if res in range(1, all_indexes + 1):
-                            plugin_data = PluginRegData(
-                                plugins_list[res - 1][0], plugins_list[res - 1][1]
-                            )
+                            plugin_data = self.get_plugin_data_from_market(plugins_list[res - 1][0])
                             ok, pres = self.choice_plugin(
                                 plugin_data,
                                 market_datas["MarketPlugins"],
@@ -143,7 +146,7 @@ class PluginMarket:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
             return
         except Exception as err:
-            Print.print_err("获取插件市场插件出现问题")
+            Print.print_err("获取插件市场插件出现问题, 报错如下:")
             Print.print_err(traceback.format_exc())
             return
         clear_screen()
@@ -157,6 +160,13 @@ class PluginMarket:
         )
         self.plugins_download_url = market_datas["DownloadRefURL"]
         return market_datas
+
+    def get_plugin_data_from_market(self, plugin_name: str):
+        data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
+        res = requests.get(data_url)
+        res.raise_for_status()
+        datas = json.loads(res.text)
+        return PluginRegData(plugin_name, datas)
 
     def choice_plugin(self, plugin_data: PluginRegData, all_plugins_dict: dict):
         pre_plugins_str = (

@@ -7,7 +7,6 @@ import importlib
 import threading
 
 from tooldelta.color_print import Print
-from tooldelta.plugin_manager import plugin_manager
 from tooldelta.plugin_load import (
     plugin_is_enabled,
     PluginAPINotFoundError,
@@ -187,8 +186,6 @@ async def load_plugin_file(file):
             getattr(plugin_module, "__plugin_meta__", {"name": module_name})
         )
         # 获取插件元数据
-        plugin_manager.test_name_same(meta_data.name, file)
-        plugin_manager.auto_register_plugin("injected", meta_data)
         return meta_data
     except PluginAPIVersionError as err:
         Print.print_err(f"插件 {file} 加载出现问题: 需要 {err.name} 的API最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")

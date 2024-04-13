@@ -459,14 +459,14 @@ class FrameNeOmg(StandardFrame):
         self.make_secret_key()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
-        Print.print_suc("已开启 NEOMG 进程")
+        Print.print_suc("已开启接入点进程")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        Print.print_suc("NEOMEGA 接入已就绪!")
+        Print.print_suc("接入点已就绪!")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出.")

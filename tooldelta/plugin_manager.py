@@ -2,10 +2,12 @@ import os
 import platform
 import shutil
 import shlex
+import json
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_market import market
 from tooldelta.constants import (
+    TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN
 )
@@ -71,8 +73,11 @@ class PluginManager:
 
     def manage_plugins(self):
         # 进入插件管理界面
+        clear_screen()
+        np = self.register_plugins_auto()
+        if np > 0:
+            Print.clean_print(f"§a已自动注册{np}个未被注册的插件.")
         while 1:
-            clear_screen()
             plugins = self.list_plugins_list()
             Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
             r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
@@ -90,6 +95,7 @@ class PluginManager:
                     input()
                 else:
                     self.plugin_operation(res)
+            clear_screen()
 
     def plugin_operation(self, plugin: PluginRegData):
         # 对插件进行操作
@@ -200,44 +206,27 @@ class PluginManager:
                 res.append(plugin)
         return res
 
-    def plugin_is_registered(self, plugin_type: str, plugin_name: str):
+    def plugin_is_registered(self, plugin_name: str):
         if not self._plugin_datas_cache:
             _, self._plugin_datas_cache = self.get_plugin_reg_name_dict_and_datas()
         for i in self._plugin_datas_cache:
-            if i.name == plugin_name and i.plugin_type == plugin_type:
+            if i.name == plugin_name:
                 return True
         return False
 
-    def auto_register_plugin(self, plugin_type, p_data):
-        # 自动注册插件信息, 不允许直接调用
-        match plugin_type:
-            case "classic":
-                self.push_plugin_reg_data(
-                    PluginRegData(
-                        p_data.name,
-                        {
-                            "name": p_data.name,
-                            "author": p_data.author,
-                            "version": p_data.version,
-                            "plugin-type": "classic",
-                        },
-                    )
-                )
-            case "injected":
-                self.push_plugin_reg_data(
-                    PluginRegData(
-                        p_data.name,
-                        {
-                            "name": p_data.name,
-                            "author": p_data.author,
-                            "version": p_data.version,
-                            "description": p_data.description,
-                            "plugin-type": "injected",
-                        },
-                    )
-                )
-            case _:
-                Print.print_err("不合法的注册插件: " + plugin_type)
+    def register_plugins_auto(self):
+        dirs = [TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN]
+        any_plugin_registered = 0
+        for f_dir in dirs:
+            dirs_type = {TOOLDELTA_CLASSIC_PLUGIN: "classic", TOOLDELTA_INJECTED_PLUGIN: "injected"}[f_dir]
+            for plugin_path in os.listdir(os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir)):
+                datpath = os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir, plugin_path, "datas.json")
+                if not self.plugin_is_registered(dirs_type) and os.path.isfile(datpath):
+                    with open(datpath, "r", encoding="utf-8") as f:
+                        jsdata = json.load(f)
+                        self.push_plugin_reg_data(PluginRegData(plugin_path, jsdata))
+                        any_plugin_registered += 1
+        return any_plugin_registered
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData):
         # 向插件注册表推送插件注册信息

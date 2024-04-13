@@ -5,7 +5,6 @@ import traceback
 from tooldelta.color_print import Print
 from tooldelta.builtins import Builtins
 from tooldelta.cfg import Cfg
-from tooldelta.plugin_manager import plugin_manager
 from tooldelta.plugin_load.funcs import unzip_plugin
 from tooldelta.plugin_load import plugin_is_enabled, NotValidPluginError
 from tooldelta.constants import TOOLDELTA_CLASSIC_PLUGIN
@@ -130,9 +129,6 @@ def load_plugin(plugin_dirname: str, hot_load=False):
                 else:
                     (apiName, api) = _api
                     plugin_grp.plugins_api[apiName] = api(plugin_grp.linked_frame)
-            # 自动注册插件到插件管理器
-        plugin_manager.test_name_same(plugin_ins.name, plugin_dirname)
-        plugin_manager.auto_register_plugin("classic", plugin_ins)
         return plugin_ins
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")
