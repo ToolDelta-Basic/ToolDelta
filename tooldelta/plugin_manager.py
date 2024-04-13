@@ -37,6 +37,7 @@ class PluginRegData:
         self.plugin_type: str = plugin_data.get("plugin-type", "unknown")
         self.description: str = plugin_data.get("description", "")
         self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", [])
+        self.plugin_id = plugin_data.get("plugin-id", "???")
         self.is_registered = is_registered
         if plugin_data.get("enabled") is not None:
             self.is_enabled = plugin_data["enabled"]
@@ -50,6 +51,7 @@ class PluginRegData:
             "plugin-type": self.plugin_type,
             "description": self.description,
             "pre-plugins": self.pre_plugins,
+            "plugin-id": self.plugin_id,
             "enabled": self.is_enabled
         }
 
@@ -126,7 +128,7 @@ class PluginManager:
                 input()
                 return
             case "2":
-                latest_version = market.get_latest_plugin_version(plugin.plugin_type, plugin.name)
+                latest_version = market.get_latest_plugin_version(plugin.plugin_id)
                 if latest_version is None:
                     Print.clean_print("§6无法获取其的最新版本, 回车键继续")
                 elif latest_version == plugin.version_str:
@@ -161,7 +163,7 @@ class PluginManager:
         market_datas = self.latest_version = market.get_datas_from_market()["MarketPlugins"]
         need_updates: list[tuple[PluginRegData, str]] = []
         for i in plugins:
-            s_data = market_datas.get(i.name)
+            s_data = market_datas.get(i.plugin_id)
             if s_data is None:
                 continue
             if i.version_str != s_data["version"]:

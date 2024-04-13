@@ -34,6 +34,7 @@ class PluginRegData:
         self.plugin_type: str = plugin_data.get("plugin-type", "unknown")
         self.description: str = plugin_data.get("description", "")
         self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", [])
+        self.plugin_id = plugin_data.get("plugin-id", "???")
         self.is_registered = is_registered
         if plugin_data.get("enabled") is not None:
             self.is_enabled = plugin_data.get("enabled")
@@ -47,7 +48,8 @@ class PluginRegData:
             "plugin-type": self.plugin_type,
             "description": self.description,
             "pre-plugins": self.pre_plugins,
-            "enabled": self.is_enabled
+            "enabled": self.is_enabled,
+            "plugin-id": self.plugin_id
         }
 
     @property

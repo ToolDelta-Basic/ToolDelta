@@ -49,11 +49,13 @@ def _get_json_from_url(url: str):
 
 
 class PluginMarket:
+    plugin_id_name_map = None
     def enter_plugin_market(self, source_url: str = None, in_game = False):
         Print.clean_print("§6正在连接到插件市场..")
         CTXS = 12
         try:
             market_datas = self.get_datas_from_market(source_url)
+            plugin_ids_map = self.get_plugin_id_name_map()
             plugins_list = list(market_datas["MarketPlugins"].items())
             all_indexes = len(plugins_list)
             now_index = 0
@@ -69,7 +71,8 @@ class PluginMarket:
                 now_page = int(now_index / CTXS) + 1
                 for i in range(now_index, now_index + CTXS):
                     if i in range(all_indexes):
-                        plugin_name = plugins_list[i][0]
+                        plugin_id = plugins_list[i][0]
+                        plugin_name = plugin_ids_map[plugin_id]
                         plugin_basic_datas = plugins_list[i][1]
                         if plugin_basic_datas['plugin-type'] == "classic":
                             plugin_type = "类式"
@@ -161,7 +164,8 @@ class PluginMarket:
         self.plugins_download_url = market_datas["DownloadRefURL"]
         return market_datas
 
-    def get_plugin_data_from_market(self, plugin_name: str):
+    def get_plugin_data_from_market(self, plugin_id: str):
+        plugin_name = self.plugin_id_name_map[plugin_id]
         data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
         res = requests.get(data_url)
         res.raise_for_status()
@@ -190,6 +194,13 @@ class PluginMarket:
             return True, pres
         return False, None
 
+    def get_plugin_id_name_map(self):
+        res = requests.get(PLUGIN_MARKET_SOURCE_OFFICIAL + "/plugin_ids_map.json")
+        res.raise_for_status()
+        res1 = json.loads(res.text)
+        self.plugin_id_name_map = res1
+        return res1
+
     def download_plugin(
         self,
         plugin_data: PluginRegData,
@@ -197,17 +208,17 @@ class PluginMarket:
     ):
         pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
-        for plugin_name in plugin_data.pre_plugins:
+        for plugin_id in plugin_data.pre_plugins:
+            plugin_name = self.plugin_id_name_map[plugin_id]
             Print.clean_print(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
             pres += self.download_plugin(
-                PluginRegData(plugin_name, all_plugins_dict[plugin_name]),
+                PluginRegData(plugin_name, all_plugins_dict[plugin_id]),
                 all_plugins_dict,
             )
         cache_dir = tempfile.mkdtemp()
         try:
             for paths in download_paths:
                 if not paths.strip():
-                    # 不可能出现的状况, 出现了证明是你的问题
                     Print.print_war("下载路径为空, 跳过")
                     continue
                 url = _url_join(self.plugins_download_url, paths)
@@ -235,6 +246,7 @@ class PluginMarket:
             # Move downloaded files to target download path
             target_path = download_path
             os.makedirs(target_path, exist_ok=True)
+            # 制作所需的目录结构
             for root, _, files in os.walk(cache_dir):
                 for filename in files:
                     source_file = os.path.join(root, filename)
@@ -245,9 +257,7 @@ class PluginMarket:
                     shutil.move(source_file, target_file)
             from tooldelta.plugin_manager import plugin_manager
             # 注册插件
-            plugin_manager.push_plugin_reg_data(PluginRegData(
-                plugin_data.name, all_plugins_dict[plugin_data.name]
-            ))
+            plugin_manager.push_plugin_reg_data(self.get_plugin_data_from_market(plugin_data.plugin_id))
             Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
         finally:
             shutil.rmtree(cache_dir)
@@ -273,13 +283,13 @@ class PluginMarket:
             return
 
     @staticmethod
-    def get_latest_plugin_version(plugin_type: str, plugin_name: str):
+    def get_latest_plugin_version(plugin_id: str):
         try:
             src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
         except:
             src_url = PLUGIN_MARKET_SOURCE_OFFICIAL
         return _get_json_from_url(
             _url_join(src_url, "latest_versions.json")
-        )[plugin_type + "_plugin"].get(plugin_name)
+        ).get(plugin_id)
 
 market = PluginMarket()
