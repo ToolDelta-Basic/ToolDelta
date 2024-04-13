@@ -121,12 +121,14 @@ class Frame:
         @staticmethod
         def auto_update(launcher):
             try:
-                num:int = 0 # 初始化计次器数据
-                while True:
-                    if launcher.TDC.SocketIO.connected:latest_version = launcher.TDC.get_version_updates();break
-                    else:time.sleep(0.1);num = num + 1
-                    if num >=50:latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"];break
-
+                try:
+                    num:int = 0 # 初始化计次器数据
+                    while True:
+                        if launcher.TDC.SocketIO.connected:latest_version = launcher.TDC.get_version_updates();break
+                        else:time.sleep(0.1);num = num + 1
+                        if num >=50:latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"];break
+                except:
+                    latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
                 current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
                 if latest_version == current_version:
