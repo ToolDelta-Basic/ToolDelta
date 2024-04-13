@@ -559,22 +559,6 @@ class PlayerKit:
         OmegaAvailable()
         return json.loads(toPyString(LIB.PlayerEntityMetadata(self._c_uuid)))
 
-    def say(self, msg: str):
-        OmegaAvailable()
-        LIB.PlayerChat(self._c_uuid, toCString(msg))
-
-    def ask(self, hint: str) -> str:
-        OmegaAvailable()
-        self.say(hint)
-        return self.parent.intercept_player_just_next_input(self._c_uuid).RawMsg.strip()
-
-    def title(self, title: str = "", subtitle: str = ""):
-        # subtitle 只有在 title 给出时才能实际生效
-        LIB.PlayerTitle(self._c_uuid, toCString(title), toCString(subtitle))
-
-    def action_bar(self, msg: str):
-        LIB.PlayerActionBar(self._c_uuid, toCString(msg))
-
     def query(self, conditions: Union[None, str, List[str]] = None) -> CommandOutput:
         query_str = f'querytarget @a[name="{self.name}"'
         if conditions is None:
@@ -588,16 +572,6 @@ class PlayerKit:
 
     def check_conditions(self, conditions: Union[None, str, List[str]] = None) -> bool:
         return self.query(conditions).SuccessCount > 0
-
-    def get_pos(self) -> QueriedPlayerPos:
-        pos = self.query().OutputMessages[0].Parameters[0][0]
-        return QueriedPlayerPos(
-            dimension=pos["dimension"],
-            yRot=pos["yRot"],
-            x=pos["position"]["x"],
-            y=pos["position"]["y"],
-            z=pos["position"]["z"],
-        )
 
     def set_ability_map(
         self, action_permission: ActionPermissionMap, adventure_flag: AdventureFlagsMap
@@ -669,19 +643,6 @@ class ThreadOmega:
         # player hooks
         self._bind_players: Dict[str, PlayerKit] = {}
 
-        # player chat intercept callbacks
-        self._player_chat_intercept_callback_retriever_counter = Counter(
-            "player_chat_intercept"
-        )
-        self._player_chat_intercept_callback_events: Dict[str, Callable] = {}
-
-        # chat
-        LIB.ListenChat()
-        self._player_chat_listeners: List[Callable[[Chat, PlayerKit], None]] = []
-        self._specific_chat_listeners: Dict[
-            str, List[Callable[[Chat, PlayerKit], None]]
-        ] = {}
-
         # named command block msg
         self._name_command_block_msg_listeners: Dict[
             str, List[Callable[[Chat], None]]
@@ -748,32 +709,10 @@ class ThreadOmega:
                         )
 
             elif eventType == "PlayerInterceptInput":
-                chat = ConsumeChat()
-                self._player_chat_intercept_callback_events[retriever](chat)
+                OmitEvent()
 
             elif eventType == "Chat":
-                chat = ConsumeChat()
-                if (
-                    not self._player_chat_listeners
-                    and not self._specific_chat_listeners.get(chat.Name)
-                    and not self._specific_chat_listeners.get(chat.RawName)
-                ):
-                    LIB.OmitEvent()
-                else:
-                    player = self.get_player_by_name(chat.Name)
-                    if not player:
-                        name = chat.Name
-                        if name in self._specific_chat_listeners:
-                            for callback in self._specific_chat_listeners[name]:
-                                self.start_new(callback, (chat,))
-                        if chat.Name != chat.RawName:
-                            name = chat.RawName
-                            if name in self._specific_chat_listeners:
-                                for callback in self._specific_chat_listeners[name]:
-                                    self.start_new(callback, (chat,))
-                    else:
-                        for callback in self._player_chat_listeners:
-                            self.start_new(callback, (chat, player))
+                OmitEvent()
 
             elif eventType == "NamedCommandBlockMsg":
                 blockName = retriever
@@ -866,53 +805,22 @@ class ThreadOmega:
 
     def listen_packets(
         self,
-        targets: Union[str, List[str]],
+        targets: Union[str | int, List[str]],
         callback: Callable[[str, Any], None],
-        clr_datas=False,
     ):
-        if clr_datas:
-            for k in self._packet_listeners.copy():
-                self._packet_listeners[k].clear()
+        for k in self._packet_listeners.copy():
+            self._packet_listeners[k].clear()
         if isinstance(targets, str):
             targets = [targets]
         if isinstance(targets, int):
             targets = [f"{targets}"]
-        translate_targets = {}
+        res = []
         for t in targets:
-            hit = False
-            if t == "all":
-                translate_targets = {
-                    k: True for k in self.get_packet_name_to_id_mapping().keys()
-                }
-                hit = True
-            elif t.startswith("!"):
-                rt = t[1:]
-                if rt in self._packet_name_to_id_mapping.keys():
-                    translate_targets[rt] = False
-                    hit = True
-                try:
-                    packetID = int(rt)
-                    packetType = self._packet_id_to_name_mapping[packetID]
-                    translate_targets[packetType] = False
-                    hit = True
-                except:
-                    pass
-            else:
-                if t in self._packet_name_to_id_mapping.keys():
-                    translate_targets[t] = True
-                    hit = True
-                try:
-                    packetID = int(t)
-                    packetType = self.get_packet_id_to_name_mapping(packetID)
-                    translate_targets[packetType] = True
-                    hit = True
-                except:
-                    pass
-            if not hit:
-                raise ValueError(f"{t}")
-        for k, v in translate_targets.items():
-            if v:
-                self._packet_listeners[k].append(callback)
+            if isinstance(t, int):
+                t = self.get_packet_id_to_name_mapping(t)
+            res.append(t)
+        for t in res:
+            self._packet_listeners[t].append(callback)
 
     def construct_game_packet_bytes_in_json_as_is(
         self, packet_type: Union[int, str], content: Any
@@ -982,30 +890,6 @@ class ThreadOmega:
         for player in self.get_all_online_players():
             callback(player, "exist")
         self._player_change_listeners.append(callback)
-
-    def intercept_player_just_next_input(
-        self, player_c_uuid: CString, timeout: int = -1
-    ) -> Chat:
-        setter, getter = self._create_lock_and_result_setter()
-        try:
-            retrieverID = next(self._player_chat_intercept_callback_retriever_counter)
-        except StopIteration:
-            raise ValueError("too many intercepts")
-        self._player_chat_intercept_callback_events[retrieverID] = setter
-        LIB.InterceptPlayerJustNextInput(player_c_uuid, toCString(retrieverID))
-        res = getter(timeout=timeout)
-        del self._player_chat_intercept_callback_events[retrieverID]
-        return res
-
-    def listen_player_chat(self, callback: Callable[[Chat, PlayerKit], None]):
-        self._player_chat_listeners.append(callback)
-
-    def listen_specific_chat(
-        self, specific_name: str, callback: Callable[[Chat], None]
-    ):
-        if specific_name not in self._specific_chat_listeners:
-            self._specific_chat_listeners[specific_name] = []
-        self._specific_chat_listeners[specific_name].append(callback)
 
     def listen_named_command_block(
         self, command_block_name: str, callback: Callable[[Chat], None]

@@ -656,8 +656,6 @@ class FrameNeOmgRemote(FrameNeOmg):
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        # bug expired
-        self.omega.listen_player_chat(lambda _, _2: None)
         Print.print_suc("NEOMEGA 已就绪")
         self.exit_event.wait()
         self.update_status(SysStatus.NORMAL_EXIT)
