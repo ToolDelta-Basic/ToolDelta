@@ -142,7 +142,6 @@ class PluginMarket:
                     now_index = max(now_index - CTXS, 0)
         except KeyError as err:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
-            print(traceback.format_exc())
             return
         except requests.RequestException as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
