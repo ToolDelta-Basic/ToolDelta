@@ -64,7 +64,8 @@ Config = Cfg()
 
 class Frame:
     # 系统框架
-    class SystemVersionException(OSError): ...
+    class SystemVersionException(OSError):
+        ...
 
     class FrameBasic:
         system_version = VERSION
@@ -84,8 +85,8 @@ class Frame:
     on_plugin_err = staticmethod(
         lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     )
-    is_mir:bool
-    plugin_market_url:str
+    is_mir: bool
+    plugin_market_url: str
 
     @staticmethod
     def check_use_token(tok_name="", check_md=""):
@@ -115,26 +116,35 @@ class Frame:
             self.auto_update(self.launcher)
             self.start_auto_update_thread()
 
-
         def start_auto_update_thread(self):
             # 每24小时检查一次更新
-            threading.Timer(24 * 60 * 60, self.auto_update, args=(self.launcher)).start()
+            threading.Timer(24 * 60 * 60, self.auto_update,
+                            args=(self.launcher)).start()
 
         @staticmethod
         def auto_update(launcher):
             try:
                 try:
-                    num:int = 0 # 初始化计次器数据
+                    num: int = 0  # 初始化计次器数据
                     while True:
-                        if launcher.TDC.SocketIO.connected:latest_version = launcher.TDC.get_version_updates();break
-                        else:time.sleep(0.1);num = num + 1
-                        if num >=50:latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"];break
+                        if launcher.TDC.SocketIO.connected:
+                            latest_version = launcher.TDC.get_version_updates()
+                            break
+                        else:
+                            time.sleep(0.1)
+                            num = num + 1
+                        if num >= 50:
+                            latest_version = requests.get(
+                                "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
+                            break
                 except:
-                    latest_version = requests.get("https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
-                current_version = ".".join(map(str, get_tool_delta_version()[:3]))
+                    latest_version = requests.get(
+                        "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest").json()["tag_name"]
+                current_version = ".".join(
+                    map(str, get_tool_delta_version()[:3]))
 
-                if latest_version == current_version:
-                    # Print.print_suc(f"检测成功,当前为最新版本 -> {current_version}，无需更新")
+                if latest_version.replace(".", "") <= current_version.replace(".", ""):
+                    # Print.print_suc(f"检测成功,当前为最新版本 -> {current_version.replace('.', '')}，无需更新")
                     return
                 if ".py" in os.path.basename(
                     __file__
@@ -166,7 +176,8 @@ class Frame:
                         else os.path.join(os.getcwd(), "ToolDelta-windows_new.exe")
                     )
                     fastest_url = next(
-                        iter(test_site_latency({"url": url, "mirror_url": mirror_urls}))
+                        iter(test_site_latency(
+                            {"url": url, "mirror_url": mirror_urls}))
                     )
 
                     if not fastest_url:
@@ -209,7 +220,8 @@ class Frame:
                             )
                             upgrade_script.write(temp_shell)
                         threading.Thread(
-                            target=tooldelta.safe_jump, kwargs={"exit_directly": True}
+                            target=tooldelta.safe_jump, kwargs={
+                                "exit_directly": True}
                         ).start()
                         upgrade_process = subprocess.Popen(
                             (
@@ -229,7 +241,8 @@ class Frame:
     def read_cfg(self):
         Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
-            cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+            cfgs = Config.get_cfg("ToolDelta基本配置.json",
+                                  constants.LAUNCH_CFG_STD)
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
@@ -397,8 +410,10 @@ class Frame:
                 "插件文件/ToolDelta组合式插件",
                 f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}",
             )
-        os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
-        os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
+        os.makedirs(
+            f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
+        os.makedirs(
+            f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs("tooldelta/fb_conn", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
@@ -443,7 +458,8 @@ class Frame:
         Print.print_inf("§a以下是可选的菜单指令项: ")
         for usage, arg_hint, _, triggers in menu:
             if arg_hint:
-                Print.print_inf(f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}")
+                Print.print_inf(
+                    f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}")
             else:
                 Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
@@ -453,7 +469,7 @@ class Frame:
                 if mode == 0:
                     rsp_arg = rsp.split()[1:]
                 elif mode == 1:
-                    rsp_arg = rsp[len(arg1) :].split()
+                    rsp_arg = rsp[len(arg1):].split()
             except IndexError:
                 Print.print_err("[控制台执行命令] 指令缺少参数")
                 return
@@ -545,7 +561,8 @@ class Frame:
                     else:
                         for tri in triggers:
                             if rsp.startswith(tri):
-                                res = _try_execute_console_cmd(func, rsp, 1, tri)
+                                res = _try_execute_console_cmd(
+                                    func, rsp, 1, tri)
                                 if res == -1:
                                     return
 
@@ -630,7 +647,8 @@ class GameCtrl:
 
     @Builtins.run_as_new_thread
     def packet_handler(self, pkt_type: int, pkt: dict):
-        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
+        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(
+            pkt_type, pkt)
         if is_skiped:
             return
         if pkt_type == PacketIDS.PlayerList:
@@ -658,7 +676,8 @@ class GameCtrl:
                 asyncio.run(execute_player_join(player))
             else:
                 playername = next(
-                    (k for k, v in self.players_uuid.items() if v == player["UUID"]),
+                    (k for k, v in self.players_uuid.items()
+                     if v == player["UUID"]),
                     None,
                 )
                 if playername is None:
@@ -689,7 +708,8 @@ class GameCtrl:
                             self.Game_Data.get(param.replace("%", ""), param)
                             for param in pkt["Parameters"]
                         ]
-                        filled_message = death_message.format(*filled_parameters)
+                        filled_message = death_message.format(
+                            *filled_parameters)
                         Print.print_inf(filled_message)
 
                     if len(pkt["Parameters"]) >= 2:
@@ -781,7 +801,8 @@ class GameCtrl:
             target: 玩家名/目标选择器
             msg: 信息
         """
-        self.sendwocmd("tellraw " + target + ' {"rawtext":[{"text":"' + msg + '"}]}')
+        self.sendwocmd("tellraw " + target +
+                       ' {"rawtext":[{"text":"' + msg + '"}]}')
 
     def player_title(self, target: str, text: str):
         """
