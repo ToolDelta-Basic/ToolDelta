@@ -17,7 +17,6 @@ from tooldelta.constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN
 )
-from typing import Dict
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"
@@ -204,7 +203,7 @@ class PluginMarket:
     def download_plugin(
         self,
         plugin_data: PluginRegData,
-        all_plugins_dict: Dict[str, str],
+        all_plugins_dict: dict[str, str],
     ):
         pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
