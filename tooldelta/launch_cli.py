@@ -484,8 +484,8 @@ class FrameNeOmg(StandardFrame):
     def download_libs(self):
         """根据系统架构和平台下载所需的库。"""
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
-        is_gitee: bool = cfgs["是否使用github镜像"]
-        if is_gitee:
+        is_mir: bool = cfgs["是否使用github镜像"]
+        if is_mir:
             mirror_src = "https://gh.api.99988866.xyz/" + \
                 "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
             depen_url = "https://gh.api.99988866.xyz/" + \
