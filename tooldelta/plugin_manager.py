@@ -3,6 +3,7 @@ import platform
 import shutil
 import shlex
 import json
+import time
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print
 from tooldelta.plugin_market import market
@@ -36,12 +37,18 @@ class PluginManager:
         while 1:
             plugins = self.list_plugins_list()
             Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
+            Print.clean_print("§f输入§ds§f同步插件注册表信息(在手动安装插件后使用)")
             r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
-            if r.strip() == "":
+            r1 = r.strip().lower()
+            if r1 == "":
                 continue
-            if r.lower() == "q":
+            elif r1 == "s":
+                self.sync_plugin_datas_to_register()
+                Print.clean_print("§a同步插件注册表数据成功.")
+                time.sleep(2)
+            elif r1 == "q":
                 return
-            if r.lower() == "u":
+            elif r1 == "u":
                 self.update_all_plugins(
                     self.get_plugin_reg_name_dict_and_datas()[1]
                 )
@@ -183,6 +190,23 @@ class PluginManager:
                         self.push_plugin_reg_data(PluginRegData(plugin_path, jsdata))
                         any_plugin_registered += 1
         return any_plugin_registered
+
+    def sync_plugin_datas_to_register(self):
+        "同步所有插件注册数据至注册表"
+        dirs = [TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN]
+        all_regs = {"classic": {}, "injected": {}}
+        sync_num = 0
+        for f_dir in dirs:
+            dirs_type = {TOOLDELTA_CLASSIC_PLUGIN: "classic", TOOLDELTA_INJECTED_PLUGIN: "injected"}[f_dir]
+            for plugin_path in os.listdir(os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir)):
+                datpath = os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir, plugin_path, "datas.json")
+                if os.path.isfile(datpath):
+                    with open(datpath, "r", encoding="utf-8") as f:
+                        jsdata = json.load(f)
+                        all_regs[dirs_type][plugin_path] = PluginRegData(plugin_path, jsdata).dump()
+                        sync_num += 1
+        JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, all_regs)
+        return sync_num
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData):
         # 向插件注册表推送插件注册信息
