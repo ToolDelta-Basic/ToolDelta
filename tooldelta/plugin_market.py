@@ -38,13 +38,15 @@ def _url_join(*urls):
 
 def _get_json_from_url(url: str):
     try:
-        resp = requests.get(url).text
+        resp = requests.get(url)
+        resp.raise_for_status()
+        resptext = resp.text
     except requests.RequestException:
         raise Exception("URL请求失败")
     try:
-        return json.loads(resp)
+        return json.loads(resptext)
     except json.JSONDecodeError:
-        raise Exception(f"服务器返回了不正确的答复: {resp}")
+        raise Exception(f"服务器返回了不正确的答复: {resptext}")
 
 
 class PluginMarket:

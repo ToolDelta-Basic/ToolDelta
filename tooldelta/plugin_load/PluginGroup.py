@@ -16,7 +16,6 @@ from tooldelta.plugin_load import (
     PluginAPIVersionError,
 )
 
-
 class PluginGroup:
     plugins: list[Plugin] = []
     plugins_funcs: dict[str, list] = {
