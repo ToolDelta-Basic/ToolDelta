@@ -160,7 +160,7 @@ class PluginMarket:
         market_datas = _get_json_from_url(
             _url_join(source_url, "market_tree.json")
         )
-        self.plugins_download_url = market_datas["DownloadRefURL"]
+        self.plugins_download_url = source_url
         return market_datas
 
     def get_plugin_data_from_market(self, plugin_id: str):
@@ -194,7 +194,11 @@ class PluginMarket:
         return False, None
 
     def get_plugin_id_name_map(self):
-        res = requests.get(PLUGIN_MARKET_SOURCE_OFFICIAL + "/plugin_ids_map.json")
+        try:
+            src_url = Cfg().get_cfg("ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
+        except:
+            src_url = PLUGIN_MARKET_SOURCE_OFFICIAL
+        res = requests.get(src_url + "/plugin_ids_map.json", timeout=10)
         res.raise_for_status()
         res1 = json.loads(res.text)
         self.plugin_id_name_map = res1
