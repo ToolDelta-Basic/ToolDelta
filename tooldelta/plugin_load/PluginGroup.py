@@ -126,7 +126,7 @@ class PluginGroup:
                     callback_list.append(res2)
         return callback_list
 
-    def test_plugin(self, plugin: Plugin):
+    def test_plugin(self, plugin: type[Plugin]):
         if self.linked_frame is None:
             # 很可能是直接单独运行此插件的代码.
             Print.clean_print(f"插件主类信息({plugin.name}): ")

@@ -666,6 +666,14 @@ class FrameNeOmgRemote(FrameNeOmg):
     def download_libs(self):
         Print.print_inf("以 Remote 启动, 将不会检查库完整性")
 
+class MCBEWebSocket(StandardFrame):
+    def __init__(self, serverNumber, password, fbToken, auth_server):
+        global fcwslib
+        import fcwslib
+        self.ws_lib = fcwslib.server.Server(serverNumber, password)
+        self.ws_lib
+        self.ws_lib.run_forever()
+
 class ToolDeltaCli(object):
     def __init__(self, address: dict = {"host": "tdaus.tooldelta.fit", "port": 0}) -> None:
     # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:

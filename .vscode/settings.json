@@ -2,4 +2,5 @@
   "terminal.integrated.defaultProfile.windows": "Command Prompt",
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "off",
+  "python.analysis.autoImportCompletions": false,
 }
