@@ -233,7 +233,7 @@ class Frame:
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
-            self.is_gitee = cfgs["是否使用gitee镜像"]
+            self.is_gitee = cfgs["是否使用github镜像"]
             self.plugin_market_url = cfgs["插件市场源"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])

@@ -1,5 +1,4 @@
 {
-  "Mirror": ["https://mirror.ghproxy.com"],
   "Linux:amd64": ["neomega_linux_amd64.so", "neomega_linux_access_point_amd64"],
   "Android:arm64": [
     "neomega_android_arm64.so",

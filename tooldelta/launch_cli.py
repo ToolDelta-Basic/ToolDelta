@@ -484,10 +484,12 @@ class FrameNeOmg(StandardFrame):
     def download_libs(self):
         """根据系统架构和平台下载所需的库。"""
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
-        is_gitee: bool = cfgs["是否使用gitee镜像"]
+        is_gitee: bool = cfgs["是否使用github镜像"]
         if is_gitee:
-            mirror_src = "https://gitee.com/ToolDelta/ToolDelta/raw/main/"
-            depen_url = "https://gitee.com/ToolDelta/DependencyLibrary/raw/main/"
+            mirror_src = "https://gh.api.99988866.xyz/" + \
+                "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
+            depen_url = "https://gh.api.99988866.xyz/" + \
+                "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
         else:
             mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
             depen_url = "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
@@ -515,7 +517,7 @@ class FrameNeOmg(StandardFrame):
             f"{depen_url}commit", timeout=5
         ).text
         commit_file_path = os.path.join(
-            os.getcwd(), "tooldelta/neo_libs/commit")
+            os.getcwd(), r"tooldelta\neo_libs\commit")
         replace_file = False
         if os.path.isfile(commit_file_path):
             with open(commit_file_path, "r", encoding="utf-8") as f:
@@ -526,7 +528,7 @@ class FrameNeOmg(StandardFrame):
         else:
             replace_file = True
         for v in source_dict:
-            pathdir = os.path.join(os.getcwd(), "tooldelta/neo_libs", v)
+            pathdir = os.path.join(os.getcwd(), r"tooldelta\neo_libs", v)
             url = depen_url + v
             if not os.path.isfile(pathdir) or replace_file:
                 Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")

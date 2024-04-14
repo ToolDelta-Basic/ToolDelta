@@ -26,7 +26,7 @@ LAUNCH_CFG: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
     "验证服务器地址(更换时记得更改fbtoken)": "",
     "是否记录日志": True,
-    "是否使用gitee镜像": True,
+    "是否使用github镜像": True,
     "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL
 }
 
@@ -36,7 +36,7 @@ LAUNCH_CFG_STD: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": Cfg.NNInt,
     "验证服务器地址(更换时记得更改fbtoken)": str,
     "是否记录日志": bool,
-    "是否使用gitee镜像": bool,
+    "是否使用github镜像": bool,
     "插件市场源": str
 }
 
