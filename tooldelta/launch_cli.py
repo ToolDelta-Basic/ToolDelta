@@ -254,7 +254,7 @@ class FrameFBConn(StandardFrame):
     def downloadMissingFiles(self):
         "获取缺失文件"
         Print.print_with_info("§d将自动检测缺失文件并补全", "§d 加载 ")
-        mirror_src = "https://mirror.ghproxy.com/"
+        mirror_src = "https://gh.api.99988866.xyz/"
         file_get_src = (
             mirror_src
             + "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"

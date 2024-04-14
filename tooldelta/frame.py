@@ -151,12 +151,12 @@ class Frame:
                     )
                     mirror_urls = (
                         [
-                            f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-linux",
+                            f"https://gh.api.99988866.xyz/{tooldelta_url}/ToolDelta-linux",
                             f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-linux",
                         ]
                         if platform.system() == "Linux"
                         else [
-                            f"https://mirror.ghproxy.com/{tooldelta_url}/ToolDelta-windows.exe",
+                            f"https://gh.api.99988866.xyz/{tooldelta_url}/ToolDelta-windows.exe",
                             f"https://hub.gitmirror.com/{tooldelta_url}/ToolDelta-windows.exe",
                         ]
                     )

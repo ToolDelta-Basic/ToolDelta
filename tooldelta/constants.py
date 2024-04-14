@@ -4,7 +4,7 @@ from tooldelta.cfg import Cfg
 
 PRG_NAME = "ToolDelta"
 
-PLUGIN_MARKET_SOURCE_OFFICIAL = "https://mirror.ghproxy.com/raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
+PLUGIN_MARKET_SOURCE_OFFICIAL = "https://gh.api.99988866.xyz/raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
 
 LAUNCHERS: List[
     tuple[str, type[FrameFBConn | FrameNeOmg | FrameNeOmgRemote]]
