@@ -9,7 +9,6 @@ from tooldelta.plugin_load.PluginGroup import plugin_group
 from tooldelta.plugin_load.injected_plugin import movent
 
 frame = Frame()
-plugin_group.set_frame(frame)
 game_control = GameCtrl(frame)
 def signal_handler(*arg):
     # 排除信号中断
@@ -18,6 +17,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def start_tool_delta():
     # 初始化系统
+    plugin_group.set_frame(frame)
     try:
         frame.welcome()
         frame.basic_operation()
