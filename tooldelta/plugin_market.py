@@ -108,10 +108,7 @@ class PluginMarket:
                     if res:
                         if res in range(1, all_indexes + 1):
                             plugin_data = self.get_plugin_data_from_market(plugins_list[res - 1][0])
-                            ok, pres = self.choice_plugin(
-                                plugin_data,
-                                market_datas["MarketPlugins"],
-                            )
+                            ok, pres = self.choice_plugin(plugin_data)
                             if ok:
                                 if in_game:
                                     from tooldelta.plugin_load.PluginGroup import plugin_group
@@ -145,6 +142,7 @@ class PluginMarket:
                     now_index = max(now_index - CTXS, 0)
         except KeyError as err:
             Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
+            print(traceback.format_exc())
             return
         except requests.RequestException as err:
             Print.print_err(f"获取插件市场插件出现问题: {err}")
@@ -166,14 +164,16 @@ class PluginMarket:
         return market_datas
 
     def get_plugin_data_from_market(self, plugin_id: str):
-        plugin_name = self.plugin_id_name_map[plugin_id]
+        plugin_name = self.plugin_id_name_map.get(plugin_id)
+        if plugin_name is None:
+            raise KeyError(f"无法通过ID: {plugin_id} 查找插件")
         data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
         res = requests.get(data_url)
         res.raise_for_status()
         datas = json.loads(res.text)
         return PluginRegData(plugin_name, datas)
 
-    def choice_plugin(self, plugin_data: PluginRegData, all_plugins_dict: dict):
+    def choice_plugin(self, plugin_data: PluginRegData):
         pre_plugins_str = (
             ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()]) or "无"
         )
@@ -190,7 +190,8 @@ class PluginMarket:
         Print.print_inf("", need_log=False)
         res = input(Print.fmt_info("§f下载 = §aY§f, 取消 = §cN§f, 请输入:")).lower().strip()
         if res == "y":
-            pres = self.download_plugin(plugin_data, all_plugins_dict)
+            Print.clean_print(f"§6正在下载插件: §f{plugin_data.name}", end="\r")
+            pres = self.download_plugin(plugin_data)
             pres.reverse()
             return True, pres
         return False, None
@@ -208,18 +209,15 @@ class PluginMarket:
 
     def download_plugin(
         self,
-        plugin_data: PluginRegData,
-        all_plugins_dict: dict[str, str],
+        plugin_data: PluginRegData
     ):
         pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
         for plugin_id in plugin_data.pre_plugins:
             plugin_name = self.plugin_id_name_map[plugin_id]
             Print.clean_print(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
-            pres += self.download_plugin(
-                PluginRegData(plugin_name, all_plugins_dict[plugin_id]),
-                all_plugins_dict,
-            )
+            plugin_datas = self.get_plugin_data_from_market(plugin_id)
+            pres += self.download_plugin(plugin_datas)
         cache_dir = tempfile.mkdtemp()
         try:
             for paths in download_paths:

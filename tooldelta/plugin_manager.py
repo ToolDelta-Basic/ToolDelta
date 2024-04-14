@@ -121,7 +121,7 @@ class PluginManager:
         input()
 
     def update_all_plugins(self, plugins: list[PluginRegData]):
-        market_datas = self.latest_version = market.get_datas_from_market()["MarketPlugins"]
+        market_datas = market.get_datas_from_market()["MarketPlugins"]
         need_updates: list[tuple[PluginRegData, str]] = []
         for i in plugins:
             s_data = market_datas.get(i.plugin_id)
@@ -137,7 +137,7 @@ class PluginManager:
             r = input(Print.clean_fmt("§f输入§a y §f开始更新, §c n §f取消: ")).strip().lower()
             if r == "y":
                 for plugin, v in need_updates:
-                    market.download_plugin(plugin, market_datas)
+                    market.download_plugin(plugin)
                 Print.clean_print("§a全部插件已更新完成")
             else:
                 Print.clean_print("§6已取消插件更新.")
