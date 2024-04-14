@@ -11,19 +11,22 @@ import ssl
 import requests
 import ujson
 import random
-from typing import Callable, Optional
 
+from tooldelta import (
+    constants,
+)
+from typing import Callable, Optional
 from .color_print import Print
 from .urlmethod import download_file_singlethreaded, get_free_port
 from .builtins import Builtins
 from .basic_mods import socketio
 from .packets import Packet_CommandOutput, PacketIDS
 from .sys_args import sys_args_to_dict
-
+from tooldelta.cfg import Cfg
 from .fb_conn import fbconn
 import threading
-
 import tooldelta
+Config = Cfg()
 
 
 class SysStatus:
@@ -238,7 +241,8 @@ class FrameFBConn(StandardFrame):
                 if packet_type == PacketIDS.CommandOutput:
                     cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
                     if cmd_uuid in self.cmds_reqs:
-                        self.cmds_resp[cmd_uuid] = [time.time(), packet_mapping]
+                        self.cmds_resp[cmd_uuid] = [
+                            time.time(), packet_mapping]
                 self.packet_handler(packet_type, packet_mapping)
                 if not self.injected and packet_type == PacketIDS.PlayerList:
                     self.injected = True
@@ -256,7 +260,8 @@ class FrameFBConn(StandardFrame):
             + "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"
         )
         try:
-            files_to_get = json.loads(requests.get(file_get_src, timeout=30).text)
+            files_to_get = json.loads(
+                requests.get(file_get_src, timeout=30).text)
         except json.JSONDecodeError:
             Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
             return False
@@ -341,7 +346,8 @@ class FrameFBConn(StandardFrame):
                 ),
             )
         )
-        self.sendfbcmd = staticmethod(lambda cmd: fbconn.SendFBCommand(self.con, cmd))
+        self.sendfbcmd = staticmethod(
+            lambda cmd: fbconn.SendFBCommand(self.con, cmd))
         self.is_op = None
 
 
@@ -434,7 +440,8 @@ class FrameNeOmg(StandardFrame):
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig in ("", "SIGNAL: exit"):
                     with Print.lock:
-                        Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                        Print.print_with_info(
+                            "ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                     self.update_status(SysStatus.NORMAL_EXIT)
                     return
                 if "[neOmega 接入点]: 就绪" in msg_orig:
@@ -475,108 +482,65 @@ class FrameNeOmg(StandardFrame):
         return SystemError("未知的退出状态")
 
     def download_libs(self):
-        if self.TDC.SocketIO.connected:
-            try:
-                res = self.TDC.get_depends_table_data()
-                use_mirror = res["mirror_data"]["Mirror"][0]
-            except Exception as err:
-                Print.print_err(f"获取依赖库表出现问题: {err}")
-                self.update_status(SysStatus.CRASHED_EXIT)
-                return
-            self.sys_machine = platform.machine().lower()
-            if self.sys_machine == "x86_64":
-                self.sys_machine = "amd64"
-            elif self.sys_machine == "aarch64":
-                self.sys_machine = "arm64"
-            if "TERMUX_VERSION" in os.environ:
-                sys_info_fmt = f"Android:{self.sys_machine.lower()}"
-            else:
-                sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
-            source_dict = res["mirror_data"][sys_info_fmt]
-            commit_file_path = res["commit_file_path"]
-            commit_url = res["commit"]
-            commit_remote = res["commit"]
-            commit_local = ""
-            commit_file_path = os.path.join(os.getcwd(), commit_file_path)
-            replace_file = False
-            if os.path.isfile(commit_file_path):
-                with open(commit_file_path, "r", encoding="utf-8") as f:
-                    commit_local = f.read()
-                if commit_local != commit_remote:
-                    Print.print_war("依赖库版本过期, 将重新下载")
-                    replace_file = True
-            else:
+        """根据系统架构和平台下载所需的库。"""
+        cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+        is_gitee: bool = cfgs["是否使用gitee镜像"]
+        if is_gitee:
+            mirror_src = "https://gitee.com/ToolDelta/ToolDelta/raw/main/"
+            depen_url = "https://gitee.com/ToolDelta/DependencyLibrary/raw/main/"
+        else:
+            mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
+            depen_url = "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+        try:
+            require_depen = json.loads(
+                requests.get(
+                    f"{mirror_src}require_files.json", timeout=5
+                ).text
+            )
+        except Exception as err:
+            Print.print_err(f"获取依赖库表出现问题: {err}")
+            self.update_status(SysStatus.CRASHED_EXIT)
+            return
+        self.sys_machine = platform.machine().lower()
+        if self.sys_machine == "x86_64":
+            self.sys_machine = "amd64"
+        elif self.sys_machine == "aarch64":
+            self.sys_machine = "arm64"
+        if "TERMUX_VERSION" in os.environ:
+            sys_info_fmt: str = f"Android:{self.sys_machine.lower()}"
+        else:
+            sys_info_fmt: str = f"{platform.uname().system}:{self.sys_machine.lower()}"
+        source_dict: list[str] = require_depen[sys_info_fmt]
+        commit_remote = requests.get(
+            f"{depen_url}commit", timeout=5
+        ).text
+        commit_file_path = os.path.join(
+            os.getcwd(), "tooldelta/neo_libs/commit")
+        replace_file = False
+        if os.path.isfile(commit_file_path):
+            with open(commit_file_path, "r", encoding="utf-8") as f:
+                commit_local = f.read()
+            if commit_local != commit_remote:
+                Print.print_war("依赖库版本过期, 将重新下载")
                 replace_file = True
-            for k, v in source_dict.items():
-                pathdir = os.path.join(os.getcwd(), k)
-                url = use_mirror + "/https://raw.githubusercontent.com/" + v
-                if not os.path.isfile(pathdir) or replace_file:
-                    Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
-                    try:
-                        download_file_singlethreaded(url, pathdir)
-                    except Exception as err:
-                        Print.print_err(f"下载依赖库出现问题: {err}")
-                        self.update_status(SysStatus.CRASHED_EXIT)
-                        return
-            if replace_file:
-                # 写入commit_remote，文字写入
-                with open(commit_file_path, "w", encoding="utf-8") as f:
-                    f.write(commit_remote)
-                Print.print_suc("已完成依赖更新！")
-
-        elif not self.TDC.SocketIO.connected:
-            try:
-                res = json.loads(
-                    requests.get(
-                        "https://mirror.ghproxy.com/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"
-                    ).text
-                )
-                use_mirror = res["Mirror"][0]
-            except Exception as err:
-                Print.print_err(f"获取依赖库表出现问题: {err}")
-                self.update_status(SysStatus.CRASHED_EXIT)
-                return
-            self.sys_machine = platform.machine().lower()
-            if self.sys_machine == "x86_64":
-                self.sys_machine = "amd64"
-            elif self.sys_machine == "aarch64":
-                self.sys_machine = "arm64"
-            if "TERMUX_VERSION" in os.environ:
-                sys_info_fmt = f"Android:{self.sys_machine.lower()}"
-            else:
-                sys_info_fmt = f"{platform.uname().system}:{self.sys_machine.lower()}"
-            source_dict = res[sys_info_fmt]
-            commit_file_path, commit_url = list(res["Commit"].items())[0]
-            commit_remote = requests.get(
-                use_mirror + "/raw.githubusercontent.com/" + commit_url
-            ).text
-            commit_local = ""
-            commit_file_path = os.path.join(os.getcwd(), commit_file_path)
-            replace_file = False
-            if os.path.isfile(commit_file_path):
-                with open(commit_file_path, "r", encoding="utf-8") as f:
-                    commit_local = f.read()
-                if commit_local != commit_remote:
-                    Print.print_war("依赖库版本过期, 将重新下载")
-                    replace_file = True
-            else:
-                replace_file = True
-            for k, v in source_dict.items():
-                pathdir = os.path.join(os.getcwd(), k)
-                url = use_mirror + "/https://raw.githubusercontent.com/" + v
-                if not os.path.isfile(pathdir) or replace_file:
-                    Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
-                    try:
-                        download_file_singlethreaded(url, pathdir)
-                    except Exception as err:
-                        Print.print_err(f"下载依赖库出现问题: {err}")
-                        self.update_status(SysStatus.CRASHED_EXIT)
-                        return
-            if replace_file:
-                # 写入commit_remote，文字写入
-                with open(commit_file_path, "w", encoding="utf-8") as f:
-                    f.write(commit_remote)
-                Print.print_suc("已完成依赖更新！")
+        else:
+            replace_file = True
+        for v in source_dict:
+            pathdir = os.path.join(os.getcwd(), "tooldelta/neo_libs", v)
+            url = depen_url + v
+            if not os.path.isfile(pathdir) or replace_file:
+                Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
+                try:
+                    download_file_singlethreaded(url, pathdir)
+                except Exception as err:
+                    Print.print_err(f"下载依赖库出现问题: {err}")
+                    self.update_status(SysStatus.CRASHED_EXIT)
+                    return
+        if replace_file:
+            # 写入commit_remote，文字写入
+            with open(commit_file_path, "w", encoding="utf-8") as f:
+                f.write(commit_remote)
+            Print.print_suc("已完成依赖更新！")
 
     def get_players_and_uuids(self):
         players_uuid = {}
@@ -594,7 +558,8 @@ class FrameNeOmg(StandardFrame):
     def init_all_functions(self):
         def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
             if waitForResp:
-                res = self.omega.send_player_command_need_response(cmd, timeout)
+                res = self.omega.send_player_command_need_response(
+                    cmd, timeout)
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
@@ -603,7 +568,8 @@ class FrameNeOmg(StandardFrame):
 
         def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
             if waitForResp:
-                res = self.omega.send_websocket_command_need_response(cmd, timeout)
+                res = self.omega.send_websocket_command_need_response(
+                    cmd, timeout)
                 if res is None:
                     raise TimeoutError("指令超时")
                 return res
@@ -633,7 +599,8 @@ class FrameNeOmg(StandardFrame):
 class FrameNeOmgRemote(FrameNeOmg):
     def launch(self):
         try:
-            openat_port = int(sys_args_to_dict().get("access-point-port", "24020"))
+            openat_port = int(sys_args_to_dict().get(
+                "access-point-port", "24020"))
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):
@@ -666,6 +633,7 @@ class FrameNeOmgRemote(FrameNeOmg):
     def download_libs(self):
         Print.print_inf("以 Remote 启动, 将不会检查库完整性")
 
+
 class MCBEWebSocket(StandardFrame):
     def __init__(self, serverNumber, password, fbToken, auth_server):
         global fcwslib
@@ -674,43 +642,51 @@ class MCBEWebSocket(StandardFrame):
         self.ws_lib
         self.ws_lib.run_forever()
 
+
 class ToolDeltaCli(object):
     def __init__(self, address: dict = {"host": "tdaus.tooldelta.fit", "port": 0}) -> None:
-    # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:
-        self.NoPort:bool = address.get("port", 0) == 0
-        self.S_ADDRESSS:dict = address
-        self.protocol:str = "http"
-        self.url:str = f'{self.protocol}://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}' if self.NoPort ==False else f'{self.protocol}://{self.S_ADDRESSS["host"]}'
-        self.SocketIO:socketio.Client = socketio.Client()
-        self.data_received_event:threading.Event = threading.Event()
-        self.connected_to_server:bool = True
+        # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:
+        self.NoPort: bool = address.get("port", 0) == 0
+        self.S_ADDRESSS: dict = address
+        self.protocol: str = "http"
+        self.url: str = f'{self.protocol}://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}' if self.NoPort == False else f'{self.protocol}://{self.S_ADDRESSS["host"]}'
+        self.SocketIO: socketio.Client = socketio.Client()
+        self.data_received_event: threading.Event = threading.Event()
+        self.connected_to_server: bool = True
         threading.Thread(target=self.conn_aus, name="SocketIO_Conn").start()
-        while not self.SocketIO.connected and self.connected_to_server:time.sleep(0.1)
+        while not self.SocketIO.connected and self.connected_to_server:
+            time.sleep(0.1)
 
     def init_auth_v(self) -> None:
-        self.feature_code:str = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(time.perf_counter())))
-        self.token_ec:tuple= (self.feature_code, self.get_new_token())
+        self.feature_code: str = str(uuid.uuid5(
+            uuid.NAMESPACE_DNS, str(time.perf_counter())))
+        self.token_ec: tuple = (self.feature_code, self.get_new_token())
 
     def get_new_token(self) -> None:
         try:
-            response = requests.post(url=f'{self.url}/api/signin', data=json.dumps({"feature_code": self.feature_code}), timeout= 5)
+            response = requests.post(
+                url=f'{self.url}/api/signin', data=json.dumps({"feature_code": self.feature_code}), timeout=5)
             if response.status_code == 200:
                 return response.text
-        except requests.exceptions.ConnectionError as err:return "null"
+        except requests.exceptions.ConnectionError as err:
+            return "null"
 
     def conn_aus(self) -> None:
         try:
             self.init_auth_v()
-            self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
+            self.SocketIO.connect(
+                self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
             Print.print_suc("ToolDelta成功连接到至Api服务器[Socket-IO]!")
             while True:
                 if not self.SocketIO.connected:
                     try:
                         self.init_auth_v()
-                        self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
+                        self.SocketIO.connect(
+                            self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
                         Print.print_suc("ToolDelta与Api服务器断开连接,已重新连接成功!")
                     except:
-                        Print.print_war("ToolDeltaApi服务器可能存在故障或当前网络环境异常，将停止使用ToolDeltaApi服务器!")
+                        Print.print_war(
+                            "ToolDeltaApi服务器可能存在故障或当前网络环境异常，将停止使用ToolDeltaApi服务器!")
                         break
                 time.sleep(10)
         except Exception as err:
@@ -722,7 +698,8 @@ class ToolDeltaCli(object):
         while not self.connected_to_server:
             try:
                 self.init_auth_v()
-                self.SocketIO.connect(self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
+                self.SocketIO.connect(
+                    self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
                 Print.print_suc("ToolDelta成功重新连接至Api服务器!")
                 self.connected_to_server = True
             except Exception as err:
@@ -739,7 +716,8 @@ class ToolDeltaCli(object):
             self.data_received_event.clear()
             return self.depend_table_data
         else:
-            Print.print_war("Namespace /api is not connected yet. Please wait for connection.")
+            Print.print_war(
+                "Namespace /api is not connected yet. Please wait for connection.")
 
     def get_version_updates(self) -> any:
         if self.SocketIO.connected:

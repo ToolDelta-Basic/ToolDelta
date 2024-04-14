@@ -1,4 +1,3 @@
-from typing import List, Union
 
 import tooldelta
 from tooldelta import (
@@ -24,7 +23,7 @@ from tooldelta.basic_mods import (
     getpass
 )
 
-from tooldelta.cfg import Cfg as _Cfg
+from tooldelta.cfg import Cfg
 from tooldelta.logger import publicLogger
 from tooldelta.plugin_load.PluginGroup import PluginGroup
 from tooldelta.game_texts import GameTextsLoader
@@ -37,7 +36,7 @@ from tooldelta.launch_cli import (
     SysStatus,
 )
 
-from .basic_mods import asyncio, datetime, json
+from .basic_mods import asyncio, json
 from .packets import PacketIDS
 from .plugin_load.injected_plugin import (
     execute_death_message,
@@ -54,7 +53,7 @@ sys_args_dict = sys_args_to_dict(sys.argv)
 createThread = builtins.Builtins.createThread
 VERSION = get_tool_delta_version()
 Builtins = builtins.Builtins
-Config = _Cfg()
+Config = Cfg()
 
 # 整个系统由三个部分组成
 #  Frame: 负责整个 ToolDelta 的基本框架运行
@@ -85,6 +84,8 @@ class Frame:
     on_plugin_err = staticmethod(
         lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
     )
+    is_gitee:bool
+    plugin_market_url:str
 
     @staticmethod
     def check_use_token(tok_name="", check_md=""):
@@ -113,6 +114,7 @@ class Frame:
             self.launcher = launcher
             self.auto_update(self.launcher)
             self.start_auto_update_thread()
+
 
         def start_auto_update_thread(self):
             # 每24小时检查一次更新
@@ -231,6 +233,7 @@ class Frame:
             self.serverNumber = str(cfgs["服务器号"])
             self.serverPasswd = cfgs["密码"]
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+            self.is_gitee = cfgs["是否使用gitee镜像"]
             self.plugin_market_url = cfgs["插件市场源"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
