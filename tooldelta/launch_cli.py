@@ -517,7 +517,7 @@ class FrameNeOmg(StandardFrame):
             f"{depen_url}commit", timeout=5
         ).text
         commit_file_path = os.path.join(
-            os.getcwd(), r"tooldelta\neo_libs\commit")
+            os.getcwd(), "tooldelta", "neo_libs", "commit")
         replace_file = False
         if os.path.isfile(commit_file_path):
             with open(commit_file_path, "r", encoding="utf-8") as f:
@@ -528,7 +528,7 @@ class FrameNeOmg(StandardFrame):
         else:
             replace_file = True
         for v in source_dict:
-            pathdir = os.path.join(os.getcwd(), r"tooldelta\neo_libs", v)
+            pathdir = os.path.join(os.getcwd(), "tooldelta", "neo_libs", v)
             url = depen_url + v
             if not os.path.isfile(pathdir) or replace_file:
                 Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
