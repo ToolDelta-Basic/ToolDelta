@@ -210,6 +210,8 @@ class PluginMarket:
         self,
         plugin_data: PluginRegData
     ):
+        if self.plugin_id_name_map is None:
+            self.plugin_id_name_map = self.get_plugin_id_name_map()
         pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
         for plugin_id in plugin_data.pre_plugins:

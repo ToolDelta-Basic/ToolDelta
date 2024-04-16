@@ -30,6 +30,7 @@ class PluginRegData:
             )
         else:
             self.version = plugin_data.get("version", (0, 0, 0))
+        #  以下的方法或许存在危险
         self.author: str = plugin_data.get("author", "unknown")
         self.plugin_type: str = plugin_data.get("plugin-type", "unknown")
         self.description: str = plugin_data.get("description", "")
