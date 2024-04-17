@@ -1,5 +1,5 @@
 import ctypes
-import json
+import ujson as json
 import os.path
 import traceback
 import threading

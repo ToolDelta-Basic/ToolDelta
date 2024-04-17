@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, List, Tuple, Optional
 import ctypes
 import threading
 import traceback
-import json
+import ujson as json
 from .color_print import Print
 
 event_pool = {"tmpjson_save": threading.Event()}

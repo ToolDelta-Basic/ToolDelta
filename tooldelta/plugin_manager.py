@@ -2,7 +2,7 @@ import os
 import platform
 import shutil
 import shlex
-import json
+import ujson as json
 import time
 from tooldelta.builtins import Builtins
 from tooldelta.color_print import Print

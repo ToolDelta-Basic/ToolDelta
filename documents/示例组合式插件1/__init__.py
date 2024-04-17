@@ -2,7 +2,7 @@ from tooldelta import *
 
 # Builtins 里有许多实用的方法
 
-import json
+import ujson as json
 
 from tooldelta.frame import Builtins, Config, Frame
 

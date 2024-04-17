@@ -1,5 +1,8 @@
-import ujson
+"""配置文件模块"""
+
 import os
+from typing import Any
+import ujson
 
 NoneType = type(None)
 
@@ -34,13 +37,21 @@ def _CfgIsinstance(obj, typ):
                 if result:
                     return True
             return False
-        except TypeError:
-            raise ValueError(f"Can't be: {typ}")
+        except TypeError as e:
+            raise ValueError(f"Can't be: {typ}") from e
     raise ValueError(f"Can't be: {typ}")
 
 
-def _CfgShowType(typ):
-    if type(typ) != type:
+def _CfgShowType(typ:Any)->str:
+    """转换类型为中文字符串
+
+    Args:
+        typ (Any): 类型
+
+    Returns:
+        str: 中文字符串
+    """
+    if isinstance(typ, type):
         typ = type(typ)
     return {
         Cfg.PInt: "正整数",
@@ -60,7 +71,9 @@ FIND_NONE = r"%FindNone"
 
 
 class Cfg:
+    """配置文件模块"""
     class Group:
+        """配置文件的键组合, 用于检测多个键中的一个是否存在"""
         def __init__(self, *keys):
             self.members = keys
 
@@ -68,13 +81,15 @@ class Cfg:
             return 'Cfg.Group("' + '", "'.join(self.members) + '")'
 
     class ConfigError(Exception):
-        def __init__(self, errStr: str, errPos: list = None):
+        "配置文件错误"
+        def __init__(self, errStr: str, errPos: list | None = None):
             if errPos is None:
                 errPos = []
             self.errPos = errPos
             self.args = (errStr,)
 
     class UnneccessaryKey:
+        "配置文件的多余键"
         def __init__(self, key):
             self.key = key
 
@@ -109,26 +124,40 @@ class Cfg:
         "配置文件的值限制: 大于0的数"
 
     def get_cfg(self, path: str, standard_type: dict):
-        # 从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测.
+        "从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测."
         path = path if path.endswith(".json") else path + ".json"
         with open(path, "r", encoding="utf-8") as f:
             try:
                 obj = ujson.load(f)
-            except ujson.JSONDecodeError:
-                raise self.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None)
+            except ujson.JSONDecodeError as exc:
+                raise self.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None) from exc
         self.check_dict_2(standard_type, obj)
         return obj
 
     @staticmethod
-    def default_cfg(path: str, default: dict, force: bool = False):
-        # 向path路径写入json文本, 若文件不存在或参数force为True, 将写入提供的默认json文本
+    def default_cfg(path: str, default: dict, force: bool = False)->None:
+        """生成默认配置文件
+
+        Args:
+            path (str): 路径
+            default (dict): 默认配置
+            force (bool, optional): 是否强制生成
+        """
         path = path if path.endswith(".json") else path + ".json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding="utf-8") as f:
                 ujson.dump(default, f, indent=4, ensure_ascii=False)
 
     @staticmethod
-    def exists(path: str):
+    def exists(path: str)-> bool:
+        """判断文件是否存在
+
+        Args:
+            path (str): 路径
+
+        Returns:
+            bool: 是否存在
+        """
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
 
     def getPluginConfigAndVersion(
@@ -137,7 +166,18 @@ class Cfg:
         standardType: dict,
         default: dict,
         default_vers: tuple[int, int, int],
-    ):
+    )-> dict:
+        """获取插件配置文件及版本
+
+        Args:
+            pluginName (str): 插件名
+            standardType (dict): 标准类型
+            default (dict): 默认配置
+            default_vers (tuple[int, int, int]): 默认版本
+
+        Returns:
+            dict: 配置文件及版本
+        """
         # 详情见 插件编写指南.md
         assert isinstance(standardType, dict)
         p = "插件配置文件/" + pluginName
@@ -153,7 +193,20 @@ class Cfg:
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         return cfgGet["配置项"], cfgVers
 
-    def check_auto(self, standard, val, fromkey="?"):
+    def check_auto(self, standard:type, val:Any, fromkey: Any="?")-> None:
+        """检查配置文件
+
+        Args:
+            standard (type): 标准
+            val (Any): 值
+            fromkey (Any, optional): 键
+
+        Raises:
+            ValueError: 未知类型
+            self.ConfigValueError: 值错误
+            ValueError: 未知类型
+        """
+
         if fromkey == FIND_NONE:
             raise ValueError("不允许传入FindNone")
         if isinstance(standard, type):
@@ -201,7 +254,19 @@ class Cfg:
                     raise self.ConfigKeyError(f"不存在的JSON键: {key}")
                 self.check_auto(std_val, val_get, key)
 
-    def check_list_2(self, pattern: list, value, fromkey="?"):
+    def check_list_2(self, pattern: list, value:Any, fromkey:Any="?")-> None:
+        """检查列表
+
+        Args:
+            pattern (list): 标准
+            value (Any): 值
+            fromkey (Any, optional): 键
+
+        Raises:
+            ValueError: 不是合法的标准列表检测样式
+            ValueError: 标准检测列表的长度不能为0
+            self.ConfigValueError: json键值错误
+        """
         if not isinstance(pattern, list):
             raise ValueError("不是合法的标准列表检测样式")
         if len(pattern) == 0:
@@ -225,7 +290,7 @@ class Cfg:
                 try:
                     self.check_auto(single_type, value, fromkey)
                     return
-                except Exception as err:
+                except Exception:
                     pass
             raise self.ConfigValueError(
                 f"JSON列表的值 \"{fromkey}\" 类型不正确: 需要 {' 或 '.join(_CfgShowType(i) for i in pattern)}, 实际上为 {_CfgShowType(value)}"

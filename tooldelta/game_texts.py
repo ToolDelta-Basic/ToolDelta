@@ -7,7 +7,7 @@ import requests
 import re
 import tarfile
 import gzip
-import json
+import ujson as json
 import importlib
 import threading
 

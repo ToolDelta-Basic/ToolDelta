@@ -12,7 +12,7 @@ import getpass
 import traceback
 from typing import TYPE_CHECKING, Callable
 import asyncio
-import json
+import ujson as json
 import requests
 import tooldelta
 from tooldelta import (

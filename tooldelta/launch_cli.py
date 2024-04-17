@@ -4,7 +4,7 @@ import os
 import threading
 import shlex
 import time
-import json
+import ujson as json
 import random
 import subprocess
 import platform

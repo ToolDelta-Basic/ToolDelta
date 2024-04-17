@@ -1,7 +1,7 @@
 from typing import Any
 import requests
 import getpass
-import json
+import ujson as json
 import hashlib
 from tooldelta import constants
 from tooldelta.color_print import Print
