@@ -1,5 +1,5 @@
 from typing import List
-from tooldelta.launch_cli import FrameFBConn, FrameNeOmg, FrameNeOmgRemote
+from .launch_cli import FrameNeOmg, FrameNeOmgRemote
 from tooldelta.cfg import Cfg
 
 PRG_NAME = "ToolDelta"
@@ -7,12 +7,8 @@ PRG_NAME = "ToolDelta"
 PLUGIN_MARKET_SOURCE_OFFICIAL = "https://tdload.tblstudio.cn/https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
 
 LAUNCHERS: List[
-    tuple[str, type[FrameFBConn | FrameNeOmg | FrameNeOmgRemote]]
+    tuple[str, type[ FrameNeOmg | FrameNeOmgRemote]]
 ] = [
-    (
-        "FastBuilder External 模式 (经典模式) §c(已停止维护, 无法适应新版本租赁服!)",
-        FrameFBConn,
-    ),
     ("NeOmega 框架 (NeOmega模式, 租赁服适应性强, 推荐)", FrameNeOmg),
     (
         "NeOmega 框架 (NeOmega连接模式, 需要先启动对应的neOmega接入点)",

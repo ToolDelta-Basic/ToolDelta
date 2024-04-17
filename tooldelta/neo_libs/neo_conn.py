@@ -740,20 +740,20 @@ class ThreadOmega:
             ret[0] = result
             lock.release()
 
-        def result_getter(timeout: int = -1) -> Any:
+        def result_getter(timeout: float = -1) -> Any:
             lock.acquire(timeout=timeout)
             return ret[0]
 
         return result_setter, result_getter
 
     def send_websocket_command_need_response(
-        self, cmd: str, timeout: int = -1
-    ) -> Optional[CommandOutput]:
+        self, cmd: str, timeout: float = -1
+    ) -> Optional[Packet_CommandOutput]:
         setter, getter = self._create_lock_and_result_setter()
         try:
             retriever_id = next(self._cmd_callback_retriever_counter)
-        except StopIteration:
-            raise ValueError("retriever counter overflow")
+        except StopIteration as err:
+            raise ValueError("retriever counter overflow") from err
         self._omega_cmd_callback_events[retriever_id] = setter
         SendWebSocketCommandNeedResponse(cmd, retriever_id)
         res = getter(timeout=timeout)
@@ -761,7 +761,7 @@ class ThreadOmega:
         return res
 
     def send_player_command_need_response(
-        self, cmd: str, timeout: int = -1
+        self, cmd: str, timeout: float = -1
     ) -> Optional[Packet_CommandOutput]:
         setter, getter = self._create_lock_and_result_setter()
         try:
@@ -806,7 +806,7 @@ class ThreadOmega:
 
     def listen_packets(
         self,
-        targets: Union[str | int, List[str]],
+        targets: Union[str | int, list[Dict[int, str] | str]],
         callback: Callable[[str, Any], None],
     ):
         for k in self._packet_listeners.copy():

@@ -32,7 +32,6 @@ from .game_texts import GameTextsLoader
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
 from .launch_cli import (
-    FrameFBConn,
     FrameNeOmg,
     FrameNeOmgRemote,
     SysStatus,
@@ -83,7 +82,7 @@ class Frame:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
         )
-        self.launcher: FrameFBConn | FrameNeOmg | FrameNeOmgRemote
+        self.launcher: FrameNeOmg | FrameNeOmgRemote
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
@@ -411,7 +410,7 @@ class Frame:
                         break
                     if res in ("", "^C", "^D"):
                         Print.print_inf("按退出键退出中...")
-                        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg, FrameFBConn)):
+                        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
                             self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()
                         return
@@ -447,7 +446,7 @@ class Frame:
             except Exception:
                 pass
         time.sleep(0.5)
-        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg, FrameFBConn)):
+        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -512,14 +511,13 @@ class GameCtrl:
         self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg, FrameFBConn)):
+        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
             self.launcher.packet_handler = lambda pckType, pck: Builtins.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理")
         self.sendcmd = self.launcher.sendcmd
         self.sendwscmd = self.launcher.sendwscmd
         self.sendwocmd = self.launcher.sendwocmd
         self.sendPacket = self.launcher.sendPacket
-        self.sendfbcmd = self.launcher.sendfbcmd
         if isinstance(self.linked_frame.launcher, FrameNeOmg):
             self.requireUUIDPacket = False
         else:
@@ -675,14 +673,22 @@ class GameCtrl:
             while 1:
                 try:
                     cmd_result = self.sendwscmd("/list", True)
-                    if cmd_result:
-                        self.allplayers = (
+                    if cmd_result is None:
+                        Print.print_err("获取全局玩家失败..重试")
+                        continue
+                    if cmd_result.OutputMessages is None or len(cmd_result.OutputMessages) < 2:
+                        Print.print_err("获取全局玩家失败..重试")
+                        continue
+                    if cmd_result.OutputMessages[1].Parameters is None or len(cmd_result.OutputMessages[1].Parameters) < 1:
+                        Print.print_err("获取全局玩家失败..重试")
+                        continue
+                    self.allplayers = (
                             cmd_result
                             .OutputMessages[1]
                             .Parameters[0]
                             .split(", ")
                         )
-                        break
+                    break
                 except TimeoutError:
                     Print.print_war("获取全局玩家失败..重试")
         self.bot_name = self.launcher.get_bot_name()

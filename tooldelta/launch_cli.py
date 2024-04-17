@@ -3,7 +3,6 @@
 import os
 import threading
 import shlex
-import uuid
 import time
 import json
 import random
@@ -11,17 +10,15 @@ import subprocess
 import platform
 from typing import Callable, Optional
 import requests
-import ujson
-
 import tooldelta
+
 from tooldelta import constants
+from .neo_libs import neo_conn
 from .cfg import Cfg
-from .fb_conn import fbconn
 from .builtins import Builtins
 from .color_print import Print
-from .basic_mods import socketio
 from .sys_args import sys_args_to_dict
-from .packets import Packet_CommandOutput, PacketIDS
+from .packets import Packet_CommandOutput
 from .urlmethod import download_file_singlethreaded, get_free_port
 
 Config = Cfg()
@@ -52,39 +49,58 @@ class StandardFrame:
     """提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口"""
     launch_type = "Original"
 
-    def __init__(self, serverNumber, password, fbToken, auth_server_url):
+    def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
+        """初始化启动器框架
+
+        Args:
+            serverNumber (int): 服务器号
+            password (str): 服务器密码
+            fbToken (str): 验证服务器Token
+            auth_server_url (str): 验证服务器地址
+        """
         self.serverNumber = serverNumber
         self.serverPassword = password
         self.fbToken = fbToken
         self.auth_server = auth_server_url
         self.system_type = platform.uname().system
-        self.inject_events = []
-        self.packet_handler: Callable | None = lambda pckType, pck: None
-        self.need_listen_packets = {9, 63, 79}
-        self._launcher_listener = None
+        self.inject_events: list = []
+        self.packet_handler: Optional[Callable] = lambda pckType, pck: None
+        self.need_listen_packets: set[int] = {9, 63, 79}
+        self._launcher_listener: Callable
         self.exit_event = threading.Event()
-        self.status = SysStatus.LOADING
+        self.status: int = SysStatus.LOADING
 
-    def add_listen_packets(self, *pcks: int):
+    def add_listen_packets(self, *pcks: int) -> None:
+        """添加需要监听的数据包"""
         for i in pcks:
             self.need_listen_packets.add(i)
 
-    @staticmethod
-    def launch():
-        raise Exception("Cannot launch this launcher")
+    def launch(self) -> None:
+        """启动器启动
 
-    def listen_launched(self, cb):
+        Raises:
+            SystemError: 无法启动此启动器
+        """
+        raise NotImplementedError
+
+    def listen_launched(self, cb: Callable) -> None:
+        """设置监听启动器启动事件"""
         self._launcher_listener = cb
 
-    @staticmethod
-    def get_players_and_uuids():
-        return None
+    def get_players_and_uuids(self) -> None:
+        """获取玩家名和UUID"""
+        raise NotImplementedError
 
-    @staticmethod
-    def get_bot_name():
-        return None
+    def get_bot_name(self) -> str:
+        """获取机器人名字"""
+        raise NotImplementedError
 
-    def update_status(self, new_status):
+    def update_status(self, new_status: int) -> None:
+        """更新启动器状态
+
+        Args:
+            new_status (int): 新的状态码
+        """
         self.status = new_status
         if new_status == SysStatus.NORMAL_EXIT:
             tooldelta.safe_jump(out_task=True)
@@ -93,310 +109,109 @@ class StandardFrame:
             tooldelta.safe_jump(out_task=False)
             self.exit_event.set()
 
-    get_all_players = None
+    def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
+        """以玩家身份发送命令
 
-    @staticmethod
-    def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
-        ...
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
 
-    @staticmethod
-    def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
-        ...
+        Raises:
+            NotImplementedError: 未实现此方法
 
-    @staticmethod
-    def sendwocmd(cmd: str) -> None:
-        ...
+        Returns:
+            Optional[Packet_CommandOutput]: 返回命令结果
+        """
+        raise NotImplementedError
 
-    @staticmethod
-    def sendfbcmd(cmd: str) -> None:
-        ...
+    def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
+        """以ws身份发送命令
 
-    @staticmethod
-    def sendPacket(pckID: int, pck: str) -> None:
-        ...
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
 
-    @staticmethod
-    def sendPacketJson(pckID: int, pck: str) -> None:
-        ...
+        Raises:
+            NotImplementedError: 未实现此方法
 
-    @staticmethod
-    def is_op(player: str) -> bool:
-        ...
+        Returns:
+            Optional[Packet_CommandOutput]: 返回命令结果
+        """
+        raise NotImplementedError
 
+    def sendwocmd(self, cmd: str) -> None:
+        """以wo身份发送命令
 
-class FrameFBConn(StandardFrame):
-    # 使用原生 FastBuilder External 连接
-    cmds_reqs = []
-    cmds_resp = {}
+        Args:
+            cmd (str): 命令
 
-    def __init__(self, serverNumber, password, fbToken, auth_server):
-        super().__init__(serverNumber, password, fbToken, auth_server)
-        self.injected = False
-        self.downloadMissingFiles()
-        self.init_all_functions()
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        raise NotImplementedError
 
-    def launch(self):
-        try:
-            free_port = get_free_port(10000)
-            self.runFB(port=free_port)
-            self.run_conn(port=free_port)
-            Builtins.createThread(self.output_fb_msgs_thread)
-            self.process_game_packets()
-        except Exception as err:
-            return err
+    def sendPacket(self, pckID: int, pck: str) -> None:
+        """发送数据包
 
-    def runFB(self, ip="127.0.0.1", port=8080):
-        if self.system_type == "Linux":
-            os.system("/usr/bin/chmod +x ./phoenixbuilder")
-            con_cmd = rf"./phoenixbuilder -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
+        Args:
+            pckID (int): 数据包ID
+            pck (str): 数据包内容
 
-        # windows updated "./PRGM" command.
-        if self.system_type == "Windows":
-            con_cmd = rf".\phoenixbuilder.exe -A {self.auth_server} -t fbtoken --no-readline --no-update-check --listen-external {ip}:{port} -c {self.serverNumber} {f'-p {self.serverPassword}' if self.serverPassword else ''}"
-        self.fb_pipe = subprocess.Popen(
-            con_cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        raise NotImplementedError
 
-    def run_conn(self, ip="127.0.0.1", port=8080, timeout=None):
-        connect_fb_start_time = time.time()
-        max_con_time = timeout or 10
-        while 1:
-            try:
-                self.con = fbconn.ConnectFB(f"{ip}:{port}")
-                Print.print_suc("§a成功连接上FastBuilder.")
-                return 1
-            except:
-                if time.time() - connect_fb_start_time > max_con_time:
-                    Print.print_err(f"§4{max_con_time}秒内未连接上FB，已退出")
-                    self.close_fb()
-                    raise SystemExit
-                if self.status == SysStatus.FB_LAUNCH_EXC:
-                    Print.print_err("§4连接FB时出现问题，已退出")
-                    self.close_fb()
-                    raise SystemExit
+    sendPacketJson = sendPacket
 
-    def output_fb_msgs_thread(self):
-        while 1:
-            tmp: str = self.fb_pipe.stdout.readline().decode("utf-8").strip("\n")
-            if not tmp:
-                continue
-            if " 简体中文" in tmp:
-                # seems will be unable forever because it's no longer supported.
-                try:
-                    self.fb_pipe.stdin.write(f"{tmp[1]}\n".encode("utf-8"))
-                    self.fb_pipe.stdin.flush()
-                    Print.print_inf(f"语言已自动选择为简体中文： [{tmp[1]}]")
-                except IndexError:
-                    Print.print_war("未能自动选择为简体中文")
-            elif "ERROR" in tmp:
-                if "Server not found" in tmp:
-                    Print.print_err(
-                        f"§c租赁服号: {self.serverNumber} 未找到, 有可能是租赁服关闭中, 或是设置了等级或密码"
-                    )
-                    self.update_status(SysStatus.CRASHED_EXIT)
+    def is_op(self, player: str) -> bool:
+        """检查玩家是否为OP
 
-                elif "Unauthorized rental server number" in tmp:
-                    Print.print_err(
-                        f"§c租赁服号: {self.serverNumber} ，你还没有该服务器号的卡槽， 请前往用户中心购买"
-                    )
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                elif "Failed to contact with API" in tmp:
-                    Print.print_err(
-                        "§c无法连接到验证服务器, 可能是FB服务器崩溃, 或者是你的IP处于黑名单中"
-                    )
-                    try:
-                        Print.print_war("尝试连接到 FastBuilder 验证服务器")
-                        requests.get("http://user.fastbuilder.pro", timeout=10)
-                        Print.print_err(
-                            "??? 未知情况， 有可能只是验证服务器崩溃， 用户中心并没有崩溃"
-                        )
-                    except:
-                        Print.print_err(
-                            "§cFastBuilder服务器无法访问， 请等待修复(加入FastBuilder频道查看详情)"
-                        )
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                elif "Invalid token" in tmp:
-                    Print.print_err("§cFastBuilder Token 无法使用， 请重新下载")
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                elif "netease.report.kick.hint" in tmp:
-                    Print.print_err(
-                        "§c无法连接到网易租赁服 -> 网易土豆的常见问题，检查你的租赁服状态（等级、是否开启、密码）并重试, 也可能是你的网络问题"
-                    )
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                elif "Press ENTER to exit." in tmp:
-                    Print.print_err("§c程序退出")
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                else:
-                    Print.print_with_info(tmp, "§b  FB  §r")
+        Args:
+            player (str): 玩家名
 
-            elif "Transfer: accept new connection @ " in tmp:
-                Print.print_with_info(
-                    "FastBuilder 监听端口已开放: " + tmp.split()[-1], "§b  FB  "
-                )
-            elif "Successfully created minecraft dialer." in tmp:
-                Print.print_with_info("§e成功创建于 Minecraft 的链接", "§b  FB  §r")
-            elif tmp.startswith("panic"):
-                Print.print_err(f"FastBuilder 出现问题: {tmp}")
-            else:
-                Print.print_with_info(tmp, "§b  FB  §r")
+        Raises:
+            NotImplementedError: 未实现此方法
 
-    def close_fb(self):
-        try:
-            self.fb_pipe.stdin.write("exit\n".encode("utf-8"))
-            self.fb_pipe.stdin.flush()
-        except:
-            pass
-        try:
-            self.fb_pipe.kill()
-        except:
-            pass
-        Print.print_suc("成功关闭FB进程")
-
-    def process_game_packets(self):
-        try:
-            for packet_bytes in fbconn.RecvGamePacket(self.con):
-                packet_type = packet_bytes[0]
-                if packet_type not in self.need_listen_packets:
-                    continue
-                packet_mapping = ujson.loads(
-                    fbconn.GamePacketBytesAsIsJsonStr(packet_bytes)
-                )
-                if packet_type == PacketIDS.CommandOutput:
-                    cmd_uuid = packet_mapping["CommandOrigin"]["UUID"].encode()
-                    if cmd_uuid in self.cmds_reqs:
-                        self.cmds_resp[cmd_uuid] = [
-                            time.time(), packet_mapping]
-                self.packet_handler(packet_type, packet_mapping)
-                if not self.injected and packet_type == PacketIDS.PlayerList:
-                    self.injected = True
-                    Builtins.createThread(self._launcher_listener)
-        except StopIteration:
-            pass
-        self.update_status(SysStatus.CRASHED_EXIT)
-
-    def downloadMissingFiles(self):
-        "获取缺失文件"
-        Print.print_with_info("§d将自动检测缺失文件并补全", "§d 加载 ")
-        mirror_src = "https://tdload.tblstudio.cn/"
-        file_get_src = (
-            mirror_src
-            + "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"
-        )
-        try:
-            files_to_get = json.loads(
-                requests.get(file_get_src, timeout=30).text)
-        except json.JSONDecodeError:
-            Print.print_err("自动下载缺失文件失败: 文件源 JSON 不合法")
-            return False
-        except requests.Timeout:
-            Print.print_err("自动下载缺失文件失败: URL 请求出现问题: 请求超时")
-            return False
-        except Exception as err:
-            Print.print_err(f"自动下载缺失文件失败: URL 请求出现问题: {err}")
-            return False
-        try:
-            Print.print_with_info("§d正在检测需要补全的文件", "§d 加载 ")
-            mirrs = files_to_get["Mirror"]
-            files = files_to_get[self.system_type]
-            for fdir, furl in files.items():
-                if not os.path.isfile(fdir):
-                    Print.print_inf(f"文件: <{fdir}> 缺失, 正在下载..")
-                    succ = False
-                    for mirr in mirrs:
-                        try:
-                            download_file_singlethreaded(
-                                mirr + "/https://github.com/" + furl, fdir
-                            )
-                            succ = True
-                            break
-                        except requests.exceptions.RequestException:
-                            Print.print_war("镜像源故障, 正在切换")
-                    if not succ:
-                        Print.print_err("镜像源全不可用..")
-                        return False
-                    Print.print_inf(f"文件: <{fdir}> 下载完成        ")
-        except requests.Timeout:
-            Print.print_err("自动检测文件并补全时出现错误: 超时, 自动跳过")
-        except Exception as err:
-            Print.print_err(f"自动检测文件并补全时出现错误: {err}")
-            return False
-        return True
-
-    def init_all_functions(self):
-        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
-            uuid = fbconn.SendMCCommand(self.con, cmd)
-            if waitForResp:
-                self.cmds_reqs.append(uuid)
-                waitStartTime = time.time()
-                while 1:
-                    res = self.cmds_resp.get(uuid)
-                    if res is not None:
-                        self.cmds_reqs.remove(uuid)
-                        del self.cmds_resp[uuid]
-                        return Packet_CommandOutput(res[1])
-                    if time.time() - waitStartTime > timeout:
-                        self.cmds_reqs.remove(uuid)
-                        Print.print_war(f'sendcmd "{cmd}" 超时, 尝试 sendwscmd')
-                        return self.sendwscmd(cmd, True, timeout)
-
-        def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
-            uuid = fbconn.SendWSCommand(self.con, cmd)
-            if waitForResp:
-                self.cmds_reqs.append(uuid)
-                waitStartTime = time.time()
-                while 1:
-                    res = self.cmds_resp.get(uuid)
-                    if res is not None:
-                        self.cmds_reqs.remove(uuid)
-                        del self.cmds_resp[uuid]
-                        return Packet_CommandOutput(res[1])
-                    if time.time() - waitStartTime > timeout:
-                        self.cmds_reqs.remove(uuid)
-                        raise TimeoutError("指令超时")
-            else:
-                return uuid
-
-        self.sendcmd = sendcmd
-        self.sendwscmd = sendwscmd
-        self.sendwocmd = staticmethod(
-            lambda cmd: fbconn.SendNoResponseCommand(self.con, cmd)
-        )
-        self.sendPacket = self.sendPacketJson = staticmethod(
-            lambda pckID, pck: fbconn.SendGamePacketBytes(
-                self.con,
-                fbconn.JsonStrAsIsGamePacketBytes(
-                    pckID, ujson.dumps(pck, ensure_ascii=False)
-                ),
-            )
-        )
-        self.sendfbcmd = staticmethod(
-            lambda cmd: fbconn.SendFBCommand(self.con, cmd))
-        self.is_op = None
+        Returns:
+            bool: 是否为OP
+        """
+        raise NotImplementedError
 
 
 class FrameNeOmg(StandardFrame):
-    # 使用 NeOmega 框架连接到游戏
+    """使用 NeOmega 框架连接到游戏"""
     launch_type = "NeOmega"
 
-    def __init__(self, serverNumber, password, fbToken, auth_server):
+    def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server: str) -> None:
+        """初始化 NeOmega 框架
+
+        Args:
+            serverNumber (int): 服务器号
+            password (str): 服务器密码
+            fbToken (str): 验证服务器Token
+            auth_server (str): 验证服务器地址
+        """
         super().__init__(serverNumber, password, fbToken, auth_server)
-        self.status = None
-        self.launch_event = threading.Event()
-        self.injected = False
-        self.omega = None
-        self.TDC = None
-        self.neomg_proc = None
-        self.set_tooldelta_cli()
-        self.download_libs()
-        self.init_all_functions()
         self.status = SysStatus.LOADING
+        self.launch_event = threading.Event()
+        self.omega: Optional[neo_conn.ThreadOmega] = None
+        self.neomg_proc = None
+        self.download_libs()
+        self.status = SysStatus.LAUNCHING
         self.secret_exit_key = ""
 
-    def set_omega(self, openat_port):
-        from .neo_libs import neo_conn
+    def set_omega(self, openat_port: int) -> None:
+        """设置 Omega 连接
+
+        Args:
+            openat_port (int): 端口号
+
+        Raises:
+            SystemExit: 系统退出
+        """
 
         retries = 0
         while retries <= 10:
@@ -407,7 +222,7 @@ class FrameNeOmg(StandardFrame):
                     accountOption=neo_conn.AccountOptions(
                         AuthServer=self.auth_server,
                         UserToken=self.fbToken,
-                        ServerCode=self.serverNumber,
+                        ServerCode=str(self.serverNumber),
                         ServerPassword=str(self.serverPassword),
                     ),
                 )
@@ -419,13 +234,14 @@ class FrameNeOmg(StandardFrame):
                 Print.print_war(f"OMEGA 连接失败, 重连: 第 {retries} 次: {err}")
                 if retries > 5:
                     Print.print_err("最大重试次数已达到")
-                    raise SystemExit
+                    raise SystemExit from err
 
-    def set_tooldelta_cli(self):
-        if type(self) == FrameNeOmg:
-            self.TDC = ToolDeltaCli()
+    def start_neomega_proc(self) -> int:
+        """启动 NeOmega 进程
 
-    def start_neomega_proc(self):
+        Returns:
+            int: 端口号
+        """
         free_port = get_free_port(24016)
         access_point_file = (
             f"neomega_{platform.uname().system.lower()}_access_point_{self.sys_machine}"
@@ -461,8 +277,12 @@ class FrameNeOmg(StandardFrame):
         )
         return free_port
 
-    def msg_show(self):
-        def _msg_show_thread():
+    def msg_show(self) -> None:
+        """显示来自 NeOmega 的信息"""
+        def _msg_show_thread() -> None:
+            """显示来自NeOmega的信息"""
+            if self.neomg_proc is None or self.neomg_proc.stdout is None:
+                raise ValueError("NEOMG 进程未启动")
             while True:
                 msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
                 if msg_orig in ("", "SIGNAL: exit"):
@@ -482,10 +302,18 @@ class FrameNeOmg(StandardFrame):
 
         Builtins.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
 
-    def make_secret_key(self):
+    def make_secret_key(self) -> None:
+        """生成退出密钥"""
         self.secret_exit_key = hex(random.randint(10000, 99999))
 
-    def launch(self):
+    def launch(self) -> SystemExit | Exception | SystemError:
+        """启动 NeOmega 进程
+
+        returns:
+            SystemExit: 正常退出
+            Exception: 异常退出
+            SystemError: 未知的退出状态
+        """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         self.msg_show()
@@ -494,6 +322,9 @@ class FrameNeOmg(StandardFrame):
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
         Print.print_suc("已开启接入点进程")
+        if self.omega is None:
+            self.update_status(SysStatus.CRASHED_EXIT)
+            return SystemExit("接入点进程未启动")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
@@ -508,7 +339,7 @@ class FrameNeOmg(StandardFrame):
             return Exception("NeOmega 已崩溃")
         return SystemError("未知的退出状态")
 
-    def download_libs(self):
+    def download_libs(self) -> None:
         """根据系统架构和平台下载所需的库。"""
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         is_mir: bool = cfgs["是否使用github镜像"]
@@ -573,63 +404,156 @@ class FrameNeOmg(StandardFrame):
 
     def get_players_and_uuids(self):
         players_uuid = {}
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
         for i in self.omega.get_all_online_players():
-            players_uuid[i.name] = i.uuid
+            if i is not None:
+                players_uuid[i.name] = i.uuid
+            else:
+                raise ValueError("未能获取玩家名和UUID")
         return players_uuid
 
-    def get_bot_name(self):
+    def get_bot_name(self) -> str:
+        """获取机器人名字
+
+        Returns:
+            str: 机器人名字
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
         return self.omega.get_bot_name()
 
-    def packet_handler_parent(self, pkt_type, pkt):
-        pkt_type = self.omega.get_packet_name_to_id_mapping(pkt_type)
-        self.packet_handler(pkt_type, pkt)
+    def packet_handler_parent(self, pkt_type: str, pkt: dict) -> None:
+        """数据包处理器
 
-    def init_all_functions(self):
-        def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30):
-            if waitForResp:
-                res = self.omega.send_player_command_need_response(
-                    cmd, timeout)
-                if res is None:
-                    raise TimeoutError("指令超时")
-                return res
-            self.omega.send_player_command_omit_response(cmd)
-            return
+        Args:
+            pkt_type (str): 数据包类型
+            pkt (dict): 数据包内容
 
-        def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int = 30):
-            if waitForResp:
-                res = self.omega.send_websocket_command_need_response(
-                    cmd, timeout)
-                if res is None:
-                    raise TimeoutError("指令超时")
-                return res
-            self.omega.send_websocket_command_omit_response(cmd)
-            return
+        Raises:
+            ValueError: 未连接到接入点
+        """
+        if self.omega is None or self.packet_handler is None:
+            raise ValueError("未连接到接入点")
+        packetType = self.omega.get_packet_name_to_id_mapping(pkt_type)
+        self.packet_handler(packetType, pkt)
 
-        def sendwocmd(cmd: str):
-            self.omega.send_settings_command(cmd)
+    def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: float = 30) -> Optional[Packet_CommandOutput]:
+        """以玩家身份发送命令
 
-        def sendPacket(pktID: int, pkt: str):
-            self.omega.send_game_packet_in_json_as_is(pktID, pkt)
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
 
-        def sendfbcmd(_):
-            raise AttributeError("NeOmg模式无法发送FBCommand")
+        Raises:
+            NotImplementedError: 未实现此方法
 
-        def is_op(player: str):
-            return self.omega.get_player_by_name(player).command_permission_level > 2
+        Returns:
+            Optional[Packet_CommandOutput]: 返回命令结果
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
+        if waitForResp:
+            res = self.omega.send_player_command_need_response(
+                cmd, timeout)
+            if res is None:
+                raise TimeoutError("指令超时")
+            return res
+        self.omega.send_player_command_omit_response(cmd)
+        return
 
-        self.sendcmd = sendcmd
-        self.sendwscmd = sendwscmd
-        self.sendwocmd = sendwocmd
-        self.sendPacket = self.sendPacketJson = sendPacket
-        self.sendfbcmd = sendfbcmd
-        self.is_op = is_op
+    def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: float = 30) -> Optional[Packet_CommandOutput]:
+        """以玩家身份发送命令
+
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
+
+        Raises:
+            NotImplementedError: 未实现此方法
+
+        Returns:
+            Optional[Packet_CommandOutput]: 返回命令结果
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
+        if waitForResp:
+            res = self.omega.send_websocket_command_need_response(
+                cmd, timeout)
+            if res is None:
+                raise TimeoutError("指令超时")
+            return res
+        self.omega.send_websocket_command_omit_response(cmd)
+        return
+
+    def sendwocmd(self, cmd: str) -> None:
+        """以wo身份发送命令
+
+        Args:
+            cmd (str): 命令
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
+        self.omega.send_settings_command(cmd)
+
+    def sendPacket(self, pckID: int, pck: str) -> None:
+        """发送数据包
+
+        Args:
+            pckID (int): 数据包ID
+            pck (str): 数据包内容
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
+        self.omega.send_game_packet_in_json_as_is(pckID, pck)
+
+    def is_op(self, player: str) -> bool:
+        """检查玩家是否为OP
+
+        Args:
+            player (str): 玩家名
+
+        Raises:
+            NotImplementedError: 未实现此方法
+
+        Returns:
+            bool: 是否为OP
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
+        player_obj = self.omega.get_player_by_name(player)
+        if player_obj is None or player_obj.command_permission_level is None:
+            raise ValueError("未能获取玩家对象")
+        return player_obj.command_permission_level > 2
+
+    sendPacketJson = sendPacket
 
 
 class FrameNeOmgRemote(FrameNeOmg):
-    def __init__(self, serverNumber, password, fbToken, auth_server):
-        super().__init__(serverNumber, password, fbToken, auth_server)
+    """远程启动器框架(使用 NeOmega 框架的Remote连接)
 
-    def launch(self):
+    Args:
+        FrameNeOmg (FrameNeOmg): FrameNeOmg 框架
+    """
+    launch_type = "NeOmega Remote"
+
+    def launch(self) -> SystemExit | Exception | SystemError:
+        """启动远程启动器框架
+
+        Raises:
+            AssertionError: 端口号错误
+
+        Returns:
+            SystemExit | Exception | SystemError: 退出状态
+        """
         try:
             openat_port = int(sys_args_to_dict().get(
                 "access-point-port", "24020"))
@@ -643,10 +567,13 @@ class FrameNeOmgRemote(FrameNeOmg):
             )
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
             openat_port = 24015
-            return SystemExit
+            return SystemExit("未指定端口号")
         Print.print_inf(f"将从端口 {openat_port} 连接至接入点(等待接入中).")
         self.set_omega(openat_port)
         Print.print_suc("已连接上接入点进程.")
+        if self.omega is None:
+            self.update_status(SysStatus.CRASHED_EXIT)
+            return SystemExit("接入点进程未启动")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
@@ -661,104 +588,3 @@ class FrameNeOmgRemote(FrameNeOmg):
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点已崩溃")
         return SystemError("未知的退出状态")
-
-    def download_libs(self):
-        Print.print_inf("以 Remote 启动, 将不会检查库完整性")
-
-
-class MCBEWebSocket(StandardFrame):
-    def __init__(self, serverNumber, password, fbToken, auth_server):
-        global fcwslib
-        import fcwslib
-        self.ws_lib = fcwslib.server.Server(serverNumber, password)
-        self.ws_lib
-        self.ws_lib.run_forever()
-
-
-class ToolDeltaCli(object):
-    def __init__(self, address: dict = {"host": "tdaus.tooldelta.fit", "port": 0}) -> None:
-        # def __init__(self, address: dict = {"host": "127.0.0.1", "port": 9002}) -> None:
-        self.NoPort: bool = address.get("port", 0) == 0
-        self.S_ADDRESSS: dict = address
-        self.protocol: str = "http"
-        self.url: str = f'{self.protocol}://{self.S_ADDRESSS["host"]}:{self.S_ADDRESSS["port"]}' if self.NoPort == False else f'{self.protocol}://{self.S_ADDRESSS["host"]}'
-        self.SocketIO: socketio.Client = socketio.Client()
-        self.data_received_event: threading.Event = threading.Event()
-        self.connected_to_server: bool = True
-        threading.Thread(target=self.conn_aus, name="SocketIO_Conn").start()
-        while not self.SocketIO.connected and self.connected_to_server:
-            time.sleep(0.1)
-
-    def init_auth_v(self) -> None:
-        self.feature_code: str = str(uuid.uuid5(
-            uuid.NAMESPACE_DNS, str(time.perf_counter())))
-        self.token_ec: tuple = (self.feature_code, self.get_new_token())
-
-    def get_new_token(self) -> None:
-        try:
-            response = requests.post(
-                url=f'{self.url}/api/signin', data=json.dumps({"feature_code": self.feature_code}), timeout=5)
-            if response.status_code == 200:
-                return response.text
-        except requests.exceptions.ConnectionError as err:
-            return "null"
-
-    def conn_aus(self) -> None:
-        try:
-            self.init_auth_v()
-            self.SocketIO.connect(
-                self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
-            Print.print_suc("ToolDelta成功连接到至Api服务器[Socket-IO]!")
-            while True:
-                if not self.SocketIO.connected:
-                    try:
-                        self.init_auth_v()
-                        self.SocketIO.connect(
-                            self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
-                        Print.print_suc("ToolDelta与Api服务器断开连接,已重新连接成功!")
-                    except:
-                        Print.print_war(
-                            "ToolDeltaApi服务器可能存在故障或当前网络环境异常，将停止使用ToolDeltaApi服务器!")
-                        break
-                time.sleep(10)
-        except Exception as err:
-            Print.print_war("ToolDelta无法连接至Api服务器,将停止使用其提供的功能!")
-            self.connected_to_server = False
-            threading.Thread(target=self.reconnect_to_server).start()
-
-    def reconnect_to_server(self, interval=20):
-        while not self.connected_to_server:
-            try:
-                self.init_auth_v()
-                self.SocketIO.connect(
-                    self.url, namespaces='/api', headers={'Authorization': f'Bearer {self.token_ec[1]}'})
-                Print.print_suc("ToolDelta成功重新连接至Api服务器!")
-                self.connected_to_server = True
-            except Exception as err:
-                time.sleep(interval)
-
-    def get_depends_table_data(self) -> dict:
-        if self.SocketIO.connected:
-            @self.SocketIO.on('depends_table_data', namespace='/api')
-            def handle_depends_table_data(data):
-                self.data_received_event.set()
-                self.depend_table_data = data
-            self.SocketIO.emit('get_depends_table', namespace='/api')
-            self.data_received_event.wait()  # 等待数据返回
-            self.data_received_event.clear()
-            return self.depend_table_data
-        else:
-            Print.print_war(
-                "Namespace /api is not connected yet. Please wait for connection.")
-
-    def get_version_updates(self) -> any:
-        if self.SocketIO.connected:
-            @self.SocketIO.on('version_updates', namespace='/api')
-            def handle_version_updates_data(data):
-                self.data_received_event.set()
-                self.latest_version_data = data
-
-            self.SocketIO.emit('get_version_update', namespace='/api')
-            self.data_received_event.wait()
-            self.data_received_event.clear()
-            return self.latest_version_data["latest_version_str"]
