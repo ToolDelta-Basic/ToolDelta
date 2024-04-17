@@ -1,18 +1,15 @@
-from .basic_mods import (
-    os,
-    requests,
-    re,
-    tarfile,
-    gzip,
-    json,
-    importlib,
-    threading,
-    time,
-)
-from .urlmethod import download_file_singlethreaded
-from typing import Dict
-from .color_print import Print
 from glob import glob
+from .color_print import Print
+from typing import Dict
+from .urlmethod import download_file_singlethreaded
+import os
+import requests
+import re
+import tarfile
+import gzip
+import json
+import importlib
+import threading
 
 
 class GameTextsLoader:
@@ -55,7 +52,8 @@ class GameTextsLoader:
         packets_url: str = (
             f"https://hub.gitmirror.com/?q=https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
         )
-        archive_path = os.path.join(self.base_path, "ToolDelta_Game_Texts.tar.gz")
+        archive_path = os.path.join(
+            self.base_path, "ToolDelta_Game_Texts.tar.gz")
         download_file_singlethreaded(packets_url, archive_path)
         self.extract_data_archive(archive_path)
 
@@ -65,9 +63,11 @@ class GameTextsLoader:
             for file_path in glob(
                 os.path.join(self.base_path, "src", "**", "*.py"), recursive=True
             ):
-                module_name: str = os.path.basename(file_path).replace(".py", "")
+                module_name: str = os.path.basename(
+                    file_path).replace(".py", "")
                 spec: importlib.util.spec_from_file_location = (
-                    importlib.util.spec_from_file_location(module_name, file_path)
+                    importlib.util.spec_from_file_location(
+                        module_name, file_path)
                 )
                 module: importlib.util.module_from_spec = (
                     importlib.util.module_from_spec(spec)

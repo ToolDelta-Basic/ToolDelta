@@ -5,8 +5,13 @@
         - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (TLSP, etc.))
 """
 
-
-from typing import TYPE_CHECKING
+import os
+import sys
+import traceback
+import requests
+import getpass
+import time
+from typing import TYPE_CHECKING, Callable
 import tooldelta
 from tooldelta import (
     auths,
@@ -17,15 +22,6 @@ from .constants import PRG_NAME
 from .builtins import Builtins, safe_close
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .basic_mods import (
-    Callable,
-    os,
-    sys,
-    time,
-    traceback,
-    requests,
-    getpass
-)
 from .cfg import Cfg
 from .logger import publicLogger
 from .game_texts import GameTextsLoader
@@ -37,7 +33,7 @@ from .launch_cli import (
     SysStatus,
 )
 
-from .basic_mods import asyncio, json
+import asyncio, json
 from .packets import PacketIDS
 from .plugin_load.injected_plugin import (
     execute_death_message,
@@ -683,11 +679,11 @@ class GameCtrl:
                         Print.print_err("获取全局玩家失败..重试")
                         continue
                     self.allplayers = (
-                            cmd_result
-                            .OutputMessages[1]
-                            .Parameters[0]
-                            .split(", ")
-                        )
+                        cmd_result
+                        .OutputMessages[1]
+                        .Parameters[0]
+                        .split(", ")
+                    )
                     break
                 except TimeoutError:
                     Print.print_war("获取全局玩家失败..重试")
@@ -747,7 +743,7 @@ class GameCtrl:
         """
         self.sendwocmd(f"title {target} subtitle {text}")
 
-    def player_actionbar(self, target: str, text: str) ->None:
+    def player_actionbar(self, target: str, text: str) -> None:
         """向玩家展示动作栏文本
 
         Args:

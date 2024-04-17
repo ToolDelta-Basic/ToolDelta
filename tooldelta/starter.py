@@ -1,25 +1,33 @@
-import signal
+"""ToolDelta 启动器"""
+
+import os
 import time
-from tooldelta import builtins, urlmethod
-from tooldelta.frame import Frame
-from tooldelta.frame import GameCtrl
-from tooldelta.basic_mods import os, traceback
-from tooldelta.color_print import Print
-from tooldelta.plugin_load.PluginGroup import plugin_group
-from tooldelta.plugin_load.injected_plugin import movent
+import signal
+import traceback
+from .builtins import tmpjson_save_thread
+from .urlmethod import check_update
+from .frame import Frame, GameCtrl
+from .color_print import Print
+from .plugin_load.PluginGroup import plugin_group
+from .plugin_load.injected_plugin import movent
 
 frame = Frame()
-def signal_handler(*arg):
-    # 排除信号中断
-    pass
+
+
+def signal_handler(*_) -> None:
+    """排除信号中断"""
+    return Print.print_war("ToolDelta 已忽略信号中断")
+
+
 signal.signal(signal.SIGINT, signal_handler)
 
-def start_tool_delta():
-    # 初始化系统
+
+def start_tool_delta() -> None:
+    """启动ToolDelta"""
     plugin_group.set_frame(frame)
     try:
         frame.welcome()
-        urlmethod.check_update()
+        check_update()
         frame.basic_operation()
         frame.loadConfiguration()
         game_control = GameCtrl(frame)
@@ -28,18 +36,23 @@ def start_tool_delta():
         movent.set_frame(frame)
         plugin_group.read_all_plugins()
         frame.plugin_load_finished(plugin_group)
-        builtins.tmpjson_save_thread()
+        tmpjson_save_thread()
         frame.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
-        # TODO: 自动更新需要时间间隔
         raise frame.launcher.launch()
     except (KeyboardInterrupt, SystemExit):
         pass
-    except:
+    except Exception:
         Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
 
 
-def safe_jump(*, out_task=True, exit_directly=True):
+def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
+    """安全退出
+
+    Args:
+        out_task (bool, optional): frame框架系统是否退出
+        exit_directly (bool, optional): 是否三秒强制直接退出
+    """
     if out_task:
         frame.system_exit()
     frame.safelyExit()

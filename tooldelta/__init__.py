@@ -1,4 +1,3 @@
-from .basic_mods import *
 from .color_print import Print
 from .packets import Packet_CommandOutput
 from .plugin_load.PluginGroup import Plugin
