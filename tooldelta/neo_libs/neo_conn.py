@@ -8,6 +8,7 @@ from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
 from threading import Thread
 from dataclasses import dataclass
 from tooldelta.color_print import Print
+from tooldelta.packets import Packet_CommandOutput
 
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
@@ -761,7 +762,7 @@ class ThreadOmega:
 
     def send_player_command_need_response(
         self, cmd: str, timeout: int = -1
-    ) -> Optional[CommandOutput]:
+    ) -> Optional[Packet_CommandOutput]:
         setter, getter = self._create_lock_and_result_setter()
         try:
             retriever_id = next(self._cmd_callback_retriever_counter)

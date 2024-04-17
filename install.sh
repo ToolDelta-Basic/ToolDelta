@@ -8,7 +8,7 @@ shortcut_command="td"
 # 获取ToolDelta的最新版本
 LatestTag=$(wget -qO- -t1 -T2 "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest" | jq -r '.tag_name')
 # 设置 GitHub release URL
-github_release_url="https://gh.api.99988866.xyz/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
+github_release_url="https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
 
 function EXIT_FAILURE(){
     exit -1

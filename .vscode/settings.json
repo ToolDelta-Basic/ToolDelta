@@ -1,6 +1,10 @@
 {
   "terminal.integrated.defaultProfile.windows": "Command Prompt",
   "python.languageServer": "Pylance",
-  "python.analysis.typeCheckingMode": "off",
-  "python.analysis.autoImportCompletions": false,
+  "python.analysis.typeCheckingMode": "basic",
+"python.analysis.autoImportCompletions": true,
+"pylint.args": [
+    "--max-line-length=200",
+    "--disable=W0718,C0103"
+],
 }

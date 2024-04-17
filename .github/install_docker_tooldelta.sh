@@ -58,7 +58,7 @@ else
 fi
 
 # 下载ToolDelta文件
-wget https://gh.api.99988866.xyz/https://github.com/ToolDelta/ToolDelta/archive/refs/tags/"${LatestTag}".tar.gz -O "${LatestTag}".tar.gz
+wget https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta/archive/refs/tags/"${LatestTag}".tar.gz -O "${LatestTag}".tar.gz
 tar  zxvf  "${LatestTag}".tar.gz  -C "$WorkDir"
 mv "$WorkDir"/ToolDelta-"${LatestTag}"/* "$WorkDir"
 rm -f "${LatestTag}".tar.gz

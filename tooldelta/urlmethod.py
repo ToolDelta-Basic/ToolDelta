@@ -1,35 +1,65 @@
+"""自定义使用方法"""
 import os
 import re
 import shutil
 import socket
-import platform
 import time
 from typing import Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
 import pyspeedtest
 import requests
 
-from tooldelta.color_print import Print
+from .get_tool_delta_version import get_tool_delta_version
+from .color_print import Print
+
 
 def progress_bar(
-    current: float | int, total: float | int, length = 20, color1="§f", color2="§b"
-):
+    current: float | int, total: float | int, length: int | float = 20, color1: str = "§f", color2: str = "§b"
+) -> str:
+    """执行进度条
+
+    Args:
+        current (float | int): 当前进度值
+        total (float | int): 总进度值
+        length (int): 进度条长度.
+        color1 (str): 进度条颜色1.
+        color2 (str): 进度条颜色2.
+
+    Returns:
+        str: 格式化后的进度条字符串
+    """
     pc = round(current / total * length)
     return Print.colormode_replace(
         color1 + " " * pc + color2 + " " * (20 - pc) + "§r ", 7
     )
 
-def download_progress_bar(
-    current_bytes: int, total_bytes: int, speed = 0
-):
-    bar = progress_bar(current_bytes, total_bytes)
-    b = f"{bar} {_pretty_kb(current_bytes)}B / {_pretty_kb(total_bytes)}B"
-    if speed != 0:
-        b += f"{_pretty_kb(speed)}B/s)    "
-    Print.print_with_info(b, "§a 下载 ", need_log=False, end = "\r")
 
-def _pretty_kb(n: int) -> str:
+def download_progress_bar(
+    current_bytes: int, total_bytes: int, speed: float = 0
+) -> None:
+    """构建下载进度条
+
+    Args:
+        current_bytes (int): 当前已下载的字节数
+        total_bytes (int): 文件总字节数
+        speed ( float): 下载速度.
+    """
+    progressBar = progress_bar(current_bytes, total_bytes)
+    b = f"{progressBar} {pretty_kb(current_bytes)}B / {pretty_kb(total_bytes)}B"
+    if speed != 0:
+        b += f" ({pretty_kb(speed)}B/s)    "
+    Print.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
+
+
+def pretty_kb(n: float) -> str:
+    """将字节数转换为可读性更好的字符串表示形式
+
+    Args:
+        n (float): 字节数
+
+    Returns:
+        str: 可读性更好的字符串表示形式
+    """
     if n >= 1048576:
         return f"{round(n / 1048576, 2)}M"
     if n >= 1024:
@@ -37,15 +67,15 @@ def _pretty_kb(n: int) -> str:
     return f"{round(n, 1)}"
 
 
-def _path_get_filename(path: str) -> Union[str, None]:
-    "从路径中获取最末尾的文件夹/文件名."
-    if "/" not in path:
-        return None
-    return path.split("/")[-1]
+def is_common_text_file(url_path: str) -> bool:
+    """判断是否为常见的文本文件.
 
+    Args:
+        url_path (str): 文件路径
 
-def _is_common_text_file(url_path: str) -> bool:
-    "是否为正常的文本文件(常见的)."
+    Returns:
+        bool: 是否为常见的文本文件
+    """
     return any(
         url_path.endswith(i)
         for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]
@@ -53,14 +83,32 @@ def _is_common_text_file(url_path: str) -> bool:
 
 
 def get_file_size(url: str) -> Union[int, None]:
+    """获取文件大小
+
+    Args:
+        url (str): 网址
+
+    Returns:
+        Union[int, None]: 文件大小（单位：字节）
+    """
     response = requests.head(url, timeout=10)
     if "Content-Length" in response.headers:
         file_size = int(response.headers["Content-Length"])
         return file_size
-    return None
 
 
 def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str) -> int:
+    """下载文件的代码块
+
+    Args:
+        url (str): 文件的URL地址
+        start_byte (int): 下载的起始字节位置
+        end_byte (int): 下载的结束字节位置
+        save_dir (str): 文件保存的目录
+
+    Returns:
+        int: 已下载的字节数
+    """
     headers = {"Range": f"bytes={start_byte}-{end_byte}"}
     response = requests.get(url, headers=headers, stream=True, timeout=10)
     response.raise_for_status()
@@ -76,19 +124,23 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
 def download_file_singlethreaded(
     url: str, save_dir: str, ignore_warnings: bool = False
 ) -> None:
+    """下载单个文件
+
+    Args:
+        url (str): 文件的URL地址
+        save_dir (str): 文件保存的目录
+        ignore_warnings (bool, optional): 是否忽略警告
+    """
     with requests.get(url, stream=True, timeout=10) as res:
         res.raise_for_status()
         filesize = get_file_size(url)
-        try:
-            if filesize < 256 and not ignore_warnings:
-                Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
-        except TypeError:
-            pass
+        if filesize is not None and filesize < 256 and not ignore_warnings:
+            Print.print_war(f"下载 {url} 的文件警告: 文件大小异常，不到 0.25KB")
         chunk_size = 8192
-        nowsize = 0
-        succ = False
-        lastime = time.time()
-        useSpeed = 0
+        useSpeed: float = 0
+        # nowsize: 当前已下载的字节数
+        nowsize: int = 0
+        lastime: float = 1
         with open(save_dir + ".tmp", "wb") as dwnf:
             for chk in res.iter_content(chunk_size):
                 nowtime = time.time()
@@ -97,67 +149,38 @@ def download_file_singlethreaded(
                     lastime = nowtime
                 nowsize += len(chk)
                 dwnf.write(chk)
-                if nowsize % 81920 == 0:  # 每下载 10 个数据块更新一次进度
+                if nowsize % 81920 == 0 and filesize:  # 每下载 10 个数据块更新一次进度
                     download_progress_bar(nowsize, filesize, useSpeed)
-        succ = True
-        if succ:
-            shutil.move(save_dir + ".tmp", save_dir)
-        else:
-            os.remove(save_dir + ".tmp")
-
-def download_file_multithreading(
-    url: str, save_dir: str, num_threads: int = 8, ignore_warnings: bool = False
-):
-    filesize = get_file_size(url)
-    if filesize is None:
-        download_file_singlethreaded(url=url, save_dir=save_dir)
-    if filesize < 256 and not ignore_warnings:
-        Print.print_war(f"下载 {url} 的文件警告: 文件大小异常, 不到 0.25KB")
-    elif filesize < 1048576 and not ignore_warnings:
-        download_file_singlethreaded(url=url, save_dir=save_dir)
-    chunk_size = filesize // num_threads  # 每个线程下载的块大小
-    with open(save_dir + ".tmp", "wb") as dwnf, Print.lock, tqdm(
-        total=filesize,
-        unit="B",
-        unit_scale=True,
-        desc=Print.fmt_info("", "§a 下载 §r"),
-        ncols=80,
-    ) as pbar:
-
-        def update_progress(downloaded_bytes: int) -> None:
-            pbar.update(downloaded_bytes)
-
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = []
-            for i in range(num_threads):
-                start_byte = i * chunk_size
-                end_byte = start_byte + chunk_size - 1
-                if i == num_threads - 1:
-                    end_byte = filesize - 1
-                future = executor.submit(
-                    download_file_chunk, url, start_byte, end_byte, save_dir
-                )
-                future.add_done_callback(lambda f: update_progress(f.result()))
-                futures.append(future)
-            for future in futures:
-                future.result()
-    shutil.move(save_dir + ".tmp", save_dir)
+        shutil.move(save_dir + ".tmp", save_dir)
 
 
 def download_unknown_file(url: str, save_dir: str) -> None:
+    """下载未知文件
+
+    Args:
+        url (str): 文件的URL地址
+        save_dir (str): 文件保存的目录
+    """
     # 鉴于 Content-Length 不一定表示文件原始大小, 二进制文件与文本文件需要分开下载
     # 否则显示的下载条会异常
     resp = requests.get(url, timeout=10)
     resp.raise_for_status()
-    # Bad..
-    if _is_common_text_file(save_dir):
+    if is_common_text_file(save_dir):
         # 文本文件, 体积可能不大
         with open(save_dir, "wb") as f:
             f.write(resp.content)
-    else:
-        download_file_singlethreaded(url, save_dir)
+    download_file_singlethreaded(url, save_dir)
+
 
 def test_site_latency(Da: dict) -> list:
+    """测试网站延迟
+
+    Args:
+        Da (dict): 包含URL和镜像URL的字典
+
+    Returns:
+        list: 按延迟排序的URL和延迟时间的元组列表
+    """
     tmp_speed = {}
     urls = [Da["url"]] + Da["mirror_url"]
 
@@ -172,22 +195,48 @@ def test_site_latency(Da: dict) -> list:
             except Exception as e:
                 Print.print_war(f"Error measuring latency for {url}: {e}")
 
-    sorted_speed = sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
-    return sorted_speed
+    return sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
+
 
 def measure_latencyt(url: str) -> float:
+    """测量延迟
+
+    Args:
+        url (str): 网址
+
+    Raises:
+        ValueError: 无效的网址
+
+    Returns:
+        float: 延迟时间
+    """
     try:
-        st = pyspeedtest.SpeedTest(
-            re.search(r"(?<=http[s]://)[.\w-]*(:\d{,8})?((?=/)|(?!/))", url).group()
-        )
-        download_speed = st.download()  # / 1000000  # 转换为兆字节/秒
+        # 提取域名
+        domain = re.search(
+            r"(?<=http[s]://)[.\w-]*(:\d{1,8})?((?=/)|(?!/))", url)
+        if isinstance(domain, type(None)):  # 如果没有匹配到域名
+            raise ValueError("Invalid URL")
+        st = pyspeedtest.SpeedTest(domain.group())  # 传入域名
+        download_speed = st.download()
         return download_speed
     except Exception as e:
         Print.print_war(f"Error measuring latency for {url}: {e}")
-        return -1.0  # 返回-1表示测速失败
+    return -1.0  # 返回-1表示测速失败
 
 
-def get_free_port(start: int = 8080, end: int = 65535) -> int:
+def get_free_port(start: int = 2000, end: int = 65535) -> int:
+    """获取空闲端口号
+
+    Args:
+        start (int, optional): 起始端口号.
+        end (int, optional): 结束端口号.
+
+    Raises:
+        Exception: 未找到空闲端口
+
+    Returns:
+        int: 空闲端口号
+    """
     for port in range(start, end):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -195,4 +244,47 @@ def get_free_port(start: int = 8080, end: int = 65535) -> int:
                 return port
             except OSError:
                 Print.print_war(f"端口 {port} 正被占用, 跳过")
-    raise Exception(f"未找到空闲端口({start}~{end})")
+    raise ValueError(f"未找到空闲端口({start}~{end})")
+
+
+def check_update() -> None:
+    """检查更新"""
+    latest_version: str = requests.get(
+        "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest", timeout=5).json()["tag_name"]
+    current_version = ".".join(
+        map(str, get_tool_delta_version()[:3]))
+
+    if not latest_version.replace(".", "") <= current_version.replace(".", ""):
+        # Print.print_suc(f"当前为最新版本 -> v{current_version}，无需更新")
+        Print.print_load(
+            f"检测到最新版本 {current_version} -> {latest_version}，请及时更新!"
+        )
+
+
+def if_token() -> None:
+    """检查路径下是否有fbtoken，没有就提示输入
+
+    Raises:
+        SystemExit: 未输入fbtoken
+    """
+    if not os.path.isfile("fbtoken"):
+        Print.print_inf(
+            "请到对应的验证服务器官网下载FBToken，并放在本目录中，或者在下面输入fbtoken"
+        )
+        fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
+        if fbtoken:
+            with open("fbtoken", "w", encoding="utf-8") as f:
+                f.write(fbtoken)
+        else:
+            Print.print_err("未输入fbtoken, 无法继续")
+            raise SystemExit
+
+
+def fbtokenFix():
+    """修复fbtoken里的换行符    """
+    with open("fbtoken", "r", encoding="utf-8") as f:
+        token = f.read()
+        if "\n" in token:
+            Print.print_war("fbtoken里有换行符，会造成fb登陆失败，已自动修复")
+            with open("fbtoken", "w", encoding="utf-8") as f:
+                f.write(token.replace("\n", ""))

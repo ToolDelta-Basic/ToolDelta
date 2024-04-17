@@ -1,35 +1,43 @@
-from hmac import new
-import platform
+"""客户端启动器框架"""
+
 import os
-from poplib import CR
+import threading
 import shlex
-import subprocess
 import uuid
 import time
 import json
-import ssl
+import random
+import subprocess
+import platform
+from typing import Callable, Optional
 import requests
 import ujson
-import random
 
-from tooldelta import (
-    constants,
-)
-from typing import Callable, Optional
-from .color_print import Print
-from .urlmethod import download_file_singlethreaded, get_free_port
-from .builtins import Builtins
-from .basic_mods import socketio
-from .packets import Packet_CommandOutput, PacketIDS
-from .sys_args import sys_args_to_dict
-from tooldelta.cfg import Cfg
-from .fb_conn import fbconn
-import threading
 import tooldelta
+from tooldelta import constants
+from .cfg import Cfg
+from .fb_conn import fbconn
+from .builtins import Builtins
+from .color_print import Print
+from .basic_mods import socketio
+from .sys_args import sys_args_to_dict
+from .packets import Packet_CommandOutput, PacketIDS
+from .urlmethod import download_file_singlethreaded, get_free_port
+
 Config = Cfg()
 
 
 class SysStatus:
+    """系统状态码
+
+    LOADING: 启动器正在加载
+    LAUNCHING: 启动器正在启动
+    RUNNING: 启动器正在运行
+    NORMAL_EXIT: 正常退出
+    FB_LAUNCH_EXC: FastBuilder 启动异常
+    CRASHED_EXIT: 启动器崩溃退出
+    NEED_RESTART: 需要重启
+    """
     LOADING = 100
     LAUNCHING = 101
     RUNNING = 102
@@ -41,7 +49,7 @@ class SysStatus:
 
 
 class StandardFrame:
-    # 提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口
+    """提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口"""
     launch_type = "Original"
 
     def __init__(self, serverNumber, password, fbToken, auth_server_url):
@@ -49,13 +57,13 @@ class StandardFrame:
         self.serverPassword = password
         self.fbToken = fbToken
         self.auth_server = auth_server_url
-        self.status = SysStatus.LOADING
         self.system_type = platform.uname().system
         self.inject_events = []
         self.packet_handler: Callable | None = lambda pckType, pck: None
         self.need_listen_packets = {9, 63, 79}
         self._launcher_listener = None
         self.exit_event = threading.Event()
+        self.status = SysStatus.LOADING
 
     def add_listen_packets(self, *pcks: int):
         for i in pcks:
@@ -67,9 +75,6 @@ class StandardFrame:
 
     def listen_launched(self, cb):
         self._launcher_listener = cb
-
-    def close_fb(self):
-        raise NotImplementedError()
 
     @staticmethod
     def get_players_and_uuids():
@@ -89,13 +94,34 @@ class StandardFrame:
             self.exit_event.set()
 
     get_all_players = None
-    sendcmd: Callable[[str, bool, int | float], None | Packet_CommandOutput]
-    sendwscmd: Callable[[str, bool, int | float], Packet_CommandOutput]
-    sendwocmd: Callable[[str], None]
-    sendfbcmd: Callable[[str], None | AttributeError]
-    sendPacket: Callable[[int, str], None]
-    sendPacketJson: Callable[[int, str], None]
-    is_op: Callable[[str], None | bool] | None
+
+    @staticmethod
+    def sendcmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
+        ...
+
+    @staticmethod
+    def sendwscmd(cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
+        ...
+
+    @staticmethod
+    def sendwocmd(cmd: str) -> None:
+        ...
+
+    @staticmethod
+    def sendfbcmd(cmd: str) -> None:
+        ...
+
+    @staticmethod
+    def sendPacket(pckID: int, pck: str) -> None:
+        ...
+
+    @staticmethod
+    def sendPacketJson(pckID: int, pck: str) -> None:
+        ...
+
+    @staticmethod
+    def is_op(player: str) -> bool:
+        ...
 
 
 class FrameFBConn(StandardFrame):
@@ -254,7 +280,7 @@ class FrameFBConn(StandardFrame):
     def downloadMissingFiles(self):
         "获取缺失文件"
         Print.print_with_info("§d将自动检测缺失文件并补全", "§d 加载 ")
-        mirror_src = "https://gh.api.99988866.xyz/"
+        mirror_src = "https://tdload.tblstudio.cn/"
         file_get_src = (
             mirror_src
             + "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/require_files.json"
@@ -362,6 +388,7 @@ class FrameNeOmg(StandardFrame):
         self.injected = False
         self.omega = None
         self.TDC = None
+        self.neomg_proc = None
         self.set_tooldelta_cli()
         self.download_libs()
         self.init_all_functions()
@@ -418,7 +445,7 @@ class FrameNeOmg(StandardFrame):
             [
                 py_file_path,
                 "-server",
-                self.serverNumber,
+                str(self.serverNumber),
                 "-T",
                 self.fbToken,
                 "-access-point-addr",
@@ -486,9 +513,9 @@ class FrameNeOmg(StandardFrame):
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         is_mir: bool = cfgs["是否使用github镜像"]
         if is_mir:
-            mirror_src = "https://gh.api.99988866.xyz/" + \
+            mirror_src = "https://tdload.tblstudio.cn/" + \
                 "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
-            depen_url = "https://gh.api.99988866.xyz/" + \
+            depen_url = "https://tdload.tblstudio.cn/" + \
                 "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
         else:
             mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
@@ -599,6 +626,9 @@ class FrameNeOmg(StandardFrame):
 
 
 class FrameNeOmgRemote(FrameNeOmg):
+    def __init__(self, serverNumber, password, fbToken, auth_server):
+        super().__init__(serverNumber, password, fbToken, auth_server)
+
     def launch(self):
         try:
             openat_port = int(sys_args_to_dict().get(
