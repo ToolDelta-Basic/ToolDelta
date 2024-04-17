@@ -7,11 +7,13 @@
 
 import os
 import sys
-import traceback
-import requests
-import getpass
 import time
+import getpass
+import traceback
 from typing import TYPE_CHECKING, Callable
+import asyncio
+import json
+import requests
 import tooldelta
 from tooldelta import (
     auths,
@@ -33,7 +35,6 @@ from .launch_cli import (
     SysStatus,
 )
 
-import asyncio, json
 from .packets import PacketIDS
 from .plugin_load.injected_plugin import (
     execute_death_message,
