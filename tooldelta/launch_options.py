@@ -1,14 +1,27 @@
+"启动选项"
 import os
-from tooldelta.color_print import Print
-from tooldelta.starter import start_tool_delta
-from tooldelta.plugin_manager import plugin_manager
-from tooldelta.plugin_market import market
-from tooldelta.sys_args import sys_args_to_dict
+import signal
+from .color_print import Print
+from .starter import start_tool_delta
+from .plugin_manager import plugin_manager
+from .plugin_market import market
+from .sys_args import sys_args_to_dict
 
-# TODO: 这是启动界面, 在此方法下写启动选项(启动ToolDelta, 插件管理, 插件市场)
-def client_title():
+
+def signal_handler(*_) -> None:
+    """排除信号中断"""
+    return Print.print_war("ToolDelta 已忽略信号中断")
+
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+def client_title() -> None:
+    "选择启动模式"
     launch_mode = sys_args_to_dict()
     if launch_mode.get("l"):
+        if not isinstance(launch_mode["l"], str):
+            raise ValueError("启动模式参数不合法")
         r = launch_mode["l"]
     else:
         Print.clean_print("§b请选择启动模式(使用启动参数 -l <启动模式> 可以跳过该页面):")

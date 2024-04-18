@@ -4,11 +4,11 @@ import os
 import threading
 import shlex
 import time
-import ujson as json
 import random
 import subprocess
 import platform
 from typing import Callable, Optional
+import ujson as json
 import requests
 import tooldelta
 
@@ -555,8 +555,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             SystemExit | Exception | SystemError: 退出状态
         """
         try:
-            openat_port = int(sys_args_to_dict().get(
-                "access-point-port", "24020"))
+            openat_port = int(sys_args_to_dict().get("access-point-port") or "24020")
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):

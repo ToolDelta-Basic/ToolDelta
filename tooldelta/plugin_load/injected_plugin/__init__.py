@@ -1,32 +1,39 @@
+"ToolDelta注入式插件"
 import asyncio
-from concurrent.futures import thread
 from dataclasses import dataclass
 import os
 import sys
 import importlib
-import threading
 
-from tooldelta.color_print import Print
-from tooldelta.plugin_load import (
+from typing import TYPE_CHECKING, Callable, List, Tuple
+from ...color_print import Print
+from ...plugin_load import (
     plugin_is_enabled,
     PluginAPINotFoundError,
     PluginAPIVersionError
 )
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from tooldelta.plugin_load.PluginGroup import PluginGroup
 
 # 定义插件处理函数列表
-player_message_funcs = {}
-player_prejoin_funcs = {}
-player_join_funcs = {}
-player_left_funcs = {}
-player_death_funcs = {}
-repeat_funcs = {}
-init_plugin_funcs = {}
+player_message_funcs: dict[Callable, int | None] = {}
+player_prejoin_funcs: dict[Callable, int | None] = {}
+player_join_funcs: dict[Callable, int | None] = {}
+player_left_funcs: dict[Callable, int | None] = {}
+player_death_funcs: dict[Callable, int | None] = {}
+repeat_funcs: dict[Callable, int | float] = {}
+init_plugin_funcs: dict[Callable, int | None] = {}
 
 
-def player_message(priority=None):
+def player_message(priority: int | None = None) -> Callable:
+    """载入处理玩家消息
+
+    Args:
+        priority (int, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
     def decorator(func):
         player_message_funcs[func] = priority
         return func
@@ -34,7 +41,16 @@ def player_message(priority=None):
     return decorator
 
 
-def player_prejoin(priority=None):
+def player_prejoin(priority: int | None = None) -> Callable:
+    """载入处理玩家加入前事件
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
+
     def decorator(func):
         player_prejoin_funcs[func] = priority
         return func
@@ -42,7 +58,15 @@ def player_prejoin(priority=None):
     return decorator
 
 
-def player_join(priority=None):
+def player_join(priority: int | None = None) -> Callable:
+    """载入处理玩家加入事件
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
     def decorator(func):
         player_join_funcs[func] = priority
         return func
@@ -50,7 +74,15 @@ def player_join(priority=None):
     return decorator
 
 
-def player_left(priority=None):
+def player_left(priority: int | None = None) -> Callable:
+    """载入处理玩家离开事件
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
     def decorator(func):
         player_left_funcs[func] = priority
         return func
@@ -58,7 +90,15 @@ def player_left(priority=None):
     return decorator
 
 
-def player_death(priority=None):
+def player_death(priority: int | None = None) -> Callable:
+    """载入处理玩家死亡事件
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
     def decorator(func):
         player_death_funcs[func] = priority
         return func
@@ -66,7 +106,15 @@ def player_death(priority=None):
     return decorator
 
 
-def init(priority=None):
+def init(priority: int | None = None) -> Callable:
+    """载入机器人进入游戏后初始化插件
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
     def decorator(func):
         init_plugin_funcs[func] = priority
         return func
@@ -74,16 +122,31 @@ def init(priority=None):
     return decorator
 
 
-def repeat(*args):
+def repeat(retime: int | float = 5) -> Callable:
+    """载入重复任务
+
+    Args:
+        retime (int, optional): 重复时间
+
+    Returns:
+        Callable: 插件处理函数
+    """
+
     def decorator(func):
-        repeat_funcs[func] = args[0]
+        repeat_funcs[func] = retime
         return func
 
     return decorator
 
 
-# repeat_task
-async def repeat_task(func, time):
+async def repeat_task(func: Callable, time: int | float) -> None:
+    """执行重复任务（执行完等待一段时间再执行）
+
+    Args:
+        func (Callable): 定时执行的函数
+        time (int | float): 重复时间
+    """
+
     while True:
         await asyncio.sleep(time)
         # 防止出错
@@ -93,32 +156,40 @@ async def repeat_task(func, time):
             Print.print_err(f"repeat_task error: {e}")
 
 
-async def execute_asyncio_task(func_dict: dict, *args, **kwargs):
-    tasks = []
-    none_tasks = []
+async def execute_asyncio_task(func_dict: dict, *args, **kwargs) -> None:
+    """执行异步任务
 
+    Args:
+        func_dict (dict): 函数字典
+    """
+    tasks: List[Tuple[int, asyncio.Task]] = []
+    none_tasks: List[Tuple[None, asyncio.Task]] = []
     # 将任务添加到 tasks 列表或 none_tasks 列表中
     for func, priority in func_dict.items():
         if priority is not None:
-            tasks.append((priority, func(*args, **kwargs)))
+            tasks.append(
+                (priority, asyncio.create_task(func(*args, **kwargs))))
         else:
-            none_tasks.append((priority, func(*args, **kwargs)))
+            none_tasks.append(
+                (priority, asyncio.create_task(func(*args, **kwargs)))
+            )
 
     # 按优先级对非 None 任务排序
     tasks.sort(key=lambda x: x[0])
 
     # 将 none_tasks 列表附加到已排序的任务列表的末尾
-    tasks += none_tasks
+    task_list = none_tasks + tasks
 
-    await asyncio.gather(*[task[1] for task in tasks])
+    await asyncio.gather(*[task[1] for task in task_list])
 
 
-# 并发初始化插件
-async def execute_init():
+async def execute_init() -> None:
+    "执行初始化插件函数"
     await execute_asyncio_task(init_plugin_funcs)
 
 
 async def run_repeat():
+    "执行重复任务"
     # 为字典中的每一个函数创建一个循环特定时间的任务
     tasks = []
     for func, time in repeat_funcs.items():
@@ -128,6 +199,7 @@ async def run_repeat():
 
 
 async def safe_jump():
+    "安全跳出重复任务"
     try:
         main_task.cancel()
     except NameError:
@@ -137,7 +209,27 @@ async def safe_jump():
 main_task: asyncio.Task
 
 
-async def execute_repeat():
+@ dataclass(order=True)
+class player_name:
+    "玩家名字"
+    playername: str
+
+
+@ dataclass(order=True)
+class player_message_info(player_name):
+    "玩家消息信息"
+    message: str
+
+
+@ dataclass(order=True)
+class player_death_info(player_name):
+    "玩家死亡信息"
+    message: str
+    killer: str | None = None
+
+
+async def execute_repeat() -> None:
+    "执行重复任务"
     global main_task
     main_task = asyncio.create_task(run_repeat())
     try:
@@ -146,55 +238,57 @@ async def execute_repeat():
         Print.print_suc("重复任务 repeat_task 已退出！")
 
 
-@dataclass(order=True)
-class player_name:
-    playername: str
+async def execute_player_message(playername: str, message: str) -> None:
+    """执行玩家消息处理函数
 
-@dataclass(order=True)
-class player_message_info(player_name):
-    message: str
-@dataclass(order=True)
-class player_death_info(player_name):
-    message: str
-    killer: str = None
-# 处理玩家消息并执行插件
-async def execute_player_message(playername, message):
+    Args:
+        playername (str): 玩家名字
+        message (str): 消息
+    """
     await execute_asyncio_task(player_message_funcs, player_message_info(playername=playername, message=message))
 
 
-async def execute_death_message(playername, killer, message):
-    await execute_asyncio_task(player_death_funcs,player_death_info(playername=playername, killer=killer, message=message))
+async def execute_death_message(playername: str, killer: str | None, message: str) -> None:
+    """执行玩家死亡处理函数
+
+    Args:
+        playername (str): 玩家名字
+        killer (str | None): 凶手
+        message (str): 消息
+    """
+    await execute_asyncio_task(player_death_funcs, player_death_info(playername=playername, killer=killer, message=message))
 
 
-async def execute_player_join(playername):
+async def execute_player_join(playername: str) -> None:
+    """执行玩家加入处理函数
+
+    Args:
+        playername (str): 玩家名字
+    """
     await execute_asyncio_task(player_join_funcs, player_name(playername=playername))
 
-async def execute_player_prejoin(playername):
+
+async def execute_player_prejoin(playername: str) -> None:
+    """执行玩家加入前处理函数
+
+    Args:
+        playername (str): 玩家名字
+    """
     await execute_asyncio_task(player_prejoin_funcs, player_name(playername=playername))
 
-async def execute_player_left(playername):
+
+async def execute_player_left(playername: str) -> None:
+    """执行玩家离开处理函数
+
+    Args:
+        playername (str): 玩家名字
+    """
     await execute_asyncio_task(player_left_funcs, player_name(playername=playername))
 
 
-async def load_plugin_file(file):
-    try:
-        # 导入插件模块
-        module_name = file
-        sys.path.append(os.path.join("插件文件", "ToolDelta注入式插件"))
-        plugin_module = importlib.import_module(module_name)
-        meta_data = create_plugin_metadata(
-            getattr(plugin_module, "__plugin_meta__", {"name": module_name})
-        )
-        # 获取插件元数据
-        return meta_data
-    except PluginAPIVersionError as err:
-        Print.print_err(f"插件 {file} 加载出现问题: 需要 {err.name} 的API最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")
-        raise
-    except PluginAPINotFoundError as err:
-        Print.print_err(f"插件 {file} 加载出现问题: 需要前置插件API {err.name}")
-        raise
-
 class PluginMetadata:
+    "插件元数据"
+
     def __init__(
         self,
         name,
@@ -212,7 +306,15 @@ class PluginMetadata:
         self.homepage = homepage
 
 
-def create_plugin_metadata(metadata_dict: dict):
+def create_plugin_metadata(metadata_dict: dict) -> PluginMetadata:
+    """创建插件元数据
+
+    Args:
+        metadata_dict (dict): 插件元数据字典
+
+    Returns:
+        PluginMetadata: 插件元数据
+    """
     name = metadata_dict.get("name", "未命名插件")
     version = metadata_dict.get("version", "1.0")
     description = metadata_dict.get("description", "未知插件")
@@ -223,7 +325,39 @@ def create_plugin_metadata(metadata_dict: dict):
     return PluginMetadata(name, author, description, version, usage, homepage)
 
 
-async def load_plugin(plugin_grp: "PluginGroup"):
+async def load_plugin_file(file: str) -> PluginMetadata:
+    """加载插件文件
+
+    Args:
+        file (str): 插件文件名
+
+    Returns:
+        PluginMetadata: 插件元数据
+    """
+    try:
+        # 导入插件模块
+        sys.path.append(os.path.join("插件文件", "ToolDelta注入式插件"))
+        plugin_module = importlib.import_module(file)
+        meta_data = create_plugin_metadata(
+            getattr(plugin_module, "__plugin_meta__", {"name": file})
+        )
+        # 获取插件元数据
+        return meta_data
+    except PluginAPIVersionError as err:
+        Print.print_err(
+            f"插件 {file} 加载出现问题: 需要 {err.name} 的API最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")
+        raise
+    except PluginAPINotFoundError as err:
+        Print.print_err(f"插件 {file} 加载出现问题: 需要前置插件API {err.name}")
+        raise
+
+
+async def load_plugin(plugin_grp: "PluginGroup") -> None:
+    """加载插件
+
+    Args:
+        plugin_grp (PluginGroup): 插件组
+    """
     tasks = []
 
     # 读取本目录下的文件夹名字

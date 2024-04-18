@@ -21,6 +21,7 @@ from typing import Any, Callable, Dict, List, Tuple, Optional
 import ctypes
 import threading
 import traceback
+import json as rjson
 import ujson as json
 from .color_print import Print
 
@@ -278,7 +279,7 @@ class Builtins:
             """读取数据时发生错误"""
 
         @staticmethod
-        def readFileFrom(plugin_name: str, file: str, default: dict | None = None) -> dict | list | None:
+        def readFileFrom(plugin_name: str, file: str, default: dict | None = None) -> dict | list:
             """从插件数据文件夹读取一个json文件, 会自动创建文件夹和文件.
 
             Args:
@@ -291,7 +292,7 @@ class Builtins:
                 err: 读取文件路径时发生错误
 
             Returns:
-                dict | list | None: JSON对象
+                dict | list: JSON对象
             """
             if file.endswith(".json"):
                 file = file[:-5]
@@ -305,7 +306,8 @@ class Builtins:
                 with open(filepath, "r", encoding="utf-8") as f:
                     res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
                 return res
-            except json.JSONDecodeError as err:
+            except rjson.JSONDecodeError as err:
+                # 判断是否有msg.doc.pos属性
                 raise Builtins.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
                 )
@@ -489,7 +491,7 @@ class Builtins:
             return __sub
 
 
-def safe_close()->None:
+def safe_close() -> None:
     """安全关闭"""
     event_pool["tmpjson_save"].set()
     event_flags_pool["tmpjson_save"] = False
@@ -515,7 +517,7 @@ def _tmpjson_save_thread():
             return
 
 
-def tmpjson_save_thread()->None:
+def tmpjson_save_thread() -> None:
     """JSON缓存文件定时保存"""
     Builtins.createThread(_tmpjson_save_thread, usage="JSON缓存文件定时保存")
 

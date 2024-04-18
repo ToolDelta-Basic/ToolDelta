@@ -1,7 +1,6 @@
+"注入式执行函数"
 import time
-import ujson as json
-from typing import TYPE_CHECKING, Any
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput
 if TYPE_CHECKING:
@@ -28,7 +27,7 @@ def set_frame(my_Frame: "Frame") -> None:
     全局初始化框架
 
     参数:
-        my_"Frame": 要设置的框架对象
+        my_Frame: 要设置的框架对象
     """
     global movent_frame, game_control  # pylint: disable=global-statement
     movent_frame = my_Frame
@@ -47,14 +46,12 @@ def sendcmd(
         timeout: 等待响应的超时时间（秒）,默认为 30
     """
     check_avaliable(game_control)
-    if game_control.sendcmd is None:
-        raise AttributeError(f"无法使用 {game_control.__class__.__name__}, 因为其还未被初始化")
     return game_control.sendcmd(cmd, waitForResp, timeout)
 
 
 def sendwscmd(
-    cmd: str, waitForResp: bool = False, timeout: int | float = 30
-) -> Packet_CommandOutput:
+    cmd: str, waitForResp: bool = False, timeout: float = 30
+) -> Packet_CommandOutput | None:
     """
     发送WSCMD命令到游戏控制器
 
@@ -90,17 +87,6 @@ def sendPacket(pktID: int, pkt: str) -> None:
     game_control.sendPacket(pktID, pkt)
 
 
-def sendfbcmd(cmd: str) -> None:
-    """向FastBuilder发送命令\n
-    在除FastBuilder外的其他启动器上不可用
-
-    参数:
-        cmd: 要发送的命令。
-    """
-    check_avaliable(game_control)
-    game_control.sendfbcmd(cmd)
-
-
 def rawText(playername: str, text: str) -> None:
     """
     向指定玩家发送原始文本消息
@@ -109,7 +95,8 @@ def rawText(playername: str, text: str) -> None:
         playername: 玩家名称
         text: 要发送的文本
     """
-    sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
+    sendcmd(
+        r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
 
 
 def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
@@ -122,7 +109,8 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
         text: 消息文本
     """
     if title is None:
-        sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
+        sendcmd(
+            r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
     else:
         sendcmd(
             r"""/tellraw %s {"rawtext":[{"text":"<%s> §r%s"}]}"""
@@ -165,16 +153,19 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
     """
     check_avaliable(game_control)
     if not sth.startswith("@"):
-        raise Exception("Minecraft Target Selector is not correct.")
+        raise ValueError("Minecraft Target Selector is not correct.")
+    result = sendwscmd(f"/testfor {sth}", True, timeout)
+    if result is None:
+        raise ValueError("Failed to get the target.")
     result = (
-        game_control.sendwscmd(f"/testfor {sth}", True, timeout)
+        result
         .OutputMessages[0]
         .Parameters
     )
     if result:
         result = result[0]
         return result.split(", ")
-    return []
+    raise ValueError("Failed to get the target.")
 
 
 def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
@@ -211,14 +202,16 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     check_avaliable(game_control)
     if targetNameToGet not in get_all_player() or targetNameToGet.startswith("@"):
         raise ValueError(f"Player {targetNameToGet} does not exist.")
-    result = sendwscmd(f'/querytarget @a[name="{targetNameToGet}"]', True, timeout)
+    result = sendwscmd(
+        f'/querytarget @a[name="{targetNameToGet}"]', True, timeout)
+    if isinstance(result, type(None)):
+        raise ValueError("Failed to get the position.")
     if not result.OutputMessages[0].Success:
-        raise ValueError(f"Failed to get the position: {result.OutputMessages[0]}")
+        raise ValueError(
+            f"Failed to get the position: {result.OutputMessages[0]}")
     parameter = result.OutputMessages[0].Parameters[0]
     if isinstance(parameter, str):
-        resultList = json.loads(parameter)
-    else:
-        resultList = parameter
+        raise ValueError("Failed to get the position.")
     result = {}
 
     if game_control.players_uuid is None:
@@ -288,6 +281,8 @@ def getBlockTile(x: int, y: int, z: int) -> str:
         z: Z坐标
     """
     res = sendwscmd(f"/testforblock {x} {y} {z} air", True)
+    if isinstance(res, type(None)):
+        raise ValueError("Failed to get the block.")
     if res.SuccessCount:
         return "air"
     return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")

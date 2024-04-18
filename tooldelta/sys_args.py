@@ -1,9 +1,18 @@
+"解析启动参数"
 import sys
 
-def sys_args_to_dict(argv: list[str] = sys.argv):
-    # 将启动参数分割为 -键=值 或 -键=None
+
+def sys_args_to_dict(argv: list[str] = sys.argv)-> dict[str, str | None]:
+    """将启动参数转换为字典
+
+    Args:
+        argv (list[str], optional): 启动参数
+
+    Returns:
+        dict[str, str | None]: 启动参数字典
+    """
     # 为什么不用 argsparser? 因为这样可以支持混合型启动参数
-    d: dict[str, str] = {}
+    d: dict[str, str | None] = {}
     i = 0
     while i < len(argv):
         arg = argv[i]

@@ -42,7 +42,7 @@ def _CfgIsinstance(obj, typ):
     raise ValueError(f"Can't be: {typ}")
 
 
-def _CfgShowType(typ:Any)->str:
+def _CfgShowType(typ: Any) -> str:
     """转换类型为中文字符串
 
     Args:
@@ -74,6 +74,7 @@ class Cfg:
     """配置文件模块"""
     class Group:
         """配置文件的键组合, 用于检测多个键中的一个是否存在"""
+
         def __init__(self, *keys):
             self.members = keys
 
@@ -82,6 +83,7 @@ class Cfg:
 
     class ConfigError(Exception):
         "配置文件错误"
+
         def __init__(self, errStr: str, errPos: list | None = None):
             if errPos is None:
                 errPos = []
@@ -90,6 +92,7 @@ class Cfg:
 
     class UnneccessaryKey:
         "配置文件的多余键"
+
         def __init__(self, key):
             self.key = key
 
@@ -130,12 +133,13 @@ class Cfg:
             try:
                 obj = ujson.load(f)
             except ujson.JSONDecodeError as exc:
-                raise self.ConfigValueError("JSON配置文件格式不正确, 请修正或直接删除", None) from exc
+                raise self.ConfigValueError(
+                    "JSON配置文件格式不正确, 请修正或直接删除", None) from exc
         self.check_dict_2(standard_type, obj)
         return obj
 
     @staticmethod
-    def default_cfg(path: str, default: dict, force: bool = False)->None:
+    def default_cfg(path: str, default: dict, force: bool = False) -> None:
         """生成默认配置文件
 
         Args:
@@ -149,7 +153,7 @@ class Cfg:
                 ujson.dump(default, f, indent=4, ensure_ascii=False)
 
     @staticmethod
-    def exists(path: str)-> bool:
+    def exists(path: str) -> bool:
         """判断文件是否存在
 
         Args:
@@ -166,7 +170,7 @@ class Cfg:
         standardType: dict,
         default: dict,
         default_vers: tuple[int, int, int],
-    )-> dict:
+    ) -> tuple[dict[str, Any], tuple[int, ...]]:
         """获取插件配置文件及版本
 
         Args:
@@ -176,7 +180,7 @@ class Cfg:
             default_vers (tuple[int, int, int]): 默认版本
 
         Returns:
-            dict: 配置文件及版本
+             tuple[dict[str, Any], tuple[int, ...]]: 配置文件及版本
         """
         # 详情见 插件编写指南.md
         assert isinstance(standardType, dict)
@@ -193,11 +197,11 @@ class Cfg:
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         return cfgGet["配置项"], cfgVers
 
-    def check_auto(self, standard:type, val:Any, fromkey: Any="?")-> None:
+    def check_auto(self, standard: type | dict | list, val: Any, fromkey: Any = "?") -> None:
         """检查配置文件
 
         Args:
-            standard (type): 标准
+            standard (type, dict, list): 标准
             val (Any): 值
             fromkey (Any, optional): 键
 
@@ -254,7 +258,7 @@ class Cfg:
                     raise self.ConfigKeyError(f"不存在的JSON键: {key}")
                 self.check_auto(std_val, val_get, key)
 
-    def check_list_2(self, pattern: list, value:Any, fromkey:Any="?")-> None:
+    def check_list_2(self, pattern: list, value: Any, fromkey: Any = "?") -> None:
         """检查列表
 
         Args:

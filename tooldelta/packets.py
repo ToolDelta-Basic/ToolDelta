@@ -1,10 +1,14 @@
+"构建数据包方便获取"
+
 class PacketIDS:
+    "数据包id"
     Text = 9
     PlayerList = 63
     CommandOutput = 79
 
 
 class SubPacket_CmdOutputMsg:
+    """命令输出消息子包构建"""
     Success: bool
     Message: str
     Parameters: list[str]
@@ -16,6 +20,7 @@ class SubPacket_CmdOutputMsg:
 
 
 class SubPacket_CmdOrigin:
+    "命令来源子包构建"
     Origin: int
     UUID: str
     RequestID: str
@@ -29,6 +34,7 @@ class SubPacket_CmdOrigin:
 
 
 class Packet_CommandOutput:
+    "命令输出包构建"
     CommandOrigin: SubPacket_CmdOrigin
     OutputType: int
     SuccessCount: int

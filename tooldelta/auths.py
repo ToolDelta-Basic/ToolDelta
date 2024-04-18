@@ -1,10 +1,12 @@
+"认证模块"
+
+import getpass
+import hashlib
 from typing import Any
 import requests
-import getpass
 import ujson as json
-import hashlib
 from tooldelta import constants
-from tooldelta.color_print import Print
+from .color_print import Print
 
 
 def liliya_login() -> str:

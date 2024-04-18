@@ -5,6 +5,6 @@
     "python.analysis.autoImportCompletions": true,
     "pylint.args": [
         "--max-line-length=200",
-        "--disable=W0718,C0103,I1101"
+        "--disable=W0718,C0103,I1101,C0415,W0603"
     ],
 }

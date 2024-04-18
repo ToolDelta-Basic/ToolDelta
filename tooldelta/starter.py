@@ -1,8 +1,6 @@
 """ToolDelta 启动器"""
-
 import os
 import time
-import signal
 import traceback
 from .builtins import tmpjson_save_thread
 from .urlmethod import check_update
@@ -12,14 +10,6 @@ from .plugin_load.PluginGroup import plugin_group
 from .plugin_load.injected_plugin import movent
 
 frame = Frame()
-
-
-def signal_handler(*_) -> None:
-    """排除信号中断"""
-    return Print.print_war("ToolDelta 已忽略信号中断")
-
-
-signal.signal(signal.SIGINT, signal_handler)
 
 
 def start_tool_delta() -> None:

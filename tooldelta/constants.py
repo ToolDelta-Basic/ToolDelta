@@ -1,13 +1,13 @@
+" ToolDelta 常量定义 "
 from typing import List
+from .cfg import Cfg
 from .launch_cli import FrameNeOmg, FrameNeOmgRemote
-from tooldelta.cfg import Cfg
-
 PRG_NAME = "ToolDelta"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = "https://tdload.tblstudio.cn/https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
 
 LAUNCHERS: List[
-    tuple[str, type[ FrameNeOmg | FrameNeOmgRemote]]
+    tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]
 ] = [
     ("NeOmega 框架 (NeOmega模式, 租赁服适应性强, 推荐)", FrameNeOmg),
     (

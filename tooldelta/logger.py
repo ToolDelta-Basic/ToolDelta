@@ -1,8 +1,10 @@
+"日志记录器"
 import os
 import time
 
 
 class ToolDeltaLogger:
+    "ToolDelta的日志记录器"
     INFO = "INFO"
     WARNING = "WARNING"
     ERROR = "ERROR"
@@ -10,6 +12,7 @@ class ToolDeltaLogger:
     OTHER_TYPE = "???"
 
     def __init__(self, log_path, name_fmt="%Y-%m-%d"):
+        "初始化"
         self.path = log_path
         self.name_fmt = name_fmt
         self.now_day = time.strftime("%Y-%m-%d")
@@ -19,10 +22,12 @@ class ToolDeltaLogger:
         self.enable_logger = False
         self.writable = True
 
-    def switch_logger(self, isopen: bool):
+    def switch_logger(self, isopen: bool) -> None:
+        "切换日志记录器状态"
         self.enable_logger = isopen
 
-    def open_wrapper_io(self, log_path: str):
+    def open_wrapper_io(self, log_path: str) -> None:
+        "打开IO流"
         self._wrapper = open(
             log_path + os.sep + time.strftime(self.name_fmt) + ".log",
             "a",
@@ -30,8 +35,8 @@ class ToolDeltaLogger:
             buffering=4096,
         )
 
-    def log_in(self, msg, level=INFO):
-        # 写入日志信息. level给定了其等级.
+    def log_in(self, msg, level=INFO) -> None:
+        "写入日志信息. level给定了其等级."
         if not self.writable or not self.enable_logger:
             return
         if not isinstance(msg, str):
@@ -50,23 +55,26 @@ class ToolDeltaLogger:
             self._save_log()
             self.lastLogTime = time.time()
 
-    def _save_log(self):
+    def _save_log(self) -> None:
+        "保存日志"
         self._wrapper.flush()
 
-    def _check_is_another_day(self):
-        # 判断记录日志的时候是否已经是第二天, 是的话就变更文件名.
+    def _check_is_another_day(self) -> None:
+        "判断记录日志的时候是否已经是第二天, 是的话就变更文件名"
         if time.strftime("%Y-%m-%d") != self.now_day:
             self.exit()
             self.open_wrapper_io(self.path)
 
-    def exit(self):
+    def exit(self) -> None:
+        "退出时调用"
         if self.writable:
             self.writable = False
             self._save_log()
             self._wrapper.close()
 
 
-def new_logger(log_path: str):
+def new_logger(log_path: str) -> ToolDeltaLogger:
+    "创建一个新的日志记录器"
     os.makedirs(log_path, exist_ok=True)
     return ToolDeltaLogger(log_path)
 
