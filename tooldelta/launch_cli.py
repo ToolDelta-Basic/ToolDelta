@@ -195,12 +195,12 @@ class FrameNeOmg(StandardFrame):
             auth_server (str): 验证服务器地址
         """
         super().__init__(serverNumber, password, fbToken, auth_server)
-        neo_conn.load_lib()
         self.status = SysStatus.LOADING
         self.launch_event = threading.Event()
         self.omega: Optional[neo_conn.ThreadOmega] = None
         self.neomg_proc = None
         self.download_libs()
+        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         self.secret_exit_key = ""
 

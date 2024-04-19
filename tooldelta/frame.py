@@ -109,7 +109,7 @@ class Frame:
             else:
                 Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
             raise SystemExit from err
-        if self.serverNumber == "0":
+        if self.serverNumber == 0:
             while 1:
                 try:
                     self.serverNumber = int(input(
