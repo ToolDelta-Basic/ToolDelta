@@ -1,3 +1,4 @@
+import platform
 import ctypes
 import ujson as json
 import os.path
@@ -48,37 +49,7 @@ def toByteCSlice(bs: bytes):
 
 
 # define lib path and how to load it
-import platform
 
-sys_machine = platform.machine().lower()
-sys_type = platform.uname().system
-sys_fn = os.path.join(os.getcwd(), "tooldelta")
-if sys_machine == "x86_64":
-    sys_machine = "amd64"
-elif sys_machine == "aarch64":
-    sys_machine = "arm64"
-if sys_type == "Windows":
-    lib_path = f"neomega_windows_{sys_machine}.dll"
-    lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-    LIB = ctypes.cdll.LoadLibrary(lib_path)
-elif "TERMUX_VERSION" in os.environ:
-    lib_path = "neomega_android_arm64.so"
-    lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-    LIB = ctypes.CDLL(lib_path)
-elif sys_type == "Linux":
-    lib_path = f"neomega_linux_{sys_machine}.so"
-    lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-    LIB = ctypes.CDLL(lib_path)
-else:
-    lib_path = f"neomega_macos_{sys_machine}.dylib"
-    lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-    LIB = ctypes.CDLL(lib_path)
-
-# define lib functions
-
-# lib core functions: connect
-LIB.ConnectOmega.argtypes = [CString]
-LIB.ConnectOmega.restype = CString
 
 
 def ConnectOmega(address):
@@ -97,8 +68,6 @@ class AccountOptions:
     ServerPassword: str = ""
 
 
-LIB.StartOmega.argtypes = [CString, CString]
-LIB.StartOmega.restype = CString
 
 
 def StartOmega(address, AccountOptions):
@@ -109,7 +78,6 @@ def StartOmega(address, AccountOptions):
         raise Exception(toPyString(r))
 
 
-LIB.OmegaAvailable.restype = ctypes.c_uint8
 
 
 def OmegaAvailable():
@@ -125,7 +93,6 @@ class Event(ctypes.Structure):
     _fields_ = [("type", CString), ("retriever", CString)]
 
 
-LIB.EventPoll.restype = Event
 
 
 def EventPoll() -> tuple[str, str]:
@@ -140,28 +107,24 @@ def OmitEvent():
 # end lib core: event
 
 # event retrievers
-LIB.ConsumeOmegaConnError.restype = CString
-LIB.ConsumeCommandResponseCB.restype = CString
 
 
 class MCPacketEvent(ctypes.Structure):
     _fields_ = [("packetDataAsJsonStr", CString), ("convertError", CString)]
 
 
-LIB.ConsumeMCPacket.restype = MCPacketEvent
 
 # Async Actions
 # cmds
 
-LIB.SendWebSocketCommandNeedResponse.argtypes = [CString, CString]
 
 
 def SendWebSocketCommandNeedResponse(cmd: str, retrieverID: str):
     OmegaAvailable()
-    LIB.SendWebSocketCommandNeedResponse(toCString(cmd), toCString(retrieverID))
+    LIB.SendWebSocketCommandNeedResponse(
+        toCString(cmd), toCString(retrieverID))
 
 
-LIB.SendPlayerCommandNeedResponse.argtypes = [CString, CString]
 
 
 def SendPlayerCommandNeedResponse(cmd: str, retrieverID: str):
@@ -170,7 +133,6 @@ def SendPlayerCommandNeedResponse(cmd: str, retrieverID: str):
 
 
 # OneWay Actions
-LIB.SendWOCommand.argtypes = [CString]
 
 
 def SendSettingsCommand(cmd: str):
@@ -178,7 +140,6 @@ def SendSettingsCommand(cmd: str):
     LIB.SendWOCommand(toCString(cmd))
 
 
-LIB.SendWebSocketCommandOmitResponse.argtypes = [CString]
 
 
 def SendWebSocketCommandOmitResponse(cmd: str):
@@ -186,7 +147,6 @@ def SendWebSocketCommandOmitResponse(cmd: str):
     LIB.SendWebSocketCommandOmitResponse(toCString(cmd))
 
 
-LIB.SendPlayerCommandOmitResponse.argtypes = [CString]
 
 
 def SendPlayerCommandOmitResponse(cmd: str):
@@ -195,17 +155,12 @@ def SendPlayerCommandOmitResponse(cmd: str):
 
 
 # Instance Actions
-LIB.FreeMem.argtypes = [ctypes.c_void_p]
-LIB.ListenAllPackets.argtypes = None
-LIB.GetPacketNameIDMapping.restype = CString
-LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
 
 
 class JsonStrAsIsGamePacketBytes_return(ctypes.Structure):
     _fields_ = [("pktBytes", CBytes), ("l", CInt), ("err", CString)]
 
 
-LIB.JsonStrAsIsGamePacketBytes.restype = JsonStrAsIsGamePacketBytes_return
 
 
 def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
@@ -217,8 +172,6 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
     return bs
 
 
-LIB.SendGamePacket.argtypes = [CInt, CString]
-LIB.SendGamePacket.restype = CString
 
 
 def SendGamePacket(packetID: int, jsonStr: str) -> None:
@@ -227,7 +180,6 @@ def SendGamePacket(packetID: int, jsonStr: str) -> None:
         raise ValueError(toPyString(r))
 
 
-LIB.GetClientMaintainedBotBasicInfo.restype = CString
 
 
 # ClientMaintainedBotBasicInfo will not change
@@ -240,7 +192,6 @@ class ClientMaintainedBotBasicInfo:
     BotUUIDStr: str = ""
 
 
-LIB.GetClientMaintainedExtendInfo.restype = CString
 
 
 # any member of ClientMaintainedExtendInfo could be not found(which means related info not currently received from server)
@@ -255,60 +206,6 @@ class ClientMaintainedExtendInfo:
     GameRules: Optional[Dict[str, Any]] = None
 
 
-LIB.GetAllOnlinePlayers.restype = CString
-LIB.ReleaseBindPlayer.argtypes = [CString]
-LIB.PlayerName.argtypes = [CString]
-LIB.PlayerName.restype = CString
-LIB.PlayerEntityUniqueID.argtypes = [CString]
-LIB.PlayerEntityUniqueID.restype = ctypes.c_int64
-LIB.PlayerLoginTime.argtypes = [CString]
-LIB.PlayerLoginTime.restype = ctypes.c_int64
-LIB.PlayerPlatformChatID.argtypes = [CString]
-LIB.PlayerPlatformChatID.restype = CString
-LIB.PlayerBuildPlatform.argtypes = [CString]
-LIB.PlayerBuildPlatform.restype = ctypes.c_int32
-LIB.PlayerSkinID.argtypes = [CString]
-LIB.PlayerSkinID.restype = CString
-LIB.PlayerPropertiesFlag.argtypes = [CString]
-LIB.PlayerPropertiesFlag.restype = ctypes.c_uint32
-LIB.PlayerCommandPermissionLevel.argtypes = [CString]
-LIB.PlayerCommandPermissionLevel.restype = ctypes.c_uint32
-LIB.PlayerActionPermissions.argtypes = [CString]
-LIB.PlayerActionPermissions.restype = ctypes.c_uint32
-LIB.PlayerGetAbilityString.argtypes = [CString]
-LIB.PlayerGetAbilityString.restype = CString
-LIB.PlayerOPPermissionLevel.argtypes = [CString]
-LIB.PlayerOPPermissionLevel.restype = ctypes.c_uint32
-LIB.PlayerCustomStoredPermissions.argtypes = [CString]
-LIB.PlayerCustomStoredPermissions.restype = ctypes.c_uint32
-LIB.PlayerDeviceID.argtypes = [CString]
-LIB.PlayerDeviceID.restype = CString
-LIB.PlayerEntityRuntimeID.argtypes = [CString]
-LIB.PlayerEntityRuntimeID.restype = ctypes.c_uint64
-LIB.PlayerEntityMetadata.argtypes = [CString]
-LIB.PlayerEntityMetadata.restype = CString
-LIB.PlayerIsOP.argtypes = [CString]
-LIB.PlayerIsOP.restype = ctypes.c_uint8
-LIB.PlayerOnline.argtypes = [CString]
-LIB.PlayerOnline.restype = ctypes.c_uint8
-
-LIB.GetPlayerByUUID.argtypes = [CString]
-LIB.GetPlayerByUUID.restype = CString
-
-LIB.GetPlayerByName.argtypes = [CString]
-LIB.GetPlayerByName.restype = CString
-
-LIB.ConsumePlayerChange.restype = CString
-LIB.InterceptPlayerJustNextInput.argtypes = [CString, CString]
-LIB.ConsumeChat.restype = CString
-
-LIB.PlayerChat.argtypes = [CString, CString]
-LIB.PlayerTitle.argtypes = [CString, CString, CString]
-LIB.PlayerActionBar.argtypes = [CString, CString]
-LIB.SetPlayerAbility.argtypes = [CString, CString]
-
-LIB.ListenCommandBlock.argtypes = [CString]
-LIB.PlaceCommandBlock.argtypes = [CString]
 
 
 def ConsumeChat() -> "Chat":
@@ -622,10 +519,12 @@ class ThreadOmega:
         self._omega_cmd_callback_events: Dict[str, Callable] = {}
 
         # packet listeners
-        self._packet_listeners: Dict[str, List[Callable[[str, any], None]]] = {}
+        self._packet_listeners: Dict[str,
+                                     List[Callable[[str, any], None]]] = {}
 
         # setup actions
-        LIB.ListenAllPackets()  # make LIB listen to all packets and new packets will have eventType="MCPacket"
+        # make LIB listen to all packets and new packets will have eventType="MCPacket"
+        LIB.ListenAllPackets()
         mapping = json.loads(toPyString(LIB.GetPacketNameIDMapping()))
         self._packet_name_to_id_mapping: dict[str, int] = mapping
         self._packet_id_to_name_mapping = {}
@@ -634,7 +533,8 @@ class ThreadOmega:
             self._packet_listeners[packet_name] = []
 
         LIB.ListenPlayerChange()
-        self._player_change_listeners: List[Callable[[PlayerKit, str], None]] = []
+        self._player_change_listeners: List[Callable[[
+            PlayerKit, str], None]] = []
 
         # get bot basic info (this info will not change so we need to get it only once)
         self._bot_basic_info = ClientMaintainedBotBasicInfo(
@@ -706,7 +606,8 @@ class ThreadOmega:
                     action = toPyString(LIB.ConsumePlayerChange())
                     for callback in self._player_change_listeners:
                         self.start_new(
-                            callback, (self._get_bind_player(playerUUID), action)
+                            callback, (self._get_bind_player(
+                                playerUUID), action)
                         )
 
             elif eventType == "PlayerInterceptInput":
@@ -898,7 +799,8 @@ class ThreadOmega:
         if command_block_name not in self._name_command_block_msg_listeners:
             self._name_command_block_msg_listeners[command_block_name] = []
         LIB.ListenCommandBlock(toCString(command_block_name))
-        self._name_command_block_msg_listeners[command_block_name].append(callback)
+        self._name_command_block_msg_listeners[command_block_name].append(
+            callback)
 
     @staticmethod
     def place_command_block(place_option: CommandBlockPlaceOption):
@@ -926,3 +828,113 @@ def _unpack_command_output(c: CommandOutput):
 
 def _unpack_output_msgs(c: OutputMessage):
     return {"Success": c.Success, "Message": c.Message, "Parameters": c.Parameters}
+
+
+def load_lib():
+    global LIB
+    sys_machine = platform.machine().lower()
+    sys_type = platform.uname().system
+    sys_fn = os.path.join(os.getcwd(), "tooldelta")
+    if sys_machine == "x86_64":
+        sys_machine = "amd64"
+    elif sys_machine == "aarch64":
+        sys_machine = "arm64"
+    if sys_type == "Windows":
+        lib_path = f"neomega_windows_{sys_machine}.dll"
+        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
+        LIB = ctypes.cdll.LoadLibrary(lib_path)
+    elif "TERMUX_VERSION" in os.environ:
+        lib_path = "neomega_android_arm64.so"
+        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
+        LIB = ctypes.CDLL(lib_path)
+    elif sys_type == "Linux":
+        lib_path = f"neomega_linux_{sys_machine}.so"
+        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
+        LIB = ctypes.CDLL(lib_path)
+    else:
+        lib_path = f"neomega_macos_{sys_machine}.dylib"
+        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
+        LIB = ctypes.CDLL(lib_path)
+
+    # define lib functions
+
+    # lib core functions: connect
+    LIB.ConnectOmega.argtypes = [CString]
+    LIB.ConnectOmega.restype = CString
+    LIB.StartOmega.argtypes = [CString, CString]
+    LIB.StartOmega.restype = CString
+
+    LIB.OmegaAvailable.restype = ctypes.c_uint8
+
+    LIB.EventPoll.restype = Event
+    LIB.ConsumeOmegaConnError.restype = CString
+    LIB.ConsumeCommandResponseCB.restype = CString
+    LIB.ConsumeMCPacket.restype = MCPacketEvent
+    LIB.SendWebSocketCommandNeedResponse.argtypes = [CString, CString]
+    LIB.SendPlayerCommandNeedResponse.argtypes = [CString, CString]
+    LIB.SendWOCommand.argtypes = [CString]
+    LIB.SendWebSocketCommandOmitResponse.argtypes = [CString]
+    LIB.SendPlayerCommandOmitResponse.argtypes = [CString]
+    LIB.FreeMem.argtypes = [ctypes.c_void_p]
+    LIB.ListenAllPackets.argtypes = None
+    LIB.GetPacketNameIDMapping.restype = CString
+    LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
+    LIB.JsonStrAsIsGamePacketBytes.restype = JsonStrAsIsGamePacketBytes_return
+    LIB.SendGamePacket.argtypes = [CInt, CString]
+    LIB.SendGamePacket.restype = CString
+    LIB.GetClientMaintainedBotBasicInfo.restype = CString
+    LIB.GetClientMaintainedExtendInfo.restype = CString
+    LIB.GetAllOnlinePlayers.restype = CString
+    LIB.ReleaseBindPlayer.argtypes = [CString]
+    LIB.PlayerName.argtypes = [CString]
+    LIB.PlayerName.restype = CString
+    LIB.PlayerEntityUniqueID.argtypes = [CString]
+    LIB.PlayerEntityUniqueID.restype = ctypes.c_int64
+    LIB.PlayerLoginTime.argtypes = [CString]
+    LIB.PlayerLoginTime.restype = ctypes.c_int64
+    LIB.PlayerPlatformChatID.argtypes = [CString]
+    LIB.PlayerPlatformChatID.restype = CString
+    LIB.PlayerBuildPlatform.argtypes = [CString]
+    LIB.PlayerBuildPlatform.restype = ctypes.c_int32
+    LIB.PlayerSkinID.argtypes = [CString]
+    LIB.PlayerSkinID.restype = CString
+    LIB.PlayerPropertiesFlag.argtypes = [CString]
+    LIB.PlayerPropertiesFlag.restype = ctypes.c_uint32
+    LIB.PlayerCommandPermissionLevel.argtypes = [CString]
+    LIB.PlayerCommandPermissionLevel.restype = ctypes.c_uint32
+    LIB.PlayerActionPermissions.argtypes = [CString]
+    LIB.PlayerActionPermissions.restype = ctypes.c_uint32
+    LIB.PlayerGetAbilityString.argtypes = [CString]
+    LIB.PlayerGetAbilityString.restype = CString
+    LIB.PlayerOPPermissionLevel.argtypes = [CString]
+    LIB.PlayerOPPermissionLevel.restype = ctypes.c_uint32
+    LIB.PlayerCustomStoredPermissions.argtypes = [CString]
+    LIB.PlayerCustomStoredPermissions.restype = ctypes.c_uint32
+    LIB.PlayerDeviceID.argtypes = [CString]
+    LIB.PlayerDeviceID.restype = CString
+    LIB.PlayerEntityRuntimeID.argtypes = [CString]
+    LIB.PlayerEntityRuntimeID.restype = ctypes.c_uint64
+    LIB.PlayerEntityMetadata.argtypes = [CString]
+    LIB.PlayerEntityMetadata.restype = CString
+    LIB.PlayerIsOP.argtypes = [CString]
+    LIB.PlayerIsOP.restype = ctypes.c_uint8
+    LIB.PlayerOnline.argtypes = [CString]
+    LIB.PlayerOnline.restype = ctypes.c_uint8
+
+    LIB.GetPlayerByUUID.argtypes = [CString]
+    LIB.GetPlayerByUUID.restype = CString
+
+    LIB.GetPlayerByName.argtypes = [CString]
+    LIB.GetPlayerByName.restype = CString
+
+    LIB.ConsumePlayerChange.restype = CString
+    LIB.InterceptPlayerJustNextInput.argtypes = [CString, CString]
+    LIB.ConsumeChat.restype = CString
+
+    LIB.PlayerChat.argtypes = [CString, CString]
+    LIB.PlayerTitle.argtypes = [CString, CString, CString]
+    LIB.PlayerActionBar.argtypes = [CString, CString]
+    LIB.SetPlayerAbility.argtypes = [CString, CString]
+
+    LIB.ListenCommandBlock.argtypes = [CString]
+    LIB.PlaceCommandBlock.argtypes = [CString]
