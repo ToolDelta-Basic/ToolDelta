@@ -554,11 +554,11 @@ class GameCtrl:
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
 
-    def process_player_list(self, pkt, plugin_group: "PluginGroup") -> None:
+    def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
         """处理玩家列表等数据包
 
         Args:
-            pkt (_type_): 数据包内容
+            pkt (dict): 数据包内容
             plugin_group (PluginGroup): 插件组对象
         """
         # 处理玩家进出事件
@@ -577,7 +577,7 @@ class GameCtrl:
                 plugin_group.execute_player_join(
                     playername, self.linked_frame.on_plugin_err
                 )
-                asyncio.run(execute_player_join(player))
+                asyncio.run(execute_player_join(playername))
             else:
                 playername = next(
                     (k for k, v in self.players_uuid.items()
