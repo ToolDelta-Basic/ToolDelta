@@ -169,7 +169,7 @@ class Cfg:
         pluginName: str,
         standardType: dict,
         default: dict,
-        default_vers: tuple[int, int, int],
+        default_vers: tuple[int, int, int] | list,
     ) -> tuple[dict[str, Any], tuple[int, ...]]:
         """获取插件配置文件及版本
 
