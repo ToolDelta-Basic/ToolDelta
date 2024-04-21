@@ -17,8 +17,10 @@ def start_tool_delta() -> None:
     plugin_group.set_frame(frame)
     try:
         frame.welcome()
-        if "not-update-check" not in sys_args_to_dict().keys():
+        if "no-update-check" not in sys_args_to_dict().keys():
             check_update()
+        else:
+            Print.print_war("将不会进行自动更新.")
         frame.basic_operation()
         frame.loadConfiguration()
         game_control = GameCtrl(frame)
