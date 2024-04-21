@@ -12,7 +12,6 @@ import ujson as json
 from .urlmethod import download_file_singlethreaded
 from .color_print import Print
 
-
 class GameTextsLoader:
     "还原游戏常见字符串"
 
@@ -21,6 +20,7 @@ class GameTextsLoader:
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
         self.start_auto_update_thread()
+        self.auto_update()
         self.game_texts_data: Dict[str, str] = self.load_data()
 
     @staticmethod
@@ -61,7 +61,8 @@ class GameTextsLoader:
         latest_version: str = self.get_latest_version()
         if version != latest_version:
             self.download_and_extract(latest_version)
-        threading.Timer(24 * 60 * 60, self.auto_update).start()
+            with open(version_file_path, "w", encoding="utf-8") as f:
+                f.write(latest_version)
 
     def download_and_extract(self, version) -> None:
         "下载并解压"
