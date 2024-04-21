@@ -342,6 +342,8 @@ class FrameNeOmg(StandardFrame):
 
     def download_libs(self) -> None:
         """根据系统架构和平台下载所需的库。"""
+        if "no-download-libs" in sys_args_to_dict().keys():
+            return
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         is_mir: bool = cfgs["是否使用github镜像"]
         if is_mir:

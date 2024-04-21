@@ -132,7 +132,6 @@ class Frame:
                     break
                 except Exception:
                     Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
-
         auth_servers = constants.AUTH_SERVERS
         if auth_server == "":
             Print.print_inf("选择 ToolDelta机器人账号 使用的验证服务器:")
