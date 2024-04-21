@@ -4,6 +4,7 @@ import time
 import traceback
 from .builtins import tmpjson_save_thread
 from .urlmethod import check_update
+from .sys_args import sys_args_to_dict
 from .frame import Frame, GameCtrl
 from .color_print import Print
 from .plugin_load.PluginGroup import plugin_group
@@ -11,13 +12,13 @@ from .plugin_load.injected_plugin import movent
 
 frame = Frame()
 
-
 def start_tool_delta() -> None:
     """启动ToolDelta"""
     plugin_group.set_frame(frame)
     try:
         frame.welcome()
-        check_update()
+        if "not-update-check" not in sys_args_to_dict().keys():
+            check_update()
         frame.basic_operation()
         frame.loadConfiguration()
         game_control = GameCtrl(frame)
