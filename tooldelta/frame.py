@@ -363,7 +363,7 @@ class Frame:
                         )
                         mjon.append(jso)
                     if not result.SuccessCount:
-                        print_str = "指令执行失败: " + " ".join(mjon); Print.print_suc(print_str)
+                        print_str = "指令执行失败: " + " ".join(mjon); Print.print_war(print_str)
                         Print.print_war(result.as_dict["OutputMessages"])
                     else:
                         print_str = "指令执行成功: " + " ".join(mjon); Print.print_suc(print_str)
