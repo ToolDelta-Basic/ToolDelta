@@ -77,7 +77,7 @@ class PluginGroup:
         Returns:
             Callable[[type[Plugin]], type[Plugin]]: 添加插件作为API
         """
-        def _add_plugin_2_api(api_plugin:  type[Plugin]) -> type[Plugin]:
+        def _add_plugin_2_api(api_plugin: type[Plugin]):
             if not Plugin.__subclasscheck__(api_plugin):
                 raise NotValidPluginError("API插件主类必须继承Plugin类")
             self.plugin_added_cache["plugin"] = api_plugin
@@ -300,7 +300,7 @@ class PluginGroup:
             self._broadcast_listeners[evt] = [func]
 
     def execute_def(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC) -> None:
-        """执行插件的初始化方法
+        """执行插件的二次初始化方法
 
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法. Defaults to NON_FUNC.
@@ -324,7 +324,7 @@ class PluginGroup:
                 onerr(name, err, traceback.format_exc())
 
     def execute_init(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC) -> None:
-        """执行插件的初始化方法
+        """执行插件的连接游戏后初始化方法
 
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法

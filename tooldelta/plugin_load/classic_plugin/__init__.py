@@ -113,7 +113,7 @@ def load_plugin(plugin_dirname: str) -> Union[None, Plugin]:
         if plugin.name is None:
             raise ValueError(f"插件主类 {plugin.__name__} 需要作者名")
         plugin_ins = plugin(plugin_grp.linked_frame)
-        if isinstance(plugin_ins, type(None)) or plugin_ins.name is "":
+        if isinstance(plugin_ins, type(None)) or plugin_ins.name == "":
             raise ValueError(f"插件主类 {plugin.__name__} 需要作者名")
         plugin_grp.plugins.append([plugin_ins.name, plugin_ins])
         _v0, _v1, _v2 = plugin_ins.version
