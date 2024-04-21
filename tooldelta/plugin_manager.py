@@ -43,9 +43,9 @@ class PluginManager:
             Print.clean_print(f"§a已自动注册{np}个未被注册的插件.")
         while 1:
             plugins = self.list_plugins_list()
-            Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
-            Print.clean_print("§f输入§ds§f同步插件注册表信息(在手动安装插件后使用)")
-            r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
+            with Print.lock:Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
+            with Print.lock:Print.clean_print("§f输入§ds§f同步插件注册表信息(在手动安装插件后使用)")
+            with Print.lock:r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
             r1 = r.strip().lower()
             if r1 == "":
                 continue

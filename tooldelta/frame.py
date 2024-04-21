@@ -345,13 +345,30 @@ class Frame:
                 ):
                     Print.print_err(f'未知的MC指令， 可能是指令格式有误： "{cmd}"')
                 else:
-                    jso = json.dumps(
-                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
-                    )
+                    mjon: list = []
+                    for i in result.as_dict["OutputMessages"]:
+                        death_message = self.link_game_ctrl.Game_Data.get(i["Message"].replace("%", ""))
+                        if death_message:
+                            filled_parameters = []
+                            for param in list(i["Parameters"]):
+                                if isinstance(param, str):
+                                    filled_param = self.link_game_ctrl.Game_Data.get(str(param).replace("%", ""), str(param))
+                                    filled_parameters.append(filled_param)
+                                else:
+                                    filled_parameters.append(param)
+
+                            filled_message = death_message.format(*filled_parameters)
+                        jso = json.dumps(
+                            filled_message, indent=2, ensure_ascii=False
+                        )
+                        mjon.append(jso)
                     if not result.SuccessCount:
-                        Print.print_war(f"指令执行失败: \n{jso}")
+                        print_str = "指令执行失败: " + " ".join(mjon); Print.print_suc(print_str)
+                        Print.print_war(result.as_dict["OutputMessages"])
                     else:
-                        Print.print_suc(f"指令执行成功: \n{jso}")
+                        print_str = "指令执行成功: " + " ".join(mjon); Print.print_suc(print_str)
+                        Print.print_suc(result.as_dict["OutputMessages"])
+
             except IndexError as exec_err:
                 if isinstance(result, type(None)):
                     raise ValueError("指令执行失败") from exec_err
@@ -425,6 +442,7 @@ class Frame:
                                     func, rsp, 1, tri)
                                 if res == -1:
                                     return
+                if res != 0:self.link_game_ctrl.sendwocmd('tellraw @a {"rawtext":[{"text":"[§bToolDelta控制台§r] §3'+rsp+'§r"}]}')
 
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
