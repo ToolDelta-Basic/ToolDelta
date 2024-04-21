@@ -30,8 +30,10 @@ class Plugin:
 
     @property
     def data_path(self) -> str:
-        "数据路径"
-        return os.path.join("插件数据文件", self.name)
+        "该插件的数据文件夹路径 (调用时直接创建数据文件夹)"
+        path = os.path.join("插件数据文件", self.name)
+        os.makedirs(path, exist_ok=True)
+        return path
 
 
 plugin_group_cache: list[Union["PluginGroup", None]] = [None]
