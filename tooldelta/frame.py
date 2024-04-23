@@ -624,32 +624,9 @@ class GameCtrl:
                         player, self.linked_frame.on_plugin_err
                     )
                     asyncio.run(execute_player_prejoin(player))
-                elif pkt["Message"].startswith("death."):
-                    death_message = self.Game_Data.get(pkt["Message"])
-                    if death_message:
-                        filled_parameters = [
-                            self.Game_Data.get(param.replace("%", ""), param)
-                            for param in pkt["Parameters"]
-                        ]
-                        filled_message = death_message.format(
-                            *filled_parameters)
-                        Print.print_inf(filled_message)
-
-                    if len(pkt["Parameters"]) >= 2:
-                        killer = pkt["Parameters"][1]
-                    else:
-                        killer = None
-                    plugin_grp.execute_player_death(
-                        pkt["Parameters"][0],
-                        killer,
-                        pkt["Message"],
-                        self.linked_frame.on_plugin_err,
-                    )
-                    asyncio.run(
-                        execute_death_message(
-                            pkt["Parameters"][0], killer, pkt["Message"]
-                        )
-                    )
+                elif not pkt["Message"].startswith("§e%multiplayer.player.joined.") or not pkt["Message"].startswith("§e%multiplayer.player.left."):
+                    jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
+                    Print.print_inf(("§1" + " ".join(jon)))
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 plugin_grp.execute_player_message(

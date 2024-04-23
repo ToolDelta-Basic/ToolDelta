@@ -249,17 +249,19 @@ def get_free_port(start: int = 2000, end: int = 65535) -> int:
 
 def check_update() -> None:
     """检查更新"""
-    latest_version: str = requests.get(
-        "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest", timeout=5).json()["tag_name"]
-    current_version = ".".join(
-        map(str, get_tool_delta_version()[:3]))
+    try:
+        latest_version: str = requests.get(
+            "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest", timeout=5).json()["tag_name"]
+        current_version = ".".join(
+            map(str, get_tool_delta_version()[:3]))
 
-    if not latest_version.replace(".", "") <= current_version.replace(".", ""):
-        # Print.print_suc(f"当前为最新版本 -> v{current_version}，无需更新")
-        Print.print_load(
-            f"检测到最新版本 {current_version} -> {latest_version}，请及时更新!"
-        )
-
+        if not latest_version.replace(".", "") <= current_version.replace(".", ""):
+            # Print.print_suc(f"当前为最新版本 -> v{current_version}，无需更新")
+            Print.print_load(
+                f"检测到最新版本 {current_version} -> {latest_version}，请及时更新!"
+            )
+    except KeyError:
+        Print.print_war("获取最新版本失败，请检查网络连接")
 
 def if_token() -> None:
     """检查路径下是否有fbtoken，没有就提示输入

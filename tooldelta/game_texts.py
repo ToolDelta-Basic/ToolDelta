@@ -139,22 +139,70 @@ class GameTextsHandle(object):
     def Handle_Text_Class1(self, Pkt: dict) -> str:
         "处理文本返回方法1"
         mjon: list = []
-        for i in Pkt:
-            death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(i["Message"].replace("%", "")))
+        if type(Pkt) == list:
+            for i in Pkt:
+                death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(i["Message"].replace("%", "")))
+                if not len(re.findall(r'%[a-zA-Z]', death_message)) >=1:
+                    if death_message:
+                        pkg_list = list(i["Parameters"])
+                        for n, value in enumerate(pkg_list, start=1):
+                            death_message = death_message.replace("%{}".format(n), "{" + str(n-1) + "}")
+                        if len([item for item in pkg_list if "%" in item]) >= 1:
+                            filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
+                            for filtered_item in filtered_pkg_list:
+                                for i in range(len(pkg_list)):
+                                    if filtered_item in pkg_list[i]:
+                                        pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
+                        filled_message = death_message.format(*pkg_list) 
+                else:   
+                    if death_message:
+                        death_message = self.Game_Texts.get(i["Message"].replace("%", ""))
+                        pkg_list = list(i["Parameters"])
+                        format_specifiers = re.findall(r'%[a-zA-Z]', death_message)
+                        formatted_string = death_message
+                        for i, arg in enumerate(pkg_list, start=1):
+                            formatted_string = re.sub(r'%[a-zA-Z]', str(arg), formatted_string, count=1)
+                        if len([item for item in pkg_list if "%" in item]) >= 1:
+                            filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
+                            for filtered_item in filtered_pkg_list:
+                                for i in range(len(pkg_list)):
+                                    if filtered_item in pkg_list[i]:
+                                        pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
+                        filled_message = death_message.format(*pkg_list) 
+
+                jso = json.dumps(
+                    filled_message, indent=2, ensure_ascii=False
+                )
+                mjon.append(jso)
+            return mjon
+        else:
+            death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(Pkt["Message"].replace("%", "")))
             if not len(re.findall(r'%[a-zA-Z]', death_message)) >=1:
                 if death_message:
-                    pkg_list = list(i["Parameters"])
+                    pkg_list = list(Pkt["Parameters"])
                     for n, value in enumerate(pkg_list, start=1):
                         death_message = death_message.replace("%{}".format(n), "{" + str(n-1) + "}")
-                    filled_message = death_message.format(*pkg_list) 
+                    if len([item for item in pkg_list if "%" in item]) >= 1:
+                        filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
+                        for filtered_item in filtered_pkg_list:
+                            for i in range(len(pkg_list)):
+                                if filtered_item in pkg_list[i]:
+                                    pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
+                    filled_message = death_message.format(*pkg_list)  
             else:   
                 if death_message:
-                    death_message = self.Game_Texts.get(i["Message"].replace("%", ""))
-                    pkg_list = list(i["Parameters"])
+                    death_message = self.Game_Texts.get(Pkt["Message"].replace("%", ""))
+                    pkg_list = list(Pkt["Parameters"])
                     format_specifiers = re.findall(r'%[a-zA-Z]', death_message)
                     formatted_string = death_message
                     for i, arg in enumerate(pkg_list, start=1):
                         formatted_string = re.sub(r'%[a-zA-Z]', str(arg), formatted_string, count=1)
+                    if len([item for item in pkg_list if "%" in item]) >= 1:
+                        filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
+                        for filtered_item in filtered_pkg_list:
+                            for i in range(len(pkg_list)):
+                                if filtered_item in pkg_list[i]:
+                                    pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
                     filled_message =  formatted_string
 
             jso = json.dumps(
