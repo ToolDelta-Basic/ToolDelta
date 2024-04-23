@@ -105,7 +105,8 @@ class GameTextsLoader:
                         if isinstance(var_value, dict):
                             all_values.update(var_value)
             return all_values
-        except Exception:
+        except Exception as err:
+            print(f"Error loading game texts data: {err}")
             return {}
 
     def extract_data_archive(self, zip_path: str) -> bool:
@@ -130,3 +131,34 @@ class GameTextsLoader:
         except Exception as err:
             Print.print_war(f"Error extracting data archive: {err}")
             return False
+
+class GameTextsHandle(object):
+    def __init__(self, Game_Texts: dict) -> None:
+        self.Game_Texts = Game_Texts
+
+    def Handle_Text_Class1(self, Pkt: dict) -> str:
+        "处理文本返回方法1"
+        mjon: list = []
+        for i in Pkt:
+            death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(i["Message"].replace("%", "")))
+            if not len(re.findall(r'%[a-zA-Z]', death_message)) >=1:
+                if death_message:
+                    pkg_list = list(i["Parameters"])
+                    for n, value in enumerate(pkg_list, start=1):
+                        death_message = death_message.replace("%{}".format(n), "{" + str(n-1) + "}")
+                    filled_message = death_message.format(*pkg_list) 
+            else:   
+                if death_message:
+                    death_message = self.Game_Texts.get(i["Message"].replace("%", ""))
+                    pkg_list = list(i["Parameters"])
+                    format_specifiers = re.findall(r'%[a-zA-Z]', death_message)
+                    formatted_string = death_message
+                    for i, arg in enumerate(pkg_list, start=1):
+                        formatted_string = re.sub(r'%[a-zA-Z]', str(arg), formatted_string, count=1)
+                    filled_message =  formatted_string
+
+            jso = json.dumps(
+                filled_message, indent=2, ensure_ascii=False
+            )
+            mjon.append(jso)
+        return mjon

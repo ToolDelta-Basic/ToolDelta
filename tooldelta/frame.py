@@ -7,6 +7,7 @@
 
 import os
 import sys
+import re
 import time
 import getpass
 import traceback
@@ -26,7 +27,7 @@ from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 from .cfg import Cfg
 from .logger import publicLogger
-from .game_texts import GameTextsLoader
+from .game_texts import GameTextsLoader, GameTextsHandle
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
 from .launch_cli import (
@@ -345,23 +346,18 @@ class Frame:
                 ):
                     Print.print_err(f'未知的MC指令， 可能是指令格式有误： "{cmd}"')
                 else:
-                    mjon: list = []
-                    for i in result.as_dict["OutputMessages"]:
-                        death_message = self.link_game_ctrl.Game_Data.get(i["Message"].replace("%", ""))
-                        if death_message:
-                            filled_parameters = []
-                            for param in list(i["Parameters"]):
-                                if isinstance(param, str):
-                                    filled_param = self.link_game_ctrl.Game_Data.get(str(param).replace("%", ""), str(param))
-                                    filled_parameters.append(filled_param)
-                                else:
-                                    filled_parameters.append(param)
+                    
+                # import re
+                # data = "已为 %3$s 添加 %1$d 到 [%2$s] （现在为 %4$d）"
+                # data = re.sub(r'\$[^"\'\]\)）}\s]*', '', data)
+                # mylist = [10, "somevalue", 20, "currentvalue"]
 
-                            filled_message = death_message.format(*filled_parameters)
-                        jso = json.dumps(
-                            filled_message, indent=2, ensure_ascii=False
-                        )
-                        mjon.append(jso)
+                # for i, value in enumerate(mylist, start=1):
+                #     data = data.replace("%{}".format(i), "{" + str(i-1) + "}")
+
+                # result = data.format(*mylist)
+                # print(result)
+                    mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(result.as_dict["OutputMessages"])
                     if not result.SuccessCount:
                         print_str = "指令执行失败: " + " ".join(mjon); Print.print_war(print_str)
                         Print.print_war(result.as_dict["OutputMessages"])
@@ -515,6 +511,7 @@ class GameCtrl:
         """
         frame.basic_operation()
         self.Game_Data = GameTextsLoader().game_texts_data
+        self.Game_Data_Handle = GameTextsHandle(self.Game_Data)
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
