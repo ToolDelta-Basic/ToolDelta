@@ -136,79 +136,80 @@ class GameTextsHandle(object):
     def __init__(self, Game_Texts: dict) -> None:
         self.Game_Texts = Game_Texts
 
-    def Handle_Text_Class1(self, Pkt: dict) -> str:
+    def Handle_Text_Class1(self, packet: dict) -> str:
         "处理文本返回方法1"
-        mjon: list = []
-        if type(Pkt) == list:
-            for i in Pkt:
-                death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(i["Message"].replace("%", "")))
-                if not len(re.findall(r'%[a-zA-Z]', death_message)) >=1:
+        json_result:list = []
+        if type(packet) == list:
+            for item in packet:
+                death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(item["Message"].replace("%", "")))
+                if not len(re.findall(r'%[a-zA-Z]', death_message)) >= 1:
                     if death_message:
-                        pkg_list = list(i["Parameters"])
-                        for n, value in enumerate(pkg_list, start=1):
+                        param_list = list(item["Parameters"])
+                        for n, value in enumerate(param_list, start=1):
                             death_message = death_message.replace("%{}".format(n), "{" + str(n-1) + "}")
-                        if len([str(item) for item in pkg_list if "%" in str(item)]) >= 1:
-                            filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
-                            for filtered_item in filtered_pkg_list:
-                                for i in range(len(pkg_list)):
-                                    if filtered_item in pkg_list[i]:
-                                        pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
-                        filled_message = death_message.format(*pkg_list) 
+                        if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                            filtered_param_list = [re.sub(r'%', '', param) for param in param_list if "%" in param]
+                            for filtered_param in filtered_param_list:
+                                for i in range(len(param_list)):
+                                    if filtered_param in param_list[i]:
+                                        param_list[i] = param_list[i].replace(f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                        filled_message = death_message.format(*param_list) 
                 else:   
                     if death_message:
-                        death_message = self.Game_Texts.get(i["Message"].replace("%", ""))
-                        pkg_list = list(i["Parameters"])
+                        death_message = self.Game_Texts.get(item["Message"].replace("%", ""))
+                        param_list = list(item["Parameters"])
                         format_specifiers = re.findall(r'%[a-zA-Z]', death_message)
                         formatted_string = death_message
-                        for i, arg in enumerate(pkg_list, start=0):
+                        for i, arg in enumerate(param_list, start=0):
                             formatted_string = re.sub(r'%[a-zA-Z]', str(arg), formatted_string, count=1)
-                        if len([str(item) for item in pkg_list if "%" in str(item)]) >= 1:
-                            filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
-                            for filtered_item in filtered_pkg_list:
-                                for i in range(len(pkg_list)):
-                                    if filtered_item in pkg_list[i]:
-                                        pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
-                        filled_message = formatted_string.format(*pkg_list) 
+                        if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                            filtered_param_list = [re.sub(r'%', '', param) for param in param_list if "%" in param]
+                            for filtered_param in filtered_param_list:
+                                for i in range(len(param_list)):
+                                    if filtered_param in param_list[i]:
+                                        param_list[i] = param_list[i].replace(f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                        filled_message = formatted_string.format(*param_list) 
 
-                jso = json.dumps(
+                json_output = json.dumps(
                     filled_message, indent=2, ensure_ascii=False
                 )
-                mjon.append(jso)
+                json_result.append(json_output)
         else:
-            death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(Pkt["Message"].replace("%", "")))
-            if not len(re.findall(r'%[a-zA-Z]', death_message)) >=1:
+            death_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', self.Game_Texts.get(packet["Message"].replace("%", "")))
+            if not len(re.findall(r'%[a-zA-Z]', death_message)) >= 1:
                 if death_message:
-                    pkg_list = list(Pkt["Parameters"])
-                    for n, value in enumerate(pkg_list, start=1):
+                    param_list = list(packet["Parameters"])
+                    for n, value in enumerate(param_list, start=1):
                         death_message = death_message.replace("%{}".format(n), "{" + str(n-1) + "}")
-                    if len([str(item) for item in pkg_list if "%" in str(item)]) >= 1:
-                        filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
-                        for filtered_item in filtered_pkg_list:
-                            for i in range(len(pkg_list)):
-                                if filtered_item in pkg_list[i]:
-                                    pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
-                    filled_message = formatted_string.format(*pkg_list)  
+                    if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                        filtered_param_list = [re.sub(r'%', '', param) for param in param_list if "%" in param]
+                        for filtered_param in filtered_param_list:
+                            for i in range(len(param_list)):
+                                if filtered_param in param_list[i]:
+                                    param_list[i] = param_list[i].replace(f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                        filled_message = formatted_string.format(*param_list)  
             else:   
                 if death_message:
-                    death_message = self.Game_Texts.get(Pkt["Message"].replace("%", ""))
-                    pkg_list = list(Pkt["Parameters"])
+                    death_message = self.Game_Texts.get(packet["Message"].replace("%", ""))
+                    param_list = list(packet["Parameters"])
                     format_specifiers = re.findall(r'%[a-zA-Z]', death_message)
                     formatted_string = death_message
-                    for i, arg in enumerate(pkg_list, start=1):
+                    for i, arg in enumerate(param_list, start=1):
                         formatted_string = re.sub(r'%[a-zA-Z]', str(arg), formatted_string, count=1)
-                    if len([str(item) for item in pkg_list if "%" in str(item)]) >= 1:
-                        filtered_pkg_list = [re.sub(r'%', '', item) for item in pkg_list if "%" in item]
-                        for filtered_item in filtered_pkg_list:
-                            for i in range(len(pkg_list)):
-                                if filtered_item in pkg_list[i]:
-                                    pkg_list[i] = pkg_list[i].replace(f"%{filtered_item}", self.Game_Texts.get(filtered_item))
-                    filled_message =  formatted_string
+                    if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                        filtered_param_list = [re.sub(r'%', '', param) for param in param_list if "%" in param]
+                        for filtered_param in filtered_param_list:
+                            for i in range(len(param_list)):
+                                if filtered_param in param_list[i]:
+                                    param_list[i] = param_list[i].replace(f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                filled_message =  formatted_string
 
-            jso = json.dumps(
+            json_output = json.dumps(
                 filled_message, indent=2, ensure_ascii=False
             )
-            mjon.append(jso)
-        return mjon
+            json_result.append(json_output)
+        return json_result
+
     
 
     
