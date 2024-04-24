@@ -624,7 +624,7 @@ class GameCtrl:
                         player, self.linked_frame.on_plugin_err
                     )
                     asyncio.run(execute_player_prejoin(player))
-                elif not pkt["Message"].startswith("§e%multiplayer.player.joined.") or not pkt["Message"].startswith("§e%multiplayer.player.left."):
+                elif not pkt["Message"].startswith("§e%multiplayer.player.joined") and not pkt["Message"].startswith("§e%multiplayer.player.left"):
                     jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
                     Print.print_inf(("§1" + " ".join(jon)))
             case 1 | 7:
