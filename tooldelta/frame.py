@@ -650,6 +650,8 @@ class GameCtrl:
                     Print.print_inf(msg_text)
                 except Exception:
                     pass
+            case 10:
+                self.Game_Data_Handle.Handle_Text_Class2(pkt)
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""
