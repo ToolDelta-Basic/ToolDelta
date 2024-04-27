@@ -11,6 +11,7 @@ import requests
 import ujson as json
 from .urlmethod import download_file_singlethreaded
 from .color_print import Print
+from .sys_args import sys_args_to_dict
 
 class GameTextsLoader:
     "还原游戏常见字符串"
@@ -19,8 +20,9 @@ class GameTextsLoader:
         "初始化"
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
-        self.start_auto_update_thread()
-        self.auto_update()
+        if "no-download-libs" not in sys_args_to_dict().keys():
+            self.start_auto_update_thread()
+            self.auto_update()
         self.game_texts_data: Dict[str, str] = self.load_data()
 
     @staticmethod
@@ -33,7 +35,7 @@ class GameTextsLoader:
         result = re.match(
             r"(\d+\.\d+\.\d+)",
             requests.get(
-                "https://api.github.com/repos/ToolDelta/GameText/releases/latest", timeout=5
+                "https://api.github.com/repos/ToolDelta/GameText/releases/latest", timeout=5, verify=False
             ).json()["tag_name"],
         )
         if not isinstance(result, type(None)):

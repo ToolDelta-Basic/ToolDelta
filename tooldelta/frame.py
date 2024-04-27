@@ -346,7 +346,6 @@ class Frame:
                 ):
                     Print.print_err(f'未知的MC指令， 可能是指令格式有误： "{cmd}"')
                 else:
-                    
                 # import re
                 # data = "已为 %3$s 添加 %1$d 到 [%2$s] （现在为 %4$d）"
                 # data = re.sub(r'\$[^"\'\]\)）}\s]*', '', data)
