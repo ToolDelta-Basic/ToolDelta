@@ -201,12 +201,13 @@ class PluginGroup:
 
             raise ValueError("无法检查ToolDelta系统版本，请确保已经加载了ToolDelta系统组件")
 
-    def get_plugin_api(self, apiName: str, min_version: tuple | None = None) -> Plugin:
+    def get_plugin_api(self, apiName: str, min_version: tuple | None = None, force = True) -> Plugin | None:
         """获取插件API
 
         Args:
             apiName (str): 插件API名
             min_version (tuple | None, optional): API最低版本(若不填则默认不检查最低版本)
+            force: 若为False, 则在找不到插件API时不报错而是返回None
 
         Raises:
             PluginAPIVersionError: 插件API版本错误
@@ -220,7 +221,10 @@ class PluginGroup:
             if min_version and api.version < min_version:
                 raise PluginAPIVersionError(apiName, min_version, api.version)
             return api
-        raise PluginAPINotFoundError(f"无法找到API插件：{apiName}")
+        if force:
+            raise PluginAPINotFoundError(f"无法找到API插件：{apiName}")
+        else:
+            return None
 
     def set_frame(self, frame: "Frame") -> None:
         "设置关联的框架"
