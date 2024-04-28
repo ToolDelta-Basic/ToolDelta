@@ -7,7 +7,6 @@
 
 import os
 import sys
-import re
 import time
 import getpass
 import traceback
@@ -346,16 +345,6 @@ class Frame:
                 ):
                     Print.print_err(f'未知的MC指令， 可能是指令格式有误： "{cmd}"')
                 else:
-                # import re
-                # data = "已为 %3$s 添加 %1$d 到 [%2$s] （现在为 %4$d）"
-                # data = re.sub(r'\$[^"\'\]\)）}\s]*', '', data)
-                # mylist = [10, "somevalue", 20, "currentvalue"]
-
-                # for i, value in enumerate(mylist, start=1):
-                #     data = data.replace("%{}".format(i), "{" + str(i-1) + "}")
-
-                # result = data.format(*mylist)
-                # print(result)
                     mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(result.as_dict["OutputMessages"])
                     if not result.SuccessCount:
                         print_str = "指令执行失败: " + " ".join(mjon); Print.print_war(print_str)
@@ -626,6 +615,22 @@ class GameCtrl:
                 elif not pkt["Message"].startswith("§e%multiplayer.player.joined") and not pkt["Message"].startswith("§e%multiplayer.player.left"):
                     jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
                     Print.print_inf(("§1" + " ".join(jon)))
+                    if pkt["Message"].startswith("death."):
+                        if len(pkt["Parameters"]) >= 2:
+                            killer = pkt["Parameters"][1]
+                        else:
+                            killer = None
+                        plugin_grp.execute_player_death(
+                        pkt["Parameters"][0],
+                        killer,
+                        pkt["Message"],
+                        self.linked_frame.on_plugin_err,
+                    )
+                        asyncio.run(
+                        execute_death_message(
+                            pkt["Parameters"][0], killer, pkt["Message"]
+                        )
+                    )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 plugin_grp.execute_player_message(
