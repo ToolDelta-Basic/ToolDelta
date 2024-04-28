@@ -371,6 +371,7 @@ class CommandBlockNBTData:
     Auto: tag.Byte = tag.Byte(1)
 
 
+@dataclass
 class QueriedPlayerPos:
     dimension: int = 0
     x: float = 0
