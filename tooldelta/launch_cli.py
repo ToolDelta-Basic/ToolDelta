@@ -179,6 +179,23 @@ class StandardFrame:
             bool: 是否为OP
         """
         raise NotImplementedError
+    
+    def place_command_block_with_nbt_data(self, block_name:str, block_states:str, 
+                                          position: tuple[int, int, int],
+                                          nbt_data: neo_conn.CommandBlockNBTData):
+        """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
+        同时向该方块写入 nbt_data 所指代的 NBT 数据
+
+        Args:
+            block_name (str): 命令块的方块名，如 chain_command_block
+            block_states (str): 命令块的方块状态，如 朝向南方 的命令方块表示为 ["facing_direction":3]
+            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
+            nbt_data (neo_conn.CommandBlockNBTData): 该命令块的原始 NBT 数据
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        raise NotImplementedError
 
 
 class FrameNeOmg(StandardFrame):
@@ -537,7 +554,36 @@ class FrameNeOmg(StandardFrame):
         if player_obj is None or player_obj.command_permission_level is None:
             raise ValueError("未能获取玩家对象")
         return player_obj.command_permission_level > 2
+    
+    def place_command_block_with_nbt_data(self, block_name:str, block_states:str, 
+                                          position: tuple[int, int, int],
+                                          nbt_data: neo_conn.CommandBlockNBTData):
+        """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
+        同时向该方块写入 nbt_data 所指代的 NBT 数据
 
+        Args:
+            block_name (str): 命令块的方块名，如 chain_command_block
+            block_states (str): 命令块的方块状态，如 朝向南方 的命令方块表示为 ["facing_direction":3]
+            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
+            nbt_data (neo_conn.CommandBlockNBTData): 该命令块的原始 NBT 数据
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        if self.omega is None:
+            raise ValueError("未连接到接入点")
+        self.omega.place_command_block(neo_conn.CommandBlockPlaceOption(
+            X=position[0], Y=position[1], Z=position[2],
+            BlockName=block_name, BockState=block_states,
+            NeedRedStone=(not bool(nbt_data.ConditionalMode)),
+            Conditional=bool(nbt_data.ConditionalMode),
+            Command=str(nbt_data.Command),
+            Name=str(nbt_data.CustomName),
+            TickDelay=int(nbt_data.TickDelay),
+            ShouldTrackOutput=bool(nbt_data.TrackOutput),
+            ExecuteOnFirstTick=bool(nbt_data.ExecuteOnFirstTick)
+        ))
+    
     sendPacketJson = sendPacket
 
 
