@@ -24,6 +24,7 @@ import traceback
 import json as rjson
 import ujson as json
 from .color_print import Print
+from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
@@ -296,8 +297,8 @@ class Utils:
             """
             if file.endswith(".json"):
                 file = file[:-5]
-            filepath = os.path.join("插件数据文件", plugin_name, f"{file}.json")
-            os.makedirs(os.path.join("插件数据文件", plugin_name), exist_ok=True)
+            filepath = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name, f"{file}.json")
+            os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name), exist_ok=True)
             try:
                 if default is not None and not os.path.isfile(filepath):
                     with open(filepath, "w", encoding="utf-8") as f:
@@ -324,8 +325,8 @@ class Utils:
                 file (str): 文件名
                 obj (str | dict[Any, Any] | list[Any]): JSON对象
             """
-            os.makedirs(f"插件数据文件/{plugin_name}", exist_ok=True)
-            with open(f"插件数据文件/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
+            os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
+            with open(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
                 Utils.SimpleJsonDataReader.SafeJsonDump(obj, f)
 
     @staticmethod
