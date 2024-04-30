@@ -1,7 +1,9 @@
 "插件加载器框架"
 import asyncio
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
+
+PLUGIN_CLS_TYPE = TypeVar("PLUGIN_CLS_TYPE")
 
 from ..color_print import Print
 from ..plugin_load.classic_plugin import Plugin
@@ -48,15 +50,16 @@ class PluginGroup:
         "初始化"
         self._listen_packet_ids = set()
         self._packet_funcs: dict[str, list[Callable]] = {}
-        self.plugins_api: dict[str, Plugin] = {}
         self._broadcast_listeners: dict[str, list[Callable]] = {}
+        self._repeat_funcs = {}
+        self.plugins_api: dict[str, Plugin] = {}
         self.excType = 0
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugins_name = []
         self.linked_frame: Union["Frame" , None] = None
 
-    def add_plugin(self, plugin: type[Plugin]) -> type[Plugin]:
+    def add_plugin(self, plugin: type[PLUGIN_CLS_TYPE]) -> type[PLUGIN_CLS_TYPE]:
         """添加插件
 
         Args:
@@ -75,10 +78,10 @@ class PluginGroup:
             raise NotValidPluginError(
                 f"插件主类必须继承Plugin类 而不是 {plugin.__class__}") from exc
         self.plugin_added_cache["plugin"] = plugin
-        self.test_plugin(plugin)
+        self.test_plugin(plugin) # type: ignore
         return plugin
 
-    def add_plugin_as_api(self, apiName: str) -> Callable[[type[Plugin]], type[Plugin]]:
+    def add_plugin_as_api(self, apiName: str):
         """添加插件作为API
 
         Args:
@@ -87,12 +90,12 @@ class PluginGroup:
         Returns:
             Callable[[type[Plugin]], type[Plugin]]: 添加插件作为API
         """
-        def _add_plugin_2_api(api_plugin: type[Plugin]):
+        def _add_plugin_2_api(api_plugin: type[PLUGIN_CLS_TYPE]) -> type[PLUGIN_CLS_TYPE]:
             if not Plugin.__subclasscheck__(api_plugin):
                 raise NotValidPluginError("API插件主类必须继承Plugin类")
             self.plugin_added_cache["plugin"] = api_plugin
             self.pluginAPI_added_cache.append(apiName)
-            self.test_plugin(api_plugin)
+            self.test_plugin(api_plugin) # type: ignore
             return api_plugin
 
         return _add_plugin_2_api
