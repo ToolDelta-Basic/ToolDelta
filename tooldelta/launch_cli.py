@@ -11,6 +11,7 @@ from typing import Callable, Optional
 import ujson as json
 import requests
 import tooldelta
+import fcwslib
 
 from tooldelta import constants
 from . import neo_conn
@@ -660,3 +661,11 @@ class FrameNeOmgRemote(FrameNeOmg):
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点已崩溃")
         return SystemError("未知的退出状态")
+
+class FrameBEConnect(StandardFrame):
+    def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
+        super().__init__(serverNumber, password, fbToken, auth_server_url)
+
+    async def wait_connect(self):
+        server = fcwslib.server.Server("127.0.0.1", 23000)
+        await server.run_forever()
