@@ -5,6 +5,16 @@ from typing import TYPE_CHECKING, Any, Callable, Union
 
 from ..color_print import Print
 from ..plugin_load.classic_plugin import Plugin
+from ..utils import Utils
+from injected_plugin import (
+    execute_init,
+    execute_player_prejoin,
+    execute_player_join,
+    execute_player_message,
+    execute_death_message,
+    execute_player_left,
+    execute_repeat
+)
 from ..plugin_load import (
     classic_plugin,
     injected_plugin,
@@ -338,6 +348,8 @@ class PluginGroup:
                 func()
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_init())
+        Utils.createThread(asyncio.run, (execute_repeat(),))
 
     def execute_player_prejoin(
         self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC
@@ -353,6 +365,7 @@ class PluginGroup:
                 func(player)
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_player_prejoin(player))
 
     def execute_player_join(
         self, player: str, onerr: Callable[[str, Exception, str], None] = NON_FUNC
@@ -368,6 +381,7 @@ class PluginGroup:
                 func(player)
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_player_join(player))
 
     def execute_player_message(
         self, player: str, msg: str, onerr: Callable[[str, Exception, str], None] = NON_FUNC
@@ -387,6 +401,7 @@ class PluginGroup:
                 func(player, msg)
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_player_message(player, msg))
 
     def execute_player_leave(
         self, player: str, onerr: Callable[[str, Exception, str], None] = NON_FUNC
@@ -402,6 +417,7 @@ class PluginGroup:
                 func(player)
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_player_left(player))
 
     def execute_player_death(
         self,
@@ -423,6 +439,11 @@ class PluginGroup:
                 func(player, killer, msg)
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
+        asyncio.run(
+            execute_death_message(
+                player, killer, msg
+            )
+        )
 
     def processPacketFunc(self, pktID: int, pkt: dict) -> bool:
         """处理数据包监听器

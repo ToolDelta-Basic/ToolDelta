@@ -1,4 +1,4 @@
-"启动选项"
+"启动页面"
 import os
 import signal
 import traceback

@@ -1,6 +1,4 @@
 " ToolDelta 常量定义 "
-from typing import List
-from .cfg import Cfg
 
 PRG_NAME = "ToolDelta"
 "程序名"
@@ -22,7 +20,7 @@ LAUNCH_CFG: dict = {
 LAUNCH_CFG_STD: dict = {
     "服务器号": int,
     "密码": int,
-    "启动器启动模式(请不要手动更改此项, 改为0可重置)": Cfg.NNInt,
+    "启动器启动模式(请不要手动更改此项, 改为0可重置)": int,
     "验证服务器地址(更换时记得更改fbtoken)": str,
     "是否记录日志": bool,
     "是否使用github镜像": bool,

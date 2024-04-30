@@ -1,8 +1,11 @@
 """
+ToolDelta基本框架
+
 整个系统由三个部分组成
     Frame: 负责整个 ToolDelta 的基本框架运行
     GameCtrl: 负责对接游戏
         - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (TLSP, etc.))
+    PluginGroup: 负责对插件进行统一管理
 """
 
 import os
@@ -22,6 +25,7 @@ from tooldelta import (
 )
 from .constants import PRG_NAME
 from .utils import Utils, safe_close
+from .plugin_load.injected_plugin import safe_jump
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 from .cfg import Cfg
@@ -36,16 +40,6 @@ from .launch_cli import (
 )
 
 from .packets import PacketIDS
-from .plugin_load.injected_plugin import (
-    execute_death_message,
-    execute_init,
-    execute_player_join,
-    execute_player_prejoin,
-    execute_player_left,
-    execute_player_message,
-    execute_repeat,
-    safe_jump,
-)
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
@@ -659,7 +653,6 @@ class GameCtrl:
                 plugin_group.execute_player_join(
                     playername, self.linked_frame.on_plugin_err
                 )
-                asyncio.run(execute_player_join(playername))
             else:
                 playername = next(
                     (k for k, v in self.players_uuid.items()
@@ -675,7 +668,6 @@ class GameCtrl:
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
-                asyncio.run(execute_player_left(playername))
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理9号数据包的消息
@@ -691,7 +683,6 @@ class GameCtrl:
                     plugin_grp.execute_player_prejoin(
                         player, self.linked_frame.on_plugin_err
                     )
-                    asyncio.run(execute_player_prejoin(player))
                 elif not pkt["Message"].startswith("§e%multiplayer.player.joined") and not pkt["Message"].startswith("§e%multiplayer.player.left"):
                     jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
                     Print.print_inf(("§1" + " ".join(jon)))
@@ -706,18 +697,11 @@ class GameCtrl:
                         pkt["Message"],
                         self.linked_frame.on_plugin_err,
                     )
-                        asyncio.run(
-                        execute_death_message(
-                            pkt["Parameters"][0], killer, pkt["Message"]
-                        )
-                    )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
-                asyncio.run(execute_player_message(player, msg))
-
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
@@ -725,7 +709,6 @@ class GameCtrl:
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
-                asyncio.run(execute_player_message(player, msg))
             case 9:
                 msg = pkt["Message"]
                 try:
@@ -772,9 +755,6 @@ class GameCtrl:
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
-        Utils.createThread(asyncio.run, (execute_repeat(),))
-        Print.print_inf("正在执行初始化注入式函数init任务")
-        asyncio.run(execute_init())
         Print.print_suc("初始化注入式函数init任务执行完毕")
         self.inject_welcome()
 

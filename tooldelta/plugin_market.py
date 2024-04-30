@@ -1,4 +1,4 @@
-"插件商店生成与操作"
+"插件市场客户端"
 import os
 import platform
 import shutil

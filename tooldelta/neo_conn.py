@@ -475,7 +475,7 @@ class PlayerKit:
         return int(LIB.PlayerEntityRuntimeID(self._c_uuid))
 
     @property
-    def entity_metadata(self) -> any:
+    def entity_metadata(self) -> Any:
         OmegaAvailable()
         return json.loads(toPyString(LIB.PlayerEntityMetadata(self._c_uuid)))
 
@@ -750,16 +750,16 @@ class ThreadOmega:
         self, packet_type: Union[int, str], content: Any
     ) -> tuple[int, bytes]:
         if isinstance(packet_type, str):
-            packet_type = self.get_packet_name_to_id_mapping(packet_type)
-        return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content))
+            packet_type = self.get_packet_name_to_id_mapping(packet_type) # type: ignore
+        return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content)) # type: ignore
 
     def send_game_packet_in_json_as_is(
         self, packet_type: Union[int, str], content: Any
     ):
         if isinstance(packet_type, str):
-            packet_type = self.get_packet_name_to_id_mapping(packet_type)
+            packet_type = self.get_packet_name_to_id_mapping(packet_type) # type: ignore
         OmegaAvailable()
-        SendGamePacket(packet_type, json.dumps(content))
+        SendGamePacket(packet_type, json.dumps(content))  # type: ignore
 
     def get_bot_basic_info(self) -> ClientMaintainedBotBasicInfo:
         return self._bot_basic_info
