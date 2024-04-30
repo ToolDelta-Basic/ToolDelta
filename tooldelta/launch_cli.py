@@ -663,6 +663,7 @@ class FrameNeOmgRemote(FrameNeOmg):
         return SystemError("未知的退出状态")
 
 class FrameBEConnect(StandardFrame):
+    "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
     def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
         super().__init__(serverNumber, password, fbToken, auth_server_url)
 
