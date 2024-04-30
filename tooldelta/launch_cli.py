@@ -576,13 +576,13 @@ class FrameNeOmg(StandardFrame):
         self.omega.place_command_block(neo_conn.CommandBlockPlaceOption(
             X=position[0], Y=position[1], Z=position[2],
             BlockName=block_name, BockState=block_states,
-            NeedRedStone = (not nbt_data.ConditionalMode),
-            Conditional = nbt_data.ConditionalMode,
-            Command = nbt_data.Command,
-            Name = nbt_data.CustomName,
-            TickDelay = nbt_data.TickDelay,
-            ShouldTrackOutput = nbt_data.TrackOutput,
-            ExecuteOnFirstTick = nbt_data.ExecuteOnFirstTick
+            NeedRedStone=(not nbt_data.ConditionalMode),
+            Conditional=nbt_data.ConditionalMode,
+            Command=nbt_data.Command,
+            Name=nbt_data.CustomName,
+            TickDelay=nbt_data.TickDelay,
+            ShouldTrackOutput=nbt_data.TrackOutput,
+            ExecuteOnFirstTick=nbt_data.ExecuteOnFirstTick
         ))
 
     sendPacketJson = sendPacket
