@@ -504,7 +504,8 @@ class Frame:
                                     func, rsp, 1, tri)
                                 if res == -1:
                                     return
-                if res != 0:self.link_game_ctrl.sendwocmd('tellraw @a {"rawtext":[{"text":"[§bToolDelta控制台§r] §3'+rsp+'§r"}]}')
+                if res != 0 and rsp:
+                    self.link_game_ctrl.say_to('@a', f'[§bToolDelta控制台§r] §3{rsp}§r')
 
         self.createThread(_console_cmd_thread, usage="控制台指令")
 

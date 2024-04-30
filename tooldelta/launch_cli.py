@@ -646,6 +646,9 @@ class FrameBEConnect(StandardFrame):
     def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
         super().__init__(serverNumber, password, fbToken, auth_server_url)
 
+    def prepare_apis(self):
+        ...
+
     async def wait_connect(self):
         server = fcwslib.server.Server("127.0.0.1", 23000)
         await server.run_forever()
