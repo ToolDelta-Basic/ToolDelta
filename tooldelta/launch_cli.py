@@ -213,7 +213,8 @@ class StandardFrame:
         Raises:
             无返回值
         """
-        self.sendwocmd(f'/setblock {position[0]} {position[1]} {position[1]} {self.Command_Block_Type[mode]} ["facing_direction": {data}, "conditional_bit": {conditional}] replace')
+        Command_Block_Type:dict = {0: "command_block", 1: "repeating_command_block", 2: "chain_command_block"}
+        self.sendwocmd(f'/setblock {position[0]} {position[1]} {position[1]} {Command_Block_Type[mode]} ["facing_direction": {data}, "conditional_bit": {conditional}] replace')
         self.sendPacket(78, json.dumps({"Block": True, "Position": position, "Mode": mode, "NeedsRedstone": needsRedstone, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick}))
         # self.game_ctrl.sendPacket(78, {"Success": True, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick})
         # 如果需要返回是否成功(需手动输出成功与否)，则可对上方注释代码取消注释
