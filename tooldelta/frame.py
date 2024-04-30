@@ -346,20 +346,12 @@ class Frame:
     @staticmethod
     def basic_operation():
         """初始化文件夹"""
-        if os.path.isdir("插件文件/ToolDelta组合式插件"):
-            os.rename(
-                "插件文件/ToolDelta组合式插件",
-                f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}",
-            )
         os.makedirs(
             f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(
             f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
-        os.makedirs("tooldelta/fb_conn", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
-        os.makedirs("插件数据文件/status", exist_ok=True)
-        os.makedirs("插件数据文件/players", exist_ok=True)
         os.makedirs("插件数据文件/game_texts", exist_ok=True)
 
     def add_console_cmd_trigger(
