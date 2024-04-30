@@ -298,6 +298,20 @@ files = [
 ]
 
 [[package]]
+name = "fcwslib"
+version = "3.0.0"
+description = "A library that makes development of Python Minecraft Bedrock Edition websocket applications easier."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "fcwslib-3.0.0-py3-none-any.whl", hash = "sha256:fc61c8f6c18d9f5108540de427f8fe7dd9211a930e70c35f742071b091195390"},
+    {file = "fcwslib-3.0.0.tar.gz", hash = "sha256:2e1b925310be60c457b8fc5765a611b4efda38b1d8e098ff2ac40dab49c1e987"},
+]
+
+[package.dependencies]
+websockets = "*"
+
+[[package]]
 name = "flask"
 version = "3.0.3"
 description = "A simple framework for building complex web applications."
@@ -1392,4 +1406,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "c30b7c8497b3c513917bd1837c6d60e6f790c087edf7f52315e72b2a3a3d298c"
+content-hash = "48d9ba32a828966101d5fd26b8e8f94c55f9fc5be27ea55da51f502cd5282d94"
