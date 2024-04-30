@@ -575,8 +575,8 @@ class FrameNeOmg(StandardFrame):
         if player_obj is None or player_obj.command_permission_level is None:
             raise ValueError("未能获取玩家对象")
         return player_obj.command_permission_level > 2
-    
-    def place_command_block_with_nbt_data(self, block_name:str, block_states:str, 
+
+    def place_command_block_with_nbt_data(self, block_name:str, block_states:str,
                                           position: tuple[int, int, int],
                                           nbt_data: neo_conn.CommandBlockNBTData):
         """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
