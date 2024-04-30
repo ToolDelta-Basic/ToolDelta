@@ -30,7 +30,6 @@ def client_title() -> None:
             Print.clean_print("§b1 - 启动 ToolDelta")
             Print.clean_print("§b2 - 打开 ToolDelta 插件管理器")
             Print.clean_print("§b3 - 打开 ToolDelta 插件市场")
-            Print.clean_print("§b4 - 打开 ToolDelta 插件市场")
             r = input("请选择:").strip()
         match r:
             case "1":
