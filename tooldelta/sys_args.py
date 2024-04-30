@@ -29,3 +29,10 @@ def sys_args_to_dict(argv: list[str] = sys.argv)-> dict[str, str | None]:
             d[arg] = val
         i += 1
     return d
+
+def print_help():
+    print("启动参数帮助:")
+    print("    -help  查看帮助(当前页)")
+    print("    -no-update-check  禁用自动更新")
+    print("    -no-download-libs  禁用自动更新依赖库")
+    print("    -l <启动模式>  按照特定的启动模式, 跳过启动页面")
