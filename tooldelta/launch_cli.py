@@ -572,9 +572,9 @@ class FrameNeOmg(StandardFrame):
         if self.omega is None:
             raise ValueError("未连接到接入点")
         player_obj = self.omega.get_player_by_name(player)
-        if player_obj is None or player_obj.command_permission_level is None:
+        if player_obj is None or player_obj.op_permissions_level is None:
             raise ValueError("未能获取玩家对象")
-        return player_obj.command_permission_level > 2
+        return player_obj.op_permissions_level > 1
 
     def place_command_block_with_nbt_data(self, block_name:str, block_states:str,
                                           position: tuple[int, int, int],
