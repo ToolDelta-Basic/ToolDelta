@@ -275,8 +275,8 @@ class PluginGroup:
             plugin.on_def() # type: ignore
         Print.print_suc(f"成功热加载插件: {plugin_name}")
 
-    def add_listen_packet_id(self, packetType: int) -> None:
-        """添加数据包监听
+    def _add_listen_packet_id(self, packetType: int) -> None:
+        """添加数据包监听, 仅在系统内部使用
 
         Args:
             packetType (int): 数据包ID
@@ -289,8 +289,8 @@ class PluginGroup:
         self._listen_packet_ids.add(packetType)
         self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
-    def add_listen_packet_func(self, packetType: int, func: Callable) -> None:
-        """添加数据包监听器
+    def _add_listen_packet_func(self, packetType: int, func: Callable) -> None:
+        """添加数据包监听器, 仅在系统内部使用
 
         Args:
             packetType (int): 数据包ID
@@ -301,8 +301,8 @@ class PluginGroup:
         else:
             self._packet_funcs[str(packetType)] = [func]
 
-    def add_broadcast_evt(self, evt: str, func: Callable) -> None:
-        """添加广播事件监听器
+    def _add_broadcast_evt(self, evt: str, func: Callable) -> None:
+        """添加广播事件监听器, 仅在系统内部使用
 
         Args:
             evt (str): 事件名
