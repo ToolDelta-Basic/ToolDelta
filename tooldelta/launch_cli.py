@@ -604,7 +604,7 @@ class FrameNeOmg(StandardFrame):
             ShouldTrackOutput=bool(nbt_data.TrackOutput),
             ExecuteOnFirstTick=bool(nbt_data.ExecuteOnFirstTick)
         ))
-    
+
     sendPacketJson = sendPacket
 
 
@@ -632,6 +632,7 @@ class FrameNeOmgRemote(FrameNeOmg):
                 raise AssertionError
         except (ValueError, AssertionError):
             Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
+            raise SystemExit("端口参数错误")
         if openat_port == 0:
             Print.print_war(
                 "未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015"
