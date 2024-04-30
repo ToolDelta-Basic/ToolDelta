@@ -524,6 +524,7 @@ def tmpjson_save_thread() -> None:
 
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
+    "启动专用的玩家会话线程, 可免除当玩家在对话线程时又试图再创建一个对话线程的问题"
     if not Utils.player_in_dialogue(player):
         Utils.add_in_dialogue_player(player)
     else:
