@@ -6,7 +6,7 @@ import shlex
 import time
 from typing import Optional
 import ujson as json
-from .builtins import Builtins
+from .utils import Utils
 from .color_print import Print
 from .plugin_market import market
 from .plugin_load import PluginRegData
@@ -16,7 +16,7 @@ from .constants import (
     TOOLDELTA_INJECTED_PLUGIN
 )
 
-JsonIO = Builtins.SimpleJsonDataReader
+JsonIO = Utils.SimpleJsonDataReader
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"
@@ -188,7 +188,7 @@ class PluginManager:
             for i, plugin in enumerate(res):
                 Print.clean_print(str(i + 1) + ". " +
                                   self.make_plugin_icon(plugin))
-            r = Builtins.try_int(input(Print.clean_fmt("§f请选择序号: ")))
+            r = Utils.try_int(input(Print.clean_fmt("§f请选择序号: ")))
             if r is None or r not in range(1, len(res) + 1):
                 Print.clean_print("§c序号无效, 回车键继续")
                 return None
@@ -340,7 +340,7 @@ class PluginManager:
         return r0, res
 
     def get_2_compare_plugins_reg(self) -> list[PluginRegData]:
-        """获取用于比较的插件注册信息列表
+        """获取用于比较的插件注册信息列表, 比较已注册与未注册插件
 
         Returns:
             list[PluginRegData]: 插件注册信息列表

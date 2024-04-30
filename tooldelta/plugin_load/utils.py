@@ -4,7 +4,7 @@ from ..color_print import Print
 
 
 def unzip_plugin(zip_dir: str, exp_dir: str) -> None:
-    """解压插件
+    """解压插件ZIP包
 
     Args:
         zip_dir (str): 压缩文件路径

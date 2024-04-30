@@ -219,7 +219,7 @@ class Counter:
         self.current_i = 0
         self.prefix = prefix
 
-    def __next__(self) -> int:
+    def __next__(self) -> str:
         self.current_i += 1
         return f"{self.prefix}_{self.current_i}"
 

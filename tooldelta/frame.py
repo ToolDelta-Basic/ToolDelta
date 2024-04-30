@@ -21,7 +21,7 @@ from tooldelta import (
     plugin_market,
 )
 from .constants import PRG_NAME
-from .builtins import Builtins, safe_close
+from .utils import Utils, safe_close
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 from .cfg import Cfg
@@ -70,7 +70,7 @@ class Frame:
 
     def __init__(self) -> None:
         """初始化"""
-        self.ClassicThread = self.createThread = Builtins.createThread
+        self.createThread = Utils.createThread
         self.sys_data = self.FrameBasic()
         self.serverNumber: int = 0
         self.serverPasswd: str = ""
@@ -325,7 +325,7 @@ class Frame:
                 Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
                 return 0
 
-        @Builtins.thread_func
+        @Utils.thread_func
         def _execute_mc_command_and_get_callback(cmd: str) -> None:
             """执行Minecraft指令并获取回调结果。
 
@@ -511,7 +511,7 @@ class GameCtrl:
         self.store_uuid_pkt: dict[str, str] | None = None
         self.launcher = self.linked_frame.launcher
         if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
-            self.launcher.packet_handler = lambda pckType, pck: Builtins.createThread(
+            self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理")
         self.sendcmd = self.launcher.sendcmd
         self.sendwscmd = self.launcher.sendwscmd
@@ -539,7 +539,7 @@ class GameCtrl:
         """
         self.require_listen_packets.add(pkt)
 
-    @Builtins.run_as_new_thread
+    @Utils.run_as_new_thread
     def packet_handler(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理分发任务函数
 
@@ -692,7 +692,7 @@ class GameCtrl:
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
-        Builtins.createThread(asyncio.run, (execute_repeat(),))
+        Utils.createThread(asyncio.run, (execute_repeat(),))
         Print.print_inf("正在执行初始化注入式函数init任务")
         asyncio.run(execute_init())
         Print.print_suc("初始化注入式函数init任务执行完毕")

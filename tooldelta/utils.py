@@ -27,10 +27,10 @@ from .color_print import Print
 
 event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
-threads_list: list["Builtins.createThread"] = []
+threads_list: list["Utils.createThread"] = []
 
 
-class Builtins:
+class Utils:
     """提供了一些实用方法的类"""
     class ThreadExit(SystemExit):
         """线程退出."""
@@ -61,7 +61,7 @@ class Builtins:
             threads_list.append(self)
             try:
                 self.func(*self.all_args[0], **self.all_args[1])
-            except (Builtins.ThreadExit, SystemExit):
+            except (Utils.ThreadExit, SystemExit):
                 pass
             except Exception:
                 Print.print_err(
@@ -119,7 +119,7 @@ class Builtins:
                 return
             try:
                 with open(path, 'r', encoding='utf-8') as file:
-                    js = Builtins.SimpleJsonDataReader.SafeJsonLoad(file)
+                    js = Utils.SimpleJsonDataReader.SafeJsonLoad(file)
             except FileNotFoundError as err:
                 if not needFileExists:
                     js = None
@@ -143,7 +143,7 @@ class Builtins:
                 isChanged, dat = jsonPathTmp[path]
                 if isChanged:
                     with open(path, 'w', encoding='utf-8') as file:
-                        Builtins.SimpleJsonDataReader.SafeJsonDump(dat, file)
+                        Utils.SimpleJsonDataReader.SafeJsonDump(dat, file)
                 del jsonPathTmp[path]
                 return True
             return False
@@ -214,8 +214,8 @@ class Builtins:
             """
             if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
-                Builtins.TMPJson.loadPathJson(path, needFileExists)
-            return Builtins.TMPJson.read(path)
+                Utils.TMPJson.loadPathJson(path, needFileExists)
+            return Utils.TMPJson.read(path)
 
         @staticmethod
         def write_as_tmp(path: str, obj: Any, needFileExists: bool = True, timeout: int = 60) -> None:
@@ -229,8 +229,8 @@ class Builtins:
             """
             if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
-                Builtins.TMPJson.loadPathJson(path, needFileExists)
-            Builtins.TMPJson.write(path, obj)
+                Utils.TMPJson.loadPathJson(path, needFileExists)
+            Utils.TMPJson.write(path, obj)
 
         @staticmethod
         def cancel_change(path: str) -> None:
@@ -288,7 +288,7 @@ class Builtins:
                 default (dict, optional): 默认值, 若文件不存在则会写入这个默认值
 
             Raises:
-                Builtins.SimpleJsonDataReader.DataReadError: 读取数据时发生错误
+                Utils.SimpleJsonDataReader.DataReadError: 读取数据时发生错误
                 err: 读取文件路径时发生错误
 
             Returns:
@@ -301,14 +301,14 @@ class Builtins:
             try:
                 if default is not None and not os.path.isfile(filepath):
                     with open(filepath, "w", encoding="utf-8") as f:
-                        Builtins.SimpleJsonDataReader.SafeJsonDump(default, f)
+                        Utils.SimpleJsonDataReader.SafeJsonDump(default, f)
                     return default
                 with open(filepath, "r", encoding="utf-8") as f:
-                    res = Builtins.SimpleJsonDataReader.SafeJsonLoad(f)
+                    res = Utils.SimpleJsonDataReader.SafeJsonLoad(f)
                 return res
             except rjson.JSONDecodeError as err:
                 # 判断是否有msg.doc.pos属性
-                raise Builtins.SimpleJsonDataReader.DataReadError(
+                raise Utils.SimpleJsonDataReader.DataReadError(
                     err.msg, err.doc, err.pos
                 )
             except Exception as err:
@@ -326,10 +326,10 @@ class Builtins:
             """
             os.makedirs(f"插件数据文件/{plugin_name}", exist_ok=True)
             with open(f"插件数据文件/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
-                Builtins.SimpleJsonDataReader.SafeJsonDump(obj, f)
+                Utils.SimpleJsonDataReader.SafeJsonDump(obj, f)
 
     @staticmethod
-    def get_threads_list() -> list["Builtins.createThread"]:
+    def get_threads_list() -> list["Utils.createThread"]:
         "返回使用 createThread 创建的全线程列表."
         return threads_list
 
@@ -345,7 +345,7 @@ class Builtins:
         示例:
             >>> my_color = "red"; my_item = "apple"
             >>> kw = {"[颜色]": my_color, "[物品]": my_item}
-            >>> Builtins.SimpleFmt(kw, "I like [颜色] [物品].")
+            >>> Utils.SimpleFmt(kw, "I like [颜色] [物品].")
             I like red apple.
         """
         __sub = args[0]
@@ -367,13 +367,13 @@ class Builtins:
         """
         在事件方法可能执行较久会造成堵塞时使用, 方便快捷地创建一个新线程, 例如:
 
-        @Builtins.run_as_new_thread
+        @Utils.run_as_new_thread
         def on_inject(self):
             ...
         """
 
         def thread_fun(*args: Tuple, **kwargs: Any) -> None:
-            Builtins.createThread(func, usage="简易线程方法:" +
+            Utils.createThread(func, usage="简易线程方法:" +
                                   func.__name__, args=args, **kwargs)
 
         return thread_fun
@@ -449,7 +449,7 @@ class Builtins:
         """
         if kwargs is None:
             kwargs = {}
-        Builtins.createThread(
+        Utils.createThread(
             _dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
         )
 
@@ -507,11 +507,11 @@ def _tmpjson_save_thread():
             secs = 0
             for k, (isChanged, dat) in jsonPathTmp.copy().items():
                 if isChanged:
-                    Builtins.SimpleJsonDataReader.SafeJsonDump(dat, k)
+                    Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
                     jsonPathTmp[k][0] = False
         for k, v in jsonUnloadPathTmp.copy().items():
             if time.time() - v > 0:
-                Builtins.TMPJson.unloadPathJson(k)
+                Utils.TMPJson.unloadPathJson(k)
                 del jsonUnloadPathTmp[k]
         if not event_flags_pool["tmpjson_save"]:
             return
@@ -519,12 +519,12 @@ def _tmpjson_save_thread():
 
 def tmpjson_save_thread() -> None:
     """JSON缓存文件定时保存"""
-    Builtins.createThread(_tmpjson_save_thread, usage="JSON缓存文件定时保存")
+    Utils.createThread(_tmpjson_save_thread, usage="JSON缓存文件定时保存")
 
 
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
-    if not Builtins.player_in_dialogue(player):
-        Builtins.add_in_dialogue_player(player)
+    if not Utils.player_in_dialogue(player):
+        Utils.add_in_dialogue_player(player)
     else:
         if exc_cb is not None:
             exc_cb(player)
@@ -534,7 +534,7 @@ def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
     except Exception:
         Print.print_err(f"玩家{player}的会话线程 出现问题:")
         Print.print_err(traceback.format_exc())
-    Builtins.remove_in_dialogue_player(player)
+    Utils.remove_in_dialogue_player(player)
 
 
 jsonPathTmp = {}

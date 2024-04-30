@@ -9,7 +9,7 @@ import shlex
 import requests
 import ujson as json
 from tooldelta import urlmethod
-from .builtins import Builtins
+from .utils import Utils
 from .color_print import Print
 from .plugin_load import PluginRegData
 from .cfg import Cfg
@@ -154,7 +154,7 @@ class PluginMarket:
                 elif last_operation == "q":
                     break
                 else:
-                    res = Builtins.try_int(last_operation)
+                    res = Utils.try_int(last_operation)
                     if res:
                         if res in range(1, all_indexes + 1):
                             plugin_data = self.get_plugin_data_from_market(

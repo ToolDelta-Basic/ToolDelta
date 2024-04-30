@@ -1,4 +1,4 @@
-"插件管理器"
+"插件加载器框架"
 import asyncio
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Union

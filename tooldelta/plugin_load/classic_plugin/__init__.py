@@ -5,9 +5,9 @@ import sys
 import traceback
 from typing import TYPE_CHECKING, Callable, Union
 from ...color_print import Print
-from ...builtins import Builtins
+from ...utils import Utils
 from ...cfg import Cfg
-from ...plugin_load.funcs import unzip_plugin
+from ..utils import unzip_plugin
 from ...plugin_load import plugin_is_enabled, NotValidPluginError
 from ...constants import TOOLDELTA_CLASSIC_PLUGIN
 
@@ -105,7 +105,7 @@ def load_plugin(plugin_dirname: str) -> Union[None, Plugin]:
         else:
             Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件, 跳过加载")
             return
-        Builtins.simpleAssert(
+        Utils.simpleAssert(
             plugin_grp.plugin_added_cache["plugin"] is not None,
             NotValidPluginError(
                 "需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用"
@@ -169,7 +169,7 @@ def load_plugin(plugin_dirname: str) -> Union[None, Plugin]:
         Print.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
         Print.print_err("你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
         raise SystemExit from err
-    except Builtins.SimpleJsonDataReader.DataReadError as err:
+    except Utils.SimpleJsonDataReader.DataReadError as err:
         Print.print_err(f"插件 {plugin_dirname} 读取数据失败: {err}")
     except plugin_grp.linked_frame.SystemVersionException as err:
         Print.print_err(f"插件 {plugin_dirname} 需要更高版本的ToolDelta加载: {err}")

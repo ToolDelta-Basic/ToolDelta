@@ -15,7 +15,7 @@ import tooldelta
 from tooldelta import constants
 from . import neo_conn
 from .cfg import Cfg
-from .builtins import Builtins
+from .utils import Utils
 from .color_print import Print
 from .sys_args import sys_args_to_dict
 from .packets import Packet_CommandOutput
@@ -318,7 +318,7 @@ class FrameNeOmg(StandardFrame):
                 with Print.lock:
                     Print.print_with_info(msg_orig, "§b NOMG ")
 
-        Builtins.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
+        Utils.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
 
     def make_secret_key(self) -> None:
         """生成退出密钥"""
