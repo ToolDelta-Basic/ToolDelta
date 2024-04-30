@@ -53,9 +53,19 @@ Config = Cfg()
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
+LAUNCHERS: list[
+    tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]
+] = [
+    ("NeOmega 框架 (NeOmega模式, 租赁服适应性强, 推荐)", FrameNeOmg),
+    (
+        "NeOmega 框架 (NeOmega连接模式, 需要先启动对应的neOmega接入点)",
+        FrameNeOmgRemote,
+    ),
+]
+
 
 class Frame:
-    """系统框架"""
+    """ToolDelta主框架"""
 
     class FrameBasic:
         """系统基本信息"""
@@ -99,7 +109,7 @@ class Frame:
             self.plugin_market_url = cfgs["插件市场源"]
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
-            if self.launchMode != 0 and self.launchMode not in range(1, len(constants.LAUNCHERS) + 1):
+            if self.launchMode != 0 and self.launchMode not in range(1, len(LAUNCHERS) + 1):
                 raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
         except Config.ConfigError as err:
             # 配置文件有误
@@ -184,15 +194,15 @@ class Frame:
                 except requests.exceptions.RequestException as e:
                     Print.print_err(f"登录失败，原因：{e}\n正在切换至Token登录")
             if_token()
-        launchers = constants.LAUNCHERS
+
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式(之后可在ToolDelta启动配置更改):")
-            for i, (launcher_name, _) in enumerate(launchers):
+            for i, (launcher_name, _) in enumerate(LAUNCHERS):
                 Print.print_inf(f" {i + 1} - {launcher_name}")
             while 1:
                 try:
                     ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
-                    if ch not in range(1, len(launchers) + 1):
+                    if ch not in range(1, len(LAUNCHERS) + 1):
                         raise ValueError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                     break
@@ -203,7 +213,7 @@ class Frame:
         fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
-        self.launcher = launchers[
+        self.launcher = LAUNCHERS[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1](
             self.serverNumber,

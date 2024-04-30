@@ -27,9 +27,10 @@ def client_title() -> None:
             r = launch_mode["l"]
         else:
             Print.clean_print("§b请选择启动模式(使用启动参数 -l <启动模式> 可以跳过该页面):")
-            Print.clean_print("1 - 启动 ToolDelta")
-            Print.clean_print("2 - 打开 ToolDelta 插件管理器")
-            Print.clean_print("3 - 打开 ToolDelta 插件市场")
+            Print.clean_print("§b1 - 启动 ToolDelta")
+            Print.clean_print("§b2 - 打开 ToolDelta 插件管理器")
+            Print.clean_print("§b3 - 打开 ToolDelta 插件市场")
+            Print.clean_print("§b4 - 打开 ToolDelta 插件市场")
             r = input("请选择:").strip()
         match r:
             case "1":
