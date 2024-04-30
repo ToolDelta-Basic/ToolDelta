@@ -197,6 +197,26 @@ class StandardFrame:
         """
         raise NotImplementedError
 
+    def place_command_bloc_with_command_block_data(self, position:tuple[int, int, int], command: str, conditional: bool, customName: str, data: str, executeOnFirstTick: bool, lastOutput:str, mode: int, needsRedstone: bool) -> None:
+        """在 position 放置命令方块，并设置相应的命令方块数据
+
+        Args:
+            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
+            command (str): 命令方块内所填指令例如:'/give @a air 1'
+            conditional (bool): 命令方块的方块状态[conditional_bit]: 指定前一个命令方块（相反方向的命令方块）激活后命令方块的行为。
+            customName (str): 更新的命令块的名称。如果非空，则在使用鼠标指针悬停在命令块上时，将在命令块上方显示该名称。
+            data (str): 命令方块的方块状态[facing_direction]: 命令方块的朝向，0-5分别对应六个方向 ["0": "朝下", "1": "朝上", "2": "朝北", "3": "朝南", "4": "朝西", "5": "朝东"]
+            executeOnFirstTick (bool): 指定命令块是否应该在第一拍（即启用命令块时）执行。
+            lastOutput (str): 命令块执行的最后一个命令的输出。可以将其留空以表示根本没有输出。
+            mode (int): 命令方块的类型，0-3分别对应命令模式方块类型 {0: "command_block", 1: "repeating_command_block", 2: "chain_command_block"}
+            needsRedstone (bool): 指定命令方块是否需要红石来激活。如果为false，则命令方块始终处于激活状态。该字段仅在Block为true时设置。
+        Raises:
+            无返回值
+        """
+        self.game_ctrl.sendwocmd(f'/setblock {position[0]} {position[1]} {position[1]} {self.Command_Block_Type[mode]} ["facing_direction": {data}, "conditional_bit": {conditional}] replace')
+        self.game_ctrl.sendPacket(78, {"Block": True, "Position": position, "Mode": mode, "NeedsRedstone": needsRedstone, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick})
+        # self.game_ctrl.sendPacket(78, {"Success": True, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick})
+        # 如果需要返回是否成功(需手动输出成功与否)，则可对上方注释代码取消注释
 
 class FrameNeOmg(StandardFrame):
     """使用 NeOmega 框架连接到游戏"""
