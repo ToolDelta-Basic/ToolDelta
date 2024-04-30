@@ -179,7 +179,7 @@ class StandardFrame:
             bool: 是否为OP
         """
         raise NotImplementedError
-    
+
     def place_command_block_with_nbt_data(self, block_name:str, block_states:str, 
                                           position: tuple[int, int, int],
                                           nbt_data: neo_conn.CommandBlockNBTData):
@@ -213,8 +213,8 @@ class StandardFrame:
         Raises:
             无返回值
         """
-        self.game_ctrl.sendwocmd(f'/setblock {position[0]} {position[1]} {position[1]} {self.Command_Block_Type[mode]} ["facing_direction": {data}, "conditional_bit": {conditional}] replace')
-        self.game_ctrl.sendPacket(78, {"Block": True, "Position": position, "Mode": mode, "NeedsRedstone": needsRedstone, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick})
+        self.sendwocmd(f'/setblock {position[0]} {position[1]} {position[1]} {self.Command_Block_Type[mode]} ["facing_direction": {data}, "conditional_bit": {conditional}] replace')
+        self.sendPacket(78, json.dumps({"Block": True, "Position": position, "Mode": mode, "NeedsRedstone": needsRedstone, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick}))
         # self.game_ctrl.sendPacket(78, {"Success": True, "Conditional": conditional, "Command": command, "LastOutput": lastOutput, "Name": customName, "TickDelay": 0, "ExecuteOnFirstTick": executeOnFirstTick})
         # 如果需要返回是否成功(需手动输出成功与否)，则可对上方注释代码取消注释
 
