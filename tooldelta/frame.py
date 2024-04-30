@@ -513,6 +513,7 @@ class GameCtrl:
         if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理")
+        # 初始化基本函数
         self.sendcmd = self.launcher.sendcmd
         self.sendwscmd = self.launcher.sendwscmd
         self.sendwocmd = self.launcher.sendwocmd

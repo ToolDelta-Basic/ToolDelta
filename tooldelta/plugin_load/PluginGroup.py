@@ -201,7 +201,7 @@ class PluginGroup:
 
             raise ValueError("无法检查ToolDelta系统版本，请确保已经加载了ToolDelta系统组件")
 
-    def get_plugin_api(self, apiName: str, min_version: tuple | None = None, force = True) -> Plugin | None:
+    def get_plugin_api(self, apiName: str, min_version: tuple | None = None, force = True) -> Any:
         """获取插件API
 
         Args:
