@@ -162,6 +162,7 @@ class GameTextsHandle:
                     # 检查原始消息中是否包含格式化参数%
                     if not len(re.findall(r'%[a-zA-Z]', original_message)) >= 1:
                         if original_message:  # 如果原始消息不为空
+                            original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
                             param_list = list(item["Parameters"])  # 获取参数列表
                             for n, value in enumerate(param_list, start=1):
                                 original_message = original_message.replace(
@@ -181,6 +182,7 @@ class GameTextsHandle:
                                 *param_list)
                     else:
                         if original_message:  # 如果原始消息不为空
+                            original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
                             param_list = list(item["Parameters"])  # 获取参数列表
                             format_specifiers = re.findall(
                                 r'%[a-zA-Z]', original_message)  # 查找格式化参数
@@ -208,11 +210,11 @@ class GameTextsHandle:
                 )
                 json_result.append(json_output)
         elif isinstance(packet, dict):  # 如果packet不是list类型
-            for item in packet:
                 # 从self.Game_Texts中获取原始消息文本
-                if not isinstance((original_message := self.Game_Texts.get(item["Message"].replace("%", ""))), type(None)):
+                if not isinstance((original_message := self.Game_Texts.get(packet["Message"].replace("%", ""))), type(None)):
                     if not len(re.findall(r'%[a-zA-Z]', original_message)) >= 1:
                         if original_message:  # 如果原始消息不为空
+                            original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
                             param_list = list(packet["Parameters"])  # 获取参数列表
                             for n, value in enumerate(param_list, start=1):
                                 original_message = original_message.replace(
@@ -233,6 +235,7 @@ class GameTextsHandle:
                         if (original_message := self.Game_Texts.get(
                                 packet["Message"].replace("%", ""))):  # 如果原始消息不为空
                             param_list = list(packet["Parameters"])  # 获取参数列表
+                            original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
                             formatted_string = original_message
                             for i, arg in enumerate(param_list, start=1):
                                 formatted_string = re.sub(
