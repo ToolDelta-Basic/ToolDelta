@@ -8,7 +8,7 @@ PLUGIN_CLS_TYPE = TypeVar("PLUGIN_CLS_TYPE")
 from ..color_print import Print
 from ..plugin_load.classic_plugin import Plugin
 from ..utils import Utils
-from injected_plugin import (
+from .injected_plugin import (
     execute_init,
     execute_player_prejoin,
     execute_player_join,
