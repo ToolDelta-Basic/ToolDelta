@@ -27,6 +27,7 @@ class GameTextsLoader:
         self.check_initial_run()
         if "no-download-libs" not in sys_args_to_dict().keys():
             self.start_auto_update_thread()
+            self.auto_update()
         self.game_texts_data: Dict[str, str] = self.load_data()
 
     @staticmethod
