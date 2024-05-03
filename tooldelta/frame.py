@@ -264,7 +264,7 @@ class Frame:
                     if n is None:
                         input(Print.clean_fmt("§c不是合法租赁服密码, 回车键继续"))
                         continue
-                    old_cfg["服务器号"] = n
+                    old_cfg["密码"] = n
                     input(Print.clean_fmt(f"§f新的租赁服密码: §a******§f, 回车键继续"))
                 case "3":
                     Print.print_inf("选择启动器启动模式(之后可在ToolDelta启动配置更改):")
