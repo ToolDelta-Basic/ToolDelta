@@ -1037,13 +1037,13 @@ docs = ["sphinx"]
 
 [[package]]
 name = "tqdm"
-version = "4.66.2"
+version = "4.66.3"
 description = "Fast, Extensible Progress Meter"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "tqdm-4.66.2-py3-none-any.whl", hash = "sha256:1ee4f8a893eb9bef51c6e35730cebf234d5d0b6bd112b0271e10ed7c24a02bd9"},
-    {file = "tqdm-4.66.2.tar.gz", hash = "sha256:6cd52cdf0fef0e0f543299cfc96fec90d7b8a7e88745f411ec33eb44d5ed3531"},
+    {file = "tqdm-4.66.3-py3-none-any.whl", hash = "sha256:4f41d54107ff9a223dca80b53efe4fb654c67efaba7f47bada3ee9d50e05bd53"},
+    {file = "tqdm-4.66.3.tar.gz", hash = "sha256:23097a41eba115ba99ecae40d06444c15d1c0c698d527a01c6c8bd1c5d0647e5"},
 ]
 
 [package.dependencies]
@@ -1406,4 +1406,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "48d9ba32a828966101d5fd26b8e8f94c55f9fc5be27ea55da51f502cd5282d94"
+content-hash = "642582f3194adadba336438aeb00f79fec5329d6f2b3e7e1c8455c2cc1bb1c18"
