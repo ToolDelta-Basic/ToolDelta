@@ -242,7 +242,7 @@ class Frame:
             Print.clean_print(f" 4. 是否记录日志: {old_cfg['是否记录日志']}")
             Print.clean_print(f" 5. 验证服务器地址: {old_cfg['验证服务器地址(更换时记得更改fbtoken)']}")
             Print.clean_print(f"    §a直接回车: 保存并退出")
-            resp = input("§6输入序号可修改配置项(0~4): ").strip()
+            resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
                 Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
                 Print.clean_print("§a配置已保存!")
