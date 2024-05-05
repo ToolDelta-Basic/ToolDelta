@@ -3,11 +3,11 @@ import importlib
 import os
 import sys
 import traceback
+import zipfile
 from typing import TYPE_CHECKING, Callable, Union
 from ...color_print import Print
 from ...utils import Utils
 from ...cfg import Cfg
-from ..utils import unzip_plugin
 from ...plugin_load import plugin_is_enabled, NotValidPluginError
 from ...constants import TOOLDELTA_CLASSIC_PLUGIN
 
@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     # 类型注释
     from ...frame import Frame
     from ...plugin_load.PluginGroup import PluginGroup
-
 
 class Plugin:
     "插件信息主类"
@@ -35,17 +34,12 @@ class Plugin:
         os.makedirs(path, exist_ok=True)
         return path
 
-
-plugin_group_cache: list[Union["PluginGroup", None]] = [None]
-
-
 def read_plugins(plugin_grp: "PluginGroup") -> None:
     """读取插件
 
     Args:
         plugin_grp (PluginGroup): 插件组
     """
-    plugin_group_cache[0] = plugin_grp
     PLUGIN_PATH = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
     sys.path.append(os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN))
     for plugin_dir in os.listdir(PLUGIN_PATH):
@@ -58,7 +52,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
             and plugin_dir.endswith(".zip")
         ):
             Print.print_with_info(f"§6正在解压插件{plugin_dir}, 请稍后", "§6 解压 ")
-            unzip_plugin(
+            _unzip_plugin(
                 os.path.join(PLUGIN_PATH, plugin_dir),
                 os.path.join(PLUGIN_PATH, plugin_dir.strip(".zip")),
             )
@@ -66,14 +60,15 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
             plugin_dir = plugin_dir.strip(".zip")
         if os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir)):
             sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
-            load_plugin(plugin_dir)
+            load_plugin(plugin_grp, plugin_dir)
             plugin_grp.loaded_plugins_name.append(plugin_dir)
 
 
-def load_plugin(plugin_dirname: str) -> Union[None, Plugin]:
+def load_plugin(plugin_group: PluginGroup, plugin_dirname: str) -> Union[None, Plugin]:
     """加载插件
 
     Args:
+        plugin_group (PluginGroup): 插件组类
         plugin_dirname (str): 插件目录名
         hot_load (bool, optional): 是否热加载
 
@@ -90,7 +85,7 @@ def load_plugin(plugin_dirname: str) -> Union[None, Plugin]:
     Returns:
         Union[None, Plugin]: 插件实例
     """
-    plugin_grp = plugin_group_cache[0]
+    plugin_grp = plugin_group
     if isinstance(plugin_grp, type(None)):
         raise ValueError("插件组未初始化读取")
     if isinstance(plugin_grp.linked_frame, type(None)):
@@ -183,3 +178,17 @@ def load_plugin(plugin_dirname: str) -> Union[None, Plugin]:
         plugin_grp.pluginAPI_added_cache.clear()
         plugin_grp.broadcast_evts_cache.clear()
     return None
+
+def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
+    """解压插件ZIP包
+
+    Args:
+        zip_dir (str): 压缩文件路径
+        exp_dir (str): 解压目录
+    """
+    try:
+        f = zipfile.ZipFile(zip_dir, "r")
+        f.extractall(exp_dir)
+    except Exception as err:
+        Print.print_err(f"zipfile: 解压失败: {err}")
+        raise EOFError("解压失败") from err

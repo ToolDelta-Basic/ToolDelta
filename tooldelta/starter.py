@@ -14,7 +14,6 @@ frame = Frame()
 
 def start_tool_delta() -> None:
     """启动ToolDelta"""
-    plugin_group.set_frame(frame)
     try:
         frame.welcome()
         if "no-update-check" not in sys_args_to_dict().keys():
@@ -26,7 +25,7 @@ def start_tool_delta() -> None:
         game_control = GameCtrl(frame)
         frame.set_game_control(game_control)
         frame.set_plugin_group(plugin_group)
-        movent.set_frame(frame)
+        plugin_group.set_frame(frame)
         plugin_group.read_all_plugins()
         frame.plugin_load_finished(plugin_group)
         tmpjson_save_thread()

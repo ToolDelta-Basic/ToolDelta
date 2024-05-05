@@ -26,9 +26,11 @@ from ..plugin_load import (
     PluginAPIVersionError,
 )
 from ..constants import PRG_NAME
-if TYPE_CHECKING:
-    from ..frame import Frame
+from .utils import set_frame as _set_frame
+from .injected_plugin.movent import set_frame as _set_frame_inj
 
+if TYPE_CHECKING:
+    from ..frame import Frame, GameCtrl
 
 class PluginGroup:
     "插件组"
@@ -240,8 +242,10 @@ class PluginGroup:
             return None
 
     def set_frame(self, frame: "Frame") -> None:
-        "设置关联的框架"
+        "设置关联的系统框架"
         self.linked_frame = frame
+        _set_frame(frame)
+        _set_frame_inj(frame)
 
     def read_all_plugins(self) -> None:
         """读取所有插件

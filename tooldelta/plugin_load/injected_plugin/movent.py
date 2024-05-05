@@ -1,8 +1,13 @@
 "注入式执行函数"
 import time
 from typing import TYPE_CHECKING, Any, Optional
-from tooldelta.color_print import Print
-from tooldelta.packets import Packet_CommandOutput
+from ...color_print import Print
+from ...packets import Packet_CommandOutput
+from ..utils import (
+    getTarget,
+    getPos
+)
+
 if TYPE_CHECKING:
     from tooldelta.frame import Frame, GameCtrl
 
@@ -142,32 +147,6 @@ def is_op(playername: str) -> bool | None:
     if movent_frame.launcher.is_op is not None:
         return movent_frame.launcher.is_op(playername)
 
-
-def getTarget(sth: str, timeout: bool | int = 5) -> list:
-    """
-    获取符合目标选择器实体的列表
-
-    参数:
-        sth: 目标选择器
-        timeout: 超时时间，默认为5秒
-    """
-    check_avaliable(game_control)
-    if not sth.startswith("@"):
-        raise ValueError("Minecraft Target Selector is not correct.")
-    result = sendwscmd(f"/testfor {sth}", True, timeout)
-    if result is None:
-        raise ValueError("Failed to get the target.")
-    result = (
-        result
-        .OutputMessages[0]
-        .Parameters
-    )
-    if result:
-        result = result[0]
-        return result.split(", ")
-    raise ValueError("Failed to get the target.")
-
-
 def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
     """
     从字典中根据值查找对应的键
@@ -185,68 +164,6 @@ def get_robotname() -> str | None:
     """获取机器人名称。"""
     check_avaliable(game_control)
     return game_control.bot_name
-
-
-def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
-    """获取目标玩家的位置信息
-
-    参数:
-        targetNameToGet: 目标玩家的名称
-        timeout: 超时时间（秒）。默认为5秒
-
-    异常:
-        ValueError: 当目标玩家不存在时抛出该异常
-        ValueError: 当获取位置信息失败时抛出该异常
-        AttributeError: 当获取玩家UUID失败时抛出该异常
-    """
-    check_avaliable(game_control)
-    if targetNameToGet not in get_all_player() or targetNameToGet.startswith("@"):
-        raise ValueError(f"Player {targetNameToGet} does not exist.")
-    result = sendwscmd(
-        f'/querytarget @a[name="{targetNameToGet}"]', True, timeout)
-    if isinstance(result, type(None)):
-        raise ValueError("Failed to get the position.")
-    if not result.OutputMessages[0].Success:
-        raise ValueError(
-            f"Failed to get the position: {result.OutputMessages[0]}")
-    parameter = result.OutputMessages[0].Parameters[0]
-    if isinstance(parameter, str):
-        raise ValueError("Failed to get the position.")
-    result = {}
-
-    if game_control.players_uuid is None:
-        raise AttributeError("Failed to get the players_uuid.")
-    targetName = targetNameToGet
-    x = (
-        parameter[0]["position"]["x"]
-        if parameter[0]["position"]["x"] >= 0
-        else parameter[0]["position"]["x"] - 1
-    )
-    y = parameter[0]["position"]["y"] - 1.6200103759765
-    z = (
-        parameter[0]["position"]["z"]
-        if parameter[0]["position"]["z"] >= 0
-        else parameter[0]["position"]["z"] - 1
-    )
-    position = {
-        "x": float(f"{x:.2f}"),
-        "y": float(f"{y:.2f}"),
-        "z": float(f"{z:.2f}"),
-    }
-    dimension = parameter[0]["dimension"]
-    yRot = parameter[0]["yRot"]
-    result[targetName] = {
-        "dimension": dimension,
-        "position": position,
-        "yRot": yRot,
-    }
-    if targetNameToGet == "@a":
-        return result
-    if len(result) != 1:
-        raise ValueError("Failed to get the position.")
-    if targetNameToGet.startswith("@a"):
-        return list(result.values())[0]
-    return result[targetNameToGet]
 
 
 def countdown(delay: int | float, msg: str | None = None) -> None:
