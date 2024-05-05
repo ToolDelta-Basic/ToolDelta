@@ -1,7 +1,7 @@
 "数据包类构建器"
 
 class PacketIDS:
-    "数据包id"
+    "数据包id常量表"
     Text = 9
     PlayerList = 63
     CommandOutput = 79

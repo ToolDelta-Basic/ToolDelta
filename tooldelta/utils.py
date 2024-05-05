@@ -364,19 +364,36 @@ class Utils:
             raise exc
 
     @staticmethod
-    def thread_func(func: Any) -> Any:
+    def thread_func(func_or_name: Callable | str) -> Any:
         """
         在事件方法可能执行较久会造成堵塞时使用, 方便快捷地创建一个新线程, 例如:
 
-        @Utils.run_as_new_thread
+        @Utils.thread_func
+        def on_inject(self):
+            ...
+        或者:
+        @Utils.thread_func("一个会卡一分钟的线程")
         def on_inject(self):
             ...
         """
-
-        def thread_fun(*args: Tuple, **kwargs: Any) -> None:
-            Utils.createThread(func, usage="简易线程方法:" +
-                                  func.__name__, args=args, **kwargs)
-
+        if isinstance(func_or_name, str):
+            func_name = func_or_name
+            def _recv_func(func: Callable):
+                def thread_fun(*args: Tuple, **kwargs: Any) -> None:
+                    Utils.createThread(
+                        func,
+                        usage=func_name, args=args, **kwargs
+                )
+                return thread_fun
+            return _recv_func
+        else:
+            def thread_fun(*args: Tuple, **kwargs: Any) -> None:
+                Utils.createThread(
+                    func_or_name,
+                    usage="简易线程方法:" + func_or_name.__name__,
+                    args=args,
+                    **kwargs
+                )
         return thread_fun
 
     run_as_new_thread = thread_func
