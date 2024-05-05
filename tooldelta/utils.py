@@ -150,7 +150,7 @@ class Utils:
             return False
 
         @staticmethod
-        def read(path: str) -> list[Any] | dict[Any, Any] | Any:
+        def read(path: str) -> Any:
             """对缓存区的该虚拟路径的文件进行读操作, 返回一个深拷贝的JSON对象
 
             Args:
