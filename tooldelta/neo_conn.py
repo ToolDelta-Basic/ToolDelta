@@ -7,7 +7,7 @@ import threading
 import enum
 from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
 from threading import Thread
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput
 
@@ -66,8 +66,6 @@ class AccountOptions:
     UserPassword: str = ""
     ServerCode: str = ""
     ServerPassword: str = ""
-
-
 
 
 def StartOmega(address, AccountOptions):
@@ -206,13 +204,6 @@ class ClientMaintainedExtendInfo:
     GameRules: Optional[Dict[str, Any]] = None
 
 
-
-
-def ConsumeChat() -> "Chat":
-    chatData = json.loads(toPyString(LIB.ConsumeChat()))
-    return Chat(**chatData)
-
-
 class Counter:
     def __init__(self, prefix: str) -> None:
         self.current_i = 0
@@ -249,18 +240,6 @@ class AdventureFlagsMap:
     AdventureSettingsFlagsNoPvM: bool = False
     AdventureSettingsFlagsShowNameTags: bool = False
 
-
-@dataclass
-class Chat:
-    Name: str = ""
-    Msg: List[str] = ""
-    Type: int = 1
-    RawMsg: str = ""
-    RawName: str = ""
-    RawParameters: Optional[Any] = None
-    Aux: Optional[Any] = None
-
-
 @dataclass
 class CommandOrigin:
     Origin: int = 0
@@ -271,17 +250,17 @@ class CommandOrigin:
 
 @dataclass
 class OutputMessage:
-    Success: bool = False
-    Message: str = ""
-    Parameters: Optional[List[Any]] = None
+    Success: bool
+    Message: str
+    Parameters: List[Any]
 
 
 @dataclass
 class CommandOutput:
-    CommandOrigin: Optional["CommandOrigin"] = None
-    OutputType: int = 0
-    SuccessCount: int = 0
-    OutputMessages: Optional[List[OutputMessage]] = None
+    CommandOrigin: "CommandOrigin"
+    OutputType: int
+    SuccessCount: int
+    OutputMessages: List[OutputMessage]
     DataSet: Optional[Any] = None
 
     @property
@@ -312,6 +291,7 @@ def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[CommandOutput]:
             outputMessage = OutputMessage(
                 Success=outputMessageData["Success"],
                 Message=outputMessageData["Message"],
+                Parameters=[]
             )
             parameters = []
             if "Parameters" in outputMessageData.keys():
@@ -488,7 +468,7 @@ class PlayerKit:
         else:
             query_str += "," + ",".join(conditions) + "]"
         ret = self.parent.send_websocket_command_need_response(query_str)
-        return ret
+        return ret # type: ignore
 
     def check_conditions(self, conditions: Union[None, str, List[str]] = None) -> bool:
         return self.query(conditions).SuccessCount > 0
@@ -520,8 +500,8 @@ class ThreadOmega:
     def __init__(
         self,
         connect_type: ConnectType,
-        address: str = "tcp://localhost:24016",
-        accountOption: AccountOptions = None,
+        address: str,
+        accountOption: AccountOptions,
     ) -> None:
         self._thread_counter = Counter("thread")
         self._running_threads: Dict[str, Thread] = {}
@@ -541,8 +521,7 @@ class ThreadOmega:
         self._omega_cmd_callback_events: Dict[str, Callable] = {}
 
         # packet listeners
-        self._packet_listeners: Dict[str,
-                                     List[Callable[[str, any], None]]] = {}
+        self._packet_listeners: Dict[str, List[Callable[[str, Any], None]]] = {}
 
         # setup actions
         # make LIB listen to all packets and new packets will have eventType="MCPacket"
@@ -564,12 +543,6 @@ class ThreadOmega:
         )
 
         # player hooks
-        self._bind_players: Dict[str, PlayerKit] = {}
-
-        # named command block msg
-        self._name_command_block_msg_listeners: Dict[
-            str, List[Callable[[Chat], None]]
-        ] = {}
 
         # start routine
         self.start_new(self._react)
@@ -637,16 +610,6 @@ class ThreadOmega:
 
             elif eventType == "Chat":
                 OmitEvent()
-
-            elif eventType == "NamedCommandBlockMsg":
-                blockName = retriever
-                listeners = self._name_command_block_msg_listeners[blockName]
-                if len(listeners) == 0:
-                    LIB.OmitEvent()
-                else:
-                    chat = ConsumeChat()
-                    for l in listeners:
-                        self.start_new(l, (chat,))
 
     def wait_disconnect(self) -> str:
         """return: disconnect reason"""
@@ -789,16 +752,17 @@ class ThreadOmega:
     def _get_bind_player(self, uuidStr: str) -> Optional[PlayerKit]:
         if uuidStr is None or uuidStr == "":
             return None
-        if uuidStr in self._bind_players:
-            return self._bind_players[uuidStr]
-        bind_player = PlayerKit(uuidStr, self)
-        self._bind_players[uuidStr] = bind_player
-        return bind_player
+        return PlayerKit(uuidStr, self)
 
     def get_all_online_players(self):
         OmegaAvailable()
         playerUUIDS = json.loads(toPyString(LIB.GetAllOnlinePlayers()))
-        return [self._get_bind_player(uuidStr) for uuidStr in playerUUIDS]
+        ret: List[PlayerKit] = []
+        for uuidStr in playerUUIDS:
+            r = self._get_bind_player(uuidStr)
+            if r:
+                ret.append(r)
+        return ret
 
     def get_player_by_name(self, name: str) -> Optional[PlayerKit]:
         OmegaAvailable()
@@ -814,15 +778,6 @@ class ThreadOmega:
         for player in self.get_all_online_players():
             callback(player, "exist")
         self._player_change_listeners.append(callback)
-
-    def listen_named_command_block(
-        self, command_block_name: str, callback: Callable[[Chat], None]
-    ):
-        if command_block_name not in self._name_command_block_msg_listeners:
-            self._name_command_block_msg_listeners[command_block_name] = []
-        LIB.ListenCommandBlock(toCString(command_block_name))
-        self._name_command_block_msg_listeners[command_block_name].append(
-            callback)
 
     @staticmethod
     def place_command_block(place_option: CommandBlockPlaceOption):
@@ -898,7 +853,7 @@ def load_lib():
     LIB.SendWebSocketCommandOmitResponse.argtypes = [CString]
     LIB.SendPlayerCommandOmitResponse.argtypes = [CString]
     LIB.FreeMem.argtypes = [ctypes.c_void_p]
-    LIB.ListenAllPackets.argtypes = None
+    LIB.ListenAllPackets.argtypes = []
     LIB.GetPacketNameIDMapping.restype = CString
     LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
     LIB.JsonStrAsIsGamePacketBytes.restype = JsonStrAsIsGamePacketBytes_return

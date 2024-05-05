@@ -262,11 +262,12 @@ class FrameNeOmg(StandardFrame):
             int: 端口号
         """
         free_port = get_free_port(24016)
+        sys_machine = platform.uname().machine
         access_point_file = (
-            f"neomega_{platform.uname().system.lower()}_access_point_{self.sys_machine}"
+            f"neomega_{platform.uname().system.lower()}_access_point_{sys_machine}"
         )
         if "TERMUX_VERSION" in os.environ:
-            access_point_file = f"neomega_android_access_point_{self.sys_machine}"
+            access_point_file = f"neomega_android_access_point_{sys_machine}"
         if platform.system() == "Windows":
             access_point_file += ".exe"
         py_file_path = os.path.join(
@@ -383,15 +384,15 @@ class FrameNeOmg(StandardFrame):
             Print.print_err(f"获取依赖库表出现问题: {err}")
             self.update_status(SysStatus.CRASHED_EXIT)
             return
-        self.sys_machine = platform.machine().lower()
-        if self.sys_machine == "x86_64":
-            self.sys_machine = "amd64"
-        elif self.sys_machine == "aarch64":
-            self.sys_machine = "arm64"
+        sys_machine = platform.machine().lower()
+        if sys_machine == "x86_64":
+            sys_machine = "amd64"
+        elif sys_machine == "aarch64":
+            sys_machine = "arm64"
         if "TERMUX_VERSION" in os.environ:
-            sys_info_fmt: str = f"Android:{self.sys_machine.lower()}"
+            sys_info_fmt: str = f"Android:{sys_machine.lower()}"
         else:
-            sys_info_fmt: str = f"{platform.uname().system}:{self.sys_machine.lower()}"
+            sys_info_fmt: str = f"{platform.uname().system}:{sys_machine.lower()}"
         source_dict: list[str] = require_depen[sys_info_fmt]
         commit_remote = requests.get(
             f"{depen_url}commit", timeout=5
