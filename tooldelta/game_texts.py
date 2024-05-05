@@ -40,7 +40,7 @@ class GameTextsLoader:
         result = re.match(
             r"(\d+\.\d+\.\d+)",
             requests.get(
-                "https://api.github.com/repos/ToolDelta/GameText/releases/latest", timeout=5, verify=False
+                "https://api.github.com/repos/ToolDelta/GameText/releases/latest", timeout=5, verify=True
             ).json()["tag_name"],
         )
         if not isinstance(result, type(None)):

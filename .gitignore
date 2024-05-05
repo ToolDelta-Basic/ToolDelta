@@ -148,7 +148,7 @@ py_tests/
 py_test.py
 fbtoken
 ToolDelta基本配置.json
-phoenixbuilder*
+本地开发数据文件夹
 *.bat
 *.bdx
 *.txt
@@ -157,10 +157,7 @@ phoenixbuilder*
 *.dll
 *.dylib
 *.cmd
-tos.sh
-build_points.sh
 neomega_*_access_point_*
-plugins/
 tooldelta/neo_libs/commit
 *.tmp
 tempCodeRunnerFile.python
