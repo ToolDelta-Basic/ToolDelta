@@ -645,6 +645,9 @@ class GameCtrl:
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
+            if isJoining and "§" in playername:
+                self.say_to("@a", f"§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常!")
+                # 没有VIP名字供测试...
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
                 if playername not in self.allplayers and not res:
