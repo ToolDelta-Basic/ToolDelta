@@ -713,6 +713,9 @@ class GameCtrl:
                 msg = pkt["Message"]
                 try:
                     msg_text = json.loads(msg)["rawtext"]
+                    if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
+                        Print.print_with_info("(该tellraw内容为敏感词)", "§f 消息 ")
+                        return
                     msg_text = "".join([i["text"] for i in msg_text])
                     Print.print_with_info(msg_text, "§f 消息 ")
                 except Exception:
