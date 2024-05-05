@@ -377,12 +377,13 @@ class Utils:
             ...
         """
         if isinstance(func_or_name, str):
-            func_name = func_or_name
             def _recv_func(func: Callable):
                 def thread_fun(*args: Tuple, **kwargs: Any) -> None:
                     Utils.createThread(
                         func,
-                        usage=func_name, args=args, **kwargs
+                        usage=func_or_name,
+                        args=args,
+                        **kwargs
                 )
                 return thread_fun
             return _recv_func
