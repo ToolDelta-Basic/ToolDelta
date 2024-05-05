@@ -714,7 +714,7 @@ class GameCtrl:
                 try:
                     msg_text = json.loads(msg)["rawtext"]
                     msg_text = "".join([i["text"] for i in msg_text])
-                    Print.print_inf(msg_text)
+                    Print.print_with_info(msg_text, "§f 消息 ")
                 except Exception:
                     pass
             case 10:

@@ -264,8 +264,7 @@ class PluginGroup:
             Print.print_err(f"加载插件出现问题: \n{err_str}")
             raise SystemExit from err
 
-    @staticmethod
-    def load_plugin_hot(plugin_name: str, plugin_type: str) -> None:
+    def load_plugin_hot(self, plugin_name: str, plugin_type: str) -> None:
         """热加载插件
 
         Args:
@@ -274,7 +273,7 @@ class PluginGroup:
         """
         plugin = None
         if plugin_type == "classic":
-            plugin = classic_plugin.load_plugin(plugin_name)
+            plugin = classic_plugin.load_plugin(self, plugin_name)
         elif plugin_type == "injected":
             asyncio.run(injected_plugin.load_plugin_file(plugin_name))
         # 检查是否有on_def成员再执行
