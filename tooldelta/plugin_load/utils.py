@@ -28,7 +28,6 @@ def set_frame(frame: "Frame"):
     "载入系统框架"
     global game_ctrl
     game_ctrl = frame.get_game_control()
-    set_frame(frame)
 
 # utils
 

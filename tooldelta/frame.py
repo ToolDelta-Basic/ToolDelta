@@ -44,6 +44,7 @@ from .packets import PacketIDS
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
 Config = Cfg()
+
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
@@ -56,7 +57,6 @@ LAUNCHERS: list[
         FrameNeOmgRemote,
     ),
 ]
-
 
 class Frame:
     """ToolDelta主框架"""

@@ -64,7 +64,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
             plugin_grp.loaded_plugins_name.append(plugin_dir)
 
 
-def load_plugin(plugin_group: PluginGroup, plugin_dirname: str) -> Union[None, Plugin]:
+def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None, Plugin]:
     """加载插件
 
     Args:
