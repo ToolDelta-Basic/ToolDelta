@@ -12,6 +12,8 @@ import requests
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 
+# 使用方法 mirror_github[value: int].format(url: str)
+mirror_github = ["https://hub.gitmirror.com/?q={}", "https://gh.con.sh/?q={}", "https://ghproxy.com/?q={}", "https://ghps.cc/?q={}", "https://gh.ddlc.top/?q={}"]
 
 def progress_bar(
     current: float | int, total: float | int, length: int | float = 20, color1: str = "§f", color2: str = "§b"
