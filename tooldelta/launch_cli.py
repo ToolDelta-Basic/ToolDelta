@@ -181,7 +181,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def place_command_block_with_nbt_data(self, block_name:str, block_states:str, 
+    def place_command_block_with_nbt_data(self, block_name:str, block_states:str,
                                           position: tuple[int, int, int],
                                           nbt_data: neo_conn.CommandBlockNBTData):
         """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
@@ -263,6 +263,7 @@ class FrameNeOmg(StandardFrame):
         """
         free_port = get_free_port(24016)
         sys_machine = platform.uname().machine
+        sys_machine = "amd64" if sys_machine == "x86_64" else sys_machine
         access_point_file = (
             f"neomega_{platform.uname().system.lower()}_access_point_{sys_machine}"
         )
