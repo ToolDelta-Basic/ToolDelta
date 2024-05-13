@@ -13,7 +13,7 @@ from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 
 # 使用方法 mirror_github[value: int].format(url: str)
-mirror_github = ["https://hub.gitmirror.com/{}", "https://gh.con.sh/{}"]
+mirror_github = ["https://hub.gitmirror.com/{}", "https://gh.con.sh/{}", "https://mirror.ghproxy.com/{}"]
 
 def format_mirror_url(url: str) -> list:
     """填充url到镜像url列表
@@ -27,6 +27,20 @@ def format_mirror_url(url: str) -> list:
     mir_url: list = []
     for mirror in mirror_github:mir_url.append(mirror.format(url))
     return mir_url
+
+def githubdownloadurl_to_rawurl(url: str) -> str:
+    """将github下载链接转换为原始链接
+
+    Args:
+        url (str): 原始链接
+
+    Returns:
+        str: 原始链接
+    """
+    try:
+        if url.startswith("https://github.com/"):return requests.head(url, allow_redirects=True).url
+        else:return url
+    except:return url
 
 def progress_bar(
     current: float | int, total: float | int, length: int | float = 20, color1: str = "§f", color2: str = "§b"
