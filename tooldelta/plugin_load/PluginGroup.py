@@ -15,6 +15,7 @@ from .injected_plugin import (
     execute_player_message,
     execute_death_message,
     execute_player_left,
+    execute_frame_exit,
     execute_repeat
 )
 from ..plugin_load import (
@@ -43,6 +44,7 @@ class PluginGroup:
         "on_player_message": [],
         "on_player_death": [],
         "on_player_leave": [],
+        "on_frame_exit": []
     }
     plugin_added_cache = {"plugin": None, "packets": []}
     pluginAPI_added_cache = []
@@ -432,7 +434,7 @@ class PluginGroup:
         msg: str,
         onerr: Callable[[str, Exception, str], None] = NON_FUNC,
     ):
-        """
+        """执行玩家死亡的方法
 
         Args:
             player (str): 玩家
@@ -450,6 +452,19 @@ class PluginGroup:
                 player, killer, msg
             )
         )
+
+    def execute_frame_exit(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
+        """执行框架退出的方法
+
+        Args:
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        for name, func in self.plugins_funcs["on_frame_exit"]:
+            try:
+                func()
+            except Exception as err:
+                onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_frame_exit())
 
     def processPacketFunc(self, pktID: int, pkt: dict) -> bool:
         """处理数据包监听器
