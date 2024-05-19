@@ -134,12 +134,12 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         plugin_grp.normal_plugin_loaded_num += 1
         if plugin_grp.plugin_added_cache["packets"] != []:
             for pktType, func in plugin_grp.plugin_added_cache["packets"]:
-                pfunc = getattr(plugin_ins, func.__name__)
-                if pfunc is None:
+                ins_func = getattr(plugin_ins, func.__name__)
+                if ins_func is None:
                     raise NotValidPluginError("数据包监听不能在主插件类以外定义")
                 plugin_grp._add_listen_packet_id(pktType)
                 plugin_grp._add_listen_packet_func(
-                    pktType, pfunc
+                    pktType, ins_func
                 )
         if plugin_grp.pluginAPI_added_cache is not None:
             for _api in plugin_grp.pluginAPI_added_cache:
@@ -152,11 +152,10 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         if plugin_grp.broadcast_evts_cache != {}:
             for evt, funcs in plugin_grp.broadcast_evts_cache.items():
                 for func in funcs:
-                    bfunc = getattr(plugin_ins, func.__name__)
-                    if bfunc is not None:
-                        # 在插件主类以内定义了广播接收器
-                        func = bfunc
-                    plugin_grp._add_broadcast_evt(evt, func)
+                    ins_func = getattr(plugin_ins, func.__name__)
+                    if ins_func is None:
+                        raise NotValidPluginError("广播事件监听不能在主插件类以外定义")
+                    plugin_grp._add_broadcast_evt(evt, ins_func)
         return plugin_ins
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")

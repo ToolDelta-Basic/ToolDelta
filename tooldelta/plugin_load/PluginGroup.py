@@ -3,8 +3,6 @@ import asyncio
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
 
-PLUGIN_CLS_TYPE = TypeVar("PLUGIN_CLS_TYPE")
-
 from ..color_print import Print
 from ..plugin_load.classic_plugin import Plugin
 from ..utils import Utils
@@ -32,6 +30,10 @@ from .injected_plugin.movent import set_frame as _set_frame_inj
 
 if TYPE_CHECKING:
     from ..frame import Frame, GameCtrl
+
+_PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
+_TV = TypeVar("_TV")
+_SUPER_CLS = TypeVar("_SUPER_CLS")
 
 class PluginGroup:
     "插件组"
@@ -63,7 +65,7 @@ class PluginGroup:
         self.loaded_plugins_name = []
         self.linked_frame: Union["Frame" , None] = None
 
-    def add_plugin(self, plugin: type[PLUGIN_CLS_TYPE]) -> type[PLUGIN_CLS_TYPE]:
+    def add_plugin(self, plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         """添加插件
 
         Args:
@@ -94,7 +96,7 @@ class PluginGroup:
         Returns:
             Callable[[type[Plugin]], type[Plugin]]: 添加插件作为API
         """
-        def _add_plugin_2_api(api_plugin: type[PLUGIN_CLS_TYPE]) -> type[PLUGIN_CLS_TYPE]:
+        def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
             if not Plugin.__subclasscheck__(api_plugin):
                 raise NotValidPluginError("API插件主类必须继承Plugin类")
             self.plugin_added_cache["plugin"] = api_plugin
@@ -104,10 +106,11 @@ class PluginGroup:
 
         return _add_plugin_2_api
 
-    def add_packet_listener(self, pktID: int | list[int]) -> Callable[[Callable], Callable]:
-        """添加数据包监听器
-
+    def add_packet_listener(self, pktID: int | list[int]):
+        """
+        添加数据包监听器
         将下面的方法作为一个MC数据包接收器
+        Tips: 只能在插件主类里的函数使用此装饰器!
 
         Args:
             pktID (int | list[int]): 数据包ID或多个ID
@@ -115,7 +118,7 @@ class PluginGroup:
         Returns:
             Callable[[Callable], Callable]: 添加数据包监听器
         """
-        def deco(func):
+        def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if isinstance(pktID, int):
                 self.plugin_added_cache["packets"].append((pktID, func))
             else:
@@ -125,9 +128,11 @@ class PluginGroup:
 
         return deco
 
-    def add_broadcast_listener(self, evt_name: str) -> Callable[[Callable], Callable[[Any], bool]]:
-        """添加广播事件监听器
+    def add_broadcast_listener(self, evt_name: str):
+        """
+        添加广播事件监听器
         将下面的方法作为一个广播事件接收器
+        Tips: 只能在插件主类里的函数使用此装饰器!
 
         Args:
             evt_name (str): 事件名
@@ -142,7 +147,7 @@ class PluginGroup:
         事件1 获取到 收集表 作为返回: ["my name is Super."]
         """
 
-        def deco(func: Callable[[Any], bool]) -> Callable[[Any], bool]:
+        def deco(func: Callable[[_SUPER_CLS, _TV], bool]) -> Callable[[_SUPER_CLS, _TV], bool]:
             if self.broadcast_evts_cache.get(evt_name):
                 self.broadcast_evts_cache[evt_name].append(func)
             else:
