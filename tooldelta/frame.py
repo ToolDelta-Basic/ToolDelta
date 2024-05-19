@@ -506,6 +506,7 @@ class Frame:
     def system_exit(self) -> None:
         """系统退出"""
         asyncio.run(safe_jump())
+        plugin_group.execute_frame_exit(self.on_plugin_err)
         exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
         if self.link_game_ctrl.allplayers and not isinstance(
             self.launcher, (FrameNeOmgRemote,)

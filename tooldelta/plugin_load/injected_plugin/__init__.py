@@ -23,6 +23,7 @@ player_left_funcs: dict[Callable, int | None] = {}
 player_death_funcs: dict[Callable, int | None] = {}
 repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
+frame_exit_funcs: dict[Callable, int | None] = {}
 
 
 def player_message(priority: int | None = None) -> Callable:
@@ -117,6 +118,22 @@ def init(priority: int | None = None) -> Callable:
     """
     def decorator(func):
         init_plugin_funcs[func] = priority
+        return func
+
+    return decorator
+
+
+def frame_exit(priority: int | None = None) -> Callable:
+    """载入处理框架退出事件的插件
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
+    def decorator(func):
+        frame_exit_funcs[func] = priority
         return func
 
     return decorator
@@ -284,6 +301,11 @@ async def execute_player_left(playername: str) -> None:
         playername (str): 玩家名字
     """
     await execute_asyncio_task(player_left_funcs, player_name(playername=playername))
+
+
+async def execute_frame_exit() -> None:
+    """执行框架退出处理函数"""
+    await execute_asyncio_task(frame_exit_funcs)
 
 
 class PluginMetadata:

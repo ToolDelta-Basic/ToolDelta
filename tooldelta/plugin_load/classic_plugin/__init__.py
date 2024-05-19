@@ -121,7 +121,8 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
             "on_player_join",
             "on_player_message",
             "on_player_death",
-            "on_player_leave"
+            "on_player_leave",
+            "on_frame_exit"
         ):
             if hasattr(plugin_ins, evt_name):
                 plugin_grp.plugins_funcs[evt_name].append(
