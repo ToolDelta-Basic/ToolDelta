@@ -22,7 +22,7 @@ def simple_fmt(kw: dict, arg: str) -> str:
     return arg
 
 
-class _Print:
+class Print:
     """输出状态栏
 
     Raises:
@@ -55,16 +55,10 @@ class _Print:
         ["r", "/"],
     ]
 
-    def __init__(self) -> None:
-        "初始化"
-        self.lock = threading.RLock()
+    lock = threading.RLock()
 
-    def __call__(self, text: str) -> None:
-        "输出信息"
-        with self.lock:
-            self.print_inf(text)
-
-    def simple_fmt(self, kw: dict, arg: str) -> str:
+    @staticmethod
+    def simple_fmt(kw: dict, arg: str) -> str:
         """简单的字符串格式化
 
         Args:
@@ -75,10 +69,10 @@ class _Print:
             str: 格式化后的字符串
         """
 
-        with self.lock:
-            return simple_fmt(kw, arg)
+        return simple_fmt(kw, arg)
 
-    def colormode_replace(self, text: str, showmode=0) -> str:
+    @staticmethod
+    def colormode_replace(text: str, showmode=0) -> str:
         """颜色代码替换
 
         Args:
@@ -88,35 +82,34 @@ class _Print:
         Returns:
             str: 替换后的字符串
         """
-        with self.lock:
             # 1 = bg_color
-            text = self._strike(text)
-            return (
-                simple_fmt(
-                    {
-                        "§1": f"\033[{showmode};37;34m",
-                        "§2": f"\033[{showmode};37;32m",
-                        "§3": f"\033[{showmode};37;36m",
-                        "§4": f"\033[{showmode};37;31m",
-                        "§5": f"\033[{showmode};37;35m",
-                        "§6": f"\033[{showmode};37;33m",
-                        "§7": f"\033[{showmode};37;90m",
-                        "§8": f"\033[{showmode};37;2m",
-                        "§9": f"\033[{showmode};37;94m",
-                        "§a": f"\033[{showmode};37;92m",
-                        "§b": f"\033[{showmode};37;96m",
-                        "§c": f"\033[{showmode};37;91m",
-                        "§d": f"\033[{showmode};37;95m",
-                        "§e": f"\033[{showmode};37;93m",
-                        "§f": f"\033[{showmode};37;1m",
-                        "§r": "\033[0m",
-                        "§u": "\033[4m",
-                        "§l": "\033[1m",
-                    },
-                    text,
-                )
-                + "\033[0m"
+        text = Print._strike(text)
+        return (
+            simple_fmt(
+                {
+                    "§1": f"\033[{showmode};37;34m",
+                    "§2": f"\033[{showmode};37;32m",
+                    "§3": f"\033[{showmode};37;36m",
+                    "§4": f"\033[{showmode};37;31m",
+                    "§5": f"\033[{showmode};37;35m",
+                    "§6": f"\033[{showmode};37;33m",
+                    "§7": f"\033[{showmode};37;90m",
+                    "§8": f"\033[{showmode};37;2m",
+                    "§9": f"\033[{showmode};37;94m",
+                    "§a": f"\033[{showmode};37;92m",
+                    "§b": f"\033[{showmode};37;96m",
+                    "§c": f"\033[{showmode};37;91m",
+                    "§d": f"\033[{showmode};37;95m",
+                    "§e": f"\033[{showmode};37;93m",
+                    "§f": f"\033[{showmode};37;1m",
+                    "§r": "\033[0m",
+                    "§u": "\033[4m",
+                    "§l": "\033[1m",
+                },
+            text,
             )
+            + "\033[0m"
+        )
 
     @staticmethod
     def align(text: str, length: int = 15) -> str:
@@ -168,8 +161,9 @@ class _Print:
             i += 1
         return text_ok
 
+    @staticmethod
     def print_with_info(
-        self, text: str, info: str = INFO_NORMAL, need_log: bool = True, **print_kwargs
+        text: str, info: str = INFO_NORMAL, need_log: bool = True, **print_kwargs
     ):
         """输出带有信息的文本
 
@@ -182,9 +176,9 @@ class _Print:
         Raises:
             AssertionError: 无法找到对应的颜色代码
         """
-        with self.lock:
+        with Print.lock:
             if need_log:
-                self.c_log(info, text)
+                Print.c_log(info, text)
             setNextColor = "§r"
             if "\n" in text:
                 output_txts = []
@@ -200,31 +194,33 @@ class _Print:
                             pass
                     output_txts.append(
                         datetime.datetime.now().strftime("[%H:%M] ")
-                        + self.colormode_replace(info, 7)
+                        + Print.colormode_replace(info, 7)
                         + " "
-                        + self.colormode_replace(setNextColor + text_line)
+                        + Print.colormode_replace(setNextColor + text_line)
                     )
                 print("\n".join(output_txts), **print_kwargs)
             else:
                 print(
                     datetime.datetime.now().strftime("[%H:%M] ")
-                    + self.colormode_replace(info, 7)
+                    + Print.colormode_replace(info, 7)
                     + " "
-                    + self.colormode_replace(text),
+                    + Print.colormode_replace(text),
                     **print_kwargs,
                 )
 
-    def clean_print(self, text: str, **print_kwargs) -> None:
+    @staticmethod
+    def clean_print(text: str, **print_kwargs) -> None:
         """依照mc的颜色代码输出文本，可带有print函数的参数
 
         Args:
             text (str): 输出的文本
             **print_kwargs: 原print函数的参数
         """
-        with self.lock:
-            print(self.colormode_replace(text), **print_kwargs)
+        with Print.lock:
+            print(Print.colormode_replace(text), **print_kwargs)
 
-    def clean_fmt(self, text: str) -> str:
+    @staticmethod
+    def clean_fmt(text: str) -> str:
         """依照mc的颜色代码格式化文本
 
         Args:
@@ -233,55 +229,56 @@ class _Print:
         Returns:
             str: 格式化后的文本
         """
-        with self.lock:
-            return self.colormode_replace(text)
+        return Print.colormode_replace(text)
 
-    def print_err(self, text: str, **print_kwargs) -> None:
+    @staticmethod
+    def print_err(text: str, **print_kwargs) -> None:
         """输出错误信息
 
         Args:
             text (str): 输出的文本
         """
-        with self.lock:
-            self.print_with_info(f"§c{text}", self.INFO_ERROR, **print_kwargs)
+        Print.print_with_info(f"§c{text}", Print.INFO_ERROR, **print_kwargs)
 
-    def print_inf(self, text: str, **print_kwargs) -> None:
+    @staticmethod
+    def print_inf(text: str, **print_kwargs) -> None:
         """输出INDO信息
 
         Args:
             text (str): 输出的文本
         """
-        with self.lock:
-            self.print_with_info(f"{text}", self.INFO_NORMAL, **print_kwargs)
+        Print.print_with_info(f"{text}", Print.INFO_NORMAL, **print_kwargs)
 
-    def print_suc(self, text: str, **print_kwargs) -> None:
+    @staticmethod
+    def print_suc(text: str, **print_kwargs) -> None:
         """输出成功信息
 
         Args:
             text (str): 输出的文本
         """
-        with self.lock:
-            self.print_with_info(f"§a{text}", self.INFO_SUCC, **print_kwargs)
+        Print.print_with_info(f"§a{text}", Print.INFO_SUCC, **print_kwargs)
 
-    def print_war(self, text: str, **print_kwargs) -> None:
+    @staticmethod
+    def print_war(text: str, **print_kwargs) -> None:
         """输出警告信息
 
         Args:
             text (str): 输出的文本
         """
-        with self.lock:
-            self.print_with_info(f"§6{text}", self.INFO_WARN, **print_kwargs)
+        Print.print_with_info(f"§6{text}", Print.INFO_WARN, **print_kwargs)
 
-    def print_load(self, text: str, **print_kwargs) -> None:
+    @staticmethod
+    def print_load(text: str, **print_kwargs) -> None:
         """输出加载信息
 
         Args:
             text (str): 输出的文本
         """
-        with self.lock:
-            self.print_with_info(f"§d{text}", self.INFO_LOAD, **print_kwargs)
+        with Print.lock:
+            Print.print_with_info(f"§d{text}", Print.INFO_LOAD, **print_kwargs)
 
-    def fmt_info(self, text: str, info: str = "§f 信息 ") -> str:
+    @staticmethod
+    def fmt_info(text: str, info: str = "§f 信息 ") -> str:
         """格式化信息
 
         Args:
@@ -294,7 +291,7 @@ class _Print:
         Returns:
             str: 格式化后的信息
         """
-        with self.lock:
+        with Print.lock:
             setNextColor = "§r"
             if "\n" in text:
                 output_txts = []
@@ -310,26 +307,27 @@ class _Print:
                             pass
                     output_txts.append(
                         datetime.datetime.now().strftime("[%H:%M] ")
-                        + self.colormode_replace(info, 7)
+                        + Print.colormode_replace(info, 7)
                         + " "
-                        + self.colormode_replace(setNextColor + text_line)
+                        + Print.colormode_replace(setNextColor + text_line)
                     )
                 return "\n".join(output_txts)
             return (
                 datetime.datetime.now().strftime("[%H:%M] ")
-                + self.colormode_replace(info, 7)
+                + Print.colormode_replace(info, 7)
                 + " "
-                + self.colormode_replace(text)
+                + Print.colormode_replace(text)
             )
 
-    def c_log(self, inf: str, msg: str) -> None:
+    @staticmethod
+    def c_log(inf: str, msg: str) -> None:
         """记录日志
 
         Args:
             inf (str): 信息
             msg (str): 记录的信息
         """
-        with self.lock:
+        with Print.lock:
             for _g, _s in [
                 ("§6 警告 ", "WARN"),
                 ("§a 成功 ", "INFO"),
@@ -340,14 +338,11 @@ class _Print:
                 if inf == _g:
                     inf = _s
                     break
-            for col, _ in self.STD_COLOR_LIST:
+            for col, _ in Print.STD_COLOR_LIST:
                 col = "§" + col
                 msg = msg.replace(col, "")
-            for col, _ in self.STD_COLOR_LIST:
+            for col, _ in Print.STD_COLOR_LIST:
                 col = "§" + col
                 inf = inf.replace(col, "")
             inf = inf.replace(" ", "")
             publicLogger.log_in(msg, inf)
-
-
-Print = _Print()
