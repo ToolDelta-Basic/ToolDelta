@@ -3,16 +3,9 @@
 import datetime
 import threading
 import colorama
+from .logger import publicLogger
 
 colorama.init(autoreset=True)
-
-try:
-    from .logger import publicLogger
-except ImportError:
-    pass
-
-unicode = type("")
-
 
 def simple_fmt(kw: dict, arg: str) -> str:
     """简单的字符串格式化
