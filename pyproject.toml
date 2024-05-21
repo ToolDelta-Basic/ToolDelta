@@ -13,7 +13,7 @@ repository = "https://github.com/SuperScript-PRC/ToolDelta"
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
 psutil = "5.9.8"
-requests = "2.31.0"
+requests = "2.32.0"
 ujson = "5.9.0"
 colorama = "^0.4.6"
 pillow = "^10.2.0"
