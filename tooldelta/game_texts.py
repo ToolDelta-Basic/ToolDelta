@@ -37,6 +37,7 @@ class GameTextsLoader:
         Returns:
             str: 版本号
         """
+        if "no-download-libs" in sys_args_to_dict().keys():return "0.0.0"
         result = re.match(
             r"(\d+\.\d+\.\d+)",
             requests.get(
