@@ -787,8 +787,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             msg (str): 消息
         """
-        self.sendwocmd("tellraw " + target +
-                       ' {"rawtext":[{"text":"' + msg + '"}]}')
+        text_json = json.dumps({"rawtext": [{"text": msg}]})
+        self.sendwocmd("tellraw " + target + text_json)
 
     def player_title(self, target: str, text: str) -> None:
         """向玩家展示标题文本
@@ -797,7 +797,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             text (str): 文本
         """
-        self.sendwocmd(f"title {target} title {text}")
+        text_json = json.dumps({"rawtext": [{"text": text}]})
+        self.sendwocmd(f"titleraw " + target + " title " + text_json)
 
     def player_subtitle(self, target: str, text: str) -> None:
         """向玩家展示副标题文本
@@ -806,7 +807,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             text (str): 文本
         """
-        self.sendwocmd(f"title {target} subtitle {text}")
+        text_json = json.dumps({"rawtext": [{"text": text}]})
+        self.sendwocmd(f"titleraw " + target + " subtitle " + text_json)
 
     def player_actionbar(self, target: str, text: str) -> None:
         """向玩家展示动作栏文本
@@ -815,7 +817,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             text (str): 文本
         """
-        self.sendwocmd(f"title {target} actionbar {text}")
+        text_json = json.dumps({"rawtext": [{"text": text}]})
+        self.sendwocmd(f"titleraw " + target + " actionbar " + text_json)
 
     def get_game_data(self) -> dict:
         """获取游戏数据
