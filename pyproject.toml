@@ -25,6 +25,7 @@ flask = "^3.0.2"
 mido = "^1.3.2"
 websocket-client = "^1.7.0"
 fcwslib = "^3.0.0"
+pyyaml = "6.0.1"
 
 [build-system]
 requires = ["poetry-core"]
