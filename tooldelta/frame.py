@@ -529,13 +529,13 @@ class Frame:
         """
         return self.consoleMenu
 
-    def set_game_control(self, game_ctrl) -> None:
+    def set_game_control(self, game_ctrl: "GameCtrl") -> None:
         """使用外源GameControl
 
         Args:
             game_ctrl (_type_): GameControl对象
         """
-        self.link_game_ctrl: "GameCtrl" = game_ctrl
+        self.link_game_ctrl = game_ctrl
 
     def set_plugin_group(self, plug_grp) -> None:
         """使用外源PluginGroup

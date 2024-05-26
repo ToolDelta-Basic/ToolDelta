@@ -139,21 +139,6 @@ class PluginGroup:
                     callback_list.append(res2)
         return callback_list
 
-    def test_plugin(self, plugin: type[Plugin]) -> None:
-        """测试插件是否符合要求
-
-        Args:
-            plugin (Plugin): 插件主类
-        """
-        if self.linked_frame is None:
-            # 很可能是直接单独运行此插件的代码.
-            Print.clean_print(f"插件主类信息({plugin.name}): ")
-            Print.clean_print(
-                f" - 作者: {plugin.author}\n - 版本: {plugin.version}")
-            Print.clean_print(
-                f" - 数据包监听: {', '.join(str(i) for i in self._listen_packet_ids)}"
-            )
-
     @staticmethod
     def help(plugin: Plugin) -> None:
         """
