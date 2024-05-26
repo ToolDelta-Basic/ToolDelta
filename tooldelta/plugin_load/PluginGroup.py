@@ -4,7 +4,11 @@ import traceback
 from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
 
 from ..color_print import Print
-from ..plugin_load.classic_plugin import Plugin
+from .classic_plugin import (
+    Plugin,
+    add_plugin,
+    add_plugin_as_api
+)
 from ..utils import Utils
 from .injected_plugin import (
     execute_init,
@@ -31,13 +35,12 @@ from .injected_plugin.movent import set_frame as _set_frame_inj
 if TYPE_CHECKING:
     from ..frame import Frame, GameCtrl
 
-_PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
 
 class PluginGroup:
     "插件组"
-    plugins: list[list[str | Plugin]] = []
+    plugins: list[Plugin] = []
     plugins_funcs: dict[str, list] = {
         "on_def": [],
         "on_inject": [],
@@ -48,8 +51,7 @@ class PluginGroup:
         "on_player_leave": [],
         "on_frame_exit": []
     }
-    plugin_added_cache = {"plugin": None, "packets": []}
-    pluginAPI_added_cache = []
+    plugin_added_cache = {"packets": []}
     broadcast_evts_cache = {}
 
     def __init__(self):
@@ -65,46 +67,9 @@ class PluginGroup:
         self.loaded_plugins_name = []
         self.linked_frame: Union["Frame" , None] = None
 
-    def add_plugin(self, plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
-        """添加插件
+    add_plugin = staticmethod(add_plugin)
 
-        Args:
-            plugin (type[Plugin]): 插件主类
-
-        Raises:
-            NotValidPluginError: 插件主类必须继承Plugin类
-
-        Returns:
-            type[Plugin]: 插件主类
-        """
-        try:
-            if not Plugin.__subclasscheck__(plugin):
-                raise NotValidPluginError(f"插件主类必须继承Plugin类 而不是 {plugin}")
-        except TypeError as exc:
-            raise NotValidPluginError(
-                f"插件主类必须继承Plugin类 而不是 {plugin.__class__}") from exc
-        self.plugin_added_cache["plugin"] = plugin
-        self.test_plugin(plugin) # type: ignore
-        return plugin
-
-    def add_plugin_as_api(self, apiName: str):
-        """添加插件作为API
-
-        Args:
-            apiName (str): API名
-
-        Returns:
-            Callable[[type[Plugin]], type[Plugin]]: 添加插件作为API
-        """
-        def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
-            if not Plugin.__subclasscheck__(api_plugin):
-                raise NotValidPluginError("API插件主类必须继承Plugin类")
-            self.plugin_added_cache["plugin"] = api_plugin
-            self.pluginAPI_added_cache.append(apiName)
-            self.test_plugin(api_plugin) # type: ignore
-            return api_plugin
-
-        return _add_plugin_2_api
+    add_plugin_as_api = staticmethod(add_plugin_as_api)
 
     def add_packet_listener(self, pktID: int | list[int]):
         """
