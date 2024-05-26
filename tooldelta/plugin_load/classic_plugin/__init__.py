@@ -42,7 +42,7 @@ class Plugin:
 _PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
 
 def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
-    """添加插件
+    """添加ToolDelta类式插件的插件主类
 
     Args:
         plugin (type[Plugin]): 插件主类
@@ -67,13 +67,10 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
     return plugin
 
 def add_plugin_as_api(apiName: str):
-    """添加插件作为API
+    """添加ToolDelta类式插件主类, 同时作为API插件提供接口供其他插件进行使用
 
     Args:
         apiName (str): API名
-
-    Returns:
-        Callable[[type[Plugin]], type[Plugin]]: 添加插件作为API
     """
     def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         if not Plugin.__subclasscheck__(api_plugin):
