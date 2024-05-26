@@ -12,6 +12,7 @@ import requests
 import ujson as json
 import urllib3
 from .urlmethod import download_file_singlethreaded
+from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 from .sys_args import sys_args_to_dict
 # 关闭警告
@@ -37,7 +38,7 @@ class GameTextsLoader:
         Returns:
             str: 版本号
         """
-        if "no-download-libs" in sys_args_to_dict().keys():return "0.0.0"
+        if "no-download-libs" in sys_args_to_dict().keys() or "no-update-check" in sys_args_to_dict().keys():return '.'.join(map(str, get_tool_delta_version()))
         result = re.match(
             r"(\d+\.\d+\.\d+)",
             requests.get(
