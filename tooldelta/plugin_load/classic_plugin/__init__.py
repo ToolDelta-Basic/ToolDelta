@@ -4,7 +4,7 @@ import os
 import sys
 import traceback
 import zipfile
-from typing import TYPE_CHECKING, Union, Any, TypeVar
+from typing import TYPE_CHECKING, Union, TypeVar
 from ...color_print import Print
 from ...utils import Utils
 from ...cfg import Cfg
@@ -18,7 +18,8 @@ if TYPE_CHECKING:
 
 __caches__ = {
     "plugin": None,
-    "api_name": ""
+    "api_name": "",
+    "frame": None
 }
 
 class Plugin:
@@ -63,7 +64,8 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         raise NotValidPluginError(
             "调用了多次 @add_plugin"
         )
-    __caches__["plugin"] = plugin
+    plugin_ins = plugin(__caches__["frame"]) # type: ignore
+    __caches__["plugin"] = plugin_ins
     return plugin
 
 def add_plugin_as_api(apiName: str):
@@ -79,7 +81,8 @@ def add_plugin_as_api(apiName: str):
             raise NotValidPluginError(
                 "调用了多次 @add_plugin"
             )
-        __caches__["plugin"] = api_plugin
+        plugin_ins = api_plugin(__caches__["frame"]) # type: ignore
+        __caches__["plugin"] = plugin_ins
         __caches__["api_name"] = apiName
         return api_plugin
 
@@ -157,19 +160,16 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         else:
             Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件, 跳过加载")
             return
-        none = None # ...
-        if __caches__["plugin"] == none:
+        plugin_or_none : Plugin | None = __caches__.get("plugin")
+        if plugin_or_none is None:
             raise NotValidPluginError(
                 "需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用"
             )
-        plugin: type[Plugin] = __caches__["plugin"] # type: ignore
-        if plugin.name is None:
-            raise ValueError(f"插件主类 {plugin.__name__} 需要作者名")
-        plugin_ins = plugin(plugin_group.linked_frame)
-        if isinstance(plugin_ins, type(None)) or plugin_ins.name == "":
-            raise ValueError(f"插件主类 {plugin.__name__} 需要作者名")
-        plugin_group.plugins.append(plugin_ins)
-        _v0, _v1, _v2 = plugin_ins.version
+        plugin: Plugin = plugin_or_none
+        if plugin.name is None or plugin.name == "":
+            raise ValueError(f"插件主类 {plugin.__class__.__name__} 需要作者名")
+        plugin_group.plugins.append(plugin)
+        _v0, _v1, _v2 = plugin.version
         for evt_name in (
             "on_def",
             "on_inject",
@@ -180,17 +180,17 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
             "on_player_leave",
             "on_frame_exit"
         ):
-            if hasattr(plugin_ins, evt_name):
+            if hasattr(plugin, evt_name):
                 plugin_group.plugins_funcs[evt_name].append(
-                    [plugin_ins.name, getattr(plugin_ins, evt_name)]
+                    [plugin.name, getattr(plugin, evt_name)]
                 )
         Print.print_suc(
-            f"成功载入插件 {plugin_ins.name} 版本: {_v0}.{_v1}.{_v2} 作者：{plugin_ins.author}"
+            f"成功载入插件 {plugin.name} 版本: {_v0}.{_v1}.{_v2} 作者：{plugin.author}"
         )
         plugin_group.normal_plugin_loaded_num += 1
         if plugin_group.plugin_added_cache["packets"] != []:
             for pktType, func in plugin_group.plugin_added_cache["packets"]:
-                ins_func = getattr(plugin_ins, func.__name__)
+                ins_func = getattr(plugin, func.__name__)
                 if ins_func is None:
                     raise NotValidPluginError("数据包监听不能在主插件类以外定义")
                 plugin_group._add_listen_packet_id(pktType)
@@ -198,15 +198,15 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
                     pktType, ins_func
                 )
         if __caches__["api_name"] != "":
-            plugin_group.plugins_api[__caches__["api_name"]] = plugin_ins
+            plugin_group.plugins_api[__caches__["api_name"]] = plugin
         if plugin_group.broadcast_evts_cache != {}:
             for evt, funcs in plugin_group.broadcast_evts_cache.items():
                 for func in funcs:
-                    ins_func = getattr(plugin_ins, func.__name__)
+                    ins_func = getattr(plugin, func.__name__)
                     if ins_func is None:
                         raise NotValidPluginError("广播事件监听不能在主插件类以外定义")
                     plugin_group._add_broadcast_evt(evt, ins_func)
-        return plugin_ins
+        return plugin
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")
         raise SystemExit from err
@@ -237,3 +237,6 @@ def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
     except Exception as err:
         Print.print_err(f"zipfile: 解压失败: {err}")
         raise EOFError("解压失败") from err
+
+def _init_frame(frame: "Frame"):
+    __caches__["frame"] = frame

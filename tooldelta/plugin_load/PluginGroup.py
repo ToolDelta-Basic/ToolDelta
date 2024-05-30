@@ -7,7 +7,9 @@ from ..color_print import Print
 from .classic_plugin import (
     Plugin,
     add_plugin,
-    add_plugin_as_api
+    add_plugin_as_api,
+    _init_frame,
+    _PLUGIN_CLS_TYPE
 )
 from ..utils import Utils
 from .injected_plugin import (
@@ -33,7 +35,7 @@ from .utils import set_frame as _set_frame
 from .injected_plugin.movent import set_frame as _set_frame_inj
 
 if TYPE_CHECKING:
-    from ..frame import Frame, GameCtrl
+    from ..frame import Frame
 
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
@@ -70,6 +72,33 @@ class PluginGroup:
     add_plugin = staticmethod(add_plugin)
 
     add_plugin_as_api = staticmethod(add_plugin_as_api)
+
+    def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
+        """
+        对外源导入 (import) 的API插件类进行类型实例化。
+        可以使得你所使用的 IDE 对导入的插件API类进行识别和高亮其所含方法。
+
+        Args:
+            api_cls (type[_PLUGIN_CLS_TYPE]): 导入的API插件类
+
+        Raises:
+            ValueError: API插件类未被注册
+
+        Returns:
+            _PLUGIN_CLS_TYPE: API插件实例
+
+        使用方法如下:
+        ```
+            p_api = plugins.get_plugin_api("...")
+            from outer_api import api_cls_xx
+            p_api = plugins.instant_plugin_api(api_cls_xx)
+        ```
+        """
+        for v in self.plugins_api.values():
+            if isinstance(v, api_cls):
+                return v
+        raise ValueError(f"无法找到API插件类 {api_cls.__name__}, 有可能是还没有注册")
+
 
     def add_packet_listener(self, pktID: int | list[int]):
         """
@@ -203,6 +232,7 @@ class PluginGroup:
         self.linked_frame = frame
         _set_frame(frame)
         _set_frame_inj(frame)
+        _init_frame(frame)
 
     def read_all_plugins(self) -> None:
         """读取所有插件

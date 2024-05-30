@@ -38,9 +38,12 @@ def githubdownloadurl_to_rawurl(url: str) -> str:
         str: 原始链接
     """
     try:
-        if url.startswith("https://github.com/"):return requests.head(url, allow_redirects=True).url
-        else:return url
-    except:return url
+        if url.startswith("https://github.com/"):
+            return requests.head(url, allow_redirects=True).url
+        else:
+            return url
+    except:
+        return url
 
 def progress_bar(
     current: float | int, total: float | int, length: int | float = 20, color1: str = "§f", color2: str = "§b"
