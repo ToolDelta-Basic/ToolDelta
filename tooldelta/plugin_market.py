@@ -319,10 +319,11 @@ class PluginMarket:
         if with_pres:
             for plugin_id in plugin_data.pre_plugins:
                 plugin_name = self.plugin_id_name_map[plugin_id]
-                Print.clean_print(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
+                Print.clean_print(f"§6正在下载 §f{plugin_data.name}§6 的前置插件 §f{plugin_name}")
                 plugin_datas = self.get_plugin_data_from_market(plugin_id)
                 pres += self.download_plugin(plugin_datas)
         cache_dir = tempfile.mkdtemp()
+        Print.clean_print(f"§6正在下载插件 §f{plugin_data.name}§6.." + " "*15, end="\r")
         try:
             for paths in download_paths:
                 if not paths.strip():
@@ -367,7 +368,7 @@ class PluginMarket:
             from .plugin_manager import plugin_manager
             plugin_manager.push_plugin_reg_data(
                 self.get_plugin_data_from_market(plugin_data.plugin_id))
-            Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹")
+            Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹" + " "*15)
         finally:
             shutil.rmtree(cache_dir)
         return pres

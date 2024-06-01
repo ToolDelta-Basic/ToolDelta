@@ -62,7 +62,7 @@ class PluginManager:
             else:
                 res = self.search_plugin(r, plugins)
                 if res is None:
-                    input()
+                    input("[Enter键继续..]")
                 else:
                     self.plugin_operation(res)
             clear_screen()
@@ -98,7 +98,7 @@ class PluginManager:
                 )
                 Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
                 self.pop_plugin_reg_data(plugin)
-                input()
+                input("[Enter键继续..]")
                 return
             case "2":
                 latest_version = market.get_latest_plugin_version(
@@ -179,6 +179,7 @@ class PluginManager:
         Args:
             plugin (PluginRegData): 插件注册信息, 新旧皆可
         """
+        Print.clean_print(f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r")
         _, old_plugins = self.get_plugin_reg_name_dict_and_datas()
         new_plugin_datas = market.get_plugin_data_from_market(plugin.plugin_id)
         new_plugins = market.download_plugin(new_plugin_datas, False)

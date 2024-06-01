@@ -154,7 +154,7 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
 
 
 def download_file_singlethreaded(
-    url: str, save_dir: str, ignore_warnings: bool = False
+    url: str, save_dir: str
 ) -> None:
     """下载单个文件
 
@@ -166,8 +166,6 @@ def download_file_singlethreaded(
     with requests.get(url, stream=True, timeout=10) as res:
         res.raise_for_status()
         filesize = get_file_size(url)
-        if filesize is not None and filesize < 256 and not ignore_warnings:
-            Print.print_war(f"下载 {url} 的文件警告: 文件大小异常，不到 0.25KB")
         chunk_size = 8192
         useSpeed: float = 0
         # nowsize: 当前已下载的字节数
