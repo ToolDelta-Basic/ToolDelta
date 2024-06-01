@@ -183,7 +183,7 @@ class Cfg:
         """
         return os.path.isfile(path if path.endswith(".json") else path + ".json")
 
-    def getPluginConfigAndVersion(
+    def get_plugin_config_and_version(
         self,
         pluginName: str,
         standardType: dict,
@@ -217,6 +217,8 @@ class Cfg:
         if len(cfgVers) != 3:
             raise ValueError("配置文件出错: 版本出错")
         return cfgGet["配置项"], cfgVers
+
+    getPluginConfigAndVersion = get_plugin_config_and_version
 
     def check_auto(self, standard: type | dict | JsonList | tuple[type | dict, ...], val: Any, fromkey: str = "?"):
         """检查配置文件(自动类型判断)
@@ -329,7 +331,7 @@ class Cfg:
         Args:
             cfg: 默认的CFG配置文件
         Returns:
-            标准cfg样式, 用于 checkDict
+            标准cfg样式, 用于 check_dict
         """
         if isinstance(cfg, dict):
             res = {}
@@ -355,14 +357,14 @@ class Cfg:
 
     checkDict = check_dict
 
+Config = Cfg()
 
 if __name__ == "__main__":
     # Test Part
     try:
         test_cfg = {"key1": {"b": 2}, "key2": [{"key3": "6"}, 7]}
         std = {"key1": Cfg.UnneccessaryKV("b", int), "key2": Cfg.JsonList(({"key3": str}, int))}
-        Cfg().check_auto(std, test_cfg)
+        Config.check_auto(std, test_cfg)
     except Cfg.ConfigError:
         import traceback
-
         print(traceback.format_exc())

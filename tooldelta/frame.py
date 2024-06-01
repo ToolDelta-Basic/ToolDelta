@@ -28,7 +28,7 @@ from .utils import Utils, safe_close
 from .plugin_load.injected_plugin import safe_jump
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
-from .cfg import Cfg
+from .cfg import Config
 from .logger import publicLogger
 from .game_texts import GameTextsLoader, GameTextsHandle
 from .urlmethod import if_token, fbtokenFix
@@ -43,7 +43,6 @@ from .packets import PacketIDS
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
-Config = Cfg()
 
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
