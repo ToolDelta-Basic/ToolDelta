@@ -50,9 +50,9 @@ def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
     frame.safelyExit()
     if exit_directly:
         for _ in range(2, 0, -1):
-            with Print.lock:Print.print_war(f"{_}秒后强制退出...", end="\r")
+            Print.print_war(f"{_}秒后强制退出...", end="\r")
             time.sleep(1)
-        with Print.lock:Print.print_war("0秒后强制退出...", end="\r")
-        with Print.lock:Print.print_suc("ToolDelta 已退出.")
+        Print.print_war("0秒后强制退出...", end="\r")
+        Print.print_suc("ToolDelta 已退出.")
         os._exit(0)
-    with Print.lock:Print.print_suc("ToolDelta 已退出.")
+    Print.print_suc("ToolDelta 已退出.")

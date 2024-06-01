@@ -97,6 +97,8 @@ class PluginGroup:
         for v in self.plugins_api.values():
             if isinstance(v, api_cls):
                 return v
+            else:
+                print(api_cls, v)
         raise ValueError(f"无法找到API插件类 {api_cls.__name__}, 有可能是还没有注册")
 
 

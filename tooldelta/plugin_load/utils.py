@@ -153,7 +153,7 @@ def getPosXYZ(player, timeout=30) -> tuple[float, float, float]:
     res = getPos(player, timeout=timeout)["position"]
     return res["x"], res["y"], res["z"]
 
-def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int:
+def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     """
     获取计分板分数
     参数:
