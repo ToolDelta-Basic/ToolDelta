@@ -214,7 +214,7 @@ class PluginMarket:
         """从插件市场获取数据
 
         Args:
-            source_url (str | None, optional): 插件市场源, 默认为None,有则替换整体插件市场源
+            source_url (str | None, optional): 插件市场源, 默认为None, 有则替换整体插件市场源
 
         Returns:
             dict: 插件市场数据
@@ -295,28 +295,33 @@ class PluginMarket:
 
     def download_plugin(
         self,
-        plugin_data: PluginRegData
+        plugin_data: PluginRegData,
+        with_pres = True
     ) -> list[PluginRegData]:
-        """下载插件
+        """
+        下载插件
+        注意: 只能传入由 `get_plugin_data_from_market()` 生成的数据
 
         Args:
             plugin_data (PluginRegData): 插件注册数据
+            with_pres (bool): 是否一同下载前置插件
 
         Raises:
             ValueError: 未知插件类型
 
         Returns:
-            list[PluginRegData]: 插件注册数据列表
+            list[PluginRegData]: 本插件和其前置插件的注册数据列表
         """
         if self.plugin_id_name_map is None:
             self.plugin_id_name_map = self.get_plugin_id_name_map()
         pres = [plugin_data]
         download_paths = self.find_dirs(plugin_data)
-        for plugin_id in plugin_data.pre_plugins:
-            plugin_name = self.plugin_id_name_map[plugin_id]
-            Print.clean_print(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
-            plugin_datas = self.get_plugin_data_from_market(plugin_id)
-            pres += self.download_plugin(plugin_datas)
+        if with_pres:
+            for plugin_id in plugin_data.pre_plugins:
+                plugin_name = self.plugin_id_name_map[plugin_id]
+                Print.clean_print(f"正在下载 {plugin_data.name} 的前置插件 {plugin_name}")
+                plugin_datas = self.get_plugin_data_from_market(plugin_id)
+                pres += self.download_plugin(plugin_datas)
         cache_dir = tempfile.mkdtemp()
         try:
             for paths in download_paths:

@@ -1,13 +1,12 @@
 """配置文件模块"""
 
 import os
-from typing import Any
+from typing import Any, Union
 import ujson
 
 NoneType = type(None)
 
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
-
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
 
 def cfg_isinstance_single(obj, typ: type) -> bool:
@@ -75,15 +74,6 @@ def _CfgShowType(typ: Any) -> str:
 
 class Cfg:
     """配置文件模块"""
-    class Group:
-        """配置文件的键组合, 用于检测多个键中的一个是否存在"""
-
-        def __init__(self, *keys):
-            self.members = keys
-
-        def __repr__(self) -> str:
-            return 'Cfg.Group("' + '", "'.join(self.members) + '")'
-
     class ConfigError(Exception):
         "配置文件错误"
 
@@ -96,9 +86,9 @@ class Cfg:
     class UnneccessaryKV:
         "配置文件的不必要的键"
 
-        def __init__(self, key, valtype):
+        def __init__(self, key: str, val_type):
             self.key = key
-            self.type = valtype
+            self.type = val_type
 
     class JsonList:
         "配置文件的列表类型"
@@ -107,10 +97,7 @@ class Cfg:
             self.patt = patt
             self.len_limit = len_limit
 
-        #def __repr__(self) -> str:
-        #    return f"JsonList(type=({', '.join(i.__name__ for i in self.patt)}), limit={self.len_limit})"
-
-    class AnyKey:
+    class AnyKeyValue:
         "配置文件的任意键名键值对类型"
         def __init__(self, val_type: type | tuple[type]):
             self.type = val_type
@@ -186,7 +173,7 @@ class Cfg:
     def get_plugin_config_and_version(
         self,
         pluginName: str,
-        standardType: dict,
+        standardType: Any,
         default: dict,
         default_vers: tuple[int, int, int] | list,
     ) -> tuple[dict[str, Any], tuple[int, int, int]]:
@@ -258,14 +245,14 @@ class Cfg:
             else:
                 reason = "\n".join(str(err) for err in errs)
                 raise self.ConfigValueError(f'JSON键 对应的键"{fromkey}" 类型不正确, 以下为可能的原因: \n{reason}')
-        elif isinstance(standard, (dict, Cfg.AnyKey, Cfg.UnneccessaryKV)):
+        elif isinstance(standard, (dict, Cfg.AnyKeyValue, Cfg.UnneccessaryKV)):
             self.check_dict(standard, val, fromkey)
         else:
             raise ValueError(
                 f'JSON键 "{fromkey}" 自动检测的标准类型传入异常: {standard.__class__.__name__}'
             )
 
-    def check_dict(self, pattern: dict | AnyKey | UnneccessaryKV, jsondict: Any, from_key = "?"):
+    def check_dict(self, pattern: dict | AnyKeyValue | UnneccessaryKV, jsondict: Any, from_key = "?"):
         """
         按照给定的标准配置样式比对传入的配置文件jsondict, 对不上则引发相应异常
 
@@ -275,7 +262,7 @@ class Cfg:
         """
         if not isinstance(jsondict, dict):
             raise ValueError(f'json键"{from_key}" 需要json对象, 而不是 {_CfgShowType(jsondict)}')
-        if isinstance(pattern, Cfg.AnyKey):
+        if isinstance(pattern, Cfg.AnyKeyValue):
             for key, val in jsondict.items():
                 self.check_auto(pattern.type, val, key)
         elif isinstance(pattern, Cfg.UnneccessaryKV):
@@ -284,17 +271,10 @@ class Cfg:
                 self.check_auto(pattern.type, val_get, pattern.key)
         else:
             for key, std_val in pattern.items():
-                if isinstance(key, self.Group):
-                    # 为键组, 至少需要拥有该键组中的任意一个键
-                    for member_key in key.members:
-                        val_get = jsondict.get(member_key, Cfg.FindNone)
-                        if val_get != Cfg.FindNone:
-                            self.check_auto(std_val, val_get, member_key)
-                else:
-                    val_get = jsondict.get(key, Cfg.FindNone)
-                    if val_get == Cfg.FindNone:
-                        raise self.ConfigKeyError(f"不存在的JSON键: {key}")
-                    self.check_auto(std_val, val_get, key)
+                val_get = jsondict.get(key, Cfg.FindNone)
+                if val_get == Cfg.FindNone:
+                    raise self.ConfigKeyError(f"不存在的JSON键: {key}")
+                self.check_auto(std_val, val_get, key)
 
     def check_list(self, pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
         """检查列表

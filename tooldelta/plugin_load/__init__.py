@@ -1,7 +1,13 @@
 "插件加载主模块"
 
+import os
 from typing import Any
-
+from tooldelta.constants import (
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_INJECTED_PLUGIN,
+    TOOLDELTA_PLUGIN_DIR
+)
+TYPE_CHECKING = 0
 
 def NON_FUNC(*_) -> None:
     "空函数"
@@ -64,6 +70,14 @@ class PluginRegData:
             self.is_enabled = plugin_data["enabled"]
         else:
             self.is_enabled = is_enabled
+
+    @property
+    def dir(self):
+        return os.path.join(
+            TOOLDELTA_PLUGIN_DIR,
+            {"classic": TOOLDELTA_CLASSIC_PLUGIN, "injected": TOOLDELTA_INJECTED_PLUGIN}[self.plugin_type],
+            self.name
+        )
 
     def dump(self) -> dict[str, Any]:
         "转储数据"

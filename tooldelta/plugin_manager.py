@@ -144,7 +144,7 @@ class PluginManager:
         """更新全部插件
 
         Args:
-            plugins (list[&quot;PluginRegData&quot;]): 插件注册信息列表
+            plugins (list[PluginRegData]): 插件注册信息列表
         """
         market_datas = market.get_datas_from_market()["MarketPlugins"]
         need_updates: list[tuple[PluginRegData, str]] = []
@@ -164,13 +164,28 @@ class PluginManager:
                 "§f输入§a y §f开始更新, §c n §f取消: ")).strip().lower()
             if r == "y":
                 for plugin, v in need_updates:
-                    market.download_plugin(plugin)
+                    self.update_plugin_from_market(plugin)
                 Print.clean_print("§a全部插件已更新完成")
             else:
                 Print.clean_print("§6已取消插件更新.")
             input("[Enter键继续...]")
         else:
             input(Print.clean_fmt("§a无可更新的插件. [Enter键继续]"))
+
+    def update_plugin_from_market(self, plugin: PluginRegData):
+        """
+        更新单个插件, 并且删除旧目录
+
+        Args:
+            plugin (PluginRegData): 插件注册信息, 新旧皆可
+        """
+        _, old_plugins = self.get_plugin_reg_name_dict_and_datas()
+        new_plugin_datas = market.get_plugin_data_from_market(plugin.plugin_id)
+        new_plugins = market.download_plugin(new_plugin_datas, False)
+        for new_plugin in new_plugins:
+            for old_plugin in old_plugins:
+                if new_plugin.plugin_id == old_plugin.plugin_id and new_plugin.name != old_plugin.name:
+                    shutil.rmtree(old_plugin.dir)
 
     def search_plugin(self, resp, plugins) -> Optional[PluginRegData]:
         """搜索插件
@@ -179,7 +194,7 @@ class PluginManager:
             None: 未找到插件
             PluginRegData: 插件注册信息
         """
-        res = self.search_plugin_by_kw(resp.split(" "), plugins)
+        res = self.search_plugin_by_kw(resp.split(), plugins)
         if not res:
             Print.clean_print("§c没有任何已安装插件匹配得上关键词")
             return None
@@ -302,7 +317,7 @@ class PluginManager:
         JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
 
     def get_plugin_reg_name_dict_and_datas(self) -> tuple[dict[str, list[str]], list[PluginRegData]]:
-        """获取插件注册表的插件名字字典和插件注册信息列表
+        """获取插件注册表的插件名字字典(插件类型:插件名列表)和插件注册信息列表
 
         Raises:
             ValueError: 插件注册表数据类型错误
@@ -340,7 +355,7 @@ class PluginManager:
         return r0, res
 
     def get_2_compare_plugins_reg(self) -> list[PluginRegData]:
-        """获取用于比较的插件注册信息列表, 比较已注册与未注册插件
+        """获取全插件注册信息列表, 比较已注册与未注册插件
 
         Returns:
             list[PluginRegData]: 插件注册信息列表
@@ -398,20 +413,6 @@ class PluginManager:
                                   "§f" + Print.align(rgts[i]))
             else:
                 Print.clean_print("§f" + Print.align(t, 35))
-
-    @staticmethod
-    def test_name_same(name: str, dirname: str) -> None:
-        """测试插件名与文件夹名是否一致
-
-        Args:
-            name (str): 插件名
-            dirname (str): 文件夹名
-
-        Raises:
-            AssertionError: 插件名与文件夹名不一致
-        """
-        if name != dirname:
-            raise AssertionError(f"插件名: {name} 与文件夹名({dirname}) 不一致") from None
 
     def list_plugins_list(self) -> list[PluginRegData]:
         """列出插件列表
