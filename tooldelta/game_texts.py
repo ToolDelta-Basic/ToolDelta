@@ -92,7 +92,7 @@ class GameTextsLoader:
         try:
             all_values: Dict[str, str] = {}
             for file_path in glob(
-                os.path.join(self.base_path, "src", "**", "*.py"), recursive=True
+                pathname=os.path.join(self.base_path, "src", "**", "*.py"), recursive=True
             ):
                 module_name: str = os.path.basename(
                     file_path).replace(".py", "")
