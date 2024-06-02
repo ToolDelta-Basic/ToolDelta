@@ -13,7 +13,8 @@ from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 
 # 使用方法 mirror_github[value: int].format(url: str)
-mirror_github = ["https://hub.gitmirror.com/{}", "https://gh.con.sh/{}", "https://mirror.ghproxy.com/{}"]
+mirror_github = ["https://tdload.tblstudio.cn/{}", "https://hub.gitmirror.com/{}",
+                 "https://gh.con.sh/{}", "https://mirror.ghproxy.com/{}"]
 
 def format_mirror_url(url: str) -> list:
     """填充url到镜像url列表
@@ -281,7 +282,7 @@ def check_update() -> None:
     """检查更新"""
     try:
         latest_version: str = requests.get(
-            "https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest", timeout=5).json()["tag_name"]
+            "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest", timeout=5).json()["tag_name"]
         current_version = ".".join(
             map(str, get_tool_delta_version()[:3]))
 
