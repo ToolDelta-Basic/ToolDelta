@@ -136,16 +136,19 @@ def auto_move_plugin_dir(fdname: str):
     Args:
         fdname (str): 插件文件夹名
     """
-    data_path = os.path.join(TOOLDELTA_PLUGIN_DIR, fdname, "data.json")
-    if os.path.isdir(data_path):
-        with open(data_path, "r", encoding="utf-8") as f:
-            plugin_data_json = json.load((f))
-            p_type = plugin_data_json["plugin-type"]
-            if p_type not in PLUGIN_TYPE_MAPPING.keys():
-                Print.print_war(f"无法识别插件 {fdname} 的类型, 跳过")
-                return
+    data_path = os.path.join(TOOLDELTA_PLUGIN_DIR, fdname, "datas.json")
+    if os.path.isfile(data_path):
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                plugin_data_json = json.load((f))
+                p_type = plugin_data_json["plugin-type"]
+                if p_type not in PLUGIN_TYPE_MAPPING.keys():
+                    Print.print_war(f"无法识别插件 {fdname} 的类型, 跳过")
+                    return
             shutil.move(
                 os.path.join(TOOLDELTA_PLUGIN_DIR, fdname),
                 os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[p_type])
             )
-        Print.print_suc(f"已将插件 {fdname} 移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内")
+            Print.print_suc(f"已将插件 {fdname} 智能移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内")
+        except Exception as err:
+            Print.print_err(f"智能移动插件文件夹 {fdname} 出错: {err}")
