@@ -9,7 +9,8 @@ NoneType = type(None)
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
 
-def cfg_isinstance_single(obj, typ: type) -> bool:
+
+def cfg_isinstance_single(obj: Any, typ: type) -> bool:
     if not isinstance(typ, type):
         raise TypeError(f"cfg_isinstance arg 1 must be a type, not {typ}")
     return {
@@ -21,6 +22,7 @@ def cfg_isinstance_single(obj, typ: type) -> bool:
         Cfg.NNNumber: lambda: isinstance(obj, (int, float)) and obj >= 0,
         int: lambda: type(obj) == int
     }.get(typ, lambda: isinstance(obj, typ))()
+
 
 def cfg_isinstance(obj: Any, typ: type | tuple[type]):
     """
@@ -72,6 +74,7 @@ def _CfgShowType(typ: Any) -> str:
         NoneType: "null",
     }.get(typ, typ.__name__)
 
+
 class Cfg:
     """配置文件模块"""
     class ConfigError(Exception):
@@ -86,19 +89,20 @@ class Cfg:
     class UnneccessaryKV:
         "配置文件的不必要的键"
 
-        def __init__(self, key: str, val_type):
+        def __init__(self, key: str, val_type: Any):
             self.key = key
             self.type = val_type
 
     class JsonList:
         "配置文件的列表类型"
 
-        def __init__(self, patt: type | dict | tuple[type | dict, ...], len_limit = -1):
+        def __init__(self, patt: type | dict | tuple[type | dict, ...], len_limit=-1):
             self.patt = patt
             self.len_limit = len_limit
 
     class AnyKeyValue:
         "配置文件的任意键名键值对类型"
+
         def __init__(self, val_type: type | tuple[type]):
             self.type = val_type
 
@@ -244,7 +248,8 @@ class Cfg:
                     errs.append(err)
             else:
                 reason = "\n".join(str(err) for err in errs)
-                raise self.ConfigValueError(f'JSON键 对应的键"{fromkey}" 类型不正确, 以下为可能的原因: \n{reason}')
+                raise self.ConfigValueError(
+                    f'JSON键 对应的键"{fromkey}" 类型不正确, 以下为可能的原因: \n{reason}')
         elif isinstance(standard, (dict, Cfg.AnyKeyValue, Cfg.UnneccessaryKV)):
             self.check_dict(standard, val, fromkey)
         else:
@@ -252,7 +257,7 @@ class Cfg:
                 f'JSON键 "{fromkey}" 自动检测的标准类型传入异常: {standard.__class__.__name__}'
             )
 
-    def check_dict(self, pattern: dict | AnyKeyValue | UnneccessaryKV, jsondict: Any, from_key = "?"):
+    def check_dict(self, pattern: dict | AnyKeyValue | UnneccessaryKV, jsondict: Any, from_key="?"):
         """
         按照给定的标准配置样式比对传入的配置文件jsondict, 对不上则引发相应异常
 
@@ -261,7 +266,8 @@ class Cfg:
             jsondict: 待检测的配置文件dict
         """
         if not isinstance(jsondict, dict):
-            raise ValueError(f'json键"{from_key}" 需要json对象, 而不是 {_CfgShowType(jsondict)}')
+            raise ValueError(
+                f'json键"{from_key}" 需要json对象, 而不是 {_CfgShowType(jsondict)}')
         if isinstance(pattern, Cfg.AnyKeyValue):
             for key, val in jsondict.items():
                 self.check_auto(pattern.type, val, key)
@@ -337,13 +343,15 @@ class Cfg:
 
     checkDict = check_dict
 
+
 Config = Cfg()
 
 if __name__ == "__main__":
     # Test Part
     try:
         test_cfg = {"key1": {"b": 2}, "key2": [{"key3": "6"}, 7]}
-        std = {"key1": Cfg.UnneccessaryKV("b", int), "key2": Cfg.JsonList(({"key3": str}, int))}
+        std = {"key1": Cfg.UnneccessaryKV(
+            "b", int), "key2": Cfg.JsonList(({"key3": str}, int))}
         Config.check_auto(std, test_cfg)
     except Cfg.ConfigError:
         import traceback
