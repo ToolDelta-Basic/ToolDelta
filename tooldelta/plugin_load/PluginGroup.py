@@ -1,6 +1,5 @@
 "插件加载器框架"
-import asyncio
-import traceback
+import asyncio, os, traceback
 from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
 
 from ..color_print import Print
@@ -29,8 +28,14 @@ from ..plugin_load import (
     NotValidPluginError,
     PluginAPINotFoundError,
     PluginAPIVersionError,
+    auto_move_plugin_dir
 )
-from ..constants import PRG_NAME
+from ..constants import (
+    PRG_NAME,
+    TOOLDELTA_PLUGIN_DIR,
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_INJECTED_PLUGIN
+)
 from .utils import set_frame as _set_frame
 from .injected_plugin.movent import set_frame as _set_frame_inj
 
@@ -241,7 +246,10 @@ class PluginGroup:
             SystemExit: 读取插件出现问题
         """
         if self.linked_frame is None or self.linked_frame.on_plugin_err is None:
-            raise ValueError("无法读取插件，请确保已经加载了ToolDelta系统组件")
+            raise ValueError("无法读取插件，请确保系统已初始化")
+        for fdir in os.listdir(TOOLDELTA_PLUGIN_DIR):
+            if fdir not in (TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN):
+                auto_move_plugin_dir(fdir)
         try:
             classic_plugin.read_plugins(self)
             self.execute_def(self.linked_frame.on_plugin_err)

@@ -1,12 +1,15 @@
 "插件加载主模块"
 
-import os
+import os, json, shutil
 from typing import Any
 from tooldelta.constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
-    TOOLDELTA_PLUGIN_DIR
+    TOOLDELTA_PLUGIN_DIR,
+    PLUGIN_TYPE_MAPPING
 )
+from tooldelta.color_print import Print
+
 TYPE_CHECKING = 0
 
 def NON_FUNC(*_) -> None:
@@ -124,3 +127,25 @@ def plugin_is_enabled(pname: str) -> bool:
         bool: 是否启用
     """
     return not pname.endswith("+disabled")
+
+def auto_move_plugin_dir(fdname: str):
+    """
+    自动尝试移动一个总插件文件夹下可能为插件文件夹的文件夹至正确的插件路径
+    move "插件文件/{plugin_dir}" -> "插件文件/{plugin_type}/{plugin_dir}
+
+    Args:
+        fdname (str): 插件文件夹名
+    """
+    data_path = os.path.join(TOOLDELTA_PLUGIN_DIR, fdname, "data.json")
+    if os.path.isdir(data_path):
+        with open(data_path, "r", encoding="utf-8") as f:
+            plugin_data_json = json.load((f))
+            p_type = plugin_data_json["plugin-type"]
+            if p_type not in PLUGIN_TYPE_MAPPING.keys():
+                Print.print_war(f"无法识别插件 {fdname} 的类型, 跳过")
+                return
+            shutil.move(
+                os.path.join(TOOLDELTA_PLUGIN_DIR, fdname),
+                os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[p_type])
+            )
+        Print.print_suc(f"已将插件 {fdname} 移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内")
