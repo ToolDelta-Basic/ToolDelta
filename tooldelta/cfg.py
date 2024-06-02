@@ -19,7 +19,7 @@ def cfg_isinstance_single(obj, typ: type) -> bool:
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
         Cfg.PNumber: lambda: isinstance(obj, (int, float)) and obj > 0,
         Cfg.NNNumber: lambda: isinstance(obj, (int, float)) and obj >= 0,
-        int: lambda: obj not in (True, False) and isinstance(obj, int)
+        int: lambda: type(obj) == int
     }.get(typ, lambda: isinstance(obj, typ))()
 
 def cfg_isinstance(obj: Any, typ: type | tuple[type]):

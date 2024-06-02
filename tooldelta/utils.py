@@ -97,7 +97,7 @@ class Utils:
                 thread_id, ctypes.py_object(SystemExit))
             if res > 1:
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-                Print.print_err("§c终止线程失败")
+                Print.print_err(f"§c终止线程 {self.name} 失败")
 
     createThread = ClassicThread
 
@@ -396,9 +396,6 @@ class Utils:
                     **kwargs
                 )
         return thread_fun
-
-    run_as_new_thread = thread_func
-    new_thread = thread_func
 
     @staticmethod
     def try_int(arg: Any) -> Optional[int]:

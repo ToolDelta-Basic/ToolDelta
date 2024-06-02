@@ -111,6 +111,8 @@ class Frame:
                 Print.print_war("配置文件未升级, 已自动升级, 请重启 ToolDelta")
             else:
                 Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
+                import traceback
+                traceback.print_exc()
             raise SystemExit from err
         if self.serverNumber == 0:
             while 1:
@@ -418,10 +420,12 @@ class Frame:
                 else:
                     mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(result.as_dict["OutputMessages"])
                     if not result.SuccessCount:
-                        print_str = "指令执行失败: " + " ".join(mjon); Print.print_war(print_str)
+                        print_str = "指令执行失败: " + " ".join(mjon)
+                        Print.print_war(print_str)
                         Print.print_war(result.as_dict["OutputMessages"])
                     else:
-                        print_str = "指令执行成功: " + " ".join(mjon); Print.print_suc(print_str)
+                        print_str = "指令执行成功: " + " ".join(mjon)
+                        Print.print_suc(print_str)
                         Print.print_suc(result.as_dict["OutputMessages"])
 
             except IndexError as exec_err:
@@ -599,21 +603,22 @@ class GameCtrl:
     def set_listen_packets(self) -> None:
         """
         向启动器初始化监听的游戏数据包
-
-        不应该再次调用此方法
+        仅限内部调用
         """
         for pktID in self.require_listen_packets:
             self.launcher.add_listen_packets(pktID)
 
     def add_listen_pkt(self, pkt: int) -> None:
-        """添加监听的数据包
+        """
+        添加监听的数据包
+        仅限内部调用
 
         Args:
             pkt (int): 数据包ID
         """
         self.require_listen_packets.add(pkt)
 
-    @Utils.run_as_new_thread
+    @Utils.thread_func
     def packet_handler(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理分发任务函数
 
