@@ -55,7 +55,7 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
     if result:
         result = result[0]
         return result.split(", ")
-    raise ValueError("获取目标失败")
+    return []
 
 def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     """获取目标玩家的位置信息
