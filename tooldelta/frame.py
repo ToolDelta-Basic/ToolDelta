@@ -77,6 +77,7 @@ class Frame:
         self.serverPasswd: str = ""
         self.launchMode: int = 0
         self.consoleMenu = []
+        self.is_docker: bool = os.path.exists('/.dockerenv')
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
         )
