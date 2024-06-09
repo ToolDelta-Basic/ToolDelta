@@ -4,7 +4,7 @@ import signal
 import traceback
 from .color_print import Print
 from .starter import start_tool_delta
-from .frame import Frame
+from .frame import ToolDelta
 from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .sys_args import sys_args_to_dict, print_help
@@ -44,7 +44,7 @@ def client_title() -> None:
             case "3":
                 market.enter_plugin_market()
             case "4":
-                Frame.change_config()
+                ToolDelta.change_config()
             case _:
                 Print.clean_print("§c不合法的模式: " + r)
         os._exit(0)

@@ -33,6 +33,9 @@ from .logger import publicLogger
 from .game_texts import GameTextsLoader, GameTextsHandle
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
+from .packets import (
+    Packet_CommandOutput
+)
 from .launch_cli import (
     FrameNeOmg,
     FrameNeOmgRemote,
@@ -57,7 +60,7 @@ LAUNCHERS: list[
     ),
 ]
 
-class Frame:
+class ToolDelta:
     """ToolDelta主框架"""
 
     class FrameBasic:
@@ -65,7 +68,7 @@ class Frame:
         system_version = VERSION
         data_path = "插件数据文件/"
 
-    class SystemVersionException(ImportError):
+    class SystemVersionException(SystemError):
         """系统版本异常"""
         msg: str
 
@@ -567,7 +570,7 @@ class Frame:
 class GameCtrl:
     """游戏连接和交互部分"""
 
-    def __init__(self, frame: "Frame"):
+    def __init__(self, frame: "ToolDelta"):
         """初始化
 
         Args:
@@ -580,7 +583,7 @@ class GameCtrl:
         self.players_uuid = {}
         self.allplayers = []
         self.bot_name = ""
-        self.linked_frame: Frame
+        self.linked_frame: ToolDelta
         self.pkt_unique_id: int = 0
         self.pkt_cache: list = []
         self.require_listen_packets = {9, 79, 63}
@@ -782,6 +785,10 @@ class GameCtrl:
             Print.print_war("未能获取机器人ID")
         self.sendcmd("/tag @s add robot")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
+
+    def sendcmd_with_resp(self, cmd: str, timeout: int | float = 30) -> Packet_CommandOutput:
+        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout) # type: ignore
+        return resp
 
     def say_to(self, target: str, msg: str) -> None:
         """向玩家发送消息

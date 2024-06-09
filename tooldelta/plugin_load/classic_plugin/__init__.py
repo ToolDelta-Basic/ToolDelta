@@ -13,7 +13,7 @@ from ...constants import TOOLDELTA_CLASSIC_PLUGIN
 
 if TYPE_CHECKING:
     # 类型注释
-    from ...frame import Frame
+    from ...frame import ToolDelta
     from ...plugin_load.PluginGroup import PluginGroup
 
 __caches__ = {
@@ -29,7 +29,7 @@ class Plugin:
     author = "?"
     description = "..."
 
-    def __init__(self, frame: "Frame"):
+    def __init__(self, frame: "ToolDelta"):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
 
@@ -238,5 +238,5 @@ def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
         Print.print_err(f"zipfile: 解压失败: {err}")
         raise EOFError("解压失败") from err
 
-def _init_frame(frame: "Frame"):
+def _init_frame(frame: "ToolDelta"):
     __caches__["frame"] = frame

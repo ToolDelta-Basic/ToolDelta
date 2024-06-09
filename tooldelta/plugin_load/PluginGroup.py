@@ -36,11 +36,11 @@ from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN
 )
-from .utils import set_frame as _set_frame
+from ..game_utils import set_frame as _set_frame
 from .injected_plugin.movent import set_frame as _set_frame_inj
 
 if TYPE_CHECKING:
-    from ..frame import Frame
+    from ..frame import ToolDelta
 
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
@@ -72,7 +72,7 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugins_name = []
-        self.linked_frame: Union["Frame" , None] = None
+        self.linked_frame: Union["ToolDelta" , None] = None
 
     add_plugin = staticmethod(add_plugin)
 
@@ -201,7 +201,7 @@ class PluginGroup:
         """
         if self.linked_frame is not None and need_vers > self.linked_frame.sys_data.system_version:
             raise self.linked_frame.SystemVersionException(
-                f"该组件需要{PRG_NAME}为{'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])}版本"
+                f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本, 请及时更新"
             )
         elif self.linked_frame is None:
 
@@ -232,7 +232,7 @@ class PluginGroup:
         else:
             return None
 
-    def set_frame(self, frame: "Frame") -> None:
+    def set_frame(self, frame: "ToolDelta") -> None:
         "设置关联的系统框架"
         self.linked_frame = frame
         _set_frame(frame)

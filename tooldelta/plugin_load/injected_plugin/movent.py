@@ -3,13 +3,13 @@ import time
 from typing import TYPE_CHECKING, Any, Optional
 from ...color_print import Print
 from ...packets import Packet_CommandOutput
-from ..utils import (
+from ...game_utils import (
     getTarget,
     getPos
 )
 
 if TYPE_CHECKING:
-    from tooldelta.frame import Frame, GameCtrl
+    from tooldelta.frame import ToolDelta, GameCtrl
 
 
 def check_avaliable(sth: "GameCtrl") -> Optional[AttributeError]:
@@ -24,10 +24,10 @@ def check_avaliable(sth: "GameCtrl") -> Optional[AttributeError]:
 
 
 game_control: "GameCtrl"
-movent_frame: "Frame"
+movent_frame: "ToolDelta"
 
 
-def set_frame(my_Frame: "Frame") -> None:
+def set_frame(my_Frame: "ToolDelta") -> None:
     """
     全局初始化框架
 

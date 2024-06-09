@@ -487,7 +487,10 @@ class Utils:
         return res
 
     class ArgsReplacement:
-        """用于替换字符串中的占位符的类"""
+        """
+        用于替换字符串中的占位符的类
+        已弃用, 请改为使用 SimpleFmt.
+        """
 
         def __init__(self, kw: Dict[str, Any]):
             self.kw = kw

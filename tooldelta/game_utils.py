@@ -1,8 +1,16 @@
-"实用函数"
-import zipfile
+"""
+游戏交互实用方法
+
+Methods:
+    getTarget (sth, timeout): 获取符合目标选择器实体的列表
+    getPos (targetNameToGet, timeout): 获取目标玩家的详细位置信息
+    getItem (targetName, itemName, itemSpecialID): 获取玩家背包内指定的物品的数量
+    getPosXYZ (player, timeout=30): 获取玩家的简略坐标值, 并以坐标三元元组返回
+    getScore (scoreboardNameToGet, targetNameToGet): 获取计分板分数
+"""
 from typing import TYPE_CHECKING
-from ..color_print import Print
-from ..packets import Packet_CommandOutput
+from .color_print import Print
+from .packets import Packet_CommandOutput
 
 if TYPE_CHECKING:
     from tooldelta import Frame, GameCtrl
@@ -13,7 +21,7 @@ __all__ = [
     "getTarget",
     "getPos",
     "getItem",
-    "getScore",
+    "getMultiScore",
     "isCmdSuccess"
 ]
 
@@ -44,21 +52,14 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
     check_gamectrl_avali()
     if not sth.startswith("@"):
         raise ValueError("我的世界目标选择器格式错误(getTarget必须使用目标选择器)")
-    result = game_ctrl.sendwscmd(f"/testfor {sth}", True, timeout)
-    if result is None:
-        raise ValueError("获取目标失败")
-    result = (
-        result
-        .OutputMessages[0]
-        .Parameters
-    )
+    result = game_ctrl.sendcmd_with_resp(f"/testfor {sth}", timeout).OutputMessages[0].Parameters
     if result:
         result = result[0]
         return result.split(", ")
     return []
 
 def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
-    """获取目标玩家的位置信息
+    """获取目标玩家的详细位置信息
 
     参数:
         targetNameToGet: 目标玩家的名称
@@ -71,21 +72,16 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     """
     check_gamectrl_avali()
     if targetNameToGet not in game_ctrl.allplayers or targetNameToGet.startswith("@"):
-        raise ValueError(f"Player {targetNameToGet} does not exist.")
-    result = game_ctrl.sendwscmd(
-        f'/querytarget @a[name="{targetNameToGet}"]', True, timeout)
-    if result is None:
-        raise ValueError("Failed to get the position.")
+        raise ValueError(f"玩家 {targetNameToGet} 不存在")
+    result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{targetNameToGet}"]', timeout)
     if not result.OutputMessages[0].Success:
-        raise ValueError(
-            f"Failed to get the position: {result.OutputMessages[0]}")
+        raise ValueError(f"无法获取坐标信息: {result.OutputMessages[0]}")
     parameter = result.OutputMessages[0].Parameters[0]
     if isinstance(parameter, str):
-        raise ValueError("Failed to get the position.")
+        raise ValueError("无法获取坐标信息: " + parameter)
     result = {}
-
     if game_ctrl.players_uuid is None:
-        raise AttributeError("Failed to get the players_uuid.")
+        raise AttributeError("无法获取玩家UUID表")
     targetName = targetNameToGet
     x = (
         parameter[0]["position"]["x"]
@@ -113,7 +109,7 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     if targetNameToGet == "@a":
         return result
     if len(result) != 1:
-        raise ValueError("Failed to get the position.")
+        raise ValueError("获取坐标失败")
     if targetNameToGet.startswith("@a"):
         return list(result.values())[0]
     return result[targetNameToGet]
@@ -132,16 +128,15 @@ def getItem(targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
         and (not targetName.startswith("@a"))
     ):
         raise Exception("未找到目标玩家")
-    result: Packet_CommandOutput = game_ctrl.sendwscmd(
-        f"/clear {targetName} {itemName} {itemSpecialID} 0", True
-    ) # type: ignore
+    result: Packet_CommandOutput = game_ctrl.sendcmd_with_resp(
+        f"/clear {targetName} {itemName} {itemSpecialID} 0")
     if result.OutputMessages[0].Message == "commands.generic.syntax":
         raise Exception("物品ID错误")
     if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
         return 0
     return int(result.OutputMessages[0].Parameters[1])
 
-def getPosXYZ(player, timeout=30) -> tuple[float, float, float]:
+def getPosXYZ(player, timeout: int | float = 30) -> tuple[float, float, float]:
     """
     获取玩家的简略坐标值, 并以坐标三元元组返回
     参数:
@@ -153,9 +148,9 @@ def getPosXYZ(player, timeout=30) -> tuple[float, float, float]:
     res = getPos(player, timeout=timeout)["position"]
     return res["x"], res["y"], res["z"]
 
-def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
+def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     """
-    获取计分板分数
+    获取单个或多个计分板分数项
     参数:
         scoreboardNameToGet: 计分板名
         targetNameToGet: 获取分数的对象/目标选择器
@@ -164,11 +159,9 @@ def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     异常:
         ValueError: 无法获取分数
     """
-    if scoreboardNameToGet == "*":
-        raise ValueError("暂不能使用 * 作为计分板参数")
-    resultList = game_ctrl.sendwscmd(
-        f"/scoreboard players list {targetNameToGet}", True
-    ).OutputMessages # type: ignore
+    resultList = game_ctrl.sendcmd_with_resp(
+        f"/scoreboard players list {targetNameToGet}"
+    ).OutputMessages
     result = {}
     result2 = {}
     for i in resultList:
@@ -199,6 +192,19 @@ def getScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     except KeyError as err:
         raise Exception(f"获取计分板分数失败: {err}")
 
+def getScore(scb_name: str, target: str, timeout = 30) -> int:
+    check_gamectrl_avali()
+    if target == "*" or scb_name == "*":
+        raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
+    resp = game_ctrl.sendcmd_with_resp(f"/scoreboard players test {target} {scb_name} 0 0", timeout).OutputMessages[0]
+    if resp.Message == "commands.scoreboard.objectiveNotFound":
+        raise ValueError(f"计分板 {scb_name} 未找到")
+    elif resp.Message == "commands.scoreboard.players.list.player.empty":
+        raise ValueError(f"计分板项或玩家 {target} 未找到")
+    elif resp.Message == "commands.scoreboard.players.score.notFound":
+        raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
+    return int(resp.Parameters[0])
+
 def isCmdSuccess(cmd: str, timeout=30):
     """
     获取命令执行成功与否的状态
@@ -208,5 +214,5 @@ def isCmdSuccess(cmd: str, timeout=30):
     返回:
         命令执行是否成功: bool
     """
-    res = game_ctrl.sendwscmd(cmd, True, timeout).SuccessCount # type: ignore
+    res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)

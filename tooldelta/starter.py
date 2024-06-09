@@ -5,33 +5,33 @@ import traceback
 from .utils import tmpjson_save_thread
 from .urlmethod import check_update
 from .sys_args import sys_args_to_dict
-from .frame import Frame, GameCtrl
+from .frame import ToolDelta, GameCtrl
 from .color_print import Print
 from .plugin_load.PluginGroup import plugin_group
 from .plugin_load.injected_plugin import movent
 
-frame = Frame()
+tooldelta = ToolDelta()
 
 def start_tool_delta() -> None:
     """启动ToolDelta"""
     try:
-        frame.welcome()
+        tooldelta.welcome()
         if "no-update-check" not in sys_args_to_dict().keys():
             check_update()
         else:
             Print.print_war("将不会进行自动更新.")
-        frame.basic_operation()
-        frame.loadConfiguration()
-        game_control = GameCtrl(frame)
-        frame.set_game_control(game_control)
-        frame.set_plugin_group(plugin_group)
-        plugin_group.set_frame(frame)
+        tooldelta.basic_operation()
+        tooldelta.loadConfiguration()
+        game_control = GameCtrl(tooldelta)
+        tooldelta.set_game_control(game_control)
+        tooldelta.set_plugin_group(plugin_group)
+        plugin_group.set_frame(tooldelta)
         plugin_group.read_all_plugins()
-        frame.plugin_load_finished(plugin_group)
+        tooldelta.plugin_load_finished(plugin_group)
         tmpjson_save_thread()
-        frame.launcher.listen_launched(game_control.Inject)
+        tooldelta.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
-        raise frame.launcher.launch()
+        raise tooldelta.launcher.launch()
     except (KeyboardInterrupt, SystemExit, EOFError):
         pass
     except Exception:
@@ -46,8 +46,8 @@ def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
         exit_directly (bool, optional): 是否三秒强制直接退出
     """
     if out_task:
-        frame.system_exit()
-    frame.safelyExit()
+        tooldelta.system_exit()
+    tooldelta.safelyExit()
     if exit_directly:
         for _ in range(2, 0, -1):
             Print.print_war(f"{_}秒后强制退出...", end="\r")

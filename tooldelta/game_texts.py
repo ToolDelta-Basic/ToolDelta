@@ -179,7 +179,7 @@ class GameTextsHandle:
                                     for i in range(len(param_list)):
                                         if filtered_param in param_list[i]:
                                             param_list[i] = param_list[i].replace(
-                                                f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                                                f"%{filtered_param}", self.Game_Texts.get(filtered_param, "???"))
                             # 格式化消息文本
                             filled_message = original_message.format(
                                 *param_list)
