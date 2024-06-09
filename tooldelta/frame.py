@@ -63,8 +63,6 @@ class Frame:
     class FrameBasic:
         """系统基本信息"""
         system_version = VERSION
-        max_connect_fb_time = 60
-        connect_fb_start_time = time.time()
         data_path = "插件数据文件/"
 
     class SystemVersionException(ImportError):
