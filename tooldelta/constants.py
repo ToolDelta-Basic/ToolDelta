@@ -67,3 +67,5 @@ PLUGIN_TYPE_MAPPING = {
     "classic": TOOLDELTA_CLASSIC_PLUGIN,
     "injected": TOOLDELTA_INJECTED_PLUGIN
 }
+
+TDSPECIFIC_MIRROR = "https://tdload.tblstudio.cn"

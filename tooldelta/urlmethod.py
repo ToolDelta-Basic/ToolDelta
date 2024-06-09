@@ -111,7 +111,7 @@ def is_common_text_file(url_path: str) -> bool:
     """
     return any(
         url_path.endswith(i)
-        for i in [".txt", ".yml", ".md", ".xml", ".py", ".h", ".c", ".pyi", ".json"]
+        for i in [".txt", ".yml", ".md", ".xml", ".html", ".py", ".h", ".c", ".pyi", ".js", ".json"]
     )
 
 
