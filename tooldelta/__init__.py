@@ -15,6 +15,7 @@ from .starter import start_tool_delta, safe_jump
 from .starter import tooldelta
 from .frame import Config, Utils, ToolDelta, GameCtrl
 from .launch_options import client_title
+from .plugin_load import TYPE_CHECKING
 
 # 重定向
 Builtins = Utils
