@@ -296,7 +296,8 @@ class PluginMarket:
     def download_plugin(
         self,
         plugin_data: PluginRegData,
-        with_pres = True
+        with_pres = True,
+        is_enabled = True
     ) -> list[PluginRegData]:
         """
         下载插件
@@ -305,6 +306,7 @@ class PluginMarket:
         Args:
             plugin_data (PluginRegData): 插件注册数据
             with_pres (bool): 是否一同下载前置插件
+            is_enabled (bool): 下载的插件是否要自动禁用
 
         Raises:
             ValueError: 未知插件类型
@@ -327,10 +329,10 @@ class PluginMarket:
         try:
             for paths in download_paths:
                 if not paths.strip():
-                    Print.print_war("下载路径为空，跳过")
+                    # 该路径为空
                     continue
                 url = url_join(self.plugins_download_url, paths)
-                # Determine download path based on plugin type
+                # 按照插件类型选择下载到的文件夹
                 match plugin_data.plugin_type:
                     case "classic":
                         download_path = os.path.join(
@@ -345,7 +347,8 @@ class PluginMarket:
                             f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                         )
                 os.makedirs(os.path.join(
-                    cache_dir, plugin_data.name), exist_ok=True)
+                    cache_dir, plugin_data.name
+                ), exist_ok=True)
                 path_last = path_dir(paths)
                 if path_last is not None:
                     # 自动创建文件夹
@@ -353,7 +356,7 @@ class PluginMarket:
                     os.makedirs(folder_path, exist_ok=True)
                 urlmethod.download_unknown_file(
                     url, os.path.join(cache_dir, paths))
-            # Move downloaded files to target download path
+            # 将缓存文件夹的插件移动到本文件夹
             target_path = download_path
             os.makedirs(target_path, exist_ok=True)
             # 制作所需的目录结构
@@ -365,9 +368,13 @@ class PluginMarket:
                     )
                     os.makedirs(os.path.dirname(target_file), exist_ok=True)
                     shutil.move(source_file, target_file)
+            if not is_enabled:
+                shutil.rmtree(os.path.join(target_path, plugin_data.name + "+disabled"))
+                os.rename(os.path.join(target_path, plugin_data.name), os.path.join(target_path, plugin_data.name + "+disabled"))
             from .plugin_manager import plugin_manager
-            plugin_manager.push_plugin_reg_data(
-                self.get_plugin_data_from_market(plugin_data.plugin_id))
+            plugin_data = self.get_plugin_data_from_market(plugin_data.plugin_id)
+            plugin_data.is_enabled = is_enabled
+            plugin_manager.push_plugin_reg_data(plugin_data)
             Print.clean_print(f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹" + " "*15)
         finally:
             shutil.rmtree(cache_dir)

@@ -23,6 +23,8 @@ if platform.system().lower() == "windows":
 else:
     CLS_CMD = "clear"
 
+PLUGIN_TYPE_DIR_MAP = {"classic": TOOLDELTA_CLASSIC_PLUGIN, "injected": TOOLDELTA_INJECTED_PLUGIN}
+
 
 def clear_screen() -> None:
     "清空屏幕"
@@ -38,27 +40,17 @@ class PluginManager:
     def manage_plugins(self) -> None:
         "插件管理界面"
         clear_screen()
-        np = self.autoRegisterPlugins()
-        if np > 0:
-            Print.clean_print(f"§a已自动注册{np}个未被注册的插件.")
         while 1:
             plugins = self.list_plugins_list()
             Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
-            Print.clean_print("§f输入§ds§f同步插件注册表信息(在手动安装插件后使用)")
             r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
             r1 = r.strip().lower()
             if r1 == "":
                 continue
-            elif r1 == "s":
-                self.sync_plugin_datas_to_register()
-                Print.clean_print("§a同步插件注册表数据成功.")
-                time.sleep(2)
             elif r1 == "q":
                 return
             elif r1 == "u":
-                self.update_all_plugins(
-                    self.get_plugin_reg_name_dict_and_datas()[1]
-                )
+                self.update_all_plugins(self.get_all_plugin_datas())
             else:
                 res = self.search_plugin(r, plugins)
                 if res is None:
@@ -80,7 +72,7 @@ class PluginManager:
         Print.clean_print(f" - 作者：{plugin.author}")
         Print.clean_print(f" 描述：{description_fixed}")
         Print.clean_print(
-            f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}")
+            f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  §c回车退出")
         f_dirname = {
             "classic": TOOLDELTA_CLASSIC_PLUGIN,
             "injected": TOOLDELTA_INJECTED_PLUGIN
@@ -97,8 +89,7 @@ class PluginManager:
                     plugin_dir + ("+disabled" if not plugin.is_enabled else "")
                 )
                 Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
-                self.pop_plugin_reg_data(plugin)
-                input("[Enter 键继续..]")
+                input("[Enter键继续..]")
                 return
             case "2":
                 latest_version = market.get_latest_plugin_version(
@@ -114,19 +105,16 @@ class PluginManager:
                         "输入§a1§f=立刻更新, §62§f=取消更新: ")).strip()
                     if r == "1":
                         Print.clean_print("§a正在下载新版插件...", end="\r")
-                        market.download_plugin(
-                            plugin)
+                        market.download_plugin(plugin)
                         Print.clean_print("§a插件更新完成, 回车键继续")
-                        plugin.version = tuple(int(i)
-                                               for i in latest_version.split("."))
+                        plugin.version = tuple(int(i) for i in latest_version.split("."))
                     else:
                         Print.clean_print("§6已取消, 回车键返回")
             case "3":
                 if plugin.is_enabled:
                     os.rename(
                         os.path.join("插件文件", f_dirname, plugin.name),
-                        os.path.join("插件文件", f_dirname,
-                                     plugin.name + "+disabled")
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled")
                     )
                 else:
                     os.rename(
@@ -136,7 +124,9 @@ class PluginManager:
                     )
                 plugin.is_enabled = [True, False][plugin.is_enabled]
                 Print.clean_print(
-                    f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}")
+                    f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}§6, 回车键继续")
+            case _:
+                return
         self.push_plugin_reg_data(plugin)
         input()
 
@@ -180,9 +170,9 @@ class PluginManager:
             plugin (PluginRegData): 插件注册信息，新旧皆可
         """
         Print.clean_print(f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r")
-        _, old_plugins = self.get_plugin_reg_name_dict_and_datas()
+        old_plugins = self.get_all_plugin_datas()
         new_plugin_datas = market.get_plugin_data_from_market(plugin.plugin_id)
-        new_plugins = market.download_plugin(new_plugin_datas, False)
+        new_plugins = market.download_plugin(new_plugin_datas, False, plugin.is_enabled)
         for new_plugin in new_plugins:
             for old_plugin in old_plugins:
                 if new_plugin.plugin_id == old_plugin.plugin_id and new_plugin.name != old_plugin.name:
@@ -226,8 +216,8 @@ class PluginManager:
             kw in plugin.name for kw in kws)]
         return res
 
-    def is_registered(self, plugin_name: str) -> bool:
-        """插件是否已注册
+    def is_valid_registered(self, plugin_name: str) -> bool:
+        """插件是否已有效注册
 
         Args:
             plugin_name (str): 插件名
@@ -236,57 +226,33 @@ class PluginManager:
             bool: 是否已注册
         """
         if not self._plugin_datas_cache:
-            _, self._plugin_datas_cache = self.get_plugin_reg_name_dict_and_datas()
+            self._plugin_datas_cache = self.get_all_plugin_datas()
         for i in self._plugin_datas_cache:
             if i.name == plugin_name:
-                return True
-        return False
+                return i.is_registered
+        raise ValueError(f"插件 {plugin_name} 不存在")
 
-    def autoRegisterPlugins(self) -> int:
-        """自动注册插件
+    def get_all_plugin_datas(self) -> list[PluginRegData]:
+        """
+        获取所有插件的注册信息(包括没有正常注册的)
 
         Returns:
-            int: 注册的插件数量
+            list[PluginRegData]: 插件数据表
         """
         dirs = [TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN]
-        any_plugin_registered = 0
-        for f_dir in dirs:
-            for plugin_path in os.listdir(os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir)):
-                datpath = os.path.join(
-                    TOOLDELTA_PLUGIN_DIR, f_dir, plugin_path, "datas.json")
-                if not self.is_registered(plugin_path.replace("+disabled", "")) and os.path.isfile(datpath):
-                    with open(datpath, "r", encoding="utf-8") as f:
-                        jsdata = json.load(f)
-                        self.push_plugin_reg_data(
-                            PluginRegData(plugin_path, jsdata)
-                        )
-                        any_plugin_registered += 1
-        return any_plugin_registered
-
-    def sync_plugin_datas_to_register(self) -> int:
-        """同步插件注册表信息
-
-        Returns:
-            int: 同步的插件数量
-        """
-        dirs = [TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN]
-        all_regs = {"classic": {}, "injected": {}}
-        sync_num = 0
-        for f_dir in dirs:
-            dirs_type = {TOOLDELTA_CLASSIC_PLUGIN: "classic",
-                         TOOLDELTA_INJECTED_PLUGIN: "injected"}[f_dir]
-            for plugin_path in os.listdir(os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir)):
-                datpath = os.path.join(
-                    TOOLDELTA_PLUGIN_DIR, f_dir, plugin_path, "datas.json")
+        plugins = []
+        for plugin_type_dir in dirs:
+            p_dirs = os.path.join(TOOLDELTA_PLUGIN_DIR, plugin_type_dir)
+            for fd in os.listdir(p_dirs):
+                datpath = os.path.join(p_dirs, fd, "datas.json")
+                is_enabled=not fd.endswith("+disabled")
                 if os.path.isfile(datpath):
                     with open(datpath, "r", encoding="utf-8") as f:
                         jsdata = json.load(f)
-                        all_regs[dirs_type][plugin_path] = PluginRegData(
-                            plugin_path, jsdata, is_enabled=not plugin_path.endswith("+disabled")
-                        ).dump()
-                        sync_num += 1
-        JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, all_regs)
-        return sync_num
+                        plugins.append(PluginRegData(fd.replace("+disabled", ""), jsdata, is_enabled=is_enabled))
+                else:
+                    plugins.append(PluginRegData(fd, {}, is_registered=False, is_enabled=is_enabled))
+        return plugins
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData) -> None:
         """将插件注册信息推送到插件注册表
@@ -294,84 +260,22 @@ class PluginManager:
         Args:
             plugin_data (PluginRegData): 插件注册信息
         """
-        r = JsonIO.readFileFrom(
-            "主系统核心数据", self.plugin_reg_data_path, self.default_reg_data
+        end_str = "" if plugin_data.is_enabled else "+disabled"
+        f_dir = os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_DIR_MAP[plugin_data.plugin_type], plugin_data.name + end_str)
+        if not os.path.isdir(f_dir):
+            os.mkdir(f_dir)
+        try:
+            old_dat: dict = JsonIO.SafeJsonLoad(
+                open(os.path.join(f_dir, "datas.json"), "r", encoding="utf-8")
+            ) # type: ignore
+        except:
+            old_dat = {}
+            pass
+        old_dat.update(plugin_data.dump())
+        JsonIO.SafeJsonDump(
+            old_dat,
+            open(os.path.join(f_dir, "datas.json"), "w", encoding="utf-8"),
         )
-        if not isinstance(r, dict):
-            raise ValueError("插件注册表数据类型错误")
-        r[plugin_data.plugin_type][plugin_data.name] = plugin_data.dump()
-        JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
-
-    def pop_plugin_reg_data(self, plugin_data: PluginRegData) -> None:
-        """从插件注册表中删除插件注册信息
-
-        Args:
-            plugin_data (PluginRegData): 插件注册信息
-
-        Raises:
-            ValueError: 插件注册表数据类型错误
-        """
-        r = JsonIO.readFileFrom("主系统核心数据", self.plugin_reg_data_path)
-        if not isinstance(r, dict):
-            raise ValueError("插件注册表数据类型错误")
-        del r[plugin_data.plugin_type][plugin_data.name]
-        JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
-
-    def get_plugin_reg_name_dict_and_datas(self) -> tuple[dict[str, list[str]], list[PluginRegData]]:
-        """获取插件注册表的插件名字字典 (插件类型：插件名列表) 和插件注册信息列表
-
-        Raises:
-            ValueError: 插件注册表数据类型错误
-            ValueError: 获取插件注册表出现问题
-
-        Returns:
-            tuple[dict[str, list[str]], list[PluginRegData]]: 插件名字字典和插件注册信息列表
-        """
-        r0: dict[str, list[str]] = {"classic": [], "injected": []}
-        r = JsonIO.readFileFrom(
-            "主系统核心数据", self.plugin_reg_data_path, self.default_reg_data
-        )
-        if not isinstance(r, dict):
-            raise ValueError("插件注册表数据类型错误")
-        f_dirname = {
-            "classic": TOOLDELTA_CLASSIC_PLUGIN,
-            "injected": TOOLDELTA_INJECTED_PLUGIN
-        }
-        res: list[PluginRegData] = []
-        for _, r1 in r.items():
-            for k, v in r1.items():
-                if not isinstance(k, str) or not isinstance(v, dict):
-                    raise ValueError(
-                        f"获取插件注册表出现问题：类型出错：{k.__class__.__name__}, {v.__class__.__name__}"
-                    )
-                v.update({"name": k})
-                p = PluginRegData(k, v)
-                if (
-                    os.path.exists(os.path.join(
-                        "插件文件", f_dirname[p.plugin_type], p.name))
-                    or os.path.exists(os.path.join("插件文件", f_dirname[p.plugin_type], p.name + "+disabled"))
-                ):
-                    res.append(p)
-                    r0[p.plugin_type].append(p.name)
-        return r0, res
-
-    def get_2_compare_plugins_reg(self) -> list[PluginRegData]:
-        """获取全插件注册信息列表，比较已注册与未注册插件
-
-        Returns:
-            list[PluginRegData]: 插件注册信息列表
-        """
-        f_plugins: list[PluginRegData] = []
-        reg_dict, reg_list = self.get_plugin_reg_name_dict_and_datas()
-        for p, k in {
-            TOOLDELTA_CLASSIC_PLUGIN: "classic",
-            TOOLDELTA_INJECTED_PLUGIN: "injected",
-        }.items():
-            for i in os.listdir(os.path.join("插件文件", p)):
-                if i.replace("+disabled", "") not in reg_dict[k]:
-                    f_plugins.append(PluginRegData(
-                        i, {"plugin-type": k}, False))
-        return f_plugins + reg_list
 
     @staticmethod
     def make_plugin_icon(plugin: PluginRegData) -> str:
@@ -399,7 +303,7 @@ class PluginManager:
             plugins (list[PluginRegData]): 插件注册信息列表
         """
         texts = []
-        for plugin in plugins:
+        for plugin in sorted(plugins, key=lambda x:x.is_registered):
             texts.append(self.make_plugin_icon(plugin))
         lfts = []
         rgts = []
@@ -422,7 +326,7 @@ class PluginManager:
             list[PluginRegData]: 插件注册信息列表
         """
         Print.clean_print("§a☑ §f目前已安装的插件列表:")
-        all_plugins = self.get_2_compare_plugins_reg()
+        all_plugins = self.get_all_plugin_datas()
         self.make_printable_list(all_plugins)
         return all_plugins
 
