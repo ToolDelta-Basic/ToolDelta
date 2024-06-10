@@ -716,7 +716,7 @@ class GameCtrl:
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
-                plugin_grp.execute_player_message(
+                plugin_grp.execute_command(
                     player, msg, self.linked_frame.on_plugin_err
                 )
             case 9:

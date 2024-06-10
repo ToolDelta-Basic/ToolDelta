@@ -184,6 +184,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
             "on_player_message",
             "on_player_death",
             "on_player_leave",
+            "on_command",
             "on_frame_exit"
         ):
             if hasattr(plugin, evt_name):

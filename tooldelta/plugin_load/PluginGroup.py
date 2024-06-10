@@ -1,5 +1,7 @@
 "插件加载器框架"
-import asyncio, os, traceback
+import asyncio
+import os
+import traceback
 from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
 
 from ..color_print import Print
@@ -8,7 +10,7 @@ from .classic_plugin import (
     add_plugin,
     add_plugin_as_api,
     _init_frame,
-    _PLUGIN_CLS_TYPE
+    _PLUGIN_CLS_TYPE,
 )
 from ..utils import Utils
 from .injected_plugin import (
@@ -19,7 +21,8 @@ from .injected_plugin import (
     execute_death_message,
     execute_player_left,
     execute_frame_exit,
-    execute_repeat
+    execute_command_say,
+    execute_repeat,
 )
 from ..plugin_load import (
     classic_plugin,
@@ -28,13 +31,13 @@ from ..plugin_load import (
     NotValidPluginError,
     PluginAPINotFoundError,
     PluginAPIVersionError,
-    auto_move_plugin_dir
+    auto_move_plugin_dir,
 )
 from ..constants import (
     PRG_NAME,
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN
+    TOOLDELTA_INJECTED_PLUGIN,
 )
 from ..game_utils import set_frame as _set_frame
 from .injected_plugin.movent import set_frame as _set_frame_inj
@@ -44,6 +47,7 @@ if TYPE_CHECKING:
 
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
+
 
 class PluginGroup:
     "插件组"
@@ -56,7 +60,8 @@ class PluginGroup:
         "on_player_message": [],
         "on_player_death": [],
         "on_player_leave": [],
-        "on_frame_exit": []
+        "on_command": [],
+        "on_frame_exit": [],
     }
     plugin_added_cache = {"packets": []}
     broadcast_evts_cache = {}
@@ -72,7 +77,7 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugins_name = []
-        self.linked_frame: Union["ToolDelta" , None] = None
+        self.linked_frame: Union["ToolDelta", None] = None
 
     add_plugin = staticmethod(add_plugin)
 
@@ -104,7 +109,6 @@ class PluginGroup:
                 return v
         raise ValueError(f"无法找到API插件类 {api_cls.__name__}, 有可能是还没有注册")
 
-
     def add_packet_listener(self, pktID: int | list[int]):
         """
         添加数据包监听器
@@ -117,6 +121,7 @@ class PluginGroup:
         Returns:
             Callable[[Callable], Callable]: 添加数据包监听器
         """
+
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if isinstance(pktID, int):
                 self.plugin_added_cache["packets"].append((pktID, func))
@@ -146,7 +151,9 @@ class PluginGroup:
         事件1 获取到 收集表 作为返回: ["my name is Super."]
         """
 
-        def deco(func: Callable[[_SUPER_CLS, _TV], bool]) -> Callable[[_SUPER_CLS, _TV], bool]:
+        def deco(
+            func: Callable[[_SUPER_CLS, _TV], bool]
+        ) -> Callable[[_SUPER_CLS, _TV], bool]:
             if self.broadcast_evts_cache.get(evt_name):
                 self.broadcast_evts_cache[evt_name].append(func)
             else:
@@ -199,15 +206,22 @@ class PluginGroup:
         Raises:
             self.linked_frame.SystemVersionException: 该组件需要的ToolDelta系统版本
         """
-        if self.linked_frame is not None and need_vers > self.linked_frame.sys_data.system_version:
+        if (
+            self.linked_frame is not None
+            and need_vers > self.linked_frame.sys_data.system_version
+        ):
             raise self.linked_frame.SystemVersionException(
                 f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本, 请及时更新"
             )
         elif self.linked_frame is None:
 
-            raise ValueError("无法检查ToolDelta系统版本，请确保已经加载了ToolDelta系统组件")
+            raise ValueError(
+                "无法检查ToolDelta系统版本，请确保已经加载了ToolDelta系统组件"
+            )
 
-    def get_plugin_api(self, apiName: str, min_version: tuple | None = None, force = True) -> Any:
+    def get_plugin_api(
+        self, apiName: str, min_version: tuple | None = None, force=True
+    ) -> Any:
         """获取插件API
 
         Args:
@@ -273,7 +287,7 @@ class PluginGroup:
             asyncio.run(injected_plugin.load_plugin_file(plugin_name))
         # 检查是否有on_def成员再执行
         if plugin and hasattr(plugin, "on_def"):
-            plugin.on_def() # type: ignore
+            plugin.on_def()  # type: ignore
         Print.print_suc(f"成功热加载插件: {plugin_name}")
 
     def _add_listen_packet_id(self, packetType: int) -> None:
@@ -314,7 +328,9 @@ class PluginGroup:
         else:
             self._broadcast_listeners[evt] = [func]
 
-    def execute_def(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC) -> None:
+    def execute_def(
+        self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+    ) -> None:
         """执行插件的二次初始化方法
 
         Args:
@@ -338,7 +354,9 @@ class PluginGroup:
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
 
-    def execute_init(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC) -> None:
+    def execute_init(
+        self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+    ) -> None:
         """执行插件的连接游戏后初始化方法
 
         Args:
@@ -385,7 +403,10 @@ class PluginGroup:
         asyncio.run(execute_player_join(player))
 
     def execute_player_message(
-        self, player: str, msg: str, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self,
+        player: str,
+        msg: str,
+        onerr: Callable[[str, Exception, str], None] = NON_FUNC,
     ) -> None:
         """执行玩家消息的方法
 
@@ -440,13 +461,31 @@ class PluginGroup:
                 func(player, killer, msg)
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
-        asyncio.run(
-            execute_death_message(
-                player, killer, msg
-            )
-        )
+        asyncio.run(execute_death_message(player, killer, msg))
 
-    def execute_frame_exit(self, onerr: Callable[[str, Exception, str], None] = NON_FUNC):
+    def execute_command(
+        self,
+        name: str,
+        msg: str,
+        onerr: Callable[[str, Exception, str], None] = NON_FUNC,
+    ) -> None:
+        """执行命令say的方法
+
+        Args:
+            player (str): 玩家
+            cmd (str): 命令
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        for name, func in self.plugins_funcs["on_command"]:
+            try:
+                func(name, msg)
+            except Exception as err:
+                onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_command_say(name, msg))
+
+    def execute_frame_exit(
+        self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+    ):
         """执行框架退出的方法
 
         Args:

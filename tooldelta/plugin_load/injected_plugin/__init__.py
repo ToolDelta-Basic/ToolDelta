@@ -21,6 +21,7 @@ player_prejoin_funcs: dict[Callable, int | None] = {}
 player_join_funcs: dict[Callable, int | None] = {}
 player_left_funcs: dict[Callable, int | None] = {}
 player_death_funcs: dict[Callable, int | None] = {}
+commmand_message_funcs: dict[Callable, int | None] = {}
 repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
@@ -156,6 +157,19 @@ def repeat(retime: int | float = 5) -> Callable:
     return decorator
 
 
+async def command_say(priority: int | None = None) -> Callable:
+    """载入处理命令消息
+
+    Args:
+        name (str): 命令名
+        priority (int | None, optional): 插件优先级
+    """
+    def decorator(func):
+        commmand_message_funcs[func] = priority
+        return func
+
+    return decorator
+
 async def repeat_task(func: Callable, time: int | float) -> None:
     """执行重复任务（执行完等待一段时间再执行）
 
@@ -226,19 +240,26 @@ async def safe_jump():
 main_task: asyncio.Task
 
 
-@ dataclass(order=True)
+@dataclass(order=True)
+class command_message_info:
+    "命令消息信息"
+    name: str
+    message: str
+
+
+@dataclass(order=True)
 class player_name:
     "玩家名字"
     playername: str
 
 
-@ dataclass(order=True)
+@dataclass(order=True)
 class player_message_info(player_name):
     "玩家消息信息"
     message: str
 
 
-@ dataclass(order=True)
+@dataclass(order=True)
 class player_death_info(player_name):
     "玩家死亡信息"
     message: str
@@ -301,6 +322,15 @@ async def execute_player_left(playername: str) -> None:
         playername (str): 玩家名字
     """
     await execute_asyncio_task(player_left_funcs, player_name(playername=playername))
+
+
+async def execute_command_say(name: str, message: str) -> None:
+    """执行命令消息处理函数
+
+    Args:
+        message (str): 消息say
+    """
+    await execute_asyncio_task(commmand_message_funcs, command_message_info(name=name, message=message))
 
 
 async def execute_frame_exit() -> None:
