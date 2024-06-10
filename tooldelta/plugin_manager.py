@@ -13,7 +13,8 @@ from .plugin_load import PluginRegData
 from .constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN
+    TOOLDELTA_INJECTED_PLUGIN,
+    PLUGIN_TYPE_MAPPING
 )
 
 JsonIO = Utils.SimpleJsonDataReader
@@ -22,8 +23,6 @@ if platform.system().lower() == "windows":
     CLS_CMD = "cls"
 else:
     CLS_CMD = "clear"
-
-PLUGIN_TYPE_DIR_MAP = {"classic": TOOLDELTA_CLASSIC_PLUGIN, "injected": TOOLDELTA_INJECTED_PLUGIN}
 
 
 def clear_screen() -> None:
@@ -261,7 +260,7 @@ class PluginManager:
             plugin_data (PluginRegData): 插件注册信息
         """
         end_str = "" if plugin_data.is_enabled else "+disabled"
-        f_dir = os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_DIR_MAP[plugin_data.plugin_type], plugin_data.name + end_str)
+        f_dir = os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[plugin_data.plugin_type], plugin_data.name + end_str)
         if not os.path.isdir(f_dir):
             os.mkdir(f_dir)
         try:
