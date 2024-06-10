@@ -256,11 +256,12 @@ class PluginManager:
             for plugin_path in os.listdir(os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir)):
                 datpath = os.path.join(
                     TOOLDELTA_PLUGIN_DIR, f_dir, plugin_path, "datas.json")
-                if not self.is_registered(dirs_type) and os.path.isfile(datpath):
+                if not self.is_registered(plugin_path.replace("+disabled", "")) and os.path.isfile(datpath):
                     with open(datpath, "r", encoding="utf-8") as f:
                         jsdata = json.load(f)
                         self.push_plugin_reg_data(
-                            PluginRegData(plugin_path, jsdata))
+                            PluginRegData(plugin_path, jsdata)
+                        )
                         any_plugin_registered += 1
         return any_plugin_registered
 
@@ -283,7 +284,8 @@ class PluginManager:
                     with open(datpath, "r", encoding="utf-8") as f:
                         jsdata = json.load(f)
                         all_regs[dirs_type][plugin_path] = PluginRegData(
-                            plugin_path, jsdata).dump()
+                            plugin_path, jsdata, is_enabled=not plugin_path.endswith("+disabled")
+                        ).dump()
                         sync_num += 1
         JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, all_regs)
         return sync_num

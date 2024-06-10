@@ -446,7 +446,7 @@ class Utils:
     def create_dialogue_threading(
         player: str,
         func: Any,
-        exc_cb: Optional[Any] = None,
+        exc_cb: Optional[Callable[[str], None]] = None,
         args: Tuple = (),
         kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:

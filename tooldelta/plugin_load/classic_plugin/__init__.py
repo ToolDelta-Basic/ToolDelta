@@ -9,7 +9,7 @@ from ...color_print import Print
 from ...utils import Utils
 from ...cfg import Cfg
 from ...plugin_load import plugin_is_enabled, NotValidPluginError
-from ...constants import TOOLDELTA_CLASSIC_PLUGIN
+from ...constants import TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_PLUGIN_DATA_DIR
 
 if TYPE_CHECKING:
     # 类型注释
@@ -36,9 +36,12 @@ class Plugin:
     @property
     def data_path(self) -> str:
         "该插件的数据文件夹路径 (调用时直接创建数据文件夹)"
-        path = os.path.join("插件数据文件", self.name)
+        path = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name)
         os.makedirs(path, exist_ok=True)
         return path
+
+    def make_data_path(self):
+        os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
 
 _PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
 
