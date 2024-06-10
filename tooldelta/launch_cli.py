@@ -14,7 +14,7 @@ import tooldelta
 import fcwslib
 
 from tooldelta import constants
-from . import neo_conn
+from .neo_libs import neo_conn
 from .cfg import Cfg
 from .utils import Utils
 from .color_print import Print

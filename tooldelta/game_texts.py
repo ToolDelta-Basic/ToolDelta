@@ -15,6 +15,7 @@ from .urlmethod import download_file_singlethreaded
 from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 from .sys_args import sys_args_to_dict
+from .constants import TDSPECIFIC_MIRROR
 # 关闭警告
 urllib3.disable_warnings()
 warnings.filterwarnings("ignore")
@@ -76,7 +77,7 @@ class GameTextsLoader:
     def download_and_extract(self, version) -> None:
         "下载并解压"
         packets_url: str = (
-            f"https://tdload.tblstudio.cn/https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
+            f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
         )
         archive_path = os.path.join(
             self.base_path, "ToolDelta_Game_Texts.tar.gz")
