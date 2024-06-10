@@ -251,8 +251,6 @@ class PluginManager:
         dirs = [TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN]
         any_plugin_registered = 0
         for f_dir in dirs:
-            dirs_type = {TOOLDELTA_CLASSIC_PLUGIN: "classic",
-                         TOOLDELTA_INJECTED_PLUGIN: "injected"}[f_dir]
             for plugin_path in os.listdir(os.path.join(TOOLDELTA_PLUGIN_DIR, f_dir)):
                 datpath = os.path.join(
                     TOOLDELTA_PLUGIN_DIR, f_dir, plugin_path, "datas.json")
