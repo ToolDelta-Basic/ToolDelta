@@ -4,7 +4,7 @@ ToolDelta基本框架
 整个系统由三个部分组成
     Frame: 负责整个 ToolDelta 的基本框架运行
     GameCtrl: 负责对接游戏
-        - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (TLSP, etc.))
+        - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (BEWS, etc.))
     PluginGroup: 负责对插件进行统一管理
 """
 
@@ -620,7 +620,7 @@ class GameCtrl:
         """
         self.require_listen_packets.add(pkt)
 
-    @Utils.thread_func
+    @Utils.thread_func("数据包处理方法")
     def packet_handler(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理分发任务函数
 

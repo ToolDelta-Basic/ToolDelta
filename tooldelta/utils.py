@@ -36,7 +36,7 @@ class Utils:
     class ThreadExit(SystemExit):
         """线程退出."""
 
-    class ClassicThread(threading.Thread):
+    class ToolDeltaThread(threading.Thread):
         """简化ToolDelta子线程创建的threading.Thread的子类."""
 
         def __init__(self, func: Callable, args: tuple = (), usage="", **kwargs):
@@ -99,7 +99,7 @@ class Utils:
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
                 Print.print_err(f"§c终止线程 {self.name} 失败")
 
-    createThread = ClassicThread
+    createThread = ClassicThread = ToolDeltaThread
 
     class TMPJson:
         """提供了加载、卸载、读取和写入JSON文件到缓存区的方法的类."""

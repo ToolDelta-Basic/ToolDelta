@@ -64,6 +64,9 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         raise NotValidPluginError(
             "调用了多次 @add_plugin"
         )
+    if __caches__["frame"] is None:
+        Print.clean_print("§d正在以直接运行模式运行插件..")
+        return plugin
     plugin_ins = plugin(__caches__["frame"]) # type: ignore
     __caches__["plugin"] = plugin_ins
     return plugin
@@ -81,6 +84,9 @@ def add_plugin_as_api(apiName: str):
             raise NotValidPluginError(
                 "调用了多次 @add_plugin"
             )
+        if __caches__["frame"] is None:
+            Print.clean_print("§d正在以直接运行模式运行插件..")
+            return api_plugin
         plugin_ins = api_plugin(__caches__["frame"]) # type: ignore
         __caches__["plugin"] = plugin_ins
         __caches__["api_name"] = apiName
