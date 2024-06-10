@@ -251,7 +251,7 @@ class PluginManager:
                         jsdata = json.load(f)
                         plugins.append(PluginRegData(fd.replace("+disabled", ""), jsdata, is_enabled=is_enabled))
                 else:
-                    plugins.append(PluginRegData(fd, {}, is_registered=False, is_enabled=is_enabled))
+                    plugins.append(PluginRegData(fd.replace("+disabled", ""), {}, is_registered=False, is_enabled=is_enabled))
         return plugins
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData) -> None:
