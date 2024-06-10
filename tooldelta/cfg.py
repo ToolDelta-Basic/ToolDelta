@@ -26,7 +26,7 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
 
 def cfg_isinstance(obj: Any, typ: type | tuple[type]):
     """
-    专用于Cfg的类型检测
+    专用于 Cfg 的类型检测
 
     Args:
         obj (Any): 待检测对象
@@ -68,7 +68,7 @@ def _CfgShowType(typ: Any) -> str:
         str: "字符串",
         float: "浮点小数",
         int: "整数",
-        dict: "json对象",
+        dict: "json 对象",
         list: "列表",
         bool: "true/false",
         NoneType: "null",
@@ -107,44 +107,44 @@ class Cfg:
             self.type = val_type
 
     class ConfigKeyError(ConfigError):
-        "配置json的键错误"
+        "配置 json 的键错误"
 
     class ConfigValueError(ConfigError):
-        "配置json的值错误"
+        "配置 json 的值错误"
 
     class VersionLowError(ConfigError):
-        "配置json的版本过低的错误"
+        "配置 json 的版本过低的错误"
 
     class PInt(int):
-        "配置文件的值限制: 正整数"
+        "配置文件的值限制：正整数"
 
     class NNInt(int):
-        "配置文件的值限制: 非负整数"
+        "配置文件的值限制：非负整数"
 
     class PFloat(float):
-        "配置文件的值限制: 正浮点小数"
+        "配置文件的值限制：正浮点小数"
 
     class NNFloat(float):
-        "配置文件的值限制: 非负浮点小数"
+        "配置文件的值限制：非负浮点小数"
 
     class PNumber:
-        "配置文件的值限制: 正数"
+        "配置文件的值限制：正数"
 
     class NNNumber:
-        "配置文件的值限制: 大于0的数"
+        "配置文件的值限制：大于 0 的数"
 
     class FindNone:
         "找不到值"
 
     def get_cfg(self, path: str, standard_type: dict):
-        "从path路径获取json文件文本信息, 并按照standard_type给出的标准形式进行检测."
+        "从 path 路径获取 json 文件文本信息，并按照 standard_type 给出的标准形式进行检测。"
         path = path if path.endswith(".json") else path + ".json"
         with open(path, "r", encoding="utf-8") as f:
             try:
                 obj = ujson.load(f)
             except ujson.JSONDecodeError as exc:
                 raise self.ConfigValueError(
-                    "JSON配置文件格式不正确, 请修正或直接删除", None) from exc
+                    "JSON 配置文件格式不正确，请修正或直接删除", None) from exc
         self.check_dict(standard_type, obj)
         return obj
 
@@ -206,13 +206,13 @@ class Cfg:
         cfgGet = self.get_cfg(p, cfg_stdtyp)
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         if len(cfgVers) != 3:
-            raise ValueError("配置文件出错: 版本出错")
+            raise ValueError("配置文件出错：版本出错")
         return cfgGet["配置项"], cfgVers
 
     getPluginConfigAndVersion = get_plugin_config_and_version
 
     def check_auto(self, standard: type | dict | JsonList | tuple[type | dict, ...], val: Any, fromkey: str = "?"):
-        """检查配置文件(自动类型判断)
+        """检查配置文件 (自动类型判断)
 
         Args:
             standard (type, dict, list): 标准
@@ -225,16 +225,16 @@ class Cfg:
         """
 
         if fromkey == Cfg.FindNone:
-            raise ValueError("不允许传入FindNone")
+            raise ValueError("不允许传入 FindNone")
         if isinstance(standard, type):
             if not cfg_isinstance(val, standard):
                 if isinstance(val, dict):
                     raise self.ConfigValueError(
-                        f'JSON键"{fromkey}" 对应值的类型不正确: 需要 {_CfgShowType(standard)}, 实际上为 json对象: {ujson.dumps(val, ensure_ascii=False)}'
+                        f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 json 对象：{ujson.dumps(val, ensure_ascii=False)}'
                     )
                 else:
                     raise self.ConfigValueError(
-                        f'JSON键"{fromkey}" 对应值的类型不正确: 需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}'
+                        f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}'
                     )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
@@ -249,25 +249,25 @@ class Cfg:
             else:
                 reason = "\n".join(str(err) for err in errs)
                 raise self.ConfigValueError(
-                    f'JSON键 对应的键"{fromkey}" 类型不正确, 以下为可能的原因: \n{reason}')
+                    f'JSON 键 对应的键"{fromkey}" 类型不正确，以下为可能的原因：\n{reason}')
         elif isinstance(standard, (dict, Cfg.AnyKeyValue, Cfg.UnneccessaryKV)):
             self.check_dict(standard, val, fromkey)
         else:
             raise ValueError(
-                f'JSON键 "{fromkey}" 自动检测的标准类型传入异常: {standard.__class__.__name__}'
+                f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard.__class__.__name__}'
             )
 
     def check_dict(self, pattern: dict | AnyKeyValue | UnneccessaryKV, jsondict: Any, from_key="?"):
         """
-        按照给定的标准配置样式比对传入的配置文件jsondict, 对不上则引发相应异常
+        按照给定的标准配置样式比对传入的配置文件 jsondict, 对不上则引发相应异常
 
         参数:
-            pattern: 标准样式dict
-            jsondict: 待检测的配置文件dict
+            pattern: 标准样式 dict
+            jsondict: 待检测的配置文件 dict
         """
         if not isinstance(jsondict, dict):
             raise ValueError(
-                f'json键"{from_key}" 需要json对象, 而不是 {_CfgShowType(jsondict)}')
+                f'json 键"{from_key}" 需要 json 对象，而不是 {_CfgShowType(jsondict)}')
         if isinstance(pattern, Cfg.AnyKeyValue):
             for key, val in jsondict.items():
                 self.check_auto(pattern.type, val, key)
@@ -279,7 +279,7 @@ class Cfg:
             for key, std_val in pattern.items():
                 val_get = jsondict.get(key, Cfg.FindNone)
                 if val_get == Cfg.FindNone:
-                    raise self.ConfigKeyError(f"不存在的JSON键: {key}")
+                    raise self.ConfigKeyError(f"不存在的 JSON 键：{key}")
                 self.check_auto(std_val, val_get, key)
 
     def check_list(self, pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
@@ -292,19 +292,19 @@ class Cfg:
 
         Raises:
             ValueError: 不是合法的标准列表检测样式
-            ValueError: 标准检测列表的长度不能为0
-            ConfigValueError: json键值错误
+            ValueError: 标准检测列表的长度不能为 0
+            ConfigValueError: json 键值错误
         """
         if not isinstance(pattern, Cfg.JsonList):
             raise ValueError("不是合法的标准列表检测样式")
         if not isinstance(value, list):
             raise self.ConfigValueError(
-                f'JSON键 "{fromkey}" 需要列表 而不是 {_CfgShowType(value)}'
+                f'JSON 键 "{fromkey}" 需要列表 而不是 {_CfgShowType(value)}'
             )
         if pattern.len_limit != -1:
             if len(value) != pattern.len_limit:
                 raise self.ConfigValueError(
-                    f'JSON键 "{fromkey}" 所对应的值列表有误: 需要 {pattern.len_limit} 项, 实际上为 {len(value)} 项'
+                    f'JSON 键 "{fromkey}" 所对应的值列表有误：需要 {pattern.len_limit} 项，实际上为 {len(value)} 项'
                 )
         for val in value:
             self.check_auto(pattern.patt, val, fromkey)
@@ -312,12 +312,12 @@ class Cfg:
     def auto_to_std(self, cfg):
         """
         自动以默认配置文件生成标准配置文件格式.
-        注意: 不支持固定长度列表以及Cfg.NeccessaryKey与Cfg.Group的自动转换
+        注意：不支持固定长度列表以及 Cfg.NeccessaryKey 与 Cfg.Group 的自动转换
 
         Args:
-            cfg: 默认的CFG配置文件
+            cfg: 默认的 CFG 配置文件
         Returns:
-            标准cfg样式, 用于 check_dict
+            标准 cfg 样式，用于 check_dict
         """
         if isinstance(cfg, dict):
             res = {}

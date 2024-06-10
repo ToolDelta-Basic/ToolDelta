@@ -13,13 +13,13 @@ from .plugin_load.injected_plugin import movent
 tooldelta = ToolDelta()
 
 def start_tool_delta() -> None:
-    """启动ToolDelta"""
+    """启动 ToolDelta"""
     try:
         tooldelta.welcome()
         if "no-update-check" not in sys_args_to_dict().keys():
             check_update()
         else:
-            Print.print_war("将不会进行自动更新.")
+            Print.print_war("将不会进行自动更新。")
         tooldelta.basic_operation()
         tooldelta.loadConfiguration()
         game_control = GameCtrl(tooldelta)
@@ -35,14 +35,14 @@ def start_tool_delta() -> None:
     except (KeyboardInterrupt, SystemExit, EOFError):
         pass
     except Exception:
-        Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
+        Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
 
 
 def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
     """安全退出
 
     Args:
-        out_task (bool, optional): frame框架系统是否退出
+        out_task (bool, optional): frame 框架系统是否退出
         exit_directly (bool, optional): 是否三秒强制直接退出
     """
     if out_task:
@@ -52,7 +52,7 @@ def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
         for _ in range(2, 0, -1):
             Print.print_war(f"{_}秒后强制退出...", end="\r")
             time.sleep(1)
-        Print.print_war("0秒后强制退出...", end="\r")
-        Print.print_suc("ToolDelta 已退出.")
+        Print.print_war("0 秒后强制退出...", end="\r")
+        Print.print_suc("ToolDelta 已退出。")
         os._exit(0)
-    Print.print_suc("ToolDelta 已退出.")
+    Print.print_suc("ToolDelta 已退出。")

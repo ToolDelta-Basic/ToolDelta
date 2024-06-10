@@ -62,7 +62,7 @@ class PluginManager:
             else:
                 res = self.search_plugin(r, plugins)
                 if res is None:
-                    input("[Enter键继续..]")
+                    input("[Enter 键继续..]")
                 else:
                     self.plugin_operation(res)
             clear_screen()
@@ -76,9 +76,9 @@ class PluginManager:
         description_fixed = plugin.description.replace('\n', '\n    ')
         clear_screen()
         Print.clean_print(f"§d插件名: §f{plugin.name}")
-        Print.clean_print(f" - 版本: {plugin.version_str}")
-        Print.clean_print(f" - 作者: {plugin.author}")
-        Print.clean_print(f" 描述: {description_fixed}")
+        Print.clean_print(f" - 版本：{plugin.version_str}")
+        Print.clean_print(f" - 作者：{plugin.author}")
+        Print.clean_print(f" 描述：{description_fixed}")
         Print.clean_print(
             f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}")
         f_dirname = {
@@ -88,7 +88,7 @@ class PluginManager:
         match input(Print.clean_fmt("§f请选择选项: ")):
             case "1":
                 r = input(
-                    Print.clean_fmt("§c删除插件操作不可逆, 请输入y, 其他取消: ")
+                    Print.clean_fmt("§c删除插件操作不可逆, 请输入 y, 其他取消：")
                 ).lower()
                 if r != "y":
                     return
@@ -98,7 +98,7 @@ class PluginManager:
                 )
                 Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
                 self.pop_plugin_reg_data(plugin)
-                input("[Enter键继续..]")
+                input("[Enter 键继续..]")
                 return
             case "2":
                 latest_version = market.get_latest_plugin_version(
@@ -168,16 +168,16 @@ class PluginManager:
                 Print.clean_print("§a全部插件已更新完成")
             else:
                 Print.clean_print("§6已取消插件更新.")
-            input("[Enter键继续...]")
+            input("[Enter 键继续...]")
         else:
-            input(Print.clean_fmt("§a无可更新的插件. [Enter键继续]"))
+            input(Print.clean_fmt("§a无可更新的插件. [Enter 键继续]"))
 
     def update_plugin_from_market(self, plugin: PluginRegData):
         """
-        更新单个插件, 并且删除旧目录
+        更新单个插件，并且删除旧目录
 
         Args:
-            plugin (PluginRegData): 插件注册信息, 新旧皆可
+            plugin (PluginRegData): 插件注册信息，新旧皆可
         """
         Print.clean_print(f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r")
         _, old_plugins = self.get_plugin_reg_name_dict_and_datas()
@@ -318,7 +318,7 @@ class PluginManager:
         JsonIO.writeFileTo("主系统核心数据", self.plugin_reg_data_path, r)
 
     def get_plugin_reg_name_dict_and_datas(self) -> tuple[dict[str, list[str]], list[PluginRegData]]:
-        """获取插件注册表的插件名字字典(插件类型:插件名列表)和插件注册信息列表
+        """获取插件注册表的插件名字字典 (插件类型：插件名列表) 和插件注册信息列表
 
         Raises:
             ValueError: 插件注册表数据类型错误
@@ -342,7 +342,7 @@ class PluginManager:
             for k, v in r1.items():
                 if not isinstance(k, str) or not isinstance(v, dict):
                     raise ValueError(
-                        f"获取插件注册表出现问题: 类型出错: {k.__class__.__name__}, {v.__class__.__name__}"
+                        f"获取插件注册表出现问题：类型出错：{k.__class__.__name__}, {v.__class__.__name__}"
                     )
                 v.update({"name": k})
                 p = PluginRegData(k, v)
@@ -356,7 +356,7 @@ class PluginManager:
         return r0, res
 
     def get_2_compare_plugins_reg(self) -> list[PluginRegData]:
-        """获取全插件注册信息列表, 比较已注册与未注册插件
+        """获取全插件注册信息列表，比较已注册与未注册插件
 
         Returns:
             list[PluginRegData]: 插件注册信息列表

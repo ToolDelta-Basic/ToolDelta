@@ -1,4 +1,4 @@
-"ToolDelta注入式插件"
+"ToolDelta 注入式插件"
 import asyncio
 from dataclasses import dataclass
 import os
@@ -328,7 +328,7 @@ async def execute_command_say(name: str, message: str) -> None:
     """执行命令消息处理函数
 
     Args:
-        message (str): 消息say
+        message (str): 消息 say
     """
     await execute_asyncio_task(commmand_message_funcs, command_message_info(name=name, message=message))
 
@@ -397,10 +397,10 @@ async def load_plugin_file(file: str) -> PluginMetadata:
         return meta_data
     except PluginAPIVersionError as err:
         Print.print_err(
-            f"插件 {file} 加载出现问题: 需要 {err.name} 的API最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")
+            f"插件 {file} 加载出现问题：需要 {err.name} 的 API 最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")
         raise
     except PluginAPINotFoundError as err:
-        Print.print_err(f"插件 {file} 加载出现问题: 需要前置插件API {err.name}")
+        Print.print_err(f"插件 {file} 加载出现问题：需要前置插件 API {err.name}")
         raise
 
 
@@ -432,5 +432,5 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:
         Print.print_suc(
-            f"成功载入插件 {metadata.name} 版本: {metadata.version} 作者: {metadata.author}"
+            f"成功载入插件 {metadata.name} 版本：{metadata.version} 作者：{metadata.author}"
         )

@@ -162,3 +162,5 @@ tooldelta/neo_libs/commit
 *.tmp
 tempCodeRunnerFile.python
 .vscode/launch.json
+.autocorrectignore
+.autocorrectrc

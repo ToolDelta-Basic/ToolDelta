@@ -35,7 +35,7 @@ def client_title() -> None:
             Print.clean_print("2 - §d打开 ToolDelta 插件管理器")
             Print.clean_print("3 - §d打开 ToolDelta 插件市场")
             Print.clean_print("4 - §a修改 ToolDelta 启动配置")
-            r = input("请选择:").strip()
+            r = input("请选择：").strip()
         match r:
             case "1":
                 start_tool_delta()
@@ -51,4 +51,4 @@ def client_title() -> None:
     except EOFError:
         pass
     except Exception:
-        Print.print_err("ToolDelta 运行过程中出现问题: " + traceback.format_exc())
+        Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())

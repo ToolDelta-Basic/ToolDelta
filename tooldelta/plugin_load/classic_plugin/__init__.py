@@ -1,4 +1,4 @@
-"ToolDelta类式插件"
+"ToolDelta 类式插件"
 import importlib
 import os
 import sys
@@ -52,17 +52,17 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         plugin (type[Plugin]): 插件主类
 
     Raises:
-        NotValidPluginError: 插件主类必须继承Plugin类
+        NotValidPluginError: 插件主类必须继承 Plugin 类
 
     Returns:
         type[Plugin]: 插件主类
     """
     try:
         if not Plugin.__subclasscheck__(plugin):
-            raise NotValidPluginError(f"插件主类必须继承Plugin类 而不是 {plugin}")
+            raise NotValidPluginError(f"插件主类必须继承 Plugin 类 而不是 {plugin}")
     except TypeError as exc:
         raise NotValidPluginError(
-            f"插件主类必须继承Plugin类 而不是 {plugin.__class__}") from exc
+            f"插件主类必须继承 Plugin 类 而不是 {plugin.__class__}") from exc
     if __caches__["plugin"] is not None:
         raise NotValidPluginError(
             "调用了多次 @add_plugin"
@@ -75,14 +75,14 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
     return plugin
 
 def add_plugin_as_api(apiName: str):
-    """添加ToolDelta类式插件主类, 同时作为API插件提供接口供其他插件进行使用
+    """添加 ToolDelta 类式插件主类，同时作为 API 插件提供接口供其他插件进行使用
 
     Args:
-        apiName (str): API名
+        apiName (str): API 名
     """
     def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         if not Plugin.__subclasscheck__(api_plugin):
-            raise NotValidPluginError("API插件主类必须继承Plugin类")
+            raise NotValidPluginError("API 插件主类必须继承 Plugin 类")
         if __caches__["plugin"] is not None:
             raise NotValidPluginError(
                 "调用了多次 @add_plugin"
@@ -167,12 +167,12 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         ):
             importlib.import_module(plugin_dirname)
         else:
-            Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件, 跳过加载")
+            Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件，跳过加载")
             return
         plugin_or_none : Plugin | None = __caches__.get("plugin")
         if plugin_or_none is None:
             raise NotValidPluginError(
-                "需要调用1次 @plugins.add_plugin 以注册插件主类, 然而没有调用"
+                "需要调用 1 次 @plugins.add_plugin 以注册插件主类，然而没有调用"
             )
         plugin: Plugin = plugin_or_none
         if plugin.name is None or plugin.name == "":
@@ -195,7 +195,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
                     [plugin.name, getattr(plugin, evt_name)]
                 )
         Print.print_suc(
-            f"成功载入插件 {plugin.name} 版本: {_v0}.{_v1}.{_v2} 作者：{plugin.author}"
+            f"成功载入插件 {plugin.name} 版本：{_v0}.{_v1}.{_v2} 作者：{plugin.author}"
         )
         plugin_group.normal_plugin_loaded_num += 1
         if plugin_group.plugin_added_cache["packets"] != []:
@@ -218,24 +218,24 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
                     plugin_group._add_broadcast_evt(evt, ins_func)
         return plugin
     except NotValidPluginError as err:
-        Print.print_err(f"插件 {plugin_dirname} 不合法: {err.args[0]}")
+        Print.print_err(f"插件 {plugin_dirname} 不合法：{err.args[0]}")
         raise SystemExit from err
     except Cfg.ConfigError as err:
         Print.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
-        Print.print_err("你也可以直接删除配置文件, 重新启动ToolDelta以自动生成配置文件")
+        Print.print_err("你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件")
         raise SystemExit from err
     except Utils.SimpleJsonDataReader.DataReadError as err:
-        Print.print_err(f"插件 {plugin_dirname} 读取数据失败: {err}")
+        Print.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
     except plugin_group.linked_frame.SystemVersionException as err:
-        Print.print_err(f"插件 {plugin_dirname} 需要更高版本的ToolDelta加载: {err}")
+        Print.print_err(f"插件 {plugin_dirname} 需要更高版本的 ToolDelta 加载：{err}")
     except Exception as err:
-        Print.print_err(f"加载插件 {plugin_dirname} 出现问题, 报错如下: ")
+        Print.print_err(f"加载插件 {plugin_dirname} 出现问题，报错如下：")
         Print.print_err("§c" + traceback.format_exc())
         raise SystemExit from err
     return None
 
 def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
-    """解压插件ZIP包
+    """解压插件 ZIP 包
 
     Args:
         zip_dir (str): 压缩文件路径
@@ -245,7 +245,7 @@ def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
         f = zipfile.ZipFile(zip_dir, "r")
         f.extractall(exp_dir)
     except Exception as err:
-        Print.print_err(f"zipfile: 解压失败: {err}")
+        Print.print_err(f"zipfile: 解压失败：{err}")
         raise EOFError("解压失败") from err
 
 def _init_frame(frame: "ToolDelta"):

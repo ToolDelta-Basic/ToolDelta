@@ -331,15 +331,15 @@ class CommandBlockPlaceOption:
 @dataclass
 class CommandBlockNBTData:
     """指代一个命令块的原始 NBT 数据 (ToolDelta 专有实现类)
-    
+
     Args
         Command (str; TAG_String): 命令块所包含的命令，默认为 空字符串
         CustomName (str; TAG_String): 命令方块的悬浮文本，默认为 空字符串
         TickDelay (int; TAG_Int): 命令块使用的延迟，默认为 0
-        ExecuteOnFirstTick (bool; TAG_Byte): 是否在该命令块上使用第一个已选项(仅重复型命令块适用)，默认 启用
+        ExecuteOnFirstTick (bool; TAG_Byte): 是否在该命令块上使用第一个已选项 (仅重复型命令块适用)，默认 启用
         TrackOutput (bool; TAG_Byte): 是否在该命令块上启用命令执行输出，默认 启用
         ConditionalMode (bool; TAG_Byte): 命令块是否是“有条件的”，默认为 无条件
-        Auto (bool; TAG_Byte): 命令块是否自动运行(无需红石控制)，默认为 自动运行(无需红石控制)
+        Auto (bool; TAG_Byte): 命令块是否自动运行 (无需红石控制)，默认为 自动运行 (无需红石控制)
     """
     Command: str = ""
     CustomName: str = ""
@@ -507,7 +507,7 @@ class ThreadOmega:
         self._running_threads: Dict[str, Thread] = {}
         if connect_type == ConnectType.Local:
             StartOmega(address, accountOption)
-            Print.print_inf(f"Omega 接入点已启动, 在 {address} 开放接口")
+            Print.print_inf(f"Omega 接入点已启动，在 {address} 开放接口")
         elif connect_type == ConnectType.Remote:
             ConnectOmega(address)
 

@@ -4,7 +4,7 @@ import time
 
 
 class ToolDeltaLogger:
-    "ToolDelta的日志记录器"
+    "ToolDelta 的日志记录器"
     INFO = "INFO"
     WARNING = "WARNING"
     ERROR = "ERROR"
@@ -27,7 +27,7 @@ class ToolDeltaLogger:
         self.enable_logger = isopen
 
     def open_wrapper_io(self, log_path: str) -> None:
-        "打开IO流"
+        "打开 IO 流"
         self._wrapper = open(
             log_path + os.sep + time.strftime(self.name_fmt) + ".log",
             "a",
@@ -36,7 +36,7 @@ class ToolDeltaLogger:
         )
 
     def log_in(self, msg, level=INFO) -> None:
-        "写入日志信息. level给定了其等级."
+        "写入日志信息。level 给定了其等级。"
         if not self.writable or not self.enable_logger:
             return
         if not isinstance(msg, str):
@@ -60,7 +60,7 @@ class ToolDeltaLogger:
         self._wrapper.flush()
 
     def _check_is_another_day(self) -> None:
-        "判断记录日志的时候是否已经是第二天, 是的话就变更文件名"
+        "判断记录日志的时候是否已经是第二天，是的话就变更文件名"
         if time.strftime("%Y-%m-%d") != self.now_day:
             self.exit()
             self.open_wrapper_io(self.path)

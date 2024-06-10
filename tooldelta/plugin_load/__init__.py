@@ -22,18 +22,18 @@ class PluginSkip(EOFError):
 
 
 class NotValidPluginError(AssertionError):
-    "仅加载插件时引发, 不是合法插件的报错"
+    "仅加载插件时引发，不是合法插件的报错"
 
 
 class PluginAPINotFoundError(ModuleNotFoundError):
-    "插件API未找到错误"
+    "插件 API 未找到错误"
 
     def __init__(self, name):
         self.name = name
 
 
 class PluginAPIVersionError(ModuleNotFoundError):
-    "插件API版本错误"
+    "插件 API 版本错误"
 
     def __init__(self, name, m_ver, n_ver):
         self.name = name
@@ -77,7 +77,7 @@ class PluginRegData:
     @property
     def dir(self):
         return os.path.join(
-            TOOLDELTA_PLUGIN_DIR,
+            str(TOOLDELTA_PLUGIN_DIR),
             {"classic": TOOLDELTA_CLASSIC_PLUGIN, "injected": TOOLDELTA_INJECTED_PLUGIN}[self.plugin_type],
             self.name
         )
@@ -143,7 +143,7 @@ def auto_move_plugin_dir(fdname: str):
                 plugin_data_json = json.load((f))
                 p_type = plugin_data_json["plugin-type"]
                 if p_type not in PLUGIN_TYPE_MAPPING.keys():
-                    Print.print_war(f"无法识别插件 {fdname} 的类型, 跳过")
+                    Print.print_war(f"无法识别插件 {fdname} 的类型，跳过")
                     return
             shutil.move(
                 os.path.join(TOOLDELTA_PLUGIN_DIR, fdname),
@@ -151,4 +151,4 @@ def auto_move_plugin_dir(fdname: str):
             )
             Print.print_suc(f"已将插件 {fdname} 智能移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内")
         except Exception as err:
-            Print.print_err(f"智能移动插件文件夹 {fdname} 出错: {err}")
+            Print.print_err(f"智能移动插件文件夹 {fdname} 出错：{err}")

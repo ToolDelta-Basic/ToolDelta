@@ -47,7 +47,7 @@ class SysStatus:
 
 
 class StandardFrame:
-    """提供了标准的启动器框架, 作为 ToolDelta 和游戏交互的接口"""
+    """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""
     launch_type = "Original"
 
     def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
@@ -56,7 +56,7 @@ class StandardFrame:
         Args:
             serverNumber (int): 服务器号
             password (str): 服务器密码
-            fbToken (str): 验证服务器Token
+            fbToken (str): 验证服务器 Token
             auth_server_url (str): 验证服务器地址
         """
         self.serverNumber = serverNumber
@@ -89,7 +89,7 @@ class StandardFrame:
         self._launcher_listener = cb
 
     def get_players_and_uuids(self) -> None:
-        """获取玩家名和UUID"""
+        """获取玩家名和 UUID"""
         raise NotImplementedError
 
     def get_bot_name(self) -> str:
@@ -127,7 +127,7 @@ class StandardFrame:
         raise NotImplementedError
 
     def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
-        """以ws身份发送命令
+        """以 ws 身份发送命令
 
         Args:
             cmd (str): 命令
@@ -143,7 +143,7 @@ class StandardFrame:
         raise NotImplementedError
 
     def sendwocmd(self, cmd: str) -> None:
-        """以wo身份发送命令
+        """以 wo 身份发送命令
 
         Args:
             cmd (str): 命令
@@ -157,7 +157,7 @@ class StandardFrame:
         """发送数据包
 
         Args:
-            pckID (int): 数据包ID
+            pckID (int): 数据包 ID
             pck (str): 数据包内容
 
         Raises:
@@ -168,7 +168,7 @@ class StandardFrame:
     sendPacketJson = sendPacket
 
     def is_op(self, player: str) -> bool:
-        """检查玩家是否为OP
+        """检查玩家是否为 OP
 
         Args:
             player (str): 玩家名
@@ -177,7 +177,7 @@ class StandardFrame:
             NotImplementedError: 未实现此方法
 
         Returns:
-            bool: 是否为OP
+            bool: 是否为 OP
         """
         raise NotImplementedError
 
@@ -209,7 +209,7 @@ class FrameNeOmg(StandardFrame):
         Args:
             serverNumber (int): 服务器号
             password (str): 服务器密码
-            fbToken (str): 验证服务器Token
+            fbToken (str): 验证服务器 Token
             auth_server (str): 验证服务器地址
         """
         super().__init__(serverNumber, password, fbToken, auth_server)
@@ -250,7 +250,7 @@ class FrameNeOmg(StandardFrame):
             except Exception as err:
                 time.sleep(5)
                 retries += 1
-                Print.print_war(f"OMEGA 连接失败, 重连: 第 {retries} 次: {err}")
+                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
                 if retries > 5:
                     Print.print_err("最大重试次数已达到")
                     raise SystemExit from err
@@ -276,7 +276,7 @@ class FrameNeOmg(StandardFrame):
         )
         if platform.uname().system.lower() == "linux":
             os.system("chmod +x " + shlex.quote(py_file_path))
-        # 只需要+x即可
+        # 只需要+x 即可
         Print.print_inf(f"DEBUG: 将使用端口 {free_port}")
         self.neomg_proc = subprocess.Popen(
             [
@@ -301,7 +301,7 @@ class FrameNeOmg(StandardFrame):
     def msg_show(self) -> None:
         """显示来自 NeOmega 的信息"""
         def _msg_show_thread() -> None:
-            """显示来自NeOmega的信息"""
+            """显示来自 NeOmega 的信息"""
             if self.neomg_proc is None or self.neomg_proc.stdout is None:
                 raise ValueError("NEOMG 进程未启动")
             while True:
@@ -321,7 +321,7 @@ class FrameNeOmg(StandardFrame):
                 with Print.lock:
                     Print.print_with_info(msg_orig, "§b NOMG ")
 
-        Utils.createThread(_msg_show_thread, usage="显示来自NeOmega的信息")
+        Utils.createThread(_msg_show_thread, usage="显示来自 NeOmega 的信息")
 
     def make_secret_key(self) -> None:
         """生成退出密钥"""
@@ -352,10 +352,10 @@ class FrameNeOmg(StandardFrame):
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        Print.print_suc("接入点已就绪!")
+        Print.print_suc("接入点已就绪！")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
-            return SystemExit("正常退出.")
+            return SystemExit("正常退出。")
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("NeOmega 已崩溃")
         return SystemError("未知的退出状态")
@@ -363,7 +363,7 @@ class FrameNeOmg(StandardFrame):
     def download_libs(self) -> None:
         """根据系统架构和平台下载所需的库。"""
         if "no-download-libs" in sys_args_to_dict().keys():
-            Print.print_war("将不会进行依赖库的下载和检测更新.")
+            Print.print_war("将不会进行依赖库的下载和检测更新。")
             return
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         is_mir: bool = cfgs["是否使用github镜像"]
@@ -382,7 +382,7 @@ class FrameNeOmg(StandardFrame):
                 ).text
             )
         except Exception as err:
-            Print.print_err(f"获取依赖库表出现问题: {err}")
+            Print.print_err(f"获取依赖库表出现问题：{err}")
             self.update_status(SysStatus.CRASHED_EXIT)
             return
         sys_machine = platform.machine().lower()
@@ -405,7 +405,7 @@ class FrameNeOmg(StandardFrame):
             with open(commit_file_path, "r", encoding="utf-8") as f:
                 commit_local = f.read()
             if commit_local != commit_remote:
-                Print.print_war("依赖库版本过期, 将重新下载")
+                Print.print_war("依赖库版本过期，将重新下载")
                 replace_file = True
         else:
             replace_file = True
@@ -417,11 +417,11 @@ class FrameNeOmg(StandardFrame):
                 try:
                     download_file_singlethreaded(url, pathdir)
                 except Exception as err:
-                    Print.print_err(f"下载依赖库出现问题: {err}")
+                    Print.print_err(f"下载依赖库出现问题：{err}")
                     self.update_status(SysStatus.CRASHED_EXIT)
                     return
         if replace_file:
-            # 写入commit_remote，文字写入
+            # 写入 commit_remote，文字写入
             with open(commit_file_path, "w", encoding="utf-8") as f:
                 f.write(commit_remote)
             Print.print_suc("已完成依赖更新！")
@@ -434,7 +434,7 @@ class FrameNeOmg(StandardFrame):
             if i is not None:
                 players_uuid[i.name] = i.uuid
             else:
-                raise ValueError("未能获取玩家名和UUID")
+                raise ValueError("未能获取玩家名和 UUID")
         return players_uuid
 
     def get_bot_name(self) -> str:
@@ -513,7 +513,7 @@ class FrameNeOmg(StandardFrame):
         return
 
     def sendwocmd(self, cmd: str) -> None:
-        """以wo身份发送命令
+        """以 wo 身份发送命令
 
         Args:
             cmd (str): 命令
@@ -529,7 +529,7 @@ class FrameNeOmg(StandardFrame):
         """发送数据包
 
         Args:
-            pckID (int): 数据包ID
+            pckID (int): 数据包 ID
             pck (str): 数据包内容
 
         Raises:
@@ -540,7 +540,7 @@ class FrameNeOmg(StandardFrame):
         self.omega.send_game_packet_in_json_as_is(pckID, pck)
 
     def is_op(self, player: str) -> bool:
-        """检查玩家是否为OP
+        """检查玩家是否为 OP
 
         Args:
             player (str): 玩家名
@@ -549,7 +549,7 @@ class FrameNeOmg(StandardFrame):
             NotImplementedError: 未实现此方法
 
         Returns:
-            bool: 是否为OP
+            bool: 是否为 OP
         """
         if self.omega is None:
             raise ValueError("未连接到接入点")
@@ -591,7 +591,7 @@ class FrameNeOmg(StandardFrame):
 
 
 class FrameNeOmgRemote(FrameNeOmg):
-    """远程启动器框架(使用 NeOmega 框架的Remote连接)
+    """远程启动器框架 (使用 NeOmega 框架的 Remote 连接)
 
     Args:
         FrameNeOmg (FrameNeOmg): FrameNeOmg 框架
@@ -613,18 +613,18 @@ class FrameNeOmgRemote(FrameNeOmg):
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):
-            Print.print_err("启动参数 -access-point-port 错误: 不是1~65535的整数")
+            Print.print_err("启动参数 -access-point-port 错误：不是 1~65535 的整数")
             raise SystemExit("端口参数错误")
         if openat_port == 0:
             Print.print_war(
-                "未用启动参数指定链接neOmega接入点开放端口, 尝试使用默认端口 24015"
+                "未用启动参数指定链接 neOmega 接入点开放端口，尝试使用默认端口 24015"
             )
-            Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口.")
+            Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口。")
             openat_port = 24015
             return SystemExit("未指定端口号")
-        Print.print_inf(f"将从端口 {openat_port} 连接至接入点(等待接入中).")
+        Print.print_inf(f"将从端口 {openat_port} 连接至接入点 (等待接入中).")
         self.set_omega(openat_port)
-        Print.print_suc("已连接上接入点进程.")
+        Print.print_suc("已连接上接入点进程。")
         if self.omega is None:
             self.update_status(SysStatus.CRASHED_EXIT)
             return SystemExit("接入点进程未启动")
@@ -638,7 +638,7 @@ class FrameNeOmgRemote(FrameNeOmg):
         self.exit_event.wait()
         self.update_status(SysStatus.NORMAL_EXIT)
         if self.status == SysStatus.NORMAL_EXIT:
-            return SystemExit("正常退出.")
+            return SystemExit("正常退出。")
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点已崩溃")
         return SystemError("未知的退出状态")

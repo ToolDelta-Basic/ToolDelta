@@ -1,4 +1,4 @@
-"支持mc颜色代码的输出模块"
+"支持 mc 颜色代码的输出模块"
 
 import datetime
 import threading
@@ -11,7 +11,7 @@ def simple_fmt(kw: dict, arg: str) -> str:
     """简单的字符串格式化
 
     Args:
-        kw (dict): 颜色列表（key为颜色代码，value为颜色代码对应的颜色）
+        kw (dict): 颜色列表（key 为颜色代码，value 为颜色代码对应的颜色）
         arg (str): 需要格式化的字符串
 
     Returns:
@@ -60,7 +60,7 @@ class Print:
         """简单的字符串格式化
 
         Args:
-            kw (dict): 颜色列表（key为颜色代码，value为颜色代码对应的颜色）
+            kw (dict): 颜色列表（key 为颜色代码，value 为颜色代码对应的颜色）
             arg (str): 需要格式化的字符串
 
         Returns:
@@ -169,7 +169,7 @@ class Print:
             text (str): 输出的文本
             info (str, optional): 输出的信息
             need_log (bool, optional): 是否需要记录日志
-            **print_kwargs: 原print函数的参数
+            **print_kwargs: 原 print 函数的参数
 
         Raises:
             AssertionError: 无法找到对应的颜色代码
@@ -208,18 +208,18 @@ class Print:
 
     @staticmethod
     def clean_print(text: str, **print_kwargs) -> None:
-        """依照mc的颜色代码输出文本，可带有print函数的参数
+        """依照 mc 的颜色代码输出文本，可带有 print 函数的参数
 
         Args:
             text (str): 输出的文本
-            **print_kwargs: 原print函数的参数
+            **print_kwargs: 原 print 函数的参数
         """
         with Print.lock:
             print(Print.colormode_replace(text), **print_kwargs)
 
     @staticmethod
     def clean_fmt(text: str) -> str:
-        """依照mc的颜色代码格式化文本
+        """依照 mc 的颜色代码格式化文本
 
         Args:
             text (str): 需要格式化的文本
@@ -240,7 +240,7 @@ class Print:
 
     @staticmethod
     def print_inf(text: str, **print_kwargs) -> None:
-        """输出INDO信息
+        """输出 INDO 信息
 
         Args:
             text (str): 输出的文本

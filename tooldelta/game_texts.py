@@ -149,18 +149,18 @@ class GameTextsHandle:
         self.Game_Texts = Game_Texts
 
     def Handle_Text_Class1(self, packet: dict | list) -> list:
-        """处理文本返回方法1
+        """处理文本返回方法 1
 
         Args:
             packet (dict | list): 数据包
 
         Returns:
-            list: 处理结果的json格式列表
+            list: 处理结果的 json 格式列表
         """
-        json_result: list = []  # 使用list保存处理后的结果
-        if isinstance(packet, list):  # 如果packet是list类型
-            for item in packet:  # 遍历packet中的每个item
-                # 从self.Game_Texts中获取原始消息文本
+        json_result: list = []  # 使用 list 保存处理后的结果
+        if isinstance(packet, list):  # 如果 packet 是 list 类型
+            for item in packet:  # 遍历 packet 中的每个 item
+                # 从 self.Game_Texts 中获取原始消息文本
                 if not isinstance((original_message := self.Game_Texts.get(item["Message"].replace("%", ""))), type(None)):
                     # 检查原始消息中是否包含格式化参数%
                     if not len(re.findall(r'%[a-zA-Z]', original_message)) >= 1:
@@ -207,13 +207,13 @@ class GameTextsHandle:
                                 *param_list)
                 else:
                     filled_message = item["Message"]
-                # 将填充后的消息文本转换为json格式，并添加到结果列表中
+                # 将填充后的消息文本转换为 json 格式，并添加到结果列表中
                 json_output = json.dumps(
                     filled_message, indent=2, ensure_ascii=False
                 )
                 json_result.append(json_output)
-        elif isinstance(packet, dict):  # 如果packet不是list类型
-            # 从self.Game_Texts中获取原始消息文本
+        elif isinstance(packet, dict):  # 如果 packet 不是 list 类型
+            # 从 self.Game_Texts 中获取原始消息文本
             if not isinstance((original_message := self.Game_Texts.get(packet["Message"].replace("%", ""))), type(None)):
                 if not len(re.findall(r'%[a-zA-Z]', original_message)) >= 1:
                     if original_message:  # 如果原始消息不为空
@@ -256,14 +256,14 @@ class GameTextsHandle:
                         filled_message = formatted_string
             else:
                 filled_message = packet["Message"]
-            # 将填充后的消息文本转换为json格式，并添加到结果列表中
+            # 将填充后的消息文本转换为 json 格式，并添加到结果列表中
             json_output = json.dumps(
                 filled_message, indent=2, ensure_ascii=False
             )
             json_result.append(json_output)
-        return json_result  # 返回处理结果的json格式列表
+        return json_result  # 返回处理结果的 json 格式列表
 
-    # TODO：处理文本返回方法2
+    # TODO：处理文本返回方法 2
     def Handle_Text_Class2(self, Pkt: dict) -> str:
-        "处理文本返回方法2（未实现）"
+        "处理文本返回方法 2（未实现）"
         ...

@@ -5,7 +5,7 @@ Methods:
     getTarget (sth, timeout): 获取符合目标选择器实体的列表
     getPos (targetNameToGet, timeout): 获取目标玩家的详细位置信息
     getItem (targetName, itemName, itemSpecialID): 获取玩家背包内指定的物品的数量
-    getPosXYZ (player, timeout=30): 获取玩家的简略坐标值, 并以坐标三元元组返回
+    getPosXYZ (player, timeout=30): 获取玩家的简略坐标值，并以坐标三元元组返回
     getScore (scoreboardNameToGet, targetNameToGet): 获取计分板分数
 """
 from typing import TYPE_CHECKING
@@ -28,7 +28,7 @@ __all__ = [
 # set_frame
 
 def check_gamectrl_avali():
-    "检查GameCtrl是否可用"
+    "检查 GameCtrl 是否可用"
     if game_ctrl is None:
         raise ValueError("GameControl 不可用")
 
@@ -45,13 +45,13 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
 
     参数:
         sth: 目标选择器
-        timeout: 超时时间，默认为5秒
+        timeout: 超时时间，默认为 5 秒
     异常:
-        ValueError: 指令返回超时, 或者无法获取目标
+        ValueError: 指令返回超时，或者无法获取目标
     """
     check_gamectrl_avali()
     if not sth.startswith("@"):
-        raise ValueError("我的世界目标选择器格式错误(getTarget必须使用目标选择器)")
+        raise ValueError("我的世界目标选择器格式错误 (getTarget 必须使用目标选择器)")
     result = game_ctrl.sendcmd_with_resp(f"/testfor {sth}", timeout).OutputMessages[0].Parameters
     if result:
         result = result[0]
@@ -63,25 +63,25 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
 
     参数:
         targetNameToGet: 目标玩家的名称
-        timeout: 超时时间（秒）。默认为5秒
+        timeout: 超时时间（秒）。默认为 5 秒
 
     异常:
         ValueError: 当目标玩家不存在时抛出该异常
         ValueError: 当获取位置信息失败时抛出该异常
-        AttributeError: 当获取玩家UUID失败时抛出该异常
+        AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
     check_gamectrl_avali()
     if targetNameToGet not in game_ctrl.allplayers or targetNameToGet.startswith("@"):
         raise ValueError(f"玩家 {targetNameToGet} 不存在")
     result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{targetNameToGet}"]', timeout)
     if not result.OutputMessages[0].Success:
-        raise ValueError(f"无法获取坐标信息: {result.OutputMessages[0]}")
+        raise ValueError(f"无法获取坐标信息：{result.OutputMessages[0]}")
     parameter = result.OutputMessages[0].Parameters[0]
     if isinstance(parameter, str):
-        raise ValueError("无法获取坐标信息: " + parameter)
+        raise ValueError("无法获取坐标信息：" + parameter)
     result = {}
     if game_ctrl.players_uuid is None:
-        raise AttributeError("无法获取玩家UUID表")
+        raise AttributeError("无法获取玩家 UUID 表")
     targetName = targetNameToGet
     x = (
         parameter[0]["position"]["x"]
@@ -119,7 +119,7 @@ def getItem(targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
     获取玩家背包内指定的物品的数量
     参数:
         targetName (str): 玩家选择器 / 玩家名
-        itemName (str): 物品ID
+        itemName (str): 物品 ID
         itemSpecialID (int) = -1: 物品特殊值
     """
     if (
@@ -131,14 +131,14 @@ def getItem(targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
     result: Packet_CommandOutput = game_ctrl.sendcmd_with_resp(
         f"/clear {targetName} {itemName} {itemSpecialID} 0")
     if result.OutputMessages[0].Message == "commands.generic.syntax":
-        raise Exception("物品ID错误")
+        raise Exception("物品 ID 错误")
     if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
         return 0
     return int(result.OutputMessages[0].Parameters[1])
 
 def getPosXYZ(player, timeout: int | float = 30) -> tuple[float, float, float]:
     """
-    获取玩家的简略坐标值, 并以坐标三元元组返回
+    获取玩家的简略坐标值，并以坐标三元元组返回
     参数:
         player (str): 玩家名
         timeout (int): 最长超时时间
@@ -155,7 +155,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
         scoreboardNameToGet: 计分板名
         targetNameToGet: 获取分数的对象/目标选择器
     返回:
-        分数: int
+        分数：int
     异常:
         ValueError: 无法获取分数
     """
@@ -190,7 +190,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
             return result[targetNameToGet]
         return result[targetNameToGet][scoreboardNameToGet]
     except KeyError as err:
-        raise Exception(f"获取计分板分数失败: {err}")
+        raise Exception(f"获取计分板分数失败：{err}")
 
 def getScore(scb_name: str, target: str, timeout = 30) -> int:
     check_gamectrl_avali()
@@ -209,10 +209,10 @@ def isCmdSuccess(cmd: str, timeout=30):
     """
     获取命令执行成功与否的状态
     参数:
-        cmd: MC指令
+        cmd: MC 指令
         timeout: 超时时间
     返回:
-        命令执行是否成功: bool
+        命令执行是否成功：bool
     """
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)

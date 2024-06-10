@@ -46,37 +46,37 @@ def path_dir(path: str) -> str | None:
 
 
 def url_join(*urls) -> str:
-    """连接URL
+    """连接 URL
 
     Returns:
-        str: 连接后的URL
+        str: 连接后的 URL
     """
     return "/".join(urls)
 
 
 def get_json_from_url(url: str) -> dict:
-    """从URL获取JSON数据
+    """从 URL 获取 JSON 数据
 
     Args:
         url (str): URL
 
     Raises:
-        requests.RequestException: Url请求失败
+        requests.RequestException: Url 请求失败
         requests.RequestException: 服务器返回了不正确的答复
 
     Returns:
-        dict: JSON数据
+        dict: JSON 数据
     """
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
         resptext = resp.text
     except requests.RequestException as exc:
-        raise requests.RequestException("URL请求失败") from exc
+        raise requests.RequestException("URL 请求失败") from exc
     try:
         return json.loads(resptext)
     except json.JSONDecodeError as exc:
-        raise requests.RequestException(f"服务器返回了不正确的答复: {resptext}") from exc
+        raise requests.RequestException(f"服务器返回了不正确的答复：{resptext}") from exc
 
 
 class PluginMarket:
@@ -136,12 +136,12 @@ class PluginMarket:
                     else:
                         Print.print_inf("")
                 Print.print_inf(
-                    f"§f第 {now_page} / {sum_pages} 页, 输入 §b+§f/§b- §f翻页", need_log=False)
+                    f"§f第 {now_page} / {sum_pages} 页，输入 §b+§f/§b- §f翻页", need_log=False)
                 Print.print_inf("§f输入插件序号选中插件并查看其下载页", need_log=False)
                 last_operation = (
                     (
                         input(Print.fmt_info(
-                            "§f回车键继续上次操作, §bq§f退出, 请输入:", "§f 输入 "))
+                            "§f回车键继续上次操作, §bq§f退出, 请输入：", "§f 输入 "))
                         or last_operation
                     )
                     .lower()
@@ -175,21 +175,21 @@ class PluginMarket:
                                                             i.name, i.plugin_type)
                                                     except BaseException as err:
                                                         Print.print_err(
-                                                            f"插件热加载出现问题: {err}")
+                                                            f"插件热加载出现问题：{err}")
                                     else:
                                         Print.print_inf(
-                                            "插件已存在, 若要更新版本, 请重启 ToolDelta", need_log=False)
+                                            "插件已存在，若要更新版本，请重启 ToolDelta", need_log=False)
                                         r = input(Print.fmt_info(
                                             "§f输入 §cq §f退出, 其他则返回插件市场"))
                                 else:
                                     Print.print_inf(
-                                        "下载插件后重启ToolDelta才能生效", need_log=False)
+                                        "下载插件后重启 ToolDelta 才能生效", need_log=False)
                                 r = input(Print.fmt_info(
                                     "§f输入 §cq §f退出, 其他则返回插件市场"))
                                 if r.lower() == "q":
                                     break
                             else:
-                                Print.print_inf("已取消.", need_log=False)
+                                Print.print_inf("已取消。", need_log=False)
                                 time.sleep(1)
                         else:
                             Print.print_err("超出序号范围")
@@ -198,23 +198,23 @@ class PluginMarket:
                 elif now_index < 0:
                     now_index = max(now_index - CTXS, 0)
         except KeyError as err:
-            Print.print_err(f"获取插件市场插件出现问题: 键值对错误: {err}")
+            Print.print_err(f"获取插件市场插件出现问题：键值对错误：{err}")
             return
         except requests.RequestException as err:
-            Print.print_err(f"获取插件市场插件出现问题: {err}")
+            Print.print_err(f"获取插件市场插件出现问题：{err}")
             return
         except Exception as err:
-            Print.print_err("获取插件市场插件出现问题, 报错如下:")
+            Print.print_err("获取插件市场插件出现问题，报错如下：")
             Print.print_err(traceback.format_exc())
             return
         clear_screen()
-        Print.clean_print("§a已从插件市场返回 ToolDelta 控制台.")
+        Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
 
     def get_datas_from_market(self, source_url: str | None = None) -> dict:
         """从插件市场获取数据
 
         Args:
-            source_url (str | None, optional): 插件市场源, 默认为None, 有则替换整体插件市场源
+            source_url (str | None, optional): 插件市场源，默认为 None, 有则替换整体插件市场源
 
         Returns:
             dict: 插件市场数据
@@ -230,17 +230,17 @@ class PluginMarket:
         """从插件市场获取插件数据
 
         Args:
-            plugin_id (str): 插件ID
+            plugin_id (str): 插件 ID
 
         Raises:
-            KeyError: 无法通过ID查找插件
+            KeyError: 无法通过 ID 查找插件
 
         Returns:
             PluginRegData: 插件注册数据
         """
         plugin_name = self.plugin_id_name_map.get(plugin_id)
         if plugin_name is None:
-            raise KeyError(f"无法通过ID: {plugin_id} 查找插件")
+            raise KeyError(f"无法通过 ID: {plugin_id} 查找插件")
         data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
         res = requests.get(data_url, timeout=10)
         res.raise_for_status()
@@ -254,7 +254,7 @@ class PluginMarket:
             plugin_data (PluginRegData): 插件注册数据
 
         Returns:
-            tuple[bool, list[PluginRegData]]: 是否下载, 下载的插件列表
+            tuple[bool, list[PluginRegData]]: 是否下载，下载的插件列表
         """
         pre_plugins_str = (
             ", ".join(
@@ -265,14 +265,14 @@ class PluginMarket:
             f"{plugin_data.name} v{plugin_data.version_str}", need_log=False
         )
         Print.print_inf(
-            f"作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}",
+            f"作者：§f{plugin_data.author}§7, 版本：§f{plugin_data.version_str} §b{plugin_data.plugin_type_str}",
             need_log=False,
         )
-        Print.print_inf(f"前置插件: §f{pre_plugins_str}", need_log=False)
-        Print.print_inf(f"介绍: {plugin_data.description}", need_log=False)
+        Print.print_inf(f"前置插件：§f{pre_plugins_str}", need_log=False)
+        Print.print_inf(f"介绍：{plugin_data.description}", need_log=False)
         Print.print_inf("", need_log=False)
         res = input(Print.fmt_info(
-            "§f下载 = §aY§f, 取消 = §cN§f, 请输入:")).lower().strip()
+            "§f下载 = §aY§f, 取消 = §cN§f, 请输入：")).lower().strip()
         if res == "y":
             Print.clean_print(f"§6正在下载插件: §f{plugin_data.name}", end="\r")
             pres = self.download_plugin(plugin_data)
@@ -281,10 +281,10 @@ class PluginMarket:
         return False, []
 
     def get_plugin_id_name_map(self) -> dict:
-        """获取插件ID与插件名的映射
+        """获取插件 ID 与插件名的映射
 
         Returns:
-            dict: 插件ID与插件名的映射
+            dict: 插件 ID 与插件名的映射
         """
         res = requests.get(self.plugins_download_url +
                            "/plugin_ids_map.json", timeout=5)
@@ -300,7 +300,7 @@ class PluginMarket:
     ) -> list[PluginRegData]:
         """
         下载插件
-        注意: 只能传入由 `get_plugin_data_from_market()` 生成的数据
+        注意：只能传入由 `get_plugin_data_from_market()` 生成的数据
 
         Args:
             plugin_data (PluginRegData): 插件注册数据
@@ -327,7 +327,7 @@ class PluginMarket:
         try:
             for paths in download_paths:
                 if not paths.strip():
-                    Print.print_war("下载路径为空, 跳过")
+                    Print.print_war("下载路径为空，跳过")
                     continue
                 url = url_join(self.plugins_download_url, paths)
                 # Determine download path based on plugin type
@@ -342,7 +342,7 @@ class PluginMarket:
                         )
                     case _:
                         raise ValueError(
-                            f"未知插件类型: {plugin_data.plugin_type}, 你可能需要通知ToolDelta项目开发组解决"
+                            f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                         )
                 os.makedirs(os.path.join(
                     cache_dir, plugin_data.name), exist_ok=True)
@@ -398,20 +398,20 @@ class PluginMarket:
                         data_list.append(folder + r"/" + file)
             return data_list
         except KeyError as err:
-            Print.print_err(f"获取插件市场插件目录结构出现问题: 无法找到 {err}, 有可能是未来得及更新目录")
+            Print.print_err(f"获取插件市场插件目录结构出现问题：无法找到 {err}, 有可能是未来得及更新目录")
             raise KeyError(f"无法找到 {err}, 有可能是未来得及更新目录") from err
         except Exception as err:
-            Print.print_err(f"获取插件市场插件目录结构出现问题: {err}")
-            raise KeyError(f"获取插件市场插件目录结构出现问题: {err}")from err
+            Print.print_err(f"获取插件市场插件目录结构出现问题：{err}")
+            raise KeyError(f"获取插件市场插件目录结构出现问题：{err}")from err
 
     def get_latest_plugin_version(self, plugin_id: str) -> str:
         """获取最新插件版本
 
         Args:
-            plugin_id (str): 插件ID
+            plugin_id (str): 插件 ID
 
         Raises:
-            KeyError: 无法通过ID获取最新插件版本
+            KeyError: 无法通过 ID 获取最新插件版本
 
         Returns:
             str: 最新插件版本
@@ -421,7 +421,7 @@ class PluginMarket:
         ).get(plugin_id)
         if isinstance(result, str):
             return result
-        raise KeyError(f"无法通过ID: {plugin_id} 获取最新插件版本")
+        raise KeyError(f"无法通过 ID: {plugin_id} 获取最新插件版本")
 
 
 market = PluginMarket()

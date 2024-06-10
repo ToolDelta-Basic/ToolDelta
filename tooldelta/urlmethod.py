@@ -1,4 +1,4 @@
-"""自定义常用URL方法"""
+"""自定义常用 URL 方法"""
 import os
 import re
 import shutil
@@ -17,20 +17,20 @@ mirror_github = ["https://tdload.tblstudio.cn/{}", "https://hub.gitmirror.com/{}
                  "https://gh.con.sh/{}", "https://mirror.ghproxy.com/{}"]
 
 def format_mirror_url(url: str) -> list:
-    """填充url到镜像url列表
+    """填充 url 到镜像 url 列表
 
     Args:
-        url (str): 原始URL
+        url (str): 原始 URL
 
     Returns:
-        list: 填充原始url后的镜像列表
+        list: 填充原始 url 后的镜像列表
     """
     mir_url: list = []
     for mirror in mirror_github:mir_url.append(mirror.format(url))
     return mir_url
 
 def githubdownloadurl_to_rawurl(url: str) -> str:
-    """将github下载链接转换为原始链接
+    """将 GitHub 下载链接转换为原始链接
 
     Args:
         url (str): 原始链接
@@ -55,8 +55,8 @@ def progress_bar(
         current (float | int): 当前进度值
         total (float | int): 总进度值
         length (int): 进度条长度.
-        color1 (str): 进度条颜色1.
-        color2 (str): 进度条颜色2.
+        color1 (str): 进度条颜色 1.
+        color2 (str): 进度条颜色 2.
 
     Returns:
         str: 格式化后的进度条字符串
@@ -134,7 +134,7 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
     """下载文件的代码块
 
     Args:
-        url (str): 文件的URL地址
+        url (str): 文件的 URL 地址
         start_byte (int): 下载的起始字节位置
         end_byte (int): 下载的结束字节位置
         save_dir (str): 文件保存的目录
@@ -160,7 +160,7 @@ def download_file_singlethreaded(
     """下载单个文件
 
     Args:
-        url (str): 文件的URL地址
+        url (str): 文件的 URL 地址
         save_dir (str): 文件保存的目录
         ignore_warnings (bool, optional): 是否忽略警告
     """
@@ -189,15 +189,15 @@ def download_unknown_file(url: str, save_dir: str) -> None:
     """下载未知文件
 
     Args:
-        url (str): 文件的URL地址
+        url (str): 文件的 URL 地址
         save_dir (str): 文件保存的目录
     """
-    # 鉴于 Content-Length 不一定表示文件原始大小, 二进制文件与文本文件需要分开下载
+    # 鉴于 Content-Length 不一定表示文件原始大小，二进制文件与文本文件需要分开下载
     # 否则显示的下载条会异常
     resp = requests.get(url, timeout=10)
     resp.raise_for_status()
     if is_common_text_file(save_dir):
-        # 文本文件, 体积可能不大
+        # 文本文件，体积可能不大
         with open(save_dir, "wb") as f:
             f.write(resp.content)
     download_file_singlethreaded(url, save_dir)
@@ -207,10 +207,10 @@ def test_site_latency(Da: dict) -> list:
     """测试网站延迟
 
     Args:
-        Da (dict): 包含URL和镜像URL的字典
+        Da (dict): 包含 URL 和镜像 URL 的字典
 
     Returns:
-        list: 按延迟排序的URL和延迟时间的元组列表
+        list: 按延迟排序的 URL 和延迟时间的元组列表
     """
     tmp_speed = {}
     urls = [Da["url"]] + Da["mirror_url"]
@@ -252,7 +252,7 @@ def measure_latencyt(url: str) -> float:
         return download_speed
     except Exception as e:
         Print.print_war(f"Error measuring latency for {url}: {e}")
-    return -1.0  # 返回-1表示测速失败
+    return -1.0  # 返回 -1 表示测速失败
 
 
 def get_free_port(start: int = 2000, end: int = 65535) -> int:
@@ -274,8 +274,8 @@ def get_free_port(start: int = 2000, end: int = 65535) -> int:
                 s.bind(("localhost", port))
                 return port
             except OSError:
-                Print.print_war(f"端口 {port} 正被占用, 跳过")
-    raise ValueError(f"未找到空闲端口({start}~{end})")
+                Print.print_war(f"端口 {port} 正被占用，跳过")
+    raise ValueError(f"未找到空闲端口 ({start}~{end})")
 
 
 def check_update() -> None:
@@ -289,35 +289,35 @@ def check_update() -> None:
         if not latest_version.replace(".", "") <= current_version.replace(".", ""):
             # Print.print_suc(f"当前为最新版本 -> v{current_version}，无需更新")
             Print.print_load(
-                f"检测到最新版本 {current_version} -> {latest_version}，请及时更新!"
+                f"检测到最新版本 {current_version} -> {latest_version}，请及时更新！"
             )
     except KeyError:
         Print.print_war("获取最新版本失败，请检查网络连接")
 
 def if_token() -> None:
-    """检查路径下是否有fbtoken，没有就提示输入
+    """检查路径下是否有 fbtoken，没有就提示输入
 
     Raises:
-        SystemExit: 未输入fbtoken
+        SystemExit: 未输入 fbtoken
     """
     if not os.path.isfile("fbtoken"):
         Print.print_inf(
-            "请到对应的验证服务器官网下载FBToken，并放在本目录中，或者在下面输入fbtoken"
+            "请到对应的验证服务器官网下载 FBToken，并放在本目录中，或者在下面输入 fbtoken"
         )
-        fbtoken = input(Print.fmt_info("请输入fbtoken: ", "§b 输入 "))
+        fbtoken = input(Print.fmt_info("请输入 fbtoken: ", "§b 输入 "))
         if fbtoken:
             with open("fbtoken", "w", encoding="utf-8") as f:
                 f.write(fbtoken)
         else:
-            Print.print_err("未输入fbtoken, 无法继续")
+            Print.print_err("未输入 fbtoken, 无法继续")
             raise SystemExit
 
 
 def fbtokenFix():
-    """修复fbtoken里的换行符    """
+    """修复 fbtoken 里的换行符    """
     with open("fbtoken", "r", encoding="utf-8") as f:
         token = f.read()
         if "\n" in token:
-            Print.print_war("fbtoken里有换行符，会造成fb登陆失败，已自动修复")
+            Print.print_war("fbtoken 里有换行符，会造成 fb 登陆失败，已自动修复")
             with open("fbtoken", "w", encoding="utf-8") as f:
                 f.write(token.replace("\n", ""))

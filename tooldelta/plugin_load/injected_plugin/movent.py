@@ -43,11 +43,11 @@ def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> None | Packet_CommandOutput:
     """发送命令到游戏控制器，并可选择是否等待响应\n
-    如果 waitForResp 为 False,则返回 None,否则返回 Packet_CommandOutput 对象
+    如果 waitForResp 为 False，则返回 None，否则返回 Packet_CommandOutput 对象
 
     参数:
         cmd: 要发送的命令
-        waitForResp: 是否等待响应,默认为 False
+        waitForResp: 是否等待响应，默认为 False
         timeout: 等待响应的超时时间（秒）,默认为 30
     """
     check_avaliable(game_control)
@@ -58,12 +58,12 @@ def sendwscmd(
     cmd: str, waitForResp: bool = False, timeout: float = 30
 ) -> Packet_CommandOutput | None:
     """
-    发送WSCMD命令到游戏控制器
+    发送 WSCMD 命令到游戏控制器
 
     参数:
-        cmd: 要发送的WSCMD命令
-        waitForResp: 是否等待响应 默认为False
-        timeout: 超时时间（秒） 默认为30
+        cmd: 要发送的 WSCMD 命令
+        waitForResp: 是否等待响应 默认为 False
+        timeout: 超时时间（秒）默认为 30
     """
     check_avaliable(game_control)
     return game_control.sendwscmd(cmd, waitForResp, timeout)
@@ -71,10 +71,10 @@ def sendwscmd(
 
 def sendwocmd(cmd: str) -> None:
     """
-    发送WO命令到游戏控制器
+    发送 WO 命令到游戏控制器
 
     参数:
-        cmd: 要发送的WO命令
+        cmd: 要发送的 WO 命令
     """
     check_avaliable(game_control)
     game_control.sendwocmd(cmd)
@@ -85,7 +85,7 @@ def sendPacket(pktID: int, pkt: str) -> None:
     发送数据包给游戏控制器
 
     参数:
-        pktID: 数据包ID
+        pktID: 数据包 ID
         pkt: 数据包内容
     """
     check_avaliable(game_control)
@@ -106,7 +106,7 @@ def rawText(playername: str, text: str) -> None:
 
 def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
     """
-    向指定玩家发送tellraw消息
+    向指定玩家发送 tellraw 消息
 
     参数:
         playername: 玩家名称
@@ -135,7 +135,7 @@ def get_all_player() -> list:
 
 def is_op(playername: str) -> bool | None:
     """
-    判断玩家是否为OP
+    判断玩家是否为 OP
 
     参数:
         playername: 玩家名称
@@ -190,12 +190,12 @@ def countdown(delay: int | float, msg: str | None = None) -> None:
 
 def getBlockTile(x: int, y: int, z: int) -> str:
     """
-    获取指定坐标的方块的ID
+    获取指定坐标的方块的 ID
 
     参数:
-        x: X坐标
-        y: Y坐标
-        z: Z坐标
+        x: X 坐标
+        y: Y 坐标
+        z: Z 坐标
     """
     res = sendwscmd(f"/testforblock {x} {y} {z} air", True)
     if isinstance(res, type(None)):

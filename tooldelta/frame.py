@@ -1,10 +1,10 @@
 """
-ToolDelta基本框架
+ToolDelta 基本框架
 
 整个系统由三个部分组成
     Frame: 负责整个 ToolDelta 的基本框架运行
     GameCtrl: 负责对接游戏
-        - Launchers: 负责将不同启动器的游戏接口统一成固定的接口, 供插件在多平台游戏接口运行(FastBuilder External, NeOmega, (BEWS, etc.))
+        - Launchers: 负责将不同启动器的游戏接口统一成固定的接口，供插件在多平台游戏接口运行 (FastBuilder External, NeOmega, (BEWS, etc.))
     PluginGroup: 负责对插件进行统一管理
 """
 
@@ -53,15 +53,15 @@ if TYPE_CHECKING:
 LAUNCHERS: list[
     tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]
 ] = [
-    ("NeOmega 框架 (NeOmega模式, 租赁服适应性强, 推荐)", FrameNeOmg),
+    ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmg),
     (
-        "NeOmega 框架 (NeOmega连接模式, 需要先启动对应的neOmega接入点)",
+        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
         FrameNeOmgRemote,
     ),
 ]
 
 class ToolDelta:
-    """ToolDelta主框架"""
+    """ToolDelta 主框架"""
 
     class FrameBasic:
         """系统基本信息"""
@@ -82,7 +82,7 @@ class ToolDelta:
         self.consoleMenu = []
         self.is_docker: bool = os.path.exists('/.dockerenv')
         self.on_plugin_err = staticmethod(
-            lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题: \n{err}")
+            lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
         self.launcher: FrameNeOmg | FrameNeOmgRemote
         self.is_mir: bool
@@ -105,14 +105,14 @@ class ToolDelta:
             auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(1, len(LAUNCHERS) + 1):
-                raise Config.ConfigError("你不该随意修改启动器模式, 现在赶紧把它改回0吧")
+                raise Config.ConfigError("你不该随意修改启动器模式，现在赶紧把它改回 0 吧")
         except Config.ConfigError as err:
             # 配置文件有误
             r = self.upgrade_cfg()
             if r:
-                Print.print_war("配置文件未升级, 已自动升级, 请重启 ToolDelta")
+                Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
             else:
-                Print.print_err(f"ToolDelta基本配置有误, 需要更正: {err}")
+                Print.print_err(f"ToolDelta 基本配置有误，需要更正：{err}")
                 import traceback
                 traceback.print_exc()
             raise SystemExit from err
@@ -120,12 +120,12 @@ class ToolDelta:
             while 1:
                 try:
                     self.serverNumber = int(input(
-                        Print.fmt_info("请输入租赁服号: ", "§b 输入 ")
+                        Print.fmt_info("请输入租赁服号：", "§b 输入 ")
                     ))
                     self.serverPasswd = (
                         getpass.getpass(
                             Print.fmt_info(
-                                "请输入租赁服密码(不会回显, 没有请直接回车): ", "§b 输入 "
+                                "请输入租赁服密码 (不会回显，没有请直接回车): ", "§b 输入 "
                             )
                         )
                         or "0"
@@ -138,18 +138,18 @@ class ToolDelta:
                     cfgs = std
                     break
                 except Exception:
-                    Print.print_err("输入有误， 租赁服号和密码应当是纯数字")
+                    Print.print_err("输入有误，租赁服号和密码应当是纯数字")
         auth_servers = constants.AUTH_SERVERS
         if auth_server == "":
-            Print.print_inf("选择 ToolDelta机器人账号 使用的验证服务器:")
+            Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
             for i, (auth_server_name, _) in enumerate(auth_servers):
                 Print.print_inf(f" {i + 1} - {auth_server_name}")
             Print.print_inf(
-                "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器, 不能混用"
+                "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
             )
             while 1:
                 try:
-                    ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
+                    ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
                     if ch not in range(1, len(auth_servers) + 1):
                         raise ValueError
                     cfgs["验证服务器地址(更换时记得更改fbtoken)"] = auth_servers[
@@ -157,22 +157,22 @@ class ToolDelta:
                     ][1]
                     break
                 except ValueError:
-                    Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
+                    Print.print_err("输入不合法，或者是不在范围内，请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
             # 读取启动配置等
         if not os.path.isfile("fbtoken"):
             Print.print_inf(
-                "请选择登录方法:\n 1 - 使用账号密码(登录成功后将自动获取Token到工作目录)\n 2 - 使用Token(如果Token文件不存在则需要输入或将文件放入工作目录)\r"
+                "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
             )
-            Login_method: str = input(Print.fmt_info("请输入你的选择:", "§6 输入 "))
+            Login_method: str = input(Print.fmt_info("请输入你的选择：", "§6 输入 "))
             while True:
                 if Login_method.isdigit() is False:
                     Login_method = input(
-                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
+                        Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
                     )
                 elif int(Login_method) > 2 or int(Login_method) < 1:
                     Login_method = input(
-                        Print.fmt_info("输入有误, 请输入正确的序号: ", "§6 警告 ")
+                        Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
                     )
                 else:
                     break
@@ -189,24 +189,24 @@ class ToolDelta:
                     with open("fbtoken", "w", encoding="utf-8") as f:
                         f.write(token)
                 except requests.exceptions.RequestException as e:
-                    Print.print_err(f"登录失败，原因：{e}\n正在切换至Token登录")
+                    Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
             if_token()
 
         if self.launchMode == 0:
-            Print.print_inf("请选择启动器启动模式(之后可在ToolDelta启动配置更改):")
+            Print.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
             for i, (launcher_name, _) in enumerate(LAUNCHERS):
                 Print.print_inf(f" {i + 1} - {launcher_name}")
             while 1:
                 try:
-                    ch = int(input(Print.fmt_info("请选择: ", "§f 输入 ")))
+                    ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
                     if ch not in range(1, len(LAUNCHERS) + 1):
                         raise ValueError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                     break
                 except ValueError:
-                    Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
+                    Print.print_err("输入不合法，或者是不在范围内，请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        # 修复fbtoken
+        # 修复 fbtoken
         fbtokenFix()
         with open("fbtoken", "r", encoding="utf-8") as f:
             fbtoken = f.read()
@@ -228,22 +228,22 @@ class ToolDelta:
             Print.clean_print("§c未初始化配置文件, 无法进行修改")
             return
         except Config.ConfigError as err:
-            Print.print_err(f"配置文件损坏: {err}")
+            Print.print_err(f"配置文件损坏：{err}")
             return
         if (old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1) not in range(0, 2):
-            Print.print_err(f"配置文件损坏: 启动模式错误: {old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1}")
+            Print.print_err(f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式 (请不要手动更改此项，改为 0 可重置)'] - 1}")
             return
         while 1:
             md = (
-                "NeOmega 框架 (NeOmega模式, 租赁服适应性强, 推荐)",
-                "NeOmega 框架 (NeOmega连接模式, 需要先启动对应的neOmega接入点)",
+                "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
+                "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
             )
             Print.clean_print("§b现有配置项如下:")
-            Print.clean_print(f" 1. 租赁服号: {old_cfg['服务器号']}")
-            Print.clean_print(f" 2. 密码: <已隐藏>")
-            Print.clean_print(f" 3. 启动器启动模式: {md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}")
-            Print.clean_print(f" 4. 是否记录日志: {old_cfg['是否记录日志']}")
-            Print.clean_print(f" 5. 验证服务器地址: {old_cfg['验证服务器地址(更换时记得更改fbtoken)']}")
+            Print.clean_print(f" 1. 租赁服号：{old_cfg['服务器号']}")
+            Print.clean_print(f" 2. 密码：<已隐藏>")
+            Print.clean_print(f" 3. 启动器启动模式：{md[old_cfg['启动器启动模式 (请不要手动更改此项，改为 0 可重置)'] - 1]}")
+            Print.clean_print(f" 4. 是否记录日志：{old_cfg['是否记录日志']}")
+            Print.clean_print(f" 5. 验证服务器地址：{old_cfg['验证服务器地址 (更换时记得更改 fbtoken)']}")
             Print.clean_print(f"    §a直接回车: 保存并退出")
             resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
@@ -270,23 +270,23 @@ class ToolDelta:
                     old_cfg["密码"] = n
                     input(Print.clean_fmt(f"§f新的租赁服密码: §a******§f, 回车键继续"))
                 case "3":
-                    Print.print_inf("选择启动器启动模式(之后可在ToolDelta启动配置更改):")
+                    Print.print_inf("选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
                     for i, (launcher_name, _) in enumerate(LAUNCHERS):
                         Print.print_inf(f" {i + 1} - {launcher_name}")
                     while 1:
                         try:
-                            ch = int(input(Print.clean_fmt("请选择: ")))
+                            ch = int(input(Print.clean_fmt("请选择：")))
                             if ch not in range(1, len(LAUNCHERS) + 1):
                                 raise ValueError
                             old_cfg["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                             break
                         except ValueError:
-                            Print.print_err("输入不合法, 或者是不在范围内, 请重新输入")
+                            Print.print_err("输入不合法，或者是不在范围内，请重新输入")
                             continue
-                    input(Print.clean_fmt(f"§a已选择启动器启动模式: §f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}, 回车键继续"))
+                    input(Print.clean_fmt(f"§a已选择启动器启动模式: §f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为 0 可重置)'] - 1]}, 回车键继续"))
                 case "4":
                     old_cfg['是否记录日志'] = [True, False][old_cfg['是否记录日志']]
-                    input(Print.clean_fmt(f"日志记录模式已改为: {['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"))
+                    input(Print.clean_fmt(f"日志记录模式已改为：{['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"))
                 case "5":
                     n = input(Print.clean_fmt("§b请输入验证服务器地址: "))
                     if not n.startswith("http://") and not n.startswith("https://"):
@@ -322,7 +322,7 @@ class ToolDelta:
             f"§d{PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} 项目地址: https://github.com/ToolDelta", Print.INFO_LOAD
+            f"§d{PRG_NAME} 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
         )
         Print.print_with_info(
             f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
@@ -337,7 +337,7 @@ class ToolDelta:
             plugins (PluginGroup): 插件组对象，包含已加载的插件信息
         """
         Print.print_suc(
-            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件, §f{plugins.injected_plugin_loaded_num}§a 个注入式插件"
+            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件，§f{plugins.injected_plugin_loaded_num}§a 个注入式插件"
         )
 
     @staticmethod
@@ -358,7 +358,7 @@ class ToolDelta:
         usage: str,
         func: Callable[[list[str]], None],
     ) -> None:
-        """注册ToolDelta控制台的菜单项
+        """注册 ToolDelta 控制台的菜单项
 
         Args:
             triggers (list[str]): 触发词列表
@@ -402,10 +402,10 @@ class ToolDelta:
 
         @Utils.thread_func
         def _execute_mc_command_and_get_callback(cmd: str) -> None:
-            """执行Minecraft指令并获取回调结果。
+            """执行 Minecraft 指令并获取回调结果。
 
             Args:
-                cmd (str): 要执行的Minecraft指令。
+                cmd (str): 要执行的 Minecraft 指令。
 
             Raises:
                 ValueError: 当指令执行失败时抛出。
@@ -418,15 +418,15 @@ class ToolDelta:
                 if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
                     result.OutputMessages[0].Message == "commands.generic.unknown"
                 ):
-                    Print.print_err(f'未知的MC指令， 可能是指令格式有误： "{cmd}"')
+                    Print.print_err(f'未知的 MC 指令，可能是指令格式有误： "{cmd}"')
                 else:
                     mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(result.as_dict["OutputMessages"])
                     if not result.SuccessCount:
-                        print_str = "指令执行失败: " + " ".join(mjon)
+                        print_str = "指令执行失败：" + " ".join(mjon)
                         Print.print_war(print_str)
                         Print.print_war(result.as_dict["OutputMessages"])
                     else:
-                        print_str = "指令执行成功: " + " ".join(mjon)
+                        print_str = "指令执行成功：" + " ".join(mjon)
                         Print.print_suc(print_str)
                         Print.print_suc(result.as_dict["OutputMessages"])
 
@@ -435,7 +435,7 @@ class ToolDelta:
                     raise ValueError("指令执行失败") from exec_err
                 if result.SuccessCount:
                     Print.print_suc(
-                        f"指令执行成功: \n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
+                        f"指令执行成功：\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
                     )
             except TimeoutError:
                 Print.print_err("[超时] 指令获取结果返回超时")
@@ -465,7 +465,7 @@ class ToolDelta:
             self.add_console_cmd_trigger(
                 ["/"],
                 "[指令]",
-                "执行MC指令",
+                "执行 MC 指令",
                 _execute_mc_command_and_get_callback
             )
             self.add_console_cmd_trigger(
@@ -473,7 +473,7 @@ class ToolDelta:
                 None,
                 "查询在线玩家",
                 lambda _: Print.print_inf(
-                    "在线玩家: " + ", ".join(self.link_game_ctrl.allplayers)
+                    "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
                 ),
             )
             while 1:
@@ -518,7 +518,7 @@ class ToolDelta:
         ):
             try:
                 self.link_game_ctrl.sendwscmd(
-                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中(看到这条消息请重新加入游戏)\nSTATUS CODE: {exit_status_code}"
+                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中 (看到这条消息请重新加入游戏)\nSTATUS CODE: {exit_status_code}"
                 )
             except Exception:
                 pass
@@ -535,26 +535,26 @@ class ToolDelta:
         return self.consoleMenu
 
     def set_game_control(self, game_ctrl: "GameCtrl") -> None:
-        """使用外源GameControl
+        """使用外源 GameControl
 
         Args:
-            game_ctrl (_type_): GameControl对象
+            game_ctrl (_type_): GameControl 对象
         """
         self.link_game_ctrl = game_ctrl
 
     def set_plugin_group(self, plug_grp) -> None:
-        """使用外源PluginGroup
+        """使用外源 PluginGroup
 
         Args:
-            plug_grp (_type_): PluginGroup对象
+            plug_grp (_type_): PluginGroup 对象
         """
         self.link_plugin_group: "PluginGroup" = plug_grp
 
     def get_game_control(self) -> "GameCtrl":
-        """获取GameControl对象
+        """获取 GameControl 对象
 
         Returns:
-            GameCtrl: GameControl对象
+            GameCtrl: GameControl 对象
         """
         gcl: "GameCtrl" = self.link_game_ctrl
         return gcl
@@ -564,7 +564,7 @@ class ToolDelta:
         """安全退出"""
         safe_close()
         publicLogger.exit()
-        Print.print_inf("已保存数据与日志等信息.")
+        Print.print_inf("已保存数据与日志等信息。")
 
 
 class GameCtrl:
@@ -574,7 +574,7 @@ class GameCtrl:
         """初始化
 
         Args:
-            frame (Frame): 继承Frame的对象
+            frame (Frame): 继承 Frame 的对象
         """
         frame.basic_operation()
         self.Game_Data = GameTextsLoader().game_texts_data
@@ -616,7 +616,7 @@ class GameCtrl:
         仅限内部调用
 
         Args:
-            pkt (int): 数据包ID
+            pkt (int): 数据包 ID
         """
         self.require_listen_packets.add(pkt)
 
@@ -653,8 +653,8 @@ class GameCtrl:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining and "§" in playername:
-                self.say_to("@a", f"§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常!")
-                # 没有VIP名字供测试...
+                self.say_to("@a", f"§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！")
+                # 没有 VIP 名字供测试...
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
                 if playername not in self.allplayers and not res:
@@ -670,7 +670,7 @@ class GameCtrl:
                     None,
                 )
                 if playername is None:
-                    Print.print_war("无法获取PlayerList中玩家名字")
+                    Print.print_war("无法获取 PlayerList 中玩家名字")
                     continue
                 if playername != "???" and not res:
                     self.allplayers.remove(playername)
@@ -680,7 +680,7 @@ class GameCtrl:
                 )
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
-        """处理9号数据包的消息
+        """处理 9 号数据包的消息
 
         Args:
             pkt (dict): 数据包内容
@@ -715,7 +715,7 @@ class GameCtrl:
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
-                Print.print_inf(f"{player} 使用say说: {msg.strip(f'[{player}]')}")
+                Print.print_inf(f"{player} 使用 say 说：{msg.strip(f'[{player}]')}")
                 plugin_grp.execute_command(
                     player, msg, self.linked_frame.on_plugin_err
                 )
@@ -724,7 +724,7 @@ class GameCtrl:
                 try:
                     msg_text = json.loads(msg)["rawtext"]
                     if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
-                        Print.print_with_info("(该tellraw内容为敏感词)", "§f 消息 ")
+                        Print.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
                         return
                     msg_text = "".join([i["text"] for i in msg_text])
                     Print.print_with_info(msg_text, "§f 消息 ")
@@ -768,7 +768,7 @@ class GameCtrl:
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
-        Print.print_suc("初始化注入式函数init任务执行完毕")
+        Print.print_suc("初始化注入式函数 init 任务执行完毕")
         self.inject_welcome()
 
     def inject_welcome(self) -> None:
@@ -776,13 +776,13 @@ class GameCtrl:
 
         if isinstance(self.bot_name, str):
             Print.print_suc(
-                "初始化完成, 在线玩家: "
+                "初始化完成，在线玩家："
                 + ", ".join(self.allplayers)
-                + ", 机器人ID: "+self.bot_name
+                + ", 机器人 ID: "+self.bot_name
             )
         else:
-            Print.print_suc("初始化完成, 在线玩家: " + ", ".join(self.allplayers))
-            Print.print_war("未能获取机器人ID")
+            Print.print_suc("初始化完成，在线玩家：" + ", ".join(self.allplayers))
+            Print.print_war("未能获取机器人 ID")
         self.sendcmd("/tag @s add robot")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
