@@ -39,6 +39,7 @@ from .packets import (
 from .launch_cli import (
     FrameNeOmg,
     FrameNeOmgRemote,
+    FrameBEConnect,
     SysStatus,
 )
 
@@ -216,6 +217,20 @@ class ToolDelta:
             self.launcher.set_launch_data(serverNumber, serverPasswd, fbtoken, auth_server)
         elif type(self.launcher) == FrameNeOmgRemote:
             ...
+        elif type(self.launcher) == FrameBEConnect:
+            launch_data = cfgs.get("基岩版WS服务器启动模式", constants.LAUNCHER_BEWS_DEFAULT)
+            try:
+                Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
+            except Config.ConfigError as err:
+                Print.print_err(f"ToolDelta 基本配置-BEWS启动配置有误，需要更正：{err}")
+                raise SystemExit from err
+            if launch_data["服务端开放地址"] == "":
+                Print.print_inf("请输入WS服务器开放的地址:")
+                addr = input(Print.fmt_info("请输入(回车默认localhost:12003): ", "§6 输入 "))
+                if not addr.startswith("ws://"):
+                    addr = "ws://" + addr
+                launch_data["服务端开放地址"] = addr
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         else:
             raise ValueError("LAUNCHER Error")
 

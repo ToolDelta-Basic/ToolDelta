@@ -659,6 +659,18 @@ class FrameNeOmgRemote(FrameNeOmg):
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
 
+    def init(self):
+        self.cmd_resp = {}
+
     def prepare_apis(self):
         ...
 
+    def handler(self, data):
+        message_purpose = data['header']['messagePurpose']
+        if message_purpose == 'commandResponse':
+            request_id = data['header']['requestId']
+            if request_id in self.cmd_resp.keys():
+                self.cmd_resp[request_id] = Packet_CommandOutput({
+                    "CommandOrigin": [],
+                    "OutputType": 1,
+                })

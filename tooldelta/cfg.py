@@ -106,6 +106,11 @@ class Cfg:
         def __init__(self, val_type: type | tuple[type]):
             self.type = val_type
 
+    class KeyGroup:
+        "配置文件的键组, 充当 dict_key 使用"
+        def __init__(self, keys: list[str]):
+            self.keys = keys
+
     class ConfigKeyError(ConfigError):
         "配置 json 的键错误"
 
@@ -277,10 +282,17 @@ class Cfg:
                 self.check_auto(pattern.type, val_get, pattern.key)
         else:
             for key, std_val in pattern.items():
-                val_get = jsondict.get(key, Cfg.FindNone)
-                if val_get == Cfg.FindNone:
-                    raise self.ConfigKeyError(f"不存在的 JSON 键：{key}")
-                self.check_auto(std_val, val_get, key)
+                if isinstance(key, self.KeyGroup):
+                    for k, v in jsondict.items():
+                        if k in key.keys:
+                            self.check_auto(v, std_val)
+                elif isinstance(key, str):
+                    val_get = jsondict.get(key, Cfg.FindNone)
+                    if val_get == Cfg.FindNone:
+                        raise self.ConfigKeyError(f"不存在的 JSON 键：{key}")
+                    self.check_auto(std_val, val_get, key)
+                else:
+                    raise ValueError("Invalid key type: " + key.__class__.__name__)
 
     def check_list(self, pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
         """检查列表

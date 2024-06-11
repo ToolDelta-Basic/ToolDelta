@@ -38,6 +38,16 @@ LAUNCHER_NEOMEGA_DEFAULT: dict = {
 }
 "启动器: NeOmega 默认启动配置"
 
+LAUNCHER_BEWS_STD: dict = {
+    "服务端开放地址": str
+}
+"启动器: BEWSServer 启动配置验证格式"
+
+LAUNCHER_BEWS_DEFAULT: dict = {
+    "服务端开放地址": ""
+}
+"启动器: BEWSServer 默认启动配置"
+
 FB_APIS = [
     "https://api.fastbuilder.pro/api/phoenix/login",
     "https://api.fastbuilder.pro/api/new",

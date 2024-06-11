@@ -65,4 +65,3 @@ def build_header(message_purpose, request_id=None):
         'version': '1',
         'messageType': 'commandRequest',
     }
-
