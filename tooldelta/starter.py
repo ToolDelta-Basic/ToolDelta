@@ -22,6 +22,7 @@ def start_tool_delta() -> None:
             Print.print_war("将不会进行自动更新。")
         tooldelta.basic_operation()
         tooldelta.loadConfiguration()
+        tooldelta.launcher.init()
         game_control = GameCtrl(tooldelta)
         tooldelta.set_game_control(game_control)
         tooldelta.set_plugin_group(plugin_group)

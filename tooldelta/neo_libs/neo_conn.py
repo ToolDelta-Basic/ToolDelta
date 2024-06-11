@@ -501,7 +501,7 @@ class ThreadOmega:
         self,
         connect_type: ConnectType,
         address: str,
-        accountOption: AccountOptions,
+        accountOption: AccountOptions | None,
     ) -> None:
         self._thread_counter = Counter("thread")
         self._running_threads: Dict[str, Thread] = {}

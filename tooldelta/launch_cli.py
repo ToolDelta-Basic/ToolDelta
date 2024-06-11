@@ -11,10 +11,10 @@ from typing import Callable, Optional
 import ujson as json
 import requests
 import tooldelta
-import fcwslib
 
 from tooldelta import constants
 from .neo_libs import neo_conn
+from .bews_libs import ws_con
 from .cfg import Cfg
 from .utils import Utils
 from .color_print import Print
@@ -50,8 +50,8 @@ class StandardFrame:
     """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""
     launch_type = "Original"
 
-    def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
-        """初始化启动器框架
+    def __init__(self) -> None:
+        """实例化启动器框架
 
         Args:
             serverNumber (int): 服务器号
@@ -59,10 +59,6 @@ class StandardFrame:
             fbToken (str): 验证服务器 Token
             auth_server_url (str): 验证服务器地址
         """
-        self.serverNumber = serverNumber
-        self.serverPassword = password
-        self.fbToken = fbToken
-        self.auth_server = auth_server_url
         self.system_type = platform.uname().system
         self.inject_events: list = []
         self.packet_handler: Optional[Callable] = lambda pckType, pck: None
@@ -70,6 +66,9 @@ class StandardFrame:
         self._launcher_listener: Callable
         self.exit_event = threading.Event()
         self.status: int = SysStatus.LOADING
+
+    def init(self):
+        "初始化启动器框架"
 
     def add_listen_packets(self, *pcks: int) -> None:
         """添加需要监听的数据包"""
@@ -203,7 +202,7 @@ class FrameNeOmg(StandardFrame):
     """使用 NeOmega 框架连接到游戏"""
     launch_type = "NeOmega"
 
-    def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server: str) -> None:
+    def __init__(self, ) -> None:
         """初始化 NeOmega 框架
 
         Args:
@@ -212,15 +211,24 @@ class FrameNeOmg(StandardFrame):
             fbToken (str): 验证服务器 Token
             auth_server (str): 验证服务器地址
         """
-        super().__init__(serverNumber, password, fbToken, auth_server)
+        super().__init__()
         self.status = SysStatus.LOADING
         self.launch_event = threading.Event()
         self.omega: Optional[neo_conn.ThreadOmega] = None
         self.neomg_proc = None
+        self.serverNumber = None
+
+    def init(self):
         self.download_libs()
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         self.secret_exit_key = ""
+
+    def set_launch_data(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str):
+        self.serverNumber = serverNumber
+        self.serverPassword = password
+        self.fbToken = fbToken
+        self.auth_server = auth_server_url
 
     def set_omega(self, openat_port: int) -> None:
         """设置 Omega 连接
@@ -231,19 +239,24 @@ class FrameNeOmg(StandardFrame):
         Raises:
             SystemExit: 系统退出
         """
-
+        if self.serverNumber is None:
+            account_opt = None
+            if not isinstance(self, FrameNeOmgRemote):
+                raise ValueError("Can't start NeOmega without account")
+        else:
+            account_opt = neo_conn.AccountOptions(
+                AuthServer=self.auth_server,
+                UserToken=self.fbToken,
+                ServerCode=str(self.serverNumber),
+                ServerPassword=str(self.serverPassword),
+            )
         retries = 0
         while retries <= 10:
             try:
                 self.omega = neo_conn.ThreadOmega(
                     connect_type=neo_conn.ConnectType.Remote,
                     address=f"tcp://localhost:{openat_port}",
-                    accountOption=neo_conn.AccountOptions(
-                        AuthServer=self.auth_server,
-                        UserToken=self.fbToken,
-                        ServerCode=str(self.serverNumber),
-                        ServerPassword=str(self.serverPassword),
-                    ),
+                    accountOption=account_opt
                 )
                 retries = 0
                 break
@@ -252,7 +265,7 @@ class FrameNeOmg(StandardFrame):
                 retries += 1
                 Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
                 if retries > 5:
-                    Print.print_err("最大重试次数已达到")
+                    Print.print_err("最大重试次数已超过")
                     raise SystemExit from err
 
     def start_neomega_proc(self) -> int:
@@ -645,12 +658,7 @@ class FrameNeOmgRemote(FrameNeOmg):
 
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
-    def __init__(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str) -> None:
-        super().__init__(serverNumber, password, fbToken, auth_server_url)
 
     def prepare_apis(self):
         ...
 
-    async def wait_connect(self):
-        server = fcwslib.server.Server("127.0.0.1", 23000)
-        await server.run_forever()

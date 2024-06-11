@@ -76,8 +76,6 @@ class ToolDelta:
         """初始化"""
         self.createThread = Utils.createThread
         self.sys_data = self.FrameBasic()
-        self.serverNumber: int = 0
-        self.serverPasswd: str = ""
         self.launchMode: int = 0
         self.consoleMenu = []
         self.is_docker: bool = os.path.exists('/.dockerenv')
@@ -95,14 +93,10 @@ class ToolDelta:
         Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
             # 读取配置文件
-            cfgs = Config.get_cfg("ToolDelta基本配置.json",
-                                  constants.LAUNCH_CFG_STD)
-            self.serverNumber = cfgs["服务器号"]
-            self.serverPasswd = cfgs["密码"]
+            cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.is_mir = cfgs["是否使用github镜像"]
             self.plugin_market_url = cfgs["插件市场源"]
-            auth_server = cfgs["验证服务器地址(更换时记得更改fbtoken)"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(1, len(LAUNCHERS) + 1):
                 raise Config.ConfigError("你不该随意修改启动器模式，现在赶紧把它改回 0 吧")
@@ -113,85 +107,8 @@ class ToolDelta:
                 Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
             else:
                 Print.print_err(f"ToolDelta 基本配置有误，需要更正：{err}")
-                import traceback
-                traceback.print_exc()
             raise SystemExit from err
-        if self.serverNumber == 0:
-            while 1:
-                try:
-                    self.serverNumber = int(input(
-                        Print.fmt_info("请输入租赁服号：", "§b 输入 ")
-                    ))
-                    self.serverPasswd = (
-                        getpass.getpass(
-                            Print.fmt_info(
-                                "请输入租赁服密码 (不会回显，没有请直接回车): ", "§b 输入 "
-                            )
-                        )
-                        or "0"
-                    )
-                    std = constants.LAUNCH_CFG.copy()
-                    std["服务器号"] = int(self.serverNumber)
-                    std["密码"] = int(self.serverPasswd)
-                    Config.default_cfg("ToolDelta基本配置.json", std, True)
-                    Print.print_suc("登录配置设置成功")
-                    cfgs = std
-                    break
-                except Exception:
-                    Print.print_err("输入有误，租赁服号和密码应当是纯数字")
-        auth_servers = constants.AUTH_SERVERS
-        if auth_server == "":
-            Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
-            for i, (auth_server_name, _) in enumerate(auth_servers):
-                Print.print_inf(f" {i + 1} - {auth_server_name}")
-            Print.print_inf(
-                "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
-            )
-            while 1:
-                try:
-                    ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
-                    if ch not in range(1, len(auth_servers) + 1):
-                        raise ValueError
-                    cfgs["验证服务器地址(更换时记得更改fbtoken)"] = auth_servers[
-                        ch - 1
-                    ][1]
-                    break
-                except ValueError:
-                    Print.print_err("输入不合法，或者是不在范围内，请重新输入")
-            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-            # 读取启动配置等
-        if not os.path.isfile("fbtoken"):
-            Print.print_inf(
-                "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
-            )
-            Login_method: str = input(Print.fmt_info("请输入你的选择：", "§6 输入 "))
-            while True:
-                if Login_method.isdigit() is False:
-                    Login_method = input(
-                        Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
-                    )
-                elif int(Login_method) > 2 or int(Login_method) < 1:
-                    Login_method = input(
-                        Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
-                    )
-                else:
-                    break
-            if Login_method == "1":
-                try:
-                    match cfgs["验证服务器地址(更换时记得更改fbtoken)"]:
-                        case "https://liliya233.uk":
-                            token = auths.liliya_login()
-                        case "https://api.fastbuilder.pro":
-                            token = auths.fbuc_login()
-                        case _:
-                            Print.print_err("暂无法登录该验证服务器")
-                            raise SystemExit
-                    with open("fbtoken", "w", encoding="utf-8") as f:
-                        f.write(token)
-                except requests.exceptions.RequestException as e:
-                    Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
-            if_token()
-
+        # 每个启动器框架的单独启动配置之前
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
             for i, (launcher_name, _) in enumerate(LAUNCHERS):
@@ -206,18 +123,101 @@ class ToolDelta:
                 except ValueError:
                     Print.print_err("输入不合法，或者是不在范围内，请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        # 修复 fbtoken
-        fbtokenFix()
-        with open("fbtoken", "r", encoding="utf-8") as f:
-            fbtoken = f.read()
         self.launcher = LAUNCHERS[
-            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
-        ][1](
-            self.serverNumber,
-            self.serverPasswd,
-            fbtoken,
-            auth_server,
-        )
+                cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+            ][1]()
+        # 每个启动器框架的单独启动配置
+        if type(self.launcher) == FrameNeOmg:
+            launch_data = cfgs.get("NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT)
+            try:
+                Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
+            except Config.ConfigError as err:
+                Print.print_err(f"ToolDelta 基本配置-NeOmega启动配置有误，需要更正：{err}")
+                raise SystemExit from err
+            serverNumber = launch_data["服务器号"]
+            serverPasswd = launch_data["密码"]
+            auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
+            if serverNumber == 0:
+                while 1:
+                    try:
+                        serverNumber = int(input(
+                            Print.fmt_info("请输入租赁服号: ", "§b 输入 ")
+                        ))
+                        serverPasswd = (
+                            getpass.getpass(
+                                Print.fmt_info(
+                                    "请输入租赁服密码 (不会回显，没有请直接回车): ", "§b 输入 "
+                                )
+                            )
+                            or "0"
+                        )
+                        launch_data["服务器号"] = int(serverNumber)
+                        launch_data["密码"] = int(serverPasswd)
+                        cfgs["NeOmega启动模式"] = launch_data
+                        Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                        Print.print_suc("登录配置设置成功")
+                        break
+                    except Exception:
+                        Print.print_err("输入有误，租赁服号和密码应当是纯数字")
+            auth_servers = constants.AUTH_SERVERS
+            if auth_server == "":
+                Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
+                for i, (auth_server_name, _) in enumerate(auth_servers):
+                    Print.print_inf(f" {i + 1} - {auth_server_name}")
+                Print.print_inf(
+                    "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
+                )
+                while 1:
+                    try:
+                        ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
+                        if ch not in range(1, len(auth_servers) + 1):
+                            raise ValueError
+                        auth_server = auth_servers[ch - 1][1]
+                        cfgs["NeOmega启动模式"]["验证服务器地址(更换时记得更改fbtoken)"] = auth_server
+                        break
+                    except ValueError:
+                        Print.print_err("输入不合法，或者是不在范围内，请重新输入")
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                # 读取启动配置等
+            if not os.path.isfile("fbtoken"):
+                Print.print_inf(
+                    "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
+                )
+                Login_method: str = input(Print.fmt_info("请输入你的选择：", "§6 输入 "))
+                while True:
+                    if Login_method.isdigit() is False:
+                        Login_method = input(
+                            Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                        )
+                    elif int(Login_method) > 2 or int(Login_method) < 1:
+                        Login_method = input(
+                            Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                        )
+                    else:
+                        break
+                if Login_method == "1":
+                    try:
+                        match cfgs["NeOmega启动模式"]["验证服务器地址(更换时记得更改fbtoken)"]:
+                            case "https://liliya233.uk":
+                                token = auths.liliya_login()
+                            case "https://api.fastbuilder.pro":
+                                token = auths.fbuc_login()
+                            case _:
+                                Print.print_err("暂无法登录该验证服务器")
+                                raise SystemExit
+                        with open("fbtoken", "w", encoding="utf-8") as f:
+                            f.write(token)
+                    except requests.exceptions.RequestException as e:
+                        Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+            if_token()
+            fbtokenFix()
+            with open("fbtoken", "r", encoding="utf-8") as f:
+                fbtoken = f.read()
+            self.launcher.set_launch_data(serverNumber, serverPasswd, fbtoken, auth_server)
+        elif type(self.launcher) == FrameNeOmgRemote:
+            ...
+        else:
+            raise ValueError("LAUNCHER Error")
 
     @staticmethod
     def change_config():
@@ -231,7 +231,7 @@ class ToolDelta:
             Print.print_err(f"配置文件损坏：{err}")
             return
         if (old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1) not in range(0, 2):
-            Print.print_err(f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式 (请不要手动更改此项，改为 0 可重置)'] - 1}")
+            Print.print_err(f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1}")
             return
         while 1:
             md = (
@@ -239,11 +239,8 @@ class ToolDelta:
                 "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
             )
             Print.clean_print("§b现有配置项如下:")
-            Print.clean_print(f" 1. 租赁服号：{old_cfg['服务器号']}")
-            Print.clean_print(f" 2. 密码：<已隐藏>")
-            Print.clean_print(f" 3. 启动器启动模式：{md[old_cfg['启动器启动模式 (请不要手动更改此项，改为 0 可重置)'] - 1]}")
-            Print.clean_print(f" 4. 是否记录日志：{old_cfg['是否记录日志']}")
-            Print.clean_print(f" 5. 验证服务器地址：{old_cfg['验证服务器地址 (更换时记得更改 fbtoken)']}")
+            Print.clean_print(f" 1. 启动器启动模式：{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}")
+            Print.clean_print(f" 2. 是否记录日志：{old_cfg['是否记录日志']}")
             Print.clean_print(f"    §a直接回车: 保存并退出")
             resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
@@ -251,25 +248,25 @@ class ToolDelta:
                 Print.clean_print("§a配置已保存!")
                 return
             match resp:
+                #case "1":
+                #    n = Utils.try_int(input(Print.clean_fmt("§b请输入租赁服号: ")))
+                #    if n is None:
+                #        input(Print.clean_fmt("§c不是合法租赁服号, 回车键继续"))
+                #        continue
+                #    old_cfg["服务器号"] = n
+                #    input(Print.clean_fmt(f"§f新的租赁服号: §a{n}§f, 回车键继续"))
+                #case "2":
+                #    n = getpass.getpass(Print.clean_fmt("§b请输入租赁服密码(自动隐藏): "))
+                #    if len(n) != 6:
+                #        input(Print.clean_fmt("§c不是合法租赁服六位数密码, 回车键继续"))
+                #        continue
+                #   n = Utils.try_int(n)
+                #    if n is None:
+                #        input(Print.clean_fmt("§c不是合法租赁服密码, 回车键继续"))
+                #        continue
+                #    old_cfg["密码"] = n
+                #    input(Print.clean_fmt(f"§f新的租赁服密码: §a******§f, 回车键继续"))
                 case "1":
-                    n = Utils.try_int(input(Print.clean_fmt("§b请输入租赁服号: ")))
-                    if n is None:
-                        input(Print.clean_fmt("§c不是合法租赁服号, 回车键继续"))
-                        continue
-                    old_cfg["服务器号"] = n
-                    input(Print.clean_fmt(f"§f新的租赁服号: §a{n}§f, 回车键继续"))
-                case "2":
-                    n = getpass.getpass(Print.clean_fmt("§b请输入租赁服密码(自动隐藏): "))
-                    if len(n) != 6:
-                        input(Print.clean_fmt("§c不是合法租赁服六位数密码, 回车键继续"))
-                        continue
-                    n = Utils.try_int(n)
-                    if n is None:
-                        input(Print.clean_fmt("§c不是合法租赁服密码, 回车键继续"))
-                        continue
-                    old_cfg["密码"] = n
-                    input(Print.clean_fmt(f"§f新的租赁服密码: §a******§f, 回车键继续"))
-                case "3":
                     Print.print_inf("选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
                     for i, (launcher_name, _) in enumerate(LAUNCHERS):
                         Print.print_inf(f" {i + 1} - {launcher_name}")
@@ -283,17 +280,16 @@ class ToolDelta:
                         except ValueError:
                             Print.print_err("输入不合法，或者是不在范围内，请重新输入")
                             continue
-                    input(Print.clean_fmt(f"§a已选择启动器启动模式: §f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为 0 可重置)'] - 1]}, 回车键继续"))
-                case "4":
+                    input(Print.clean_fmt(f"§a已选择启动器启动模式: §f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}, 回车键继续"))
+                case "2":
                     old_cfg['是否记录日志'] = [True, False][old_cfg['是否记录日志']]
                     input(Print.clean_fmt(f"日志记录模式已改为：{['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"))
-                case "5":
-                    n = input(Print.clean_fmt("§b请输入验证服务器地址: "))
-                    if not n.startswith("http://") and not n.startswith("https://"):
-                        input(Print.clean_fmt("§c不合法URL地址, 回车键继续"))
-                        continue
-                    old_cfg['验证服务器地址(更换时记得更改fbtoken)'] = n
-                    input(Print.clean_fmt(f"§a验证服务器已设置, 回车键继续"))
+                #case "3":
+                #    n = input(Print.clean_fmt("§b请输入验证服务器地址: "))
+                #    if not n.startswith("http://") and not n.startswith("https://"):
+                #        input(Print.clean_fmt("§c不合法URL地址, 回车键继续"))
+                #    old_cfg['验证服务器地址(更换时记得更改fbtoken)'] = n
+                #    input(Print.clean_fmt(f"§a验证服务器已设置, 回车键继续"))
 
     @staticmethod
     def upgrade_cfg() -> bool:

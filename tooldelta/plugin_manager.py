@@ -238,10 +238,9 @@ class PluginManager:
         Returns:
             list[PluginRegData]: 插件数据表
         """
-        dirs = [TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN]
         plugins = []
-        for plugin_type_dir in dirs:
-            p_dirs = os.path.join(TOOLDELTA_PLUGIN_DIR, plugin_type_dir)
+        for ptype, type_dir in PLUGIN_TYPE_MAPPING.items():
+            p_dirs = os.path.join(TOOLDELTA_PLUGIN_DIR, type_dir)
             for fd in os.listdir(p_dirs):
                 datpath = os.path.join(p_dirs, fd, "datas.json")
                 is_enabled=not fd.endswith("+disabled")
@@ -250,7 +249,7 @@ class PluginManager:
                         jsdata = json.load(f)
                         plugins.append(PluginRegData(fd.replace("+disabled", ""), jsdata, is_enabled=is_enabled))
                 else:
-                    plugins.append(PluginRegData(fd.replace("+disabled", ""), {}, is_registered=False, is_enabled=is_enabled))
+                    plugins.append(PluginRegData(fd.replace("+disabled", ""), {"plugin-type": ptype}, is_registered=False, is_enabled=is_enabled))
         return plugins
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData) -> None:
