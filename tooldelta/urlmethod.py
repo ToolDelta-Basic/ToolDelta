@@ -314,7 +314,7 @@ def if_token() -> None:
 
 
 def fbtokenFix():
-    """修复 fbtoken 里的换行符    """
+    """修复 fbtoken 里的换行符"""
     with open("fbtoken", "r", encoding="utf-8") as f:
         token = f.read()
         if "\n" in token:

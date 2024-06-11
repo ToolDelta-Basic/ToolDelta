@@ -86,13 +86,6 @@ class Cfg:
             self.errPos = errPos
             self.args = (errStr,)
 
-    class UnneccessaryKV:
-        "配置文件的不必要的键"
-
-        def __init__(self, key: str, val_type: Any):
-            self.key = key
-            self.type = val_type
-
     class JsonList:
         "配置文件的列表类型"
 
@@ -255,14 +248,14 @@ class Cfg:
                 reason = "\n".join(str(err) for err in errs)
                 raise self.ConfigValueError(
                     f'JSON 键 对应的键"{fromkey}" 类型不正确，以下为可能的原因：\n{reason}')
-        elif isinstance(standard, (dict, Cfg.AnyKeyValue, Cfg.UnneccessaryKV)):
+        elif isinstance(standard, (dict, Cfg.AnyKeyValue)):
             self.check_dict(standard, val, fromkey)
         else:
             raise ValueError(
-                f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard.__class__.__name__}'
+                f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard}'
             )
 
-    def check_dict(self, pattern: dict | AnyKeyValue | UnneccessaryKV, jsondict: Any, from_key="?"):
+    def check_dict(self, pattern: dict | AnyKeyValue, jsondict: Any, from_key="?"):
         """
         按照给定的标准配置样式比对传入的配置文件 jsondict, 对不上则引发相应异常
 
@@ -276,16 +269,12 @@ class Cfg:
         if isinstance(pattern, Cfg.AnyKeyValue):
             for key, val in jsondict.items():
                 self.check_auto(pattern.type, val, key)
-        elif isinstance(pattern, Cfg.UnneccessaryKV):
-            val_get = jsondict.get(pattern.key, Cfg.FindNone)
-            if val_get != Cfg.FindNone:
-                self.check_auto(pattern.type, val_get, pattern.key)
         else:
             for key, std_val in pattern.items():
                 if isinstance(key, self.KeyGroup):
                     for k, v in jsondict.items():
                         if k in key.keys:
-                            self.check_auto(v, std_val)
+                            self.check_auto(std_val, v, k)
                 elif isinstance(key, str):
                     val_get = jsondict.get(key, Cfg.FindNone)
                     if val_get == Cfg.FindNone:
@@ -361,9 +350,8 @@ Config = Cfg()
 if __name__ == "__main__":
     # Test Part
     try:
-        test_cfg = {"key1": {"b": 2}, "key2": [{"key3": "6"}, 7]}
-        std = {"key1": Cfg.UnneccessaryKV(
-            "b", int), "key2": Cfg.JsonList(({"key3": str}, int))}
+        test_cfg = {"strong": "2"}
+        std = {Cfg.KeyGroup("strong"): int}
         Config.check_auto(std, test_cfg)
     except Cfg.ConfigError:
         import traceback
