@@ -108,7 +108,7 @@ class Cfg:
 
     class KeyGroup:
         "配置文件的键组, 充当 dict_key 使用"
-        def __init__(self, keys: list[str]):
+        def __init__(self, *keys: str):
             self.keys = keys
 
     class ConfigKeyError(ConfigError):
