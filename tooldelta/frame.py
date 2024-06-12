@@ -842,9 +842,9 @@ class GameCtrl:
         self.sendwocmd(f"titleraw " + target + " actionbar " + text_json)
 
     def get_game_data(self) -> dict:
-        """获取游戏数据
+        """获取游戏常见字符串数据
 
         Returns:
-            dict: 游戏数据
+            dict: 游戏常见字符串数据
         """
         return self.Game_Data
