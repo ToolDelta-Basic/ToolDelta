@@ -606,6 +606,7 @@ class GameCtrl:
         self.linked_frame = frame
         self.players_uuid = {}
         self.allplayers = []
+        self.all_players_data = {}
         self.bot_name = ""
         self.linked_frame: ToolDelta
         self.pkt_unique_id: int = 0
@@ -685,6 +686,7 @@ class GameCtrl:
                 if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
                     return
+                self.all_players_data = self.launcher.omega.get_all_online_players()
                 plugin_group.execute_player_join(
                     playername, self.linked_frame.on_plugin_err
                 )
@@ -700,6 +702,7 @@ class GameCtrl:
                 if playername != "???" and not res:
                     self.allplayers.remove(playername)
                 Print.print_inf(f"§e{playername} 退出了游戏")
+                self.all_players_data = self.launcher.omega.get_all_online_players()
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
@@ -762,6 +765,7 @@ class GameCtrl:
     def Inject(self) -> None:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
+        self.all_players_data = self.launcher.omega.get_all_online_players()
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)

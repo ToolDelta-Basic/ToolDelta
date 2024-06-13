@@ -3,7 +3,7 @@
 class PacketIDS:
     "数据包 ID 常量表"
     IDLogin = 1  # 登录
-    IDPlayAddress = 2  # 播放地址
+    IDPlayStatus = 2  # 播放地址
     IDServerToClientHandshake = 3  # 服务器到客户端握手
     IDClientToServerHandshake = 4  # 客户端到服务器握手
     IDDisconnect = 5  # 断开连接
