@@ -100,7 +100,7 @@ class Cfg:
             self.type = val_type
 
     class KeyGroup:
-        "配置文件的键组, 充当 dict_key 使用"
+        "配置文件的键组，充当 dict_key 使用"
         def __init__(self, *keys: str):
             self.keys = keys
 

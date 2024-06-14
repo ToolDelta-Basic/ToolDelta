@@ -52,7 +52,7 @@ class PacketIDS:
     IDContainerSetData = 51  # 容器设置数据
     IDCraftingData = 52  # 合成数据
     IDCraftingEvent = 53  # 合成事件
-    IDGUIDataPickItem = 54  # GUI数据选择物品
+    IDGUIDataPickItem = 54  # GUI 数据选择物品
     IDAdventureSettings = 55  # 冒险设置
     IDBlockActorData = 56  # 方块演员数据
     IDPlayerInput = 57  # 玩家输入
@@ -96,7 +96,7 @@ class PacketIDS:
     IDAutomationClientConnect = 95  # 自动化客户端连接
     IDSetLastHurtBy = 96  # 设置最后受伤者
     IDBookEdit = 97  # 编辑书籍
-    IDNPCRequest = 98  # NPC请求
+    IDNPCRequest = 98  # NPC 请求
     IDPhotoTransfer = 99  # 照片传输
     IDModalFormRequest = 100  # 模态窗口请求
     IDModalFormResponse = 101  # 模态窗口响应
@@ -163,7 +163,7 @@ class PacketIDS:
     IDAddVolumeEntity = 166  # 添加体积实体
     IDRemoveVolumeEntity = 167  # 移除体积实体
     IDSimulationType = 168  # 模拟类型
-    IDNPCDialogue = 169  # NPC对话
+    IDNPCDialogue = 169  # NPC 对话
     IDEducationResourceURI = 170  # 教育资源 URI
     IDCreatePhoto = 171  # 创建照片
     IDUpdateSubChunkBlocks = 172  # 更新子区块方块

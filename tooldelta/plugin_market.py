@@ -141,7 +141,7 @@ class PluginMarket:
                 last_operation = (
                     (
                         input(Print.fmt_info(
-                            "§f回车键继续上次操作, §bq§f退出, 请输入：", "§f 输入 "))
+                            "§f回车键继续上次操作，§bq§f 退出，请输入：", "§f 输入 "))
                         or last_operation
                     )
                     .lower()
@@ -274,7 +274,7 @@ class PluginMarket:
         res = input(Print.fmt_info(
             "§f下载 = §aY§f, 取消 = §cN§f, 请输入：")).lower().strip()
         if res == "y":
-            Print.clean_print(f"§6正在下载插件: §f{plugin_data.name}", end="\r")
+            Print.clean_print(f"§6正在下载插件：§f{plugin_data.name}", end="\r")
             pres = self.download_plugin(plugin_data)
             pres.reverse()
             return True, pres

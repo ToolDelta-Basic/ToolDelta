@@ -61,6 +61,7 @@ LAUNCHERS: list[
     ),
 ]
 
+
 class ToolDelta:
     """ToolDelta 主框架"""
 
@@ -94,7 +95,8 @@ class ToolDelta:
         Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
             # 读取配置文件
-            cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+            cfgs = Config.get_cfg("ToolDelta基本配置.json",
+                                  constants.LAUNCH_CFG_STD)
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.is_mir = cfgs["是否使用github镜像"]
             self.plugin_market_url = cfgs["插件市场源"]
@@ -125,11 +127,12 @@ class ToolDelta:
                     Print.print_err("输入不合法，或者是不在范围内，请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         self.launcher = LAUNCHERS[
-                cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
-            ][1]()
+            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+        ][1]()
         # 每个启动器框架的单独启动配置
         if type(self.launcher) == FrameNeOmg:
-            launch_data = cfgs.get("NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT)
+            launch_data = cfgs.get(
+                "NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT)
             try:
                 Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
             except Config.ConfigError as err:
@@ -142,7 +145,7 @@ class ToolDelta:
                 while 1:
                     try:
                         serverNumber = int(input(
-                            Print.fmt_info("请输入租赁服号: ", "§b 输入 ")
+                            Print.fmt_info("请输入租赁服号：", "§b 输入 ")
                         ))
                         serverPasswd = (
                             getpass.getpass(
@@ -214,19 +217,22 @@ class ToolDelta:
             fbtokenFix()
             with open("fbtoken", "r", encoding="utf-8") as f:
                 fbtoken = f.read()
-            self.launcher.set_launch_data(serverNumber, serverPasswd, fbtoken, auth_server)
+            self.launcher.set_launch_data(
+                serverNumber, serverPasswd, fbtoken, auth_server)
         elif type(self.launcher) == FrameNeOmgRemote:
             ...
         elif type(self.launcher) == FrameBEConnect:
-            launch_data = cfgs.get("基岩版WS服务器启动模式", constants.LAUNCHER_BEWS_DEFAULT)
+            launch_data = cfgs.get(
+                "基岩版WS服务器启动模式", constants.LAUNCHER_BEWS_DEFAULT)
             try:
                 Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
             except Config.ConfigError as err:
-                Print.print_err(f"ToolDelta 基本配置-BEWS启动配置有误，需要更正：{err}")
+                Print.print_err(f"ToolDelta 基本配置-BEWS 启动配置有误，需要更正：{err}")
                 raise SystemExit from err
             if launch_data["服务端开放地址"] == "":
-                Print.print_inf("请输入WS服务器开放的地址:")
-                addr = input(Print.fmt_info("请输入(回车默认localhost:12003): ", "§6 输入 "))
+                Print.print_inf("请输入 WS 服务器开放的地址：")
+                addr = input(Print.fmt_info(
+                    "请输入 (回车默认 localhost:12003): ", "§6 输入 "))
                 if not addr.startswith("ws://"):
                     addr = "ws://" + addr
                 launch_data["服务端开放地址"] = addr
@@ -238,7 +244,8 @@ class ToolDelta:
     def change_config():
         "修改配置文件"
         try:
-            old_cfg = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+            old_cfg = Config.get_cfg(
+                "ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         except FileNotFoundError:
             Print.clean_print("§c未初始化配置文件, 无法进行修改")
             return
@@ -246,7 +253,8 @@ class ToolDelta:
             Print.print_err(f"配置文件损坏：{err}")
             return
         if (old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1) not in range(0, 2):
-            Print.print_err(f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1}")
+            Print.print_err(
+                f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1}")
             return
         while 1:
             md = (
@@ -254,7 +262,8 @@ class ToolDelta:
                 "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
             )
             Print.clean_print("§b现有配置项如下:")
-            Print.clean_print(f" 1. 启动器启动模式：{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}")
+            Print.clean_print(
+                f" 1. 启动器启动模式：{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}")
             Print.clean_print(f" 2. 是否记录日志：{old_cfg['是否记录日志']}")
             Print.clean_print(f"    §a直接回车: 保存并退出")
             resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
@@ -263,14 +272,14 @@ class ToolDelta:
                 Print.clean_print("§a配置已保存!")
                 return
             match resp:
-                #case "1":
-                #    n = Utils.try_int(input(Print.clean_fmt("§b请输入租赁服号: ")))
+                # case "1":
+                #    n = Utils.try_int(input(Print.clean_fmt("§b 请输入租赁服号：")))
                 #    if n is None:
                 #        input(Print.clean_fmt("§c不是合法租赁服号, 回车键继续"))
                 #        continue
                 #    old_cfg["服务器号"] = n
                 #    input(Print.clean_fmt(f"§f新的租赁服号: §a{n}§f, 回车键继续"))
-                #case "2":
+                # case "2":
                 #    n = getpass.getpass(Print.clean_fmt("§b请输入租赁服密码(自动隐藏): "))
                 #    if len(n) != 6:
                 #        input(Print.clean_fmt("§c不是合法租赁服六位数密码, 回车键继续"))
@@ -295,11 +304,13 @@ class ToolDelta:
                         except ValueError:
                             Print.print_err("输入不合法，或者是不在范围内，请重新输入")
                             continue
-                    input(Print.clean_fmt(f"§a已选择启动器启动模式: §f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}, 回车键继续"))
+                    input(Print.clean_fmt(
+                        f"§a已选择启动器启动模式：§f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}, 回车键继续"))
                 case "2":
                     old_cfg['是否记录日志'] = [True, False][old_cfg['是否记录日志']]
-                    input(Print.clean_fmt(f"日志记录模式已改为：{['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"))
-                #case "3":
+                    input(Print.clean_fmt(
+                        f"日志记录模式已改为：{['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"))
+                # case "3":
                 #    n = input(Print.clean_fmt("§b请输入验证服务器地址: "))
                 #    if not n.startswith("http://") and not n.startswith("https://"):
                 #        input(Print.clean_fmt("§c不合法URL地址, 回车键继续"))
@@ -431,7 +442,8 @@ class ToolDelta:
                 ):
                     Print.print_err(f'未知的 MC 指令，可能是指令格式有误： "{cmd}"')
                 else:
-                    mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(result.as_dict["OutputMessages"])
+                    mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(
+                        result.as_dict["OutputMessages"])
                     if not result.SuccessCount:
                         print_str = "指令执行失败：" + " ".join(mjon)
                         Print.print_war(print_str)
@@ -515,7 +527,8 @@ class ToolDelta:
                                 if res == -1:
                                     return
                 if res != 0 and rsp:
-                    self.link_game_ctrl.say_to('@a', f'[§bToolDelta控制台§r] §3{rsp}§r')
+                    self.link_game_ctrl.say_to(
+                        '@a', f'[§bToolDelta控制台§r] §3{rsp}§r')
 
         self.createThread(_console_cmd_thread, usage="控制台指令")
 
@@ -664,7 +677,8 @@ class GameCtrl:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
             if isJoining and "§" in playername:
-                self.say_to("@a", f"§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！")
+                self.say_to(
+                    "@a", f"§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！")
                 # 没有 VIP 名字供测试...
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
@@ -713,11 +727,11 @@ class GameCtrl:
                         else:
                             killer = None
                         plugin_grp.execute_player_death(
-                        pkt["Parameters"][0],
-                        killer,
-                        pkt["Message"],
-                        self.linked_frame.on_plugin_err,
-                    )
+                            pkt["Parameters"][0],
+                            killer,
+                            pkt["Message"],
+                            self.linked_frame.on_plugin_err,
+                        )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
                 plugin_grp.execute_player_message(
@@ -726,7 +740,8 @@ class GameCtrl:
                 Print.print_inf(f"<{player}> {msg}")
             case 8:
                 player, msg = pkt["SourceName"], pkt["Message"]
-                Print.print_inf(f"{player} 使用 say 说：{msg.strip(f'[{player}]')}")
+                Print.print_inf(
+                    f"{player} 使用 say 说：{msg.strip(f'[{player}]')}")
                 plugin_grp.execute_command(
                     player, msg, self.linked_frame.on_plugin_err
                 )
@@ -798,7 +813,8 @@ class GameCtrl:
         Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
 
     def sendcmd_with_resp(self, cmd: str, timeout: int | float = 30) -> Packet_CommandOutput:
-        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout) # type: ignore
+        resp: Packet_CommandOutput = self.sendwscmd(
+            cmd, True, timeout)  # type: ignore
         return resp
 
     def say_to(self, target: str, msg: str) -> None:
@@ -808,7 +824,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             msg (str): 消息
         """
-        text_json = json.dumps({"rawtext": [{"text": msg}]}, ensure_ascii=False)
+        text_json = json.dumps(
+            {"rawtext": [{"text": msg}]}, ensure_ascii=False)
         self.sendwocmd("tellraw " + target + text_json)
 
     def player_title(self, target: str, text: str) -> None:
@@ -818,7 +835,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             text (str): 文本
         """
-        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        text_json = json.dumps(
+            {"rawtext": [{"text": text}]}, ensure_ascii=False)
         self.sendwocmd(f"titleraw " + target + " title " + text_json)
 
     def player_subtitle(self, target: str, text: str) -> None:
@@ -828,7 +846,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             text (str): 文本
         """
-        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        text_json = json.dumps(
+            {"rawtext": [{"text": text}]}, ensure_ascii=False)
         self.sendwocmd(f"titleraw " + target + " subtitle " + text_json)
 
     def player_actionbar(self, target: str, text: str) -> None:
@@ -838,7 +857,8 @@ class GameCtrl:
             target (str): 玩家名/目标选择器
             text (str): 文本
         """
-        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        text_json = json.dumps(
+            {"rawtext": [{"text": text}]}, ensure_ascii=False)
         self.sendwocmd(f"titleraw " + target + " actionbar " + text_json)
 
     def get_game_data(self) -> dict:

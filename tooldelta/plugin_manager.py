@@ -88,7 +88,7 @@ class PluginManager:
                     plugin_dir + ("+disabled" if not plugin.is_enabled else "")
                 )
                 Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
-                input("[Enter键继续..]")
+                input("[Enter 键继续..]")
                 return
             case "2":
                 latest_version = market.get_latest_plugin_version(
@@ -233,7 +233,7 @@ class PluginManager:
 
     def get_all_plugin_datas(self) -> list[PluginRegData]:
         """
-        获取所有插件的注册信息(包括没有正常注册的)
+        获取所有插件的注册信息 (包括没有正常注册的)
 
         Returns:
             list[PluginRegData]: 插件数据表
