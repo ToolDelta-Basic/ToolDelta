@@ -360,10 +360,8 @@ class FrameNeOmg(StandardFrame):
         self.make_secret_key()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
+        self.wait_omega_disconn_thread()
         Print.print_suc("已开启接入点进程")
-        if self.omega is None:
-            self.update_status(SysStatus.CRASHED_EXIT)
-            return SystemExit("接入点进程未启动")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
@@ -603,6 +601,11 @@ class FrameNeOmg(StandardFrame):
             ExecuteOnFirstTick=nbt_data.ExecuteOnFirstTick
         ))
 
+    @Utils.thread_func("检测 Omega 断开连接线程")
+    def wait_omega_disconn_thread(self):
+        self.omega.wait_disconnect()
+        self.update_status(SysStatus.CRASHED_EXIT)
+
     sendPacketJson = sendPacket
 
 
@@ -641,6 +644,7 @@ class FrameNeOmgRemote(FrameNeOmg):
         Print.print_inf(f"将从端口 {openat_port} 连接至接入点 (等待接入中).")
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
+        self.wait_omega_disconn_thread()
         Print.print_suc("已连接上接入点进程。")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
