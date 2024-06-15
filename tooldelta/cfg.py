@@ -9,7 +9,6 @@ NoneType = type(None)
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
 
-
 def cfg_isinstance_single(obj: Any, typ: type) -> bool:
     if not isinstance(typ, type):
         raise TypeError(f"cfg_isinstance arg 1 must be a type, not {typ}")
@@ -96,7 +95,7 @@ class Cfg:
     class AnyKeyValue:
         "配置文件的任意键名键值对类型"
 
-        def __init__(self, val_type: type | tuple[type]):
+        def __init__(self, val_type: type | tuple[type] | dict):
             self.type = val_type
 
     class KeyGroup:
@@ -236,7 +235,7 @@ class Cfg:
                     )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
-        elif isinstance(standard, tuple):
+        elif isinstance(standard, (tuple, list)):
             errs = []
             for single_type in standard:
                 try:

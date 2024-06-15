@@ -3,26 +3,20 @@
 
 Classes:
 - Builtins: 一个提供了线程、JSON 操作和文件操作的实用方法的类。
-
-Methods:
-- ThreadExit: 用于线程终止的 SystemExit 的子类。
-- ClassicThread: 简化 ToolDelta 子线程创建的 threading.Thread 的子类。
-- TMPJson: 提供了加载、卸载、读取和写入 JSON 文件到缓存区的方法的类。
-- SimpleJsonDataReader: 提供了安全的 JSON 文件操作方法的类。
-- get_threads_list: 返回使用 createThread 创建的所有线程的列表。
-- SimpleFmt: 使用字典中的值替换字符串中的占位符的静态方法。
 """
 
-from io import TextIOWrapper
+
 import os
 import time
 import copy
-from typing import Any, Callable, Dict, List, Tuple, Optional
+import sqlite3
 import ctypes
 import threading
 import traceback
 import json as rjson
 import ujson as json
+from typing import Any, Callable, Dict, List, Tuple, Optional
+from io import TextIOWrapper
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
@@ -486,28 +480,7 @@ class Utils:
                 res.append(i)
         return res
 
-    class ArgsReplacement:
-        """
-        用于替换字符串中的占位符的类
-        已弃用，请改为使用 SimpleFmt.
-        """
 
-        def __init__(self, kw: Dict[str, Any]):
-            self.kw = kw
-
-        def replaceTo(self, __sub: str) -> str:
-            """
-
-            Args:
-                __sub (str): 需要替换的字符串
-
-            Returns:
-                str: 替换后的字符串
-            """
-            for k, v in self.kw.items():
-                if k in __sub:
-                    __sub = __sub.replace(k, str(v))
-            return __sub
 
 
 def safe_close() -> None:
@@ -515,8 +488,8 @@ def safe_close() -> None:
     event_pool["tmpjson_save"].set()
     event_flags_pool["tmpjson_save"] = False
 
-
-def _tmpjson_save_thread():
+@Utils.thread_func("JSON 缓存文件定时保存")
+def tmpjson_save_thread():
     evt = event_pool["tmpjson_save"]
     secs = 0
     while 1:
@@ -535,14 +508,8 @@ def _tmpjson_save_thread():
         if not event_flags_pool["tmpjson_save"]:
             return
 
-
-def tmpjson_save_thread() -> None:
-    """JSON 缓存文件定时保存"""
-    Utils.createThread(_tmpjson_save_thread, usage="JSON 缓存文件定时保存")
-
-
 def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
-    "启动专用的玩家会话线程，可免除当玩家在对话线程时又试图再创建一个对话线程的问题"
+    "[已弃用] 启动专用的玩家会话线程，可免除当玩家在对话线程时又试图再创建一个对话线程的问题"
     if not Utils.player_in_dialogue(player):
         Utils.add_in_dialogue_player(player)
     else:

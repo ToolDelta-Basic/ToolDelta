@@ -29,6 +29,8 @@ class Plugin:
     author = "?"
     description = "..."
 
+    __path_created__ = False
+
     def __init__(self, frame: "ToolDelta"):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
@@ -37,7 +39,9 @@ class Plugin:
     def data_path(self) -> str:
         "该插件的数据文件夹路径 (调用时直接创建数据文件夹)"
         path = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name)
-        os.makedirs(path, exist_ok=True)
+        if not self.__path_created__:
+            os.makedirs(path, exist_ok=True)
+            self.__path_created__ = True
         return path
 
     def make_data_path(self):

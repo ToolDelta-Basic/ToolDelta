@@ -71,11 +71,11 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
     check_gamectrl_avali()
-    if targetNameToGet not in game_ctrl.allplayers or targetNameToGet.startswith("@"):
+    if targetNameToGet not in game_ctrl.allplayers and not targetNameToGet.startswith("@"):
         raise ValueError(f"玩家 {targetNameToGet} 不存在")
     result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{targetNameToGet}"]', timeout)
     if not result.OutputMessages[0].Success:
-        raise ValueError(f"无法获取坐标信息：{result.OutputMessages[0]}")
+        raise ValueError(f"无法获取坐标信息：{result.OutputMessages[0].Message}")
     parameter = result.OutputMessages[0].Parameters[0]
     if isinstance(parameter, str):
         raise ValueError("无法获取坐标信息：" + parameter)

@@ -88,7 +88,6 @@ class PluginMarket:
                 "ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
         except Exception:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
-        self.plugin_id_name_map: dict = self.get_plugin_id_name_map()
 
     def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
         """进入插件市场
@@ -98,6 +97,7 @@ class PluginMarket:
             in_game (bool, optional): 是否在游戏内
         """
         Print.clean_print("§6正在连接到插件市场..")
+        self.plugin_id_name_map: dict = self.get_plugin_id_name_map()
         CTXS = 12
         try:
             if isinstance(source_url, str):
