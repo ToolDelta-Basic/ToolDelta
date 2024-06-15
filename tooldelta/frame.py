@@ -686,10 +686,10 @@ class GameCtrl:
                 # 没有 VIP 名字供测试...
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
+                self.all_players_data = self.launcher.omega.get_all_online_players()
                 if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
                     return
-                self.all_players_data = self.launcher.omega.get_all_online_players()
                 plugin_group.execute_player_join(
                     playername, self.linked_frame.on_plugin_err
                 )
@@ -725,7 +725,10 @@ class GameCtrl:
             NotImplementedError: 未实现此方法
         """
         # raise NotImplementedError
-        pass
+        # match pkt["EventType"]:
+        #     case 1:
+        if self.entityruntimeid_is_player(pkt['EntityRuntimeID']):
+            print(pkt)
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理 9 号数据包的消息
@@ -786,7 +789,7 @@ class GameCtrl:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
-        self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
+        # self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
@@ -893,3 +896,20 @@ class GameCtrl:
             dict: 游戏常见字符串数据
         """
         return self.Game_Data
+
+    def entityruntimeid_is_player(self, runtimeid: int) -> bool:
+        """判断实体 runtimeid 是否为玩家
+
+        Args:
+            runtimeid (int): 实体 runtimeid
+        
+        Returns:
+            bool: 实体 runtimeid 是否为玩家
+        """
+        if not self.all_players_data:
+            return False
+        for player in self.all_players_data:
+            if player.entity_runtime_id == runtimeid:
+                return True
+        return False
+

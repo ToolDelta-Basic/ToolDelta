@@ -63,13 +63,14 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    plugin_added_cache = {"packets": []}
+    plugin_added_cache = {"packets": [], "update_player_attributes": []}
     broadcast_evts_cache = {}
 
     def __init__(self):
         "初始化"
         self._listen_packet_ids = set()
         self._packet_funcs: dict[str, list[Callable]] = {}
+        self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
         self._repeat_funcs = {}
         self.plugins_api: dict[str, Plugin] = {}
@@ -179,6 +180,27 @@ class PluginGroup:
                 if res2:
                     callback_list.append(res2)
         return callback_list
+
+    def update_player_attributes_listener(self, Agree_bot_patrol: bool = True):
+        """
+        添加玩家属性更新监听器
+        将下面的方法作为一个玩家属性更新接收器
+        Tips: 只能在插件主类里的函数使用此装饰器!
+
+        Args:
+            Agree_bot_patrol (bool): 是否同意机器人巡逻(默认同意)[不同意将无法使用该功能]
+
+        Returns:
+            Callable[[Callable], Callable]: 添加玩家属性更新监听器
+        """
+        def deco(func: Callable[[_SUPER_CLS, dict], bool]):
+            if Agree_bot_patrol == False:
+                raise ValueError(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__class__}！")
+            
+            self.plugin_added_cache["update_player_attributes"].append((func))
+            return func
+
+        return deco
 
     @staticmethod
     def help(plugin: Plugin) -> None:
@@ -327,6 +349,18 @@ class PluginGroup:
             self._broadcast_listeners[evt].append(func)
         else:
             self._broadcast_listeners[evt] = [func]
+
+    def _add_listen_update_player_attributes_func(self, func: Callable) -> None:
+        """添加玩家属性更新监听器, 仅在系统内部使用
+
+        Args:
+            func (Callable): 数据包监听器
+        """
+        if self._packet_funcs.get(str(packetType)):
+            self._packet_funcs[str(packetType)].append(func)
+        else:
+            self._packet_funcs[str(packetType)] = [func]
+
 
     def execute_def(
         self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
@@ -519,6 +553,8 @@ class PluginGroup:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False
+
+    # def processUpdatePlayerAttributes(self, ) -> bool:
 
 
 plugin_group = PluginGroup()
