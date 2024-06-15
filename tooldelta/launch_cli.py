@@ -214,9 +214,14 @@ class FrameNeOmg(StandardFrame):
         super().__init__()
         self.status = SysStatus.LOADING
         self.launch_event = threading.Event()
-        self.omega: Optional[neo_conn.ThreadOmega] = None
         self.neomg_proc = None
         self.serverNumber = None
+        self.neomega_account_opt = None
+        self.omega = neo_conn.ThreadOmega(
+            connect_type = neo_conn.ConnectType.Remote,
+            address = "tcp://localhost:24013",
+            accountOption = None
+        )
 
     def init(self):
         self.download_libs()
@@ -229,6 +234,20 @@ class FrameNeOmg(StandardFrame):
         self.serverPassword = password
         self.fbToken = fbToken
         self.auth_server = auth_server_url
+        if self.serverNumber is None:
+            self.neomega_account_opt = None
+        else:
+            self.neomega_account_opt = neo_conn.AccountOptions(
+                AuthServer=self.auth_server,
+                UserToken=self.fbToken,
+                ServerCode=str(self.serverNumber),
+                ServerPassword=str(self.serverPassword),
+            )
+        self.omega = neo_conn.ThreadOmega(
+            connect_type = neo_conn.ConnectType.Remote,
+            address = "tcp://localhost:24013",
+            accountOption = self.neomega_account_opt
+        )
 
     def set_omega(self, openat_port: int) -> None:
         """设置 Omega 连接
@@ -239,31 +258,17 @@ class FrameNeOmg(StandardFrame):
         Raises:
             SystemExit: 系统退出
         """
-        if self.serverNumber is None:
-            account_opt = None
-            if not isinstance(self, FrameNeOmgRemote):
-                raise ValueError("Can't start NeOmega without account")
-        else:
-            account_opt = neo_conn.AccountOptions(
-                AuthServer=self.auth_server,
-                UserToken=self.fbToken,
-                ServerCode=str(self.serverNumber),
-                ServerPassword=str(self.serverPassword),
-            )
         retries = 0
+        self.omega.address = f"tcp://localhost:{openat_port}"
         while retries <= 10:
             try:
-                self.omega = neo_conn.ThreadOmega(
-                    connect_type=neo_conn.ConnectType.Remote,
-                    address=f"tcp://localhost:{openat_port}",
-                    accountOption=account_opt
-                )
+                self.omega.connect()
                 retries = 0
                 break
             except Exception as err:
                 time.sleep(5)
                 retries += 1
-                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
+                Print.print_war(f"OMEGA 连接失败，重连: 第 {retries} 次: {err}")
                 if retries > 5:
                     Print.print_err("最大重试次数已超过")
                     raise SystemExit from err
@@ -475,6 +480,10 @@ class FrameNeOmg(StandardFrame):
         packetType = self.omega.get_packet_name_to_id_mapping(pkt_type)
         self.packet_handler(packetType, pkt)
 
+    def check_avaliable(self):
+        if self.status != SysStatus.RUNNING:
+            raise ValueError("未连接到游戏")
+
     def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: float = 30) -> Optional[Packet_CommandOutput]:
         """以玩家身份发送命令
 
@@ -489,8 +498,7 @@ class FrameNeOmg(StandardFrame):
         Returns:
             Optional[Packet_CommandOutput]: 返回命令结果
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
+        self.check_avaliable()
         if waitForResp:
             res = self.omega.send_player_command_need_response(
                 cmd, timeout)
@@ -514,8 +522,7 @@ class FrameNeOmg(StandardFrame):
         Returns:
             Optional[Packet_CommandOutput]: 返回命令结果
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
+        self.check_avaliable()
         if waitForResp:
             res = self.omega.send_websocket_command_need_response(
                 cmd, timeout)
@@ -534,8 +541,7 @@ class FrameNeOmg(StandardFrame):
         Raises:
             NotImplementedError: 未实现此方法
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
+        self.check_avaliable()
         self.omega.send_settings_command(cmd)
 
     def sendPacket(self, pckID: int, pck: str) -> None:
@@ -548,8 +554,7 @@ class FrameNeOmg(StandardFrame):
         Raises:
             NotImplementedError: 未实现此方法
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
+        self.check_avaliable()
         self.omega.send_game_packet_in_json_as_is(pckID, pck)
 
     def is_op(self, player: str) -> bool:
@@ -564,8 +569,7 @@ class FrameNeOmg(StandardFrame):
         Returns:
             bool: 是否为 OP
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
+        self.check_avaliable()
         player_obj = self.omega.get_player_by_name(player)
         if player_obj is None or player_obj.op_permissions_level is None:
             raise ValueError("未能获取玩家对象")
@@ -586,8 +590,7 @@ class FrameNeOmg(StandardFrame):
         Raises:
             NotImplementedError: 未实现此方法
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
+        self.check_avaliable()
         self.omega.place_command_block(neo_conn.CommandBlockPlaceOption(
             X=position[0], Y=position[1], Z=position[2],
             BlockName=block_name, BockState=block_states,

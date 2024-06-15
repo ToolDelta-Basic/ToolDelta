@@ -15,7 +15,6 @@ CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
 CBytes = ctypes.POINTER(ctypes.c_char)
 
-
 class byteCSlice(ctypes.Structure):
     _fields_ = [
         ("data", ctypes.POINTER(ctypes.c_char)),
@@ -505,11 +504,16 @@ class ThreadOmega:
     ) -> None:
         self._thread_counter = Counter("thread")
         self._running_threads: Dict[str, Thread] = {}
-        if connect_type == ConnectType.Local:
-            StartOmega(address, accountOption)
-            Print.print_inf(f"Omega 接入点已启动，在 {address} 开放接口")
-        elif connect_type == ConnectType.Remote:
-            ConnectOmega(address)
+        self.connect_type = connect_type
+        self.address = address
+        self.accountOption = accountOption
+
+    def connect(self):
+        if self.connect_type == ConnectType.Local:
+            StartOmega(self.address, self.accountOption)
+            Print.print_inf(f"Omega 接入点已启动，在 {self.address} 开放接口")
+        elif self.connect_type == ConnectType.Remote:
+            ConnectOmega(self.address)
 
         # disconnect event
         self._omega_disconnected_lock = threading.Event()
