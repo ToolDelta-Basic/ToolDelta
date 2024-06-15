@@ -278,7 +278,38 @@ class EventType:
     EventTypeStriderRiddenInLavaInOverworld  = 28  # 熔岩中骑猪灵
     EventTypeSneakCloseToSculkSensor  = 29  # 靠近鸾石感应器潜行
 
-
+@dataclass
+class PlayerActionType:
+    PlayerActionStartBreak = 0  # 玩家开始破坏
+    PlayerActionAbortBreak = 1  # 取消破坏
+    PlayerActionStopBreak = 2  # 停止破坏
+    PlayerActionGetUpdatedBlock = 3  # 获取更新的方块
+    PlayerActionDropItem = 4  # 丢弃物品
+    PlayerActionStartSleeping = 5  # 开始睡觉
+    PlayerActionStopSleeping = 6  # 停止睡觉
+    PlayerActionRespawn = 7  # 重生
+    PlayerActionJump = 8  # 跳跃
+    PlayerActionStartSprint = 9  # 开始冲刺
+    PlayerActionStopSprint = 10  # 停止冲刺
+    PlayerActionStartSneak = 11  # 开始潜行
+    PlayerActionStopSneak = 12  # 停止潜行
+    PlayerActionCreativePlayerDestroyBlock = 13  # 创造模式下玩家摧毁方块
+    PlayerActionDimensionChangeDone = 14  # 维度切换完成
+    PlayerActionStartGlide = 15  # 开始滑翔
+    PlayerActionStopGlide = 16  # 停止滑翔
+    PlayerActionBuildDenied = 17  # 建造被拒绝
+    PlayerActionCrackBreak = 18  # 破坏进度
+    PlayerActionChangeSkin = 19  # 更换皮肤
+    PlayerActionSetEnchantmentSeed = 20  # 设置附魔种子
+    PlayerActionStartSwimming = 21  # 开始游泳
+    PlayerActionStopSwimming = 22  # 停止游泳
+    PlayerActionStartSpinAttack = 23  # 开始旋转攻击
+    PlayerActionStopSpinAttack = 24  # 停止旋转攻击
+    PlayerActionStartBuildingBlock = 25  # 开始建造方块
+    PlayerActionPredictDestroyBlock = 26  # 预测破坏方块
+    PlayerActionContinueDestroyBlock = 27  # 继续破坏方块
+    PlayerActionStartItemUseOn = 28  # 开始使用物品
+    PlayerActionStopItemUseOn = 29  # 停止使用物品
 
 class SubPacket_CmdOutputMsg:
     """命令输出消息子包构建"""

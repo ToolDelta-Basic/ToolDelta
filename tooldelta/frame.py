@@ -31,6 +31,7 @@ from .color_print import Print
 from .cfg import Config
 from .logger import publicLogger
 from .game_texts import GameTextsLoader, GameTextsHandle
+from .game_utils import getPos
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
 from .packets import (
@@ -611,7 +612,7 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.pkt_unique_id: int = 0
         self.pkt_cache: list = []
-        self.require_listen_packets = {9, 79, 63}
+        self.require_listen_packets = {9, 79, 63, 29, 69}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.launcher = self.linked_frame.launcher
         if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
@@ -661,6 +662,8 @@ class GameCtrl:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
+        elif pkt_type == PacketIDS.IDUpdateAttributes:
+            self.process_update_attributes(pkt, self.linked_frame.link_plugin_group)
 
     def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
         """处理玩家列表等数据包
@@ -706,6 +709,23 @@ class GameCtrl:
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
+
+    def process_update_attributes(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
+        # TODO: 处理属性更新事件(未实现)
+        """处理 29 号数据包的事件
+
+        Args:
+            pkt (dict): 数据包内容
+            plugin_grp (PluginGroup): 插件组对象
+        
+        Returns:
+            None: 无返回值
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        # raise NotImplementedError
+        pass
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理 9 号数据包的消息
@@ -766,6 +786,7 @@ class GameCtrl:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
+        self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
