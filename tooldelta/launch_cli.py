@@ -640,10 +640,8 @@ class FrameNeOmgRemote(FrameNeOmg):
             return SystemExit("未指定端口号")
         Print.print_inf(f"将从端口 {openat_port} 连接至接入点 (等待接入中).")
         self.set_omega(openat_port)
+        self.update_status(SysStatus.RUNNING)
         Print.print_suc("已连接上接入点进程。")
-        if self.omega is None:
-            self.update_status(SysStatus.CRASHED_EXIT)
-            return SystemExit("接入点进程未启动")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
