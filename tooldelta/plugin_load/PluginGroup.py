@@ -1,6 +1,7 @@
 "插件加载器框架"
 import asyncio
 import os
+import time
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
 
@@ -40,6 +41,7 @@ from ..constants import (
     TOOLDELTA_INJECTED_PLUGIN,
 )
 from ..game_utils import set_frame as _set_frame
+from ..launch_cli import SysStatus
 from .injected_plugin.movent import set_frame as _set_frame_inj
 
 if TYPE_CHECKING:
@@ -64,6 +66,7 @@ class PluginGroup:
         "on_frame_exit": [],
     }
     plugin_added_cache = {"packets": [], "update_player_attributes": []}
+    Agree_bot_patrol: list[bool] = []
     broadcast_evts_cache = {}
 
     def __init__(self):
@@ -193,6 +196,7 @@ class PluginGroup:
         Returns:
             Callable[[Callable], Callable]: 添加玩家属性更新监听器
         """
+        self.Agree_bot_patrol.append(Agree_bot_patrol)
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if Agree_bot_patrol == False:
                 raise ValueError(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__module__} 中的 {func.__name__} 函数！")

@@ -722,7 +722,6 @@ class GameCtrl:
             None: 无返回值
 
         """
-
         if self.entityruntimeid_is_player(pkt['EntityRuntimeID']):
             player_name: Union[str, None] = self.getPlayerNameFromEntityRuntime(pkt['EntityRuntimeID'])
             self.linked_frame.link_plugin_group.processUpdatePlayerAttributes(player_name, pkt['Attributes'], pkt['Tick'])
@@ -785,9 +784,12 @@ class GameCtrl:
     def Inject(self) -> None:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
-        self.all_players_data = self.launcher.omega.get_all_online_players()
-        # self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
         if res:
+            self.all_players_data = self.launcher.omega.get_all_online_players()
+            if self.linked_frame.link_plugin_group.Agree_bot_patrol.all():
+                self.linked_frame.createThread(self.repeat_tp_all_players, usage="循环传送至所有玩家")
+            else:
+                Print.print_war("机器人巡逻未被全部同意，不执行循环传送")
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
         else:
@@ -926,3 +928,12 @@ class GameCtrl:
                 return player.name
         return None
 
+    def repeat_tp_all_players(self) -> None:
+        """
+        重复传送所有玩家到指定位置
+        """
+        while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
+            for player in self.linked_frame.link_game_ctrl.all_players_data:
+                player_pos = self.getPos(player.name)
+                self.linked_frame.link_game_ctrl.sendwocmd(f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos['x'])) + ' ' + str(int(player_pos['y'])) + ' ' + str(int(player_pos['z']))}")
+            time.sleep(0.01)
