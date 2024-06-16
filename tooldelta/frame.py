@@ -694,6 +694,7 @@ class GameCtrl:
             pkt (dict): 数据包内容
             plugin_grp (PluginGroup): 插件组对象
 
+
         Returns:
             None: 无返回值
 
@@ -765,6 +766,8 @@ class GameCtrl:
     def Inject(self) -> None:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
+        self.all_players_data = self.launcher.omega.get_all_online_players()
+        self.sendwocmd(f"effect {self.bot_name} invisibility 999999 255 true")
         if res:
             # TODO: 插件化
             # self.all_players_data = self.launcher.omega.get_all_online_players()
