@@ -137,7 +137,7 @@ class ToolDelta:
             try:
                 Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
             except Config.ConfigError as err:
-                Print.print_err(f"ToolDelta 基本配置-NeOmega启动配置有误，需要更正：{err}")
+                Print.print_err(f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}")
                 raise SystemExit from err
             serverNumber = launch_data["服务器号"]
             serverPasswd = launch_data["密码"]
@@ -273,24 +273,6 @@ class ToolDelta:
                 Print.clean_print("§a配置已保存!")
                 return
             match resp:
-                # case "1":
-                #    n = Utils.try_int(input(Print.clean_fmt("§b 请输入租赁服号：")))
-                #    if n is None:
-                #        input(Print.clean_fmt("§c不是合法租赁服号, 回车键继续"))
-                #        continue
-                #    old_cfg["服务器号"] = n
-                #    input(Print.clean_fmt(f"§f新的租赁服号: §a{n}§f, 回车键继续"))
-                # case "2":
-                #    n = getpass.getpass(Print.clean_fmt("§b请输入租赁服密码(自动隐藏): "))
-                #    if len(n) != 6:
-                #        input(Print.clean_fmt("§c不是合法租赁服六位数密码, 回车键继续"))
-                #        continue
-                #   n = Utils.try_int(n)
-                #    if n is None:
-                #        input(Print.clean_fmt("§c不是合法租赁服密码, 回车键继续"))
-                #        continue
-                #    old_cfg["密码"] = n
-                #    input(Print.clean_fmt(f"§f新的租赁服密码: §a******§f, 回车键继续"))
                 case "1":
                     Print.print_inf("选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
                     for i, (launcher_name, _) in enumerate(LAUNCHERS):
@@ -311,12 +293,6 @@ class ToolDelta:
                     old_cfg['是否记录日志'] = [True, False][old_cfg['是否记录日志']]
                     input(Print.clean_fmt(
                         f"日志记录模式已改为：{['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"))
-                # case "3":
-                #    n = input(Print.clean_fmt("§b请输入验证服务器地址: "))
-                #    if not n.startswith("http://") and not n.startswith("https://"):
-                #        input(Print.clean_fmt("§c不合法URL地址, 回车键继续"))
-                #    old_cfg['验证服务器地址(更换时记得更改fbtoken)'] = n
-                #    input(Print.clean_fmt(f"§a验证服务器已设置, 回车键继续"))
 
     @staticmethod
     def upgrade_cfg() -> bool:
@@ -717,13 +693,16 @@ class GameCtrl:
         Args:
             pkt (dict): 数据包内容
             plugin_grp (PluginGroup): 插件组对象
-        
+
         Returns:
             None: 无返回值
 
         """
         if self.entityruntimeid_is_player(pkt['EntityRuntimeID']):
             player_name: Union[str, None] = self.getPlayerNameFromEntityRuntime(pkt['EntityRuntimeID'])
+            if isinstance(player_name,type(None)):
+                Print.print_err("处理 29 号数据包的事件时无法获取实体的名字")
+                return
             self.linked_frame.link_plugin_group.processUpdatePlayerAttributes(player_name, pkt['Attributes'], pkt['Tick'])
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
@@ -837,7 +816,7 @@ class GameCtrl:
             Print.print_suc("初始化完成，在线玩家：" + ", ".join(self.allplayers))
             Print.print_war("未能获取机器人 ID")
         self.sendcmd("/tag @s add robot")
-        Print.print_suc("§f在控制台输入 §ahelp / ?§f可查看控制台命令")
+        Print.print_suc("§f在控制台输入 §ahelp / ?§f 可查看控制台命令")
 
     def sendcmd_with_resp(self, cmd: str, timeout: int | float = 30) -> Packet_CommandOutput:
         resp: Packet_CommandOutput = self.sendwscmd(
@@ -917,7 +896,7 @@ class GameCtrl:
 
         Args:
             runtimeid (int): 实体 RuntimeID
-        
+
         Returns:
             str | None: 玩家名
         """
