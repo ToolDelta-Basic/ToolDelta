@@ -199,7 +199,7 @@ class PluginGroup:
         self.Agree_bot_patrol.append(Agree_bot_patrol)
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if Agree_bot_patrol == False:
-                raise ValueError(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__module__} 中的 {func.__name__} 函数！")
+                Print.print_war(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__module__} 中的 {func.__name__} 函数！")
             self.plugin_added_cache["update_player_attributes"].append((func))
             return func
 

@@ -31,7 +31,7 @@ from .color_print import Print
 from .cfg import Config
 from .logger import publicLogger
 from .game_texts import GameTextsLoader, GameTextsHandle
-from .game_utils import getPos
+from .game_utils import getPosXYZ
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
 from .packets import (
@@ -934,6 +934,6 @@ class GameCtrl:
         """
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
             for player in self.linked_frame.link_game_ctrl.all_players_data:
-                player_pos = getPos(player.name)
-                self.linked_frame.link_game_ctrl.sendwocmd(f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos['x'])) + ' ' + str(int(player_pos['y'])) + ' ' + str(int(player_pos['z']))}")
+                player_pos = getPosXYZ(player.name)
+                self.linked_frame.link_game_ctrl.sendwocmd(f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos[0])) + ' ' + str(int(player_pos[1])) + ' ' + str(int(player_pos[2]))}")
             time.sleep(0.01)
