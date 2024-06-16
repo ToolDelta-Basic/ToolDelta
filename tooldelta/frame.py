@@ -934,6 +934,6 @@ class GameCtrl:
         """
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
             for player in self.linked_frame.link_game_ctrl.all_players_data:
-                player_pos = self.getPos(player.name)
+                player_pos = getPos(player.name)
                 self.linked_frame.link_game_ctrl.sendwocmd(f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos['x'])) + ' ' + str(int(player_pos['y'])) + ' ' + str(int(player_pos['z']))}")
             time.sleep(0.01)
