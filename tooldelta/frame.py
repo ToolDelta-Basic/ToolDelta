@@ -13,7 +13,7 @@ import sys
 import time
 import getpass
 import traceback
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Union
 import asyncio
 import ujson as json
 import requests
@@ -683,6 +683,7 @@ class GameCtrl:
             if isJoining and "§" in playername:
                 self.say_to(
                     "@a", f"§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！")
+                self.all_players_data = self.launcher.omega.get_all_online_players()
                 # 没有 VIP 名字供测试...
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
@@ -711,7 +712,6 @@ class GameCtrl:
                 )
 
     def process_update_attributes(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
-        # TODO: 处理属性更新事件(未实现)
         """处理 29 号数据包的事件
 
         Args:
@@ -721,14 +721,11 @@ class GameCtrl:
         Returns:
             None: 无返回值
 
-        Raises:
-            NotImplementedError: 未实现此方法
         """
-        # raise NotImplementedError
-        # match pkt["EventType"]:
-        #     case 1:
+
         if self.entityruntimeid_is_player(pkt['EntityRuntimeID']):
-            print(pkt)
+            player_name: Union[str, None] = self.getPlayerNameFromEntityRuntime(pkt['EntityRuntimeID'])
+            self.linked_frame.link_plugin_group.processUpdatePlayerAttributes(player_name, pkt['Attributes'], pkt['Tick'])
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理 9 号数据包的消息
@@ -912,4 +909,20 @@ class GameCtrl:
             if player.entity_runtime_id == runtimeid:
                 return True
         return False
+
+    def getPlayerNameFromEntityRuntime(self, runtimeid: int) -> str | None:
+        """根据实体 runtimeid 获取玩家名
+
+        Args:
+            runtimeid (int): 实体 RuntimeID
+        
+        Returns:
+            str | None: 玩家名
+        """
+        if not self.all_players_data:
+            return None
+        for player in self.all_players_data:
+            if player.entity_runtime_id == runtimeid:
+                return player.name
+        return None
 

@@ -195,8 +195,7 @@ class PluginGroup:
         """
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if Agree_bot_patrol == False:
-                raise ValueError(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__class__}！")
-            
+                raise ValueError(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__module__} 中的 {func.__name__} 函数！")
             self.plugin_added_cache["update_player_attributes"].append((func))
             return func
 
@@ -356,11 +355,7 @@ class PluginGroup:
         Args:
             func (Callable): 数据包监听器
         """
-        if self._packet_funcs.get(str(packetType)):
-            self._packet_funcs[str(packetType)].append(func)
-        else:
-            self._packet_funcs[str(packetType)] = [func]
-
+        self._update_player_attributes_funcs.append(func)
 
     def execute_def(
         self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
@@ -554,7 +549,23 @@ class PluginGroup:
                     Print.print_err(traceback.format_exc())
         return False
 
-    # def processUpdatePlayerAttributes(self, ) -> bool:
+    def processUpdatePlayerAttributes(self, player_name: str, Attributes: list, Tick: int) -> bool:
+        """处理玩家属性更新监听器
 
+        Args:
+            pkt (dict): 数据包
+
+        Returns:
+            bool: 是否处理成功
+        """
+        for func in self._update_player_attributes_funcs + self.plugin_added_cache["update_player_attributes"]:
+            try:
+                res = func(player_name, Attributes, Tick)
+                if res:
+                    return True
+            except Exception:
+                Print.print_err(f"插件方法 {func.__name__} 出错：")
+                Print.print_err(traceback.format_exc())
+        return False
 
 plugin_group = PluginGroup()
