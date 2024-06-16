@@ -786,7 +786,7 @@ class GameCtrl:
         res = self.launcher.get_players_and_uuids()
         if res:
             self.all_players_data = self.launcher.omega.get_all_online_players()
-            if self.linked_frame.link_plugin_group.Agree_bot_patrol.all():
+            if all(self.linked_frame.link_plugin_group.Agree_bot_patrol):
                 self.linked_frame.createThread(self.repeat_tp_all_players, usage="循环传送至所有玩家")
             else:
                 Print.print_war("机器人巡逻未被全部同意，不执行循环传送")
