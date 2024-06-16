@@ -902,7 +902,7 @@ class GameCtrl:
 
         Args:
             runtimeid (int): 实体 runtimeid
-        
+
         Returns:
             bool: 实体 runtimeid 是否为玩家
         """

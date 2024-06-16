@@ -444,7 +444,7 @@ class FrameNeOmg(StandardFrame):
 
     def get_players_and_uuids(self):
         players_uuid = {}
-        if self.omega is None:
+        if self.status != SysStatus.RUNNING:
             raise ValueError("未连接到接入点")
         for i in self.omega.get_all_online_players():
             if i is not None:
