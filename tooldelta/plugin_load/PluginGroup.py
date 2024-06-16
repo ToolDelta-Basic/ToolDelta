@@ -65,7 +65,7 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    plugin_added_cache = {"packets": [], "update_player_attributes": []}
+    plugin_added_cache = {"packets": []}
     Agree_bot_patrol: list[bool] = []
     broadcast_evts_cache = {}
 
@@ -183,27 +183,6 @@ class PluginGroup:
                 if res2:
                     callback_list.append(res2)
         return callback_list
-
-    def update_player_attributes_listener(self, Agree_bot_patrol: bool = True):
-        """
-        添加玩家属性更新监听器
-        将下面的方法作为一个玩家属性更新接收器
-        Tips: 只能在插件主类里的函数使用此装饰器!
-
-        Args:
-            Agree_bot_patrol (bool): 是否同意机器人巡逻(默认同意)[不同意将无法使用该功能]
-
-        Returns:
-            Callable[[Callable], Callable]: 添加玩家属性更新监听器
-        """
-        self.Agree_bot_patrol.append(Agree_bot_patrol)
-        def deco(func: Callable[[_SUPER_CLS, dict], bool]):
-            if Agree_bot_patrol == False:
-                Print.print_war(f"不同意机器人巡逻将将无法监听玩家属性更新，该异常引发自 {func.__module__} 中的 {func.__name__} 函数！")
-            self.plugin_added_cache["update_player_attributes"].append((func))
-            return func
-
-        return deco
 
     @staticmethod
     def help(plugin: Plugin) -> None:
@@ -551,25 +530,6 @@ class PluginGroup:
                 except Exception:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
-        return False
-
-    def processUpdatePlayerAttributes(self, player_name: str, Attributes: list, Tick: int) -> bool:
-        """处理玩家属性更新监听器
-
-        Args:
-            pkt (dict): 数据包
-
-        Returns:
-            bool: 是否处理成功
-        """
-        for func in self._update_player_attributes_funcs + self.plugin_added_cache["update_player_attributes"]:
-            try:
-                res = func(player_name, Attributes, Tick)
-                if res:
-                    return True
-            except Exception:
-                Print.print_err(f"插件方法 {func.__name__} 出错：")
-                Print.print_err(traceback.format_exc())
         return False
 
 plugin_group = PluginGroup()

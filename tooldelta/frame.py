@@ -13,6 +13,7 @@ import sys
 import time
 import getpass
 import traceback
+import threading
 from typing import TYPE_CHECKING, Callable, Union
 import asyncio
 import ujson as json
@@ -31,7 +32,6 @@ from .color_print import Print
 from .cfg import Config
 from .logger import publicLogger
 from .game_texts import GameTextsLoader, GameTextsHandle
-from .game_utils import getPosXYZ
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
 from .packets import (
@@ -587,7 +587,7 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.pkt_unique_id: int = 0
         self.pkt_cache: list = []
-        self.require_listen_packets = {9, 79, 63, 29, 69}
+        self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.launcher = self.linked_frame.launcher
         if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
@@ -637,9 +637,6 @@ class GameCtrl:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
-        elif pkt_type == PacketIDS.IDUpdateAttributes:
-            self.process_update_attributes(
-                pkt, self.linked_frame.link_plugin_group)
 
     def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
         """处理玩家列表等数据包
@@ -686,27 +683,6 @@ class GameCtrl:
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
-
-    def process_update_attributes(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
-        """处理 29 号数据包的事件
-
-        Args:
-            pkt (dict): 数据包内容
-            plugin_grp (PluginGroup): 插件组对象
-
-
-        Returns:
-            None: 无返回值
-
-        """
-        if self.entityruntimeid_is_player(pkt['EntityRuntimeID']):
-            player_name: Union[str, None] = self.getPlayerNameFromEntityRuntime(
-                pkt['EntityRuntimeID'])
-            if isinstance(player_name, type(None)):
-                Print.print_err("处理 29 号数据包的事件时无法获取实体的名字")
-                return
-            self.linked_frame.link_plugin_group.processUpdatePlayerAttributes(
-                player_name, pkt['Attributes'], pkt['Tick'])
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理 9 号数据包的消息
@@ -767,7 +743,7 @@ class GameCtrl:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
-        self.sendwocmd(f"effect {self.bot_name} invisibility 999999 255 true")
+        threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
         if res:
             # TODO: 插件化
             # self.all_players_data = self.launcher.omega.get_all_online_players()
@@ -882,45 +858,8 @@ class GameCtrl:
         """
         return self.Game_Data
 
-    def entityruntimeid_is_player(self, runtimeid: int) -> bool:
-        """判断实体 runtimeid 是否为玩家
-
-        Args:
-            runtimeid (int): 实体 runtimeid
-
-        Returns:
-            bool: 实体 runtimeid 是否为玩家
-        """
-        if not self.all_players_data:
-            return False
-        for player in self.all_players_data:
-            if player.entity_runtime_id == runtimeid:
-                return True
-        return False
-
-    def getPlayerNameFromEntityRuntime(self, runtimeid: int) -> str | None:
-        """根据实体 runtimeid 获取玩家名
-
-        Args:
-            runtimeid (int): 实体 RuntimeID
-
-        Returns:
-            str | None: 玩家名
-        """
-        if not self.all_players_data:
-            return None
-        for player in self.all_players_data:
-            if player.entity_runtime_id == runtimeid:
-                return player.name
-        return None
-
-    def repeat_tp_all_players(self) -> None:
-        """
-        重复传送所有玩家到指定位置
-        """
+    def give_bot_effect_invisibility(self) -> None:
+        """给机器人添加隐身效果"""
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
-            for player in self.linked_frame.link_game_ctrl.all_players_data:
-                player_pos = getPosXYZ(player.name)
-                self.linked_frame.link_game_ctrl.sendwocmd(
-                    f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos[0])) + ' ' + str(int(player_pos[1])) + ' ' + str(int(player_pos[2]))}")
-            time.sleep(0.01)
+            self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
+            time.sleep(16384)

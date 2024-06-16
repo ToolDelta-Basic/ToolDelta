@@ -211,12 +211,6 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
                 plugin_group._add_listen_packet_func(
                     pktType, ins_func
                 )
-        elif plugin_group.plugin_added_cache["update_player_attributes"] != []:
-            for func in plugin_group.plugin_added_cache["update_player_attributes"]:
-                ins_func = getattr(plugin, func.__name__)
-                if ins_func is None:
-                    raise NotValidPluginError("玩家属性更新监听不能在主插件类以外定义")
-                plugin_group._add_listen_update_player_attributes_func(ins_func)
         if __caches__["api_name"] != "":
             plugin_group.plugins_api[__caches__["api_name"]] = plugin
         if plugin_group.broadcast_evts_cache != {}:
