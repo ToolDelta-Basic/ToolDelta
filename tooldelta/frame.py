@@ -639,7 +639,8 @@ class GameCtrl:
         elif pkt_type == PacketIDS.Text:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
         elif pkt_type == PacketIDS.IDUpdateAttributes:
-            self.process_update_attributes(pkt, self.linked_frame.link_plugin_group)
+            self.process_update_attributes(
+                pkt, self.linked_frame.link_plugin_group)
 
     def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
         """处理玩家列表等数据包
@@ -699,11 +700,13 @@ class GameCtrl:
 
         """
         if self.entityruntimeid_is_player(pkt['EntityRuntimeID']):
-            player_name: Union[str, None] = self.getPlayerNameFromEntityRuntime(pkt['EntityRuntimeID'])
-            if isinstance(player_name,type(None)):
+            player_name: Union[str, None] = self.getPlayerNameFromEntityRuntime(
+                pkt['EntityRuntimeID'])
+            if isinstance(player_name, type(None)):
                 Print.print_err("处理 29 号数据包的事件时无法获取实体的名字")
                 return
-            self.linked_frame.link_plugin_group.processUpdatePlayerAttributes(player_name, pkt['Attributes'], pkt['Tick'])
+            self.linked_frame.link_plugin_group.processUpdatePlayerAttributes(
+                player_name, pkt['Attributes'], pkt['Tick'])
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理 9 号数据包的消息
@@ -764,11 +767,13 @@ class GameCtrl:
         """载入游戏时的初始化"""
         res = self.launcher.get_players_and_uuids()
         if res:
-            self.all_players_data = self.launcher.omega.get_all_online_players()
-            if all(self.linked_frame.link_plugin_group.Agree_bot_patrol):
-                self.linked_frame.createThread(self.repeat_tp_all_players, usage="循环传送至所有玩家")
-            else:
-                Print.print_war("机器人巡逻未被全部同意，不执行循环传送")
+            # TODO: 插件化
+            # self.all_players_data = self.launcher.omega.get_all_online_players()
+            # if all(self.linked_frame.link_plugin_group.Agree_bot_patrol):
+            #     self.linked_frame.createThread(
+            #         self.repeat_tp_all_players, usage="循环传送至所有玩家")
+            # else:
+            #     Print.print_war("机器人巡逻未被全部同意，不执行循环传送")
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
         else:
@@ -914,5 +919,6 @@ class GameCtrl:
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
             for player in self.linked_frame.link_game_ctrl.all_players_data:
                 player_pos = getPosXYZ(player.name)
-                self.linked_frame.link_game_ctrl.sendwocmd(f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos[0])) + ' ' + str(int(player_pos[1])) + ' ' + str(int(player_pos[2]))}")
+                self.linked_frame.link_game_ctrl.sendwocmd(
+                    f"tp {self.linked_frame.link_game_ctrl.bot_name} {str(int(player_pos[0])) + ' ' + str(int(player_pos[1])) + ' ' + str(int(player_pos[2]))}")
             time.sleep(0.01)
