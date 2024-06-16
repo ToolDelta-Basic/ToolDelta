@@ -180,7 +180,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def place_command_block_with_nbt_data(self, block_name:str, block_states:str,
+    def place_command_block_with_nbt_data(self, block_name: str, block_states: str,
                                           position: tuple[int, int, int],
                                           nbt_data: neo_conn.CommandBlockNBTData):
         """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
@@ -218,9 +218,9 @@ class FrameNeOmg(StandardFrame):
         self.serverNumber = None
         self.neomega_account_opt = None
         self.omega = neo_conn.ThreadOmega(
-            connect_type = neo_conn.ConnectType.Remote,
-            address = "tcp://localhost:24013",
-            accountOption = None
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=None
         )
 
     def init(self):
@@ -244,9 +244,9 @@ class FrameNeOmg(StandardFrame):
                 ServerPassword=str(self.serverPassword),
             )
         self.omega = neo_conn.ThreadOmega(
-            connect_type = neo_conn.ConnectType.Remote,
-            address = "tcp://localhost:24013",
-            accountOption = self.neomega_account_opt
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=self.neomega_account_opt
         )
 
     def set_omega(self, openat_port: int) -> None:
@@ -268,7 +268,7 @@ class FrameNeOmg(StandardFrame):
             except Exception as err:
                 time.sleep(5)
                 retries += 1
-                Print.print_war(f"OMEGA 连接失败，重连: 第 {retries} 次: {err}")
+                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
                 if retries > 5:
                     Print.print_err("最大重试次数已超过")
                     raise SystemExit from err
@@ -316,30 +316,28 @@ class FrameNeOmg(StandardFrame):
         )
         return free_port
 
-    def msg_show(self) -> None:
+    def _msg_show_thread(self) -> None:
         """显示来自 NeOmega 的信息"""
-        def _msg_show_thread() -> None:
-            """显示来自 NeOmega 的信息"""
-            if self.neomg_proc is None or self.neomg_proc.stdout is None:
-                raise ValueError("NEOMG 进程未启动")
-            while True:
-                msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
-                if msg_orig in ("", "SIGNAL: exit"):
-                    with Print.lock:
-                        Print.print_with_info(
-                            "ToolDelta: NEOMG 进程已结束", "§b NOMG ")
-                    self.update_status(SysStatus.NORMAL_EXIT)
-                    return
-                if "[neOmega 接入点]: 就绪" in msg_orig:
-                    self.launch_event.set()
-                elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
-                    with Print.lock:
-                        Print.print_with_info("§a机器人已退出", "§b NOMG ")
-                    continue
+        if self.neomg_proc is None or self.neomg_proc.stdout is None:
+            raise ValueError("NEOMG 进程未启动")
+        while True:
+            msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
+            if msg_orig in ("", "SIGNAL: exit"):
                 with Print.lock:
-                    Print.print_with_info(msg_orig, "§b NOMG ")
+                    Print.print_with_info(
+                        "ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                self.update_status(SysStatus.NORMAL_EXIT)
+                return
+            if "[neOmega 接入点]: 就绪" in msg_orig:
+                self.launch_event.set()
+            elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
+                with Print.lock:
+                    Print.print_with_info("§a机器人已退出", "§b NOMG ")
+                continue
+            with Print.lock:
+                Print.print_with_info(msg_orig, "§b NOMG ")
 
-        Utils.createThread(_msg_show_thread, usage="显示来自 NeOmega 的信息")
+
 
     def make_secret_key(self) -> None:
         """生成退出密钥"""
@@ -355,7 +353,7 @@ class FrameNeOmg(StandardFrame):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
-        self.msg_show()
+        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega 的信息")
         self.launch_event.wait()
         self.make_secret_key()
         self.set_omega(openat_port)
@@ -573,7 +571,7 @@ class FrameNeOmg(StandardFrame):
             raise ValueError("未能获取玩家对象")
         return player_obj.op_permissions_level > 1
 
-    def place_command_block_with_nbt_data(self, block_name:str, block_states:str,
+    def place_command_block_with_nbt_data(self, block_name: str, block_states: str,
                                           position: tuple[int, int, int],
                                           nbt_data: neo_conn.CommandBlockNBTData):
         """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
@@ -660,6 +658,7 @@ class FrameNeOmgRemote(FrameNeOmg):
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点已崩溃")
         return SystemError("未知的退出状态")
+
 
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"

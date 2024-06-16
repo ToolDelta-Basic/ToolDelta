@@ -39,7 +39,7 @@ def start_tool_delta() -> None:
         Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
 
 
-def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
+def safe_jump(out_task: bool = True, exit_directly: bool = True) -> None:
     """安全退出
 
     Args:
@@ -50,7 +50,7 @@ def safe_jump(*, out_task: bool = True, exit_directly: bool = True) -> None:
         tooldelta.system_exit()
     tooldelta.safelyExit()
     if exit_directly:
-        for _ in range(2, 0, -1):
+        for _ in range(3, 0, -1):
             Print.print_war(f"{_}秒后强制退出...", end="\r")
             time.sleep(1)
         Print.print_war("0 秒后强制退出...", end="\r")

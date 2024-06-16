@@ -567,7 +567,6 @@ class ToolDelta:
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息。")
 
-
 class GameCtrl:
     """游戏连接和交互部分"""
 

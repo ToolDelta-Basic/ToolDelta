@@ -12,7 +12,7 @@ from .sys_args import sys_args_to_dict, print_help
 
 def signal_handler(*_) -> None:
     """排除信号中断"""
-    return Print.print_war("ToolDelta 已忽略信号中断")
+    return
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -47,7 +47,6 @@ def client_title() -> None:
                 ToolDelta.change_config()
             case _:
                 Print.clean_print("§c不合法的模式: " + r)
-        os._exit(0)
     except EOFError:
         pass
     except Exception:
