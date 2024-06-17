@@ -862,10 +862,12 @@ class GameCtrl:
 
     def init_tp_all_players(self) -> None:
         """在ToolDelta连接到Neomega后先 tp 所有玩家（防止玩家entityruntimeid为空）"""
+        BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
         for player in self.allplayers:
             if player == self.bot_name:
                 continue
             self.sendwocmd(f"tp {self.bot_name} {player}")
+        self.sendwocmd(f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}")
 
     def tmp_tp_player(self, player: str) -> None:
         """临时传送玩家(看一眼玩家就回来，多数用于捕获数据)
