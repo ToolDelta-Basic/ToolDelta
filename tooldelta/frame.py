@@ -32,6 +32,7 @@ from .color_print import Print
 from .cfg import Config
 from .logger import publicLogger
 from .game_texts import GameTextsLoader, GameTextsHandle
+from .game_utils import getPosXYZ
 from .urlmethod import if_token, fbtokenFix
 from .sys_args import sys_args_to_dict
 from .packets import (
@@ -659,6 +660,7 @@ class GameCtrl:
                 self.all_players_data = self.launcher.omega.get_all_online_players()
                 # 没有 VIP 名字供测试...
             if isJoining:
+                self.tmp_tp_player(playername)
                 Print.print_inf(f"§e{playername} 加入了游戏")
                 self.all_players_data = self.launcher.omega.get_all_online_players()
                 if playername not in self.allplayers and not res:
@@ -741,17 +743,11 @@ class GameCtrl:
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""
+        self.init_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
         threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
         if res:
-            # TODO: 插件化
-            # self.all_players_data = self.launcher.omega.get_all_online_players()
-            # if all(self.linked_frame.link_plugin_group.Agree_bot_patrol):
-            #     self.linked_frame.createThread(
-            #         self.repeat_tp_all_players, usage="循环传送至所有玩家")
-            # else:
-            #     Print.print_war("机器人巡逻未被全部同意，不执行循环传送")
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
         else:
@@ -863,3 +859,22 @@ class GameCtrl:
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
             self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
             time.sleep(16384)
+
+    def init_tp_all_players(self) -> None:
+        """在ToolDelta连接到Neomega后先 tp 所有玩家（防止玩家entityruntimeid为空）"""
+        for player in self.allplayers:
+            if player == self.bot_name:
+                continue
+            self.sendwocmd(f"tp {self.bot_name} {player}")
+
+    def tmp_tp_player(self, player: str) -> None:
+        """临时传送玩家(看一眼玩家就回来，多数用于捕获数据)
+        
+        Args:
+
+            player (str): 玩家名
+
+        """
+        BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
+        self.sendwocmd(f"tp {self.bot_name} {player}")
+        self.sendwocmd(f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}")
