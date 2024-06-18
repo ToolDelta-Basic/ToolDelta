@@ -31,7 +31,7 @@ def start_tool_delta() -> None:
         tooldelta.plugin_load_finished(plugin_group)
         tmpjson_save_thread()
         tooldelta.launcher.listen_launched(game_control.Inject)
-        game_control.set_listen_packets()
+        game_control._set_listen_packets()
         raise tooldelta.launcher.launch()
     except (KeyboardInterrupt, SystemExit, EOFError):
         pass
