@@ -337,8 +337,6 @@ class FrameNeOmg(StandardFrame):
             with Print.lock:
                 Print.print_with_info(msg_orig, "§b NOMG ")
 
-
-
     def make_secret_key(self) -> None:
         """生成退出密钥"""
         self.secret_exit_key = hex(random.randint(10000, 99999))
@@ -382,10 +380,10 @@ class FrameNeOmg(StandardFrame):
         cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         is_mir: bool = cfgs["是否使用github镜像"]
         if is_mir:
-            mirror_src = "https://tdload.tblstudio.cn/" + \
-                "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
-            depen_url = "https://tdload.tblstudio.cn/" + \
-                "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+            mirror_src = constants.TDSPECIFIC_MIRROR + \
+                "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
+            depen_url = constants.TDSPECIFIC_MIRROR + \
+                "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
         else:
             mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
             depen_url = "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"

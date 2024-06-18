@@ -15,7 +15,7 @@ import threading
 import traceback
 import json as rjson
 import ujson as json
-from typing import Any, Callable, Dict, List, Tuple, Optional
+from typing import Any, Callable, Optional
 from io import TextIOWrapper
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
@@ -38,7 +38,7 @@ class Utils:
 
             Args:
                 func (Callable): 线程方法
-                args (tuple, optional):方法的参数项
+                args (tuple, optional): 方法的参数项
                 usage (str, optional): 线程的用途说明
                 kwargs (dict, optional): 方法的关键词参数项
             """
@@ -233,7 +233,7 @@ class Utils:
             jsonPathTmp[path][0] = False
 
         @staticmethod
-        def get_tmps() -> Dict:
+        def get_tmps() -> dict:
             """不要调用!"""
             return jsonPathTmp.copy()
 
@@ -329,7 +329,7 @@ class Utils:
         return threads_list
 
     @staticmethod
-    def SimpleFmt(kw: Dict[str, Any], *args: str) -> str:
+    def simple_fmt(kw: dict[str, Any], sub: str) -> str:
         """
         快速将字符串内按照给出的 dict 的键值对替换掉内容.
 
@@ -343,19 +343,23 @@ class Utils:
             >>> Utils.SimpleFmt(kw, "I like [颜色] [物品].")
             I like red apple.
         """
-        __sub = args[0]
         for k, v in kw.items():
-            if k in __sub:
-                __sub = __sub.replace(k, str(v))
-        return __sub
+            if k in sub:
+                sub = sub.replace(k, str(v))
+        return sub
+
+
+    SimpleFmt = simple_fmt
 
     @staticmethod
-    def simpleAssert(cond: Any, exc: Any) -> None:
+    def simple_assert(cond: Any, exc: Any) -> None:
         """
         相当于 assert cond, 但是可以自定义引发的异常的类型
         """
         if not cond:
             raise exc
+
+    simpleAssert = simple_assert
 
     @staticmethod
     def thread_func(func_or_name: Callable | str) -> Any:
@@ -372,7 +376,7 @@ class Utils:
         """
         if isinstance(func_or_name, str):
             def _recv_func(func: Callable):
-                def thread_fun(*args: Tuple, **kwargs: Any) -> None:
+                def thread_fun(*args: tuple, **kwargs: Any) -> None:
                     Utils.createThread(
                         func,
                         usage=func_or_name,
@@ -382,7 +386,7 @@ class Utils:
                 return thread_fun
             return _recv_func
         else:
-            def thread_fun(*args: Tuple, **kwargs: Any) -> None:
+            def thread_fun(*args: tuple, **kwargs: Any) -> None:
                 Utils.createThread(
                     func_or_name,
                     usage="简易线程方法：" + func_or_name.__name__,
@@ -441,8 +445,8 @@ class Utils:
         player: str,
         func: Any,
         exc_cb: Optional[Callable[[str], None]] = None,
-        args: Tuple = (),
-        kwargs: Optional[Dict[str, Any]] = None,
+        args: tuple = (),
+        kwargs: Optional[dict[str, Any]] = None,
     ) -> None:
         """
         创建一个玩家与聊天栏交互的线程，
@@ -464,7 +468,7 @@ class Utils:
         )
 
     @staticmethod
-    def fuzzy_match(lst: List[str], sub: str) -> List[str]:
+    def fuzzy_match(lst: list[str], sub: str) -> list[str]:
         """
         模糊匹配列表内的字符串，可以用在诸如模糊匹配玩家名的用途
 

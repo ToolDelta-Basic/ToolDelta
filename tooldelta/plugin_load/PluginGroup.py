@@ -40,7 +40,7 @@ from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
 )
-from ..game_utils import set_frame as _set_frame
+from ..game_utils import _set_frame
 from ..launch_cli import SysStatus
 from .injected_plugin.movent import set_frame as _set_frame_inj
 
@@ -306,7 +306,7 @@ class PluginGroup:
         if self.linked_frame is None:
             raise ValueError("无法添加数据包监听，请确保已经加载了系统组件")
         self._listen_packet_ids.add(packetType)
-        self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
+        self.linked_frame.link_game_ctrl._add_listen_pkt(packetType)
 
     def _add_listen_packet_func(self, packetType: int, func: Callable) -> None:
         """添加数据包监听器, 仅在系统内部使用

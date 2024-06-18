@@ -242,9 +242,7 @@ class PluginMarket:
         if plugin_name is None:
             raise KeyError(f"无法通过 ID: {plugin_id} 查找插件")
         data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
-        res = requests.get(data_url, timeout=10)
-        res.raise_for_status()
-        datas = json.loads(res.text)
+        datas = get_json_from_url(data_url)
         return PluginRegData(plugin_name, datas)
 
     def choice_plugin(self, plugin_data: PluginRegData) -> tuple[bool, list[PluginRegData]]:

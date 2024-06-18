@@ -241,6 +241,7 @@ class ToolDelta:
                 Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         else:
             raise ValueError("LAUNCHER Error")
+        Print.print_suc("配置文件读取完成")
 
     @staticmethod
     def change_config():
@@ -604,7 +605,7 @@ class GameCtrl:
         else:
             self.requireUUIDPacket = True
 
-    def set_listen_packets(self) -> None:
+    def _set_listen_packets(self) -> None:
         """
         向启动器初始化监听的游戏数据包
         仅限内部调用
@@ -612,7 +613,7 @@ class GameCtrl:
         for pktID in self.require_listen_packets:
             self.launcher.add_listen_packets(pktID)
 
-    def add_listen_pkt(self, pkt: int) -> None:
+    def _add_listen_pkt(self, pkt: int) -> None:
         """
         添加监听的数据包
         仅限内部调用
@@ -802,7 +803,7 @@ class GameCtrl:
             cmd, True, timeout)  # type: ignore
         return resp
 
-    def say_to(self, target: str, msg: str) -> None:
+    def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息
 
         Args:
@@ -810,7 +811,7 @@ class GameCtrl:
             msg (str): 消息
         """
         text_json = json.dumps(
-            {"rawtext": [{"text": msg}]}, ensure_ascii=False)
+            {"rawtext": [{"text": text}]}, ensure_ascii=False)
         self.sendwocmd("tellraw " + target + text_json)
 
     def player_title(self, target: str, text: str) -> None:

@@ -17,29 +17,21 @@ if TYPE_CHECKING:
 
 game_ctrl: "GameCtrl" = None # type: ignore
 
-__all__ = [
-    "getTarget",
-    "getPos",
-    "getItem",
-    "getMultiScore",
-    "isCmdSuccess"
-]
-
 # set_frame
 
-def check_gamectrl_avali():
+def _check_gamectrl_avali():
     "检查 GameCtrl 是否可用"
     if game_ctrl is None:
         raise ValueError("GameControl 不可用")
 
-def set_frame(frame: "Frame"):
+def _set_frame(frame: "Frame"):
     "载入系统框架"
     global game_ctrl
     game_ctrl = frame.get_game_control()
 
 # utils
 
-def getTarget(sth: str, timeout: bool | int = 5) -> list:
+def getTarget(sth: str, timeout: int = 5) -> list:
     """
     获取符合目标选择器实体的列表
 
@@ -49,16 +41,20 @@ def getTarget(sth: str, timeout: bool | int = 5) -> list:
     异常:
         ValueError: 指令返回超时，或者无法获取目标
     """
-    check_gamectrl_avali()
+    _check_gamectrl_avali()
     if not sth.startswith("@"):
         raise ValueError("我的世界目标选择器格式错误 (getTarget 必须使用目标选择器)")
-    result = game_ctrl.sendcmd_with_resp(f"/testfor {sth}", timeout).OutputMessages[0].Parameters
-    if result:
-        result = result[0]
+    result = game_ctrl.sendcmd_with_resp(f"/testfor {sth}", timeout)
+    if result.SuccessCount:
+        result = result.OutputMessages[0].Parameters[0]
         return result.split(", ")
-    return []
+    else:
+        if result.OutputMessages[0].Message == "commands.generic.syntax":
+            raise ValueError(f"getTarget 目标选择器表达式错误: {sth}")
+        else:
+            return []
 
-def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
+def getPos(target: str, timeout: float | int = 5) -> dict:
     """获取目标玩家的详细位置信息
 
     参数:
@@ -70,10 +66,10 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         ValueError: 当获取位置信息失败时抛出该异常
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
-    check_gamectrl_avali()
-    if targetNameToGet not in game_ctrl.allplayers and not targetNameToGet.startswith("@"):
-        raise ValueError(f"玩家 {targetNameToGet} 不存在")
-    result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{targetNameToGet}"]', timeout)
+    _check_gamectrl_avali()
+    if target not in game_ctrl.allplayers and not target.startswith("@"):
+        raise ValueError(f"玩家 {target} 不存在")
+    result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{target}"]', timeout)
     if not result.OutputMessages[0].Success:
         raise ValueError(f"无法获取坐标信息：{result.OutputMessages[0].Message}")
     parameter = result.OutputMessages[0].Parameters[0]
@@ -82,7 +78,7 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
     result = {}
     if game_ctrl.players_uuid is None:
         raise AttributeError("无法获取玩家 UUID 表")
-    targetName = targetNameToGet
+    targetName = target
     x = (
         parameter[0]["position"]["x"]
         if parameter[0]["position"]["x"] >= 0
@@ -106,32 +102,32 @@ def getPos(targetNameToGet: str, timeout: float | int = 5) -> dict:
         "position": position,
         "yRot": yRot,
     }
-    if targetNameToGet == "@a":
+    if target == "@a":
         return result
     if len(result) != 1:
         raise ValueError("获取坐标失败")
-    if targetNameToGet.startswith("@a"):
+    if target.startswith("@a"):
         return list(result.values())[0]
-    return result[targetNameToGet]
+    return result[target]
 
-def getItem(targetName: str, itemName: str, itemSpecialID: int = -1) -> int:
+def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
     """
     获取玩家背包内指定的物品的数量
     参数:
         targetName (str): 玩家选择器 / 玩家名
         itemName (str): 物品 ID
-        itemSpecialID (int) = -1: 物品特殊值
+        itemSpecialID (int): 物品特殊值, 默认值 -1
     """
     if (
-        (targetName not in game_ctrl.allplayers)
-        and (targetName != game_ctrl.bot_name)
-        and (not targetName.startswith("@a"))
+        (target not in game_ctrl.allplayers)
+        and (target != game_ctrl.bot_name)
+        and (not target.startswith("@a"))
     ):
-        raise Exception("未找到目标玩家")
+        raise ValueError("未找到目标玩家")
     result: Packet_CommandOutput = game_ctrl.sendcmd_with_resp(
-        f"/clear {targetName} {itemName} {itemSpecialID} 0")
+        f"/clear {target} {itemName} {itemSpecialID} 0")
     if result.OutputMessages[0].Message == "commands.generic.syntax":
-        raise Exception("物品 ID 错误")
+        raise ValueError("物品 ID 错误")
     if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
         return 0
     return int(result.OutputMessages[0].Parameters[1])
@@ -193,7 +189,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
         raise Exception(f"获取计分板分数失败：{err}")
 
 def getScore(scb_name: str, target: str, timeout = 30) -> int:
-    check_gamectrl_avali()
+    _check_gamectrl_avali()
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
     resp = game_ctrl.sendcmd_with_resp(f"/scoreboard players test {target} {scb_name} 0 0", timeout).OutputMessages[0]
@@ -203,6 +199,8 @@ def getScore(scb_name: str, target: str, timeout = 30) -> int:
         raise ValueError(f"计分板项或玩家 {target} 未找到")
     elif resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
+    elif not resp.Success:
+        raise ValueError(f"计分板分数获取失败: {resp.Message}")
     return int(resp.Parameters[0])
 
 def isCmdSuccess(cmd: str, timeout=30):
