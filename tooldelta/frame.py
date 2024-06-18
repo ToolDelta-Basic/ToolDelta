@@ -744,7 +744,8 @@ class GameCtrl:
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""
-        self.init_tp_all_players()
+        # TODO: 这个功能不应该强制实现, 请修复
+        # self.init_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
         threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
@@ -872,7 +873,6 @@ class GameCtrl:
 
     def tmp_tp_player(self, player: str) -> None:
         """临时传送玩家(看一眼玩家就回来，多数用于捕获数据)
-        
         Args:
 
             player (str): 玩家名

@@ -68,7 +68,7 @@ def getPos(target: str, timeout: float | int = 5) -> dict:
     """
     _check_gamectrl_avali()
     if target not in game_ctrl.allplayers and not target.startswith("@"):
-        raise ValueError(f"玩家 {target} 不存在")
+        raise ValueError(f'玩家 "{target}" 不存在')
     result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{target}"]', timeout)
     if not result.OutputMessages[0].Success:
         raise ValueError(f"无法获取坐标信息：{result.OutputMessages[0].Message}")
