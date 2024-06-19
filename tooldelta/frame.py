@@ -744,8 +744,7 @@ class GameCtrl:
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""
-        # TODO: 这个功能不应该强制实现, 请修复
-        # self.init_tp_all_players()
+        self.init_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
         threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
