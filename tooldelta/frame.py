@@ -744,7 +744,7 @@ class GameCtrl:
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""
-        self.init_tp_all_players()
+        self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
         threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
@@ -861,8 +861,11 @@ class GameCtrl:
             self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
             time.sleep(16384)
 
-    def init_tp_all_players(self) -> None:
-        """在ToolDelta连接到Neomega后先 tp 所有玩家（防止玩家entityruntimeid为空）"""
+    def tmp_tp_all_players(self) -> None:
+        """
+        内部调用：在ToolDelta连接到Neomega后先 tp 所有玩家（防止玩家entityruntimeid为空）
+        外部调用：临时传送至所有玩家后回到原位
+        """
         BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
         for player in self.allplayers:
             if player == self.bot_name:
