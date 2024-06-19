@@ -754,16 +754,11 @@ class GameCtrl:
         else:
             while 1:
                 try:
-                    cmd_result = self.sendwscmd("/list", True)
-                    if cmd_result is None:
-                        Print.print_err("获取全局玩家失败..重试")
-                        continue
+                    cmd_result = self.sendcmd_with_resp("/list", True)
                     if cmd_result.OutputMessages is None or len(cmd_result.OutputMessages) < 2:
-                        Print.print_err("获取全局玩家失败..重试")
-                        continue
+                        raise ValueError
                     if cmd_result.OutputMessages[1].Parameters is None or len(cmd_result.OutputMessages[1].Parameters) < 1:
-                        Print.print_err("获取全局玩家失败..重试")
-                        continue
+                        raise ValueError
                     self.allplayers = (
                         cmd_result
                         .OutputMessages[1]
@@ -771,7 +766,7 @@ class GameCtrl:
                         .split(", ")
                     )
                     break
-                except TimeoutError:
+                except (TimeoutError, ValueError):
                     Print.print_war("获取全局玩家失败..重试")
         self.bot_name = self.launcher.get_bot_name()
         if self.bot_name is None:
