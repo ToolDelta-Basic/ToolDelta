@@ -13,7 +13,7 @@ import requests
 import tooldelta
 
 from tooldelta import constants
-from .neo_libs import neo_conn
+from .neo_libs import file_download as neo_fd, neo_conn
 from .bews_libs import ws_con
 from .cfg import Cfg
 from .utils import Utils
@@ -217,6 +217,7 @@ class FrameNeOmg(StandardFrame):
         self.neomg_proc = None
         self.serverNumber = None
         self.neomega_account_opt = None
+        self.bot_name = ""
         self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:24013",
@@ -224,7 +225,9 @@ class FrameNeOmg(StandardFrame):
         )
 
     def init(self):
-        self.download_libs()
+        res = neo_fd.download_libs()
+        if not res:
+            raise SystemExit("ToolDelta 因下载库异常而退出")
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         self.secret_exit_key = ""
@@ -289,16 +292,15 @@ class FrameNeOmg(StandardFrame):
             access_point_file = f"neomega_android_access_point_{sys_machine}"
         if platform.system() == "Windows":
             access_point_file += ".exe"
-        py_file_path = os.path.join(
+        exe_file_path = os.path.join(
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
         if platform.uname().system.lower() == "linux":
-            os.system("chmod +x " + shlex.quote(py_file_path))
+            os.system("chmod +x " + shlex.quote(exe_file_path))
         # 只需要+x 即可
-        Print.print_inf(f"DEBUG: 将使用端口 {free_port}")
         self.neomg_proc = subprocess.Popen(
             [
-                py_file_path,
+                exe_file_path,
                 "-server",
                 str(self.serverNumber),
                 "-T",
@@ -372,72 +374,6 @@ class FrameNeOmg(StandardFrame):
             return Exception("NeOmega 已崩溃")
         return SystemError("未知的退出状态")
 
-    def download_libs(self) -> None:
-        """根据系统架构和平台下载所需的库。"""
-        if "no-download-libs" in sys_args_to_dict().keys():
-            Print.print_war("将不会进行依赖库的下载和检测更新。")
-            return
-        cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
-        is_mir: bool = cfgs["是否使用github镜像"]
-        if is_mir:
-            mirror_src = constants.TDSPECIFIC_MIRROR + \
-                "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
-            depen_url = constants.TDSPECIFIC_MIRROR + \
-                "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
-        else:
-            mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
-            depen_url = "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
-        try:
-            require_depen = json.loads(
-                requests.get(
-                    f"{mirror_src}require_files.json", timeout=5
-                ).text
-            )
-        except Exception as err:
-            Print.print_err(f"获取依赖库表出现问题：{err}")
-            self.update_status(SysStatus.CRASHED_EXIT)
-            return
-        sys_machine = platform.machine().lower()
-        if sys_machine == "x86_64":
-            sys_machine = "amd64"
-        elif sys_machine == "aarch64":
-            sys_machine = "arm64"
-        if "TERMUX_VERSION" in os.environ:
-            sys_info_fmt: str = f"Android:{sys_machine.lower()}"
-        else:
-            sys_info_fmt: str = f"{platform.uname().system}:{sys_machine.lower()}"
-        source_dict: list[str] = require_depen[sys_info_fmt]
-        commit_remote = requests.get(
-            f"{depen_url}commit", timeout=5
-        ).text
-        commit_file_path = os.path.join(
-            os.getcwd(), "tooldelta", "neo_libs", "commit")
-        replace_file = False
-        if os.path.isfile(commit_file_path):
-            with open(commit_file_path, "r", encoding="utf-8") as f:
-                commit_local = f.read()
-            if commit_local != commit_remote:
-                Print.print_war("依赖库版本过期，将重新下载")
-                replace_file = True
-        else:
-            replace_file = True
-        for v in source_dict:
-            pathdir = os.path.join(os.getcwd(), "tooldelta", "neo_libs", v)
-            url = depen_url + v
-            if not os.path.isfile(pathdir) or replace_file:
-                Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
-                try:
-                    download_file_singlethreaded(url, pathdir)
-                except Exception as err:
-                    Print.print_err(f"下载依赖库出现问题：{err}")
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                    return
-        if replace_file:
-            # 写入 commit_remote，文字写入
-            with open(commit_file_path, "w", encoding="utf-8") as f:
-                f.write(commit_remote)
-            Print.print_suc("已完成依赖更新！")
-
     def get_players_and_uuids(self):
         players_uuid = {}
         if self.status != SysStatus.RUNNING:
@@ -455,9 +391,10 @@ class FrameNeOmg(StandardFrame):
         Returns:
             str: 机器人名字
         """
-        if self.omega is None:
-            raise ValueError("未连接到接入点")
-        return self.omega.get_bot_name()
+        self.check_avaliable()
+        if not self.bot_name:
+            self.bot_name = self.omega.get_bot_name()
+        return self.bot_name
 
     def packet_handler_parent(self, pkt_type: str, pkt: dict) -> None:
         """数据包处理器

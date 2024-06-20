@@ -585,7 +585,6 @@ class GameCtrl:
         self.players_uuid = {}
         self.allplayers = []
         self.all_players_data = {}
-        self.bot_name = ""
         self.linked_frame: ToolDelta
         self.pkt_unique_id: int = 0
         self.pkt_cache: list = []
@@ -744,7 +743,8 @@ class GameCtrl:
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""
-        self.tmp_tp_all_players()
+        if hasattr(self.launcher, "bot_name"):
+            self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
         threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
@@ -768,9 +768,6 @@ class GameCtrl:
                     break
                 except (TimeoutError, ValueError):
                     Print.print_war("获取全局玩家失败..重试")
-        self.bot_name = self.launcher.get_bot_name()
-        if self.bot_name is None:
-            self.bot_name = self.allplayers[0]
         self.linked_frame.comsole_cmd_start()
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
@@ -792,6 +789,13 @@ class GameCtrl:
             Print.print_war("未能获取机器人 ID")
         self.sendcmd("/tag @s add robot")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f 可查看控制台命令")
+
+    @property
+    def bot_name(self) -> str:
+        if hasattr(self.launcher, "bot_name"):
+            return self.launcher.get_bot_name()
+        else:
+            raise ValueError("此启动器框架无法产生机器人名")
 
     def sendcmd_with_resp(self, cmd: str, timeout: int | float = 30) -> Packet_CommandOutput:
         resp: Packet_CommandOutput = self.sendwscmd(
@@ -858,7 +862,7 @@ class GameCtrl:
 
     def tmp_tp_all_players(self) -> None:
         """
-        内部调用：在ToolDelta连接到Neomega后先 tp 所有玩家（防止玩家entityruntimeid为空）
+        内部调用：在ToolDelta连接到NeOmega后先 tp 所有玩家（防止玩家entityruntimeid为空）
         外部调用：临时传送至所有玩家后回到原位
         """
         BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)

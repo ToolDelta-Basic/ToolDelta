@@ -7,6 +7,7 @@ Methods:
     getItem (targetName, itemName, itemSpecialID): 获取玩家背包内指定的物品的数量
     getPosXYZ (player, timeout=30): 获取玩家的简略坐标值，并以坐标三元元组返回
     getScore (scoreboardNameToGet, targetNameToGet): 获取计分板分数
+    isCmdSuccess (cmd: str, timeout=30): 获取命令执行成功与否的状态
 """
 from typing import TYPE_CHECKING
 from .color_print import Print
@@ -67,7 +68,7 @@ def getPos(target: str, timeout: float | int = 5) -> dict:
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
     _check_gamectrl_avali()
-    if target not in game_ctrl.allplayers and not target.startswith("@"):
+    if target not in game_ctrl.allplayers and not target.startswith("@") and target != game_ctrl.bot_name:
         raise ValueError(f'玩家 "{target}" 不存在')
     result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{target}"]', timeout)
     if not result.OutputMessages[0].Success:
