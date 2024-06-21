@@ -352,19 +352,20 @@ class PluginGroup:
             SystemExit: 缺少前置
             SystemExit: 前置版本过低
         """
-        for name, func in self.plugins_funcs["on_def"]:
-            try:
+        try:
+            for name, func in self.plugins_funcs["on_def"]:
                 func()
-            except PluginAPINotFoundError as err:
-                Print.print_err(f"插件 {name} 需要包含该种接口的前置组件: {err.name}")
-                raise SystemExit from err
-            except PluginAPIVersionError as err:
-                Print.print_err(
-                    f"插件 {name} 需要该前置组件 {err.name} 版本: {err.m_ver}, 但是现有版本过低: {err.n_ver}"
-                )
-                raise SystemExit from err
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
+        except PluginAPINotFoundError as err:
+            Print.print_err(f"插件 {name} 需要包含该种接口的前置组件: {err.name}")
+            raise SystemExit from err
+        except PluginAPIVersionError as err:
+            Print.print_err(
+                f"插件 {name} 需要该前置组件 {err.name} 版本: {err.m_ver}, 但是现有版本过低: {err.n_ver}"
+            )
+            raise SystemExit from err
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+            raise SystemExit
 
     def execute_init(
         self, onerr: Callable[[str, Exception, str], None] = NON_FUNC

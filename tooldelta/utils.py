@@ -329,12 +329,22 @@ class Utils:
     class ChatbarLock:
         """
         聊天栏锁, 用于防止玩家同时开启多个聊天栏对话\n
-        调用了该锁的所有代码, 在另一个进程使用该锁的时候, 尝试调用其他锁会导致进程直接退出, 直到此锁退出为止
+        调用了该锁的所有代码, 在另一个进程使用该锁的时候, 尝试调用其他锁会导致进程直接退出, 直到此锁退出为止\n
+        示例(以类式插件为例):
         ```python
-        def on_player_message(self, player: str, msg: str):
-            with ChatbarLock(player):
-                # 如果玩家处在另一个on_player_message进程 (锁环境) 中
-                # 则在上面就会直接引发 SystemExit
+        class MyPlugin(Plugin):
+            ...
+            def on_player_message(self, player: str, msg: str):
+                with ChatbarLock(player):
+                    # 如果玩家处在另一个on_player_message进程 (锁环境) 中
+                    # 则在上面就会直接引发 SystemExit
+                    ...
+        ```
+        示例(以注入式插件为例):
+        ```
+        @player_message()
+        async def onPlayerChat(info: player_message_info):
+            with ChatbarLock(info.playername):
                 ...
         ```
         """
