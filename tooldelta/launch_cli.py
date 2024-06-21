@@ -325,19 +325,15 @@ class FrameNeOmg(StandardFrame):
         while True:
             msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
-                with Print.lock:
-                    Print.print_with_info(
-                        "ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
                 self.update_status(SysStatus.NORMAL_EXIT)
                 return
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()
             elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
-                with Print.lock:
-                    Print.print_with_info("§a机器人已退出", "§b NOMG ")
+                Print.print_with_info("§a机器人已退出", "§b NOMG ")
                 continue
-            with Print.lock:
-                Print.print_with_info(msg_orig, "§b NOMG ")
+            Print.print_with_info(msg_orig, "§b NOMG ")
 
     def make_secret_key(self) -> None:
         """生成退出密钥"""

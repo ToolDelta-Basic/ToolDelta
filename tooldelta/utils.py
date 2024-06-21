@@ -20,7 +20,6 @@ event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
 threads_list: list["Utils.createThread"] = []
 
-
 class Utils:
     """提供了一些实用方法的类"""
     class ThreadExit(SystemExit):
@@ -355,6 +354,7 @@ class Utils:
         def __enter__(self):
             if self.player in chatbar_lock_list:
                 self.oth_cb(self.player)
+                Print.print_war(f"玩家 {self.player} 的线程锁正在锁定状态")
                 raise SystemExit
             chatbar_lock_list.append(self.player)
 
