@@ -218,7 +218,6 @@ class PluginGroup:
                 f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本, 请及时更新"
             )
         elif self.linked_frame is None:
-
             raise ValueError(
                 "无法检查ToolDelta系统版本，请确保已经加载了ToolDelta系统组件"
             )

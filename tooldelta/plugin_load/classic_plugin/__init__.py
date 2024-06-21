@@ -232,6 +232,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         Print.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
     except plugin_group.linked_frame.SystemVersionException as err:
         Print.print_err(f"插件 {plugin_dirname} 需要更高版本的 ToolDelta 加载：{err}")
+        raise SystemExit
     except Exception as err:
         Print.print_err(f"加载插件 {plugin_dirname} 出现问题，报错如下：")
         Print.print_err("§c" + traceback.format_exc())
