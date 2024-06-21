@@ -241,12 +241,12 @@ class Utils:
     class JsonIO:
         """提供了安全的 JSON 文件操作方法的类."""
         @staticmethod
-        def SafeJsonDump(obj: str | dict | list, fp: TextIOWrapper, indent=4) -> None:
+        def SafeJsonDump(obj: Any, fp: TextIOWrapper | str, indent=4) -> None:
             """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
 
             Args:
                 obj (str | dict | list): JSON 对象
-                fp (_type_): open(...) 打开的文件读写口 或 文件路径
+                fp (Any): open(...) 打开的文件读写口 或 文件路径
             """
             if isinstance(fp, str):
                 with open(fp, "w", encoding="utf-8") as file:
@@ -256,11 +256,11 @@ class Utils:
                     fp.write(json.dumps(obj, indent=indent, ensure_ascii=False))
 
         @staticmethod
-        def SafeJsonLoad(fp: TextIOWrapper) -> dict | list:
+        def SafeJsonLoad(fp: TextIOWrapper | str) -> Any:
             """从一个文件读取 json 对象，会自动关闭文件读写接口.
 
             Args:
-                fp (TextIOWrapper): open(...) 打开的文件读写口
+                fp (TextIOWrapper | str): open(...) 打开的文件读写口 或文件路径
 
             Returns:
                 dict | list: JSON 对象
@@ -275,7 +275,7 @@ class Utils:
             """读取数据时发生错误"""
 
         @staticmethod
-        def readFileFrom(plugin_name: str, file: str, default: dict | None = None) -> dict | list:
+        def readFileFrom(plugin_name: str, file: str, default: dict | None = None) -> Any:
             """从插件数据文件夹读取一个 json 文件，会自动创建文件夹和文件.
 
             Args:
@@ -325,6 +325,31 @@ class Utils:
                 Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
 
     SimpleJsonDataReader = JsonIO
+
+    class ChatbarLock:
+        """
+        聊天栏锁, 用于防止玩家同时开启多个聊天栏对话\n
+        调用了该锁的所有代码, 在另一个进程使用该锁的时候, 尝试调用其他锁会导致进程直接退出, 直到此锁退出为止
+        ```python
+        def on_player_message(self, player: str, msg: str):
+            with ChatbarLock(player):
+                # 如果玩家处在另一个on_player_message进程 (锁环境) 中
+                # 则在上面就会直接引发 SystemExit
+                ...
+        ```
+        """
+        def __init__(self, player: str, oth_cb: Callable[[str], None] = lambda _:None):
+            self.player = player
+            self.oth_cb = oth_cb
+
+        def __enter__(self):
+            if self.player in chatbar_lock_list:
+                self.oth_cb(self.player)
+                raise SystemExit
+            chatbar_lock_list.append(self.player)
+
+        def __exit__(self, e, e2, e3):
+            chatbar_lock_list.remove(self.player)
 
     @staticmethod
     def get_threads_list() -> list["Utils.createThread"]:
@@ -407,70 +432,6 @@ class Utils:
             return None
 
     @staticmethod
-    def add_in_dialogue_player(player: str) -> None:
-        """
-        使玩家进入聊天栏对话模式，可防止其在对话时继续触发另一个会话线程
-
-        参数:
-            player: str, 玩家名
-        """
-        if player not in in_dialogue_list:
-            in_dialogue_list.append(player)
-        else:
-            raise ValueError("Already in a dialogue!")
-
-    @staticmethod
-    def remove_in_dialogue_player(player: str) -> None:
-        """
-        使玩家离开聊天栏对话模式
-
-        参数:
-            player: str, 玩家名
-        """
-        if player not in in_dialogue_list:
-            return
-        in_dialogue_list.remove(player)
-
-    @staticmethod
-    def player_in_dialogue(player: str) -> bool:
-        """
-        检测玩家是否处在聊天栏对话模式中.
-
-        参数:
-            player: str, 玩家名
-        返回:
-            bool, 检测结果
-        """
-        return player in in_dialogue_list
-
-    @staticmethod
-    def create_dialogue_threading(
-        player: str,
-        func: Any,
-        exc_cb: Optional[Callable[[str], None]] = None,
-        args: tuple = (),
-        kwargs: Optional[dict[str, Any]] = None,
-    ) -> None:
-        """
-        创建一个玩家与聊天栏交互的线程，
-        线程启动时玩家会自动进入聊天栏对话模式
-        线程结束后该玩家会自动退出聊天栏对话模式
-        可以用来防止玩家多开聊天栏对话或菜单线程
-
-        参数:
-            player: str, 玩家名
-            func: function, 线程方法
-            exc_cb: function, 若玩家已处于一个对话中，则向方法 exc_cb 传参并调用它：player(玩家名)
-            args: tuple, 线程方法的参数组
-            kwargs: dict, 线程方法的关键词参数组
-        """
-        if kwargs is None:
-            kwargs = {}
-        Utils.createThread(
-            _dialogue_thread_run, args=(player, func, exc_cb, args, kwargs)
-        )
-
-    @staticmethod
     def fuzzy_match(lst: list[str], sub: str) -> list[str]:
         """
         模糊匹配列表内的字符串，可以用在诸如模糊匹配玩家名的用途
@@ -486,8 +447,6 @@ class Utils:
             if sub in i:
                 res.append(i)
         return res
-
-
 
 
 def safe_close() -> None:
@@ -515,22 +474,6 @@ def tmpjson_save_thread():
         if not event_flags_pool["tmpjson_save"]:
             return
 
-def _dialogue_thread_run(player, func, exc_cb, args, kwargs):
-    "[已弃用] 启动专用的玩家会话线程，可免除当玩家在对话线程时又试图再创建一个对话线程的问题"
-    if not Utils.player_in_dialogue(player):
-        Utils.add_in_dialogue_player(player)
-    else:
-        if exc_cb is not None:
-            exc_cb(player)
-        return
-    try:
-        func(*args, **kwargs)
-    except Exception:
-        Print.print_err(f"玩家{player}的会话线程 出现问题：")
-        Print.print_err(traceback.format_exc())
-    Utils.remove_in_dialogue_player(player)
-
-
 jsonPathTmp = {}
-in_dialogue_list = []
+chatbar_lock_list = []
 jsonUnloadPathTmp = {}
