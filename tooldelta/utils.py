@@ -238,10 +238,10 @@ class Utils:
             """不要调用!"""
             return jsonPathTmp.copy()
 
-    class SimpleJsonDataReader:
+    class JsonIO:
         """提供了安全的 JSON 文件操作方法的类."""
         @staticmethod
-        def SafeJsonDump(obj: str | dict | list, fp: TextIOWrapper) -> None:
+        def SafeJsonDump(obj: str | dict | list, fp: TextIOWrapper, indent=4) -> None:
             """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
 
             Args:
@@ -250,10 +250,10 @@ class Utils:
             """
             if isinstance(fp, str):
                 with open(fp, "w", encoding="utf-8") as file:
-                    file.write(json.dumps(obj, indent=4, ensure_ascii=False))
+                    file.write(json.dumps(obj, indent=indent, ensure_ascii=False))
             else:
                 with fp:
-                    fp.write(json.dumps(obj, indent=4, ensure_ascii=False))
+                    fp.write(json.dumps(obj, indent=indent, ensure_ascii=False))
 
         @staticmethod
         def SafeJsonLoad(fp: TextIOWrapper) -> dict | list:
@@ -284,7 +284,7 @@ class Utils:
                 default (dict, optional): 默认值，若文件不存在则会写入这个默认值
 
             Raises:
-                Utils.SimpleJsonDataReader.DataReadError: 读取数据时发生错误
+                Utils.JsonIO.DataReadError: 读取数据时发生错误
                 err: 读取文件路径时发生错误
 
             Returns:
@@ -297,14 +297,14 @@ class Utils:
             try:
                 if default is not None and not os.path.isfile(filepath):
                     with open(filepath, "w", encoding="utf-8") as f:
-                        Utils.SimpleJsonDataReader.SafeJsonDump(default, f)
+                        Utils.JsonIO.SafeJsonDump(default, f)
                     return default
                 with open(filepath, "r", encoding="utf-8") as f:
-                    res = Utils.SimpleJsonDataReader.SafeJsonLoad(f)
+                    res = Utils.JsonIO.SafeJsonLoad(f)
                 return res
             except rjson.JSONDecodeError as err:
                 # 判断是否有 msg.doc.pos 属性
-                raise Utils.SimpleJsonDataReader.DataReadError(
+                raise Utils.JsonIO.DataReadError(
                     err.msg, err.doc, err.pos
                 )
             except Exception as err:
@@ -312,7 +312,7 @@ class Utils:
                 raise err
 
         @staticmethod
-        def writeFileTo(plugin_name: str, file: str, obj: str | dict[Any, Any] | list[Any]) -> None:
+        def writeFileTo(plugin_name: str, file: str, obj: Any, indent=4) -> None:
             """将一个 json 对象写入插件数据文件夹，会自动创建文件夹和文件.
 
             Args:
@@ -322,7 +322,9 @@ class Utils:
             """
             os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
             with open(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
-                Utils.SimpleJsonDataReader.SafeJsonDump(obj, f)
+                Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
+
+    SimpleJsonDataReader = JsonIO
 
     @staticmethod
     def get_threads_list() -> list["Utils.createThread"]:
