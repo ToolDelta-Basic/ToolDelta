@@ -8,7 +8,7 @@ import time
 import shlex
 import requests
 import ujson as json
-from tooldelta import urlmethod
+from . import urlmethod
 from .utils import Utils
 from .color_print import Print
 from .plugin_load import PluginRegData
@@ -324,29 +324,31 @@ class PluginMarket:
                 pres += self.download_plugin(plugin_datas)
         cache_dir = tempfile.mkdtemp()
         Print.clean_print(f"§6正在下载插件 §f{plugin_data.name}§6.." + " "*15, end="\r")
+        match plugin_data.plugin_type:
+            case "classic":
+                download_path = os.path.join(
+                    "插件文件", TOOLDELTA_CLASSIC_PLUGIN
+                )
+            case "injected":
+                download_path = os.path.join(
+                    "插件文件", TOOLDELTA_INJECTED_PLUGIN
+                )
+            case _:
+                raise ValueError(
+                    f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
+                )
         try:
-            for paths in download_paths:
+            os.makedirs(os.path.join(
+                cache_dir, plugin_data.name
+            ), exist_ok=True)
+            all_files_len = len(download_paths)
+            for i, paths in enumerate(download_paths):
+                Print.print_with_info(f"正在下载附带文件 ({i}/{all_files_len})", end="\r")
                 if not paths.strip():
                     # 该路径为空
                     continue
                 url = url_join(self.plugins_download_url, paths)
                 # 按照插件类型选择下载到的文件夹
-                match plugin_data.plugin_type:
-                    case "classic":
-                        download_path = os.path.join(
-                            "插件文件", TOOLDELTA_CLASSIC_PLUGIN
-                        )
-                    case "injected":
-                        download_path = os.path.join(
-                            "插件文件", TOOLDELTA_INJECTED_PLUGIN
-                        )
-                    case _:
-                        raise ValueError(
-                            f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
-                        )
-                os.makedirs(os.path.join(
-                    cache_dir, plugin_data.name
-                ), exist_ok=True)
                 path_last = path_dir(paths)
                 if path_last is not None:
                     # 自动创建文件夹

@@ -21,7 +21,6 @@ def simple_fmt(kw: dict, arg: str) -> str:
         arg = arg.replace(k, str(v))
     return arg
 
-
 class Print:
     """
     生成多样彩色输出的类

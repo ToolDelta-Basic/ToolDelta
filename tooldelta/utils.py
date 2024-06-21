@@ -1,15 +1,11 @@
 """
 提供了一些实用方法的类
-
-Classes:
-- Builtins: 一个提供了线程、JSON 操作和文件操作的实用方法的类。
 """
 
 
 import os
 import time
 import copy
-import sqlite3
 import ctypes
 import threading
 import traceback
@@ -58,6 +54,11 @@ class Utils:
                 self.func(*self.all_args[0], **self.all_args[1])
             except (Utils.ThreadExit, SystemExit):
                 pass
+            except ValueError as e:
+                if str(e) != "未连接到游戏":
+                    raise
+                else:
+                    Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
             except Exception:
                 Print.print_err(
                     f"线程 {self.usage or self.func.__name__} 出错:\n" + traceback.format_exc())

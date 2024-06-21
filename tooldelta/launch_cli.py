@@ -202,7 +202,7 @@ class FrameNeOmg(StandardFrame):
     """使用 NeOmega 框架连接到游戏"""
     launch_type = "NeOmega"
 
-    def __init__(self, ) -> None:
+    def __init__(self) -> None:
         """初始化 NeOmega 框架
 
         Args:
@@ -269,9 +269,9 @@ class FrameNeOmg(StandardFrame):
                 retries = 0
                 break
             except Exception as err:
+                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
                 time.sleep(5)
                 retries += 1
-                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
                 if retries > 5:
                     Print.print_err("最大重试次数已超过")
                     raise SystemExit from err

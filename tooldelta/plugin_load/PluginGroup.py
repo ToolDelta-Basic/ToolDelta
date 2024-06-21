@@ -102,7 +102,7 @@ class PluginGroup:
             _PLUGIN_CLS_TYPE: API插件实例
 
         使用方法如下:
-        ```
+        ```python
             p_api = plugins.get_plugin_api("...")
             from outer_api import api_cls_xx
             p_api = plugins.instant_plugin_api(api_cls_xx)
@@ -166,14 +166,14 @@ class PluginGroup:
 
         return deco
 
-    def broadcastEvt(self, evt_name: str, data: Any = None) -> list[Any] | None:
+    def broadcastEvt(self, evt_name: str, data: Any = None) -> list[Any]:
         """
         向全局广播一个特定事件, 可以传入附加信息参数
         Args:
             evt_name (str): 事件名
             data (Any, optional): 附加信息参数
         Returns:
-             list[Any] | None: 收集到的数据的列表(如果接收到广播的方法返回了数据的话)
+             list[Any]: 收集到的数据的列表(如果接收到广播的方法返回了数据的话)
         """
         callback_list = []
         res = self._broadcast_listeners.get(evt_name)

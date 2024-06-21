@@ -14,7 +14,7 @@ from .color_print import Print
 from .packets import Packet_CommandOutput
 
 if TYPE_CHECKING:
-    from tooldelta import Frame, GameCtrl
+    from tooldelta import ToolDelta, GameCtrl
 
 game_ctrl: "GameCtrl" = None # type: ignore
 
@@ -25,7 +25,7 @@ def _check_gamectrl_avali():
     if game_ctrl is None:
         raise ValueError("GameControl 不可用")
 
-def _set_frame(frame: "Frame"):
+def _set_frame(frame: "ToolDelta"):
     "载入系统框架"
     global game_ctrl
     game_ctrl = frame.get_game_control()

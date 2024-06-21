@@ -8,7 +8,6 @@ from .sys_args import sys_args_to_dict
 from .frame import ToolDelta, GameCtrl
 from .color_print import Print
 from .plugin_load.PluginGroup import plugin_group
-from .plugin_load.injected_plugin import movent
 
 tooldelta = ToolDelta()
 

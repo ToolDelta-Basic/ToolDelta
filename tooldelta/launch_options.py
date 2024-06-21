@@ -23,7 +23,7 @@ def client_title() -> None:
     try:
         if "h" in sys_args_to_dict() or "help" in sys_args_to_dict():
             print_help()
-            os._exit(0)
+            raise SystemExit
         launch_mode = sys_args_to_dict()
         if launch_mode.get("l"):
             if not isinstance(launch_mode["l"], str):
@@ -46,8 +46,8 @@ def client_title() -> None:
             case "4":
                 ToolDelta.change_config()
             case _:
-                Print.clean_print("§c不合法的模式: " + r)
-    except EOFError:
+                Print.clean_print("§c不合法的启动模式: " + r)
+    except (EOFError, SystemExit):
         pass
     except Exception:
         Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())

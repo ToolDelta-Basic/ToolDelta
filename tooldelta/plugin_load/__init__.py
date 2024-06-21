@@ -66,7 +66,7 @@ class PluginRegData:
         self.author: str = plugin_data.get("author", "unknown")
         self.plugin_type: str = plugin_data.get("plugin-type", "unknown")
         self.description: str = plugin_data.get("description", "")
-        self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", [])
+        self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", {})
         self.plugin_id = plugin_data.get("plugin-id", "???")
         self.is_registered = is_registered
         if plugin_data.get("enabled") is not None:

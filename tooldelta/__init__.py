@@ -1,12 +1,20 @@
 """
 ## ToolDelta: NEMC Rental Server R-Plugin Loader ##
 ToolDelta: 网易我的世界手机版 租赁服机器人式插件加载器
- - 进入 ToolDelta 界面:\n
-    from tooldelta import client_title\n
-    client_title()
- - 快速启动 ToolDelta:\n
-    from tooldelta import start_tool_delta\n
-    start_tool_delta()
+- 进入 ToolDelta 界面:\n
+   ```python
+   from tooldelta import client_title\n
+   client_title()
+   ```
+- 快速启动 ToolDelta:\n
+   ```python
+   from tooldelta import start_tool_delta\n
+   start_tool_delta()
+   ```
+- 快速创建插件所需库环境\n
+   ```python
+   from tooldelta import *
+   ```
 """
 from .color_print import Print
 from .plugin_load.PluginGroup import Plugin

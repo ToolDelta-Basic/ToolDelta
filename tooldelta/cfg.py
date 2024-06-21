@@ -345,13 +345,3 @@ class Cfg:
 
 
 Config = Cfg()
-
-if __name__ == "__main__":
-    # Test Part
-    try:
-        test_cfg = {"strong": "2"}
-        std = {Cfg.KeyGroup("strong"): int}
-        Config.check_auto(std, test_cfg)
-    except Cfg.ConfigError:
-        import traceback
-        print(traceback.format_exc())

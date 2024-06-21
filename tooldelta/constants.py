@@ -87,5 +87,7 @@ PLUGIN_TYPE_MAPPING = {
     "classic": TOOLDELTA_CLASSIC_PLUGIN,
     "injected": TOOLDELTA_INJECTED_PLUGIN
 }
+"插件属性名映射"
 
 TDSPECIFIC_MIRROR = "https://tdload.tblstudio.cn"
+"ToolDelta专用镜像"
