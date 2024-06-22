@@ -326,7 +326,6 @@ class FrameNeOmg(StandardFrame):
             msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
                 Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
-                self.update_status(SysStatus.NORMAL_EXIT)
                 return
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()
@@ -364,6 +363,7 @@ class FrameNeOmg(StandardFrame):
         self._launcher_listener()
         Print.print_suc("接入点已就绪！")
         self.exit_event.wait()  # 等待事件的触发
+        self.update_status(SysStatus.NORMAL_EXIT)
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
         if self.status == SysStatus.CRASHED_EXIT:
@@ -533,7 +533,8 @@ class FrameNeOmg(StandardFrame):
     @Utils.thread_func("检测 Omega 断开连接线程")
     def wait_omega_disconn_thread(self):
         self.omega.wait_disconnect()
-        self.update_status(SysStatus.CRASHED_EXIT)
+        if self.status == SysStatus.RUNNING:
+            self.update_status(SysStatus.CRASHED_EXIT)
 
     sendPacketJson = sendPacket
 

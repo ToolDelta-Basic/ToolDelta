@@ -11,7 +11,7 @@ import threading
 import traceback
 import json as rjson
 import ujson as json
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Iterable, Optional
 from io import TextIOWrapper
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
@@ -28,7 +28,7 @@ class Utils:
     class ToolDeltaThread(threading.Thread):
         """简化 ToolDelta 子线程创建的 threading.Thread 的子类."""
 
-        def __init__(self, func: Callable, args: tuple = (), usage="", **kwargs):
+        def __init__(self, func: Callable, args: Iterable[Any] = (), usage="", **kwargs):
             """新建一个 ToolDelta 子线程
 
             Args:

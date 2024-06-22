@@ -10,6 +10,7 @@ from threading import Thread
 from dataclasses import dataclass, field
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput
+from tooldelta.utils import Utils
 
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
@@ -507,7 +508,6 @@ class ThreadOmega:
         self.connect_type = connect_type
         self.address = address
         self.accountOption = accountOption
-
     def connect(self):
         if self.connect_type == ConnectType.Local:
             StartOmega(self.address, self.accountOption)
@@ -546,28 +546,8 @@ class ThreadOmega:
             **json.loads(toPyString(LIB.GetClientMaintainedBotBasicInfo()))
         )
 
-        # player hooks
-
         # start routine
-        self.start_new(self._react)
-
-    def start_new(self, func: Callable, args: Iterable[Any] = ()):
-        try:
-            thread_i = next(self._thread_counter)
-        except StopIteration:
-            raise ValueError("thread counter overflow")
-
-        def clean_up(*args):
-            try:
-                func(*args)
-            except Exception:
-                print(traceback.print_exc(limit=None, file=None, chain=True))
-            finally:
-                del self._running_threads[thread_i]
-
-        t = Thread(target=clean_up, args=args)
-        self._running_threads[thread_i] = t
-        t.start()
+        Utils.createThread(self._react,usage="Omega React Thread")
 
     def _react(self):
         while True:
@@ -577,6 +557,7 @@ class ThreadOmega:
                     LIB.ConsumeOmegaConnError()
                 )
                 self._omega_disconnected_lock.set()
+                break
             elif eventType == "CommandResponseCB":
                 cmdResp = unpackCommandOutput(
                     toPyString(LIB.ConsumeCommandResponseCB())
@@ -596,7 +577,8 @@ class ThreadOmega:
                         raise ValueError(toPyString(ret.convertError))
                     jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
                     for listener in listeners:
-                        self.start_new(listener, (packetTypeName, jsonPkt))
+                        Utils.createThread(
+                            listener, (packetTypeName, jsonPkt),usage="Packet Callback Thread")
             elif eventType == "PlayerChange":
                 playerUUID = retriever
                 if len(self._player_change_listeners) == 0:
@@ -604,9 +586,9 @@ class ThreadOmega:
                 else:
                     action = toPyString(LIB.ConsumePlayerChange())
                     for callback in self._player_change_listeners:
-                        self.start_new(
+                        Utils.createThread(
                             callback, (self._get_bind_player(
-                                playerUUID), action)
+                                playerUUID), action),usage="Player Change Callback Thread"
                         )
 
             elif eventType == "PlayerInterceptInput":

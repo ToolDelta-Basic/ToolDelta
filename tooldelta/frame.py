@@ -454,7 +454,7 @@ class ToolDelta:
                 ["exit"],
                 None,
                 f"退出并关闭{PRG_NAME}",
-                lambda _: tooldelta.safe_jump(out_task=True),
+                lambda _: self.system_exit()
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -486,8 +486,6 @@ class ToolDelta:
                         break
                     if res in ("", "^C", "^D"):
                         Print.print_inf("按退出键退出中...")
-                        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
-                            self.launcher.status = SysStatus.NORMAL_EXIT
                         self.system_exit()
                         return
                     rsp += res
@@ -747,7 +745,8 @@ class GameCtrl:
             self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
-        threading.Thread(target=self.give_bot_effect_invisibility, name="GiveBotEffectInvisibility").start()
+        Utils.createThread(func=self.give_bot_effect_invisibility,
+                           usage="GiveBotEffectInvisibility")
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
@@ -856,10 +855,12 @@ class GameCtrl:
 
     def give_bot_effect_invisibility(self) -> None:
         """给机器人添加隐身效果"""
+        start_time = time.time()
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
-            self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
-            time.sleep(16384)
-
+            if time.time() - start_time > 16384:
+                self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
+                start_time = time.time()
+            time.sleep(1)
     def tmp_tp_all_players(self) -> None:
         """
         内部调用：在ToolDelta连接到NeOmega后先 tp 所有玩家（防止玩家entityruntimeid为空）
