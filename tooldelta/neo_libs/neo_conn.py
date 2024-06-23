@@ -562,7 +562,10 @@ class ThreadOmega:
                 cmdResp = unpackCommandOutput(
                     toPyString(LIB.ConsumeCommandResponseCB())
                 )
-                self._omega_cmd_callback_events[retriever](cmdResp)
+                if retriever in self._omega_cmd_callback_events.keys():
+                    self._omega_cmd_callback_events[retriever](cmdResp)
+                else:
+                    Print.print_war(f"接入点核心进程: 指令返回 {retriever} 没有对应的回调, 已忽略")
             elif eventType == "MCPacket":
                 packetTypeName = retriever
                 if packetTypeName == "":

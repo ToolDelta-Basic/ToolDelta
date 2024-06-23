@@ -200,8 +200,6 @@ def getScore(scb_name: str, target: str, timeout = 30) -> int:
         raise ValueError(f"计分板项或玩家 {target} 未找到")
     elif resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
-    elif not resp.Success:
-        raise ValueError(f"计分板分数获取失败: {resp.Message}")
     return int(resp.Parameters[0])
 
 def isCmdSuccess(cmd: str, timeout=30):
