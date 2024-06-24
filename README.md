@@ -36,7 +36,7 @@
 
 
 ## 友情链接
-- [如何使用](https://tooldelta-wiki.tblstudio.cn/learn-use.html)
+- [如何使用](https://tooldelta-wiki.tblstudio.cn/learn_use.html)
 - [Docker 镜像](https://hub.docker.com/r/wlingzhenyu/tooldelta)
 
 

@@ -404,13 +404,17 @@ class Utils:
         """
         在事件方法可能执行较久会造成堵塞时使用，方便快捷地创建一个新线程，例如:
 
+        ```python
         @Utils.thread_func
         def on_inject(self):
             ...
+        ```
         或者:
+        ```python
         @Utils.thread_func("一个会卡一分钟的线程")
         def on_inject(self):
             ...
+        ```
         """
         if isinstance(func_or_name, str):
             def _recv_func(func: Callable):
