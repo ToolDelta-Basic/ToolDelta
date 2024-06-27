@@ -46,7 +46,7 @@
     - <a href="https://github.com/ToolDelta/ToolDelta/releases">发行版 ToolDelta 下载点这里</a>
  - 在 `pip` 安装 ToolDelta 并运行
     - `pip install tooldelta`
-    - `echo "import tooldelta;tooldelta.client_title()"`
+    - `echo "import tooldelta;tooldelta.client_title()" > main.py`
  - 在docker运行
     ```bash
     docker run -v .:/app -t -i wlingzhenyu/tooldelta:latest
