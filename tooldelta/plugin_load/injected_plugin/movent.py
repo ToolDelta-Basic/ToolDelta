@@ -98,7 +98,7 @@ def rawText(playername: str, text: str) -> None:
         playername: 玩家名称
         text: 要发送的文本
     """
-    sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
+    game_control.say_to(playername, text)
 
 
 def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
@@ -111,16 +111,9 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
         text: 消息文本
     """
     if title is None:
-        sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
+        game_control.say_to(playername, text)
     else:
-        sendcmd(
-            r"""/tellraw %s {"rawtext":[{"text":"<%s> §r%s"}]}"""
-            % (
-                playername,
-                title,
-                text,
-            )
-        )
+        game_control.say_to(playername, f"<{title}§r> {text}")
 
 
 def get_all_player() -> list:

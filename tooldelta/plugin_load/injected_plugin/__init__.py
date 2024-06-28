@@ -6,7 +6,7 @@ import os
 import sys
 import importlib
 
-from typing import TYPE_CHECKING, Callable, List, Tuple
+from typing import TYPE_CHECKING, Callable, List, Tuple, Any
 from ...color_print import Print
 from ...plugin_load import (
     plugin_is_enabled,
@@ -46,7 +46,7 @@ def player_message(priority: int | None = None) -> Callable:
     return decorator
 
 
-def player_prejoin(priority: int | None = None) -> Callable:
+def player_prejoin(priority: int | None = None) -> Callable[["player_name"], None]:
     """载入处理玩家加入前事件
 
     Args:
