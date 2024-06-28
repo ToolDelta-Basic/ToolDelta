@@ -160,7 +160,7 @@ def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
             return k
 
 
-def get_robotname() -> str | None:
+def get_robotname() -> str:
     """获取机器人名称。"""
     check_avaliable(game_control)
     return game_control.bot_name
@@ -205,7 +205,7 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
 
-def getTickingAreaList() -> dict | AttributeError:
+def getTickingAreaList() -> dict:
     """
     获取 tickingarea 列表
 
