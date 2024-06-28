@@ -1,3 +1,3 @@
-from tooldelta.launch_options import client_title
+import tooldelta
 
-client_title()
+tooldelta.client_title()

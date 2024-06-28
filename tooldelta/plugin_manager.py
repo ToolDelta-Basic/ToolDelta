@@ -59,11 +59,7 @@ class PluginManager:
             clear_screen()
 
     def plugin_operation(self, plugin: PluginRegData) -> None:
-        """插件操作
-
-        Args:
-            plugin (PluginRegData): 插件注册信息
-        """
+        "插件操作"
         description_fixed = plugin.description.replace('\n', '\n    ')
         clear_screen()
         Print.clean_print(f"§d插件名: §f{plugin.name}")
@@ -71,7 +67,7 @@ class PluginManager:
         Print.clean_print(f" - 作者：{plugin.author}")
         Print.clean_print(f" 描述：{description_fixed}")
         Print.clean_print(
-            f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  §c回车退出")
+            f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  4.查看手册  §c回车退出")
         f_dirname = {
             "classic": TOOLDELTA_CLASSIC_PLUGIN,
             "injected": TOOLDELTA_INJECTED_PLUGIN
@@ -124,13 +120,16 @@ class PluginManager:
                 plugin.is_enabled = [True, False][plugin.is_enabled]
                 Print.clean_print(
                     f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}§6, 回车键继续")
+            case "4":
+                self.lookup_readme(plugin)
             case _:
                 return
         self.push_plugin_reg_data(plugin)
         input()
 
     def update_all_plugins(self, plugins: list[PluginRegData]) -> None:
-        """更新全部插件
+        """
+        更新全部插件
 
         Args:
             plugins (list[PluginRegData]): 插件注册信息列表
@@ -178,7 +177,8 @@ class PluginManager:
                     shutil.rmtree(old_plugin.dir)
 
     def search_plugin(self, resp, plugins) -> Optional[PluginRegData]:
-        """搜索插件
+        """
+        搜索插件
 
         Returns:
             None: 未找到插件
@@ -199,6 +199,30 @@ class PluginManager:
                 return None
             return res[r - 1]
         return res[0]
+
+    def lookup_readme(self, plugin: PluginRegData):
+        "查看插件的 readme.txt 文档"
+        readme_path = os.path.join(
+            TOOLDELTA_PLUGIN_DIR,
+            PLUGIN_TYPE_MAPPING[plugin.plugin_type],
+            plugin.name,
+            "readme.txt"
+        )
+        if os.path.isfile(readme_path):
+            with open(readme_path, encoding="utf-8") as f:
+                lns = f.read().split("\n")
+            counter = 0
+            clear_screen()
+            Print.clean_print(f"§b文档正文 ({readme_path}):")
+            for ln in lns:
+                Print.clean_print("  " + ln)
+                counter += 1
+                if counter > 15:
+                    counter = 0
+                    input(Print.clean_fmt("§a[按回车键继续阅读..]"))
+            Print.clean_print("§a[按回车键退出..]")
+        else:
+            Print.clean_print("§6此插件没有手册文档 [回车键继续]")
 
     @staticmethod
     def search_plugin_by_kw(kws: list[str], plugins: list[PluginRegData]) -> list[PluginRegData]:

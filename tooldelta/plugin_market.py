@@ -70,13 +70,11 @@ def get_json_from_url(url: str) -> dict:
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
-        resptext = resp.text
+        return resp.json()
     except requests.RequestException as exc:
         raise requests.RequestException("URL 请求失败") from exc
-    try:
-        return json.loads(resptext)
     except json.JSONDecodeError as exc:
-        raise requests.RequestException(f"服务器返回了不正确的答复：{resptext}") from exc
+        raise requests.RequestException(f"服务器返回了不正确的答复：{resp.text}") from exc
 
 
 class PluginMarket:
@@ -211,7 +209,8 @@ class PluginMarket:
         Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
 
     def get_datas_from_market(self, source_url: str | None = None) -> dict:
-        """从插件市场获取数据
+        """
+        从插件市场的 market_tree.json 获取数据
 
         Args:
             source_url (str | None, optional): 插件市场源，默认为 None, 有则替换整体插件市场源
@@ -227,7 +226,7 @@ class PluginMarket:
         return market_datas
 
     def get_plugin_data_from_market(self, plugin_id: str) -> PluginRegData:
-        """从插件市场获取插件数据
+        """从插件市场获取单个插件数据
 
         Args:
             plugin_id (str): 插件 ID
@@ -284,8 +283,7 @@ class PluginMarket:
         Returns:
             dict: 插件 ID 与插件名的映射
         """
-        res = requests.get(self.plugins_download_url +
-                           "/plugin_ids_map.json", timeout=5)
+        res = requests.get(self.plugins_download_url + "/plugin_ids_map.json", timeout=5)
         res.raise_for_status()
         res1: dict = json.loads(res.text)
         self.plugin_id_name_map = res1
