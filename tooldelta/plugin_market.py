@@ -81,6 +81,7 @@ class PluginMarket:
     "插件市场类"
 
     def __init__(self):
+        self.plugin_id_name_map: dict | None = None
         try:
             self.plugins_download_url = Cfg().get_cfg(
                 "ToolDelta基本配置.json", {"插件市场源": str})["插件市场源"]
@@ -95,7 +96,7 @@ class PluginMarket:
             in_game (bool, optional): 是否在游戏内
         """
         Print.clean_print("§6正在连接到插件市场..")
-        self.plugin_id_name_map: dict = self.get_plugin_id_name_map()
+        self.plugin_id_name_map = self.get_plugin_id_name_map()
         CTXS = 12
         try:
             if isinstance(source_url, str):
@@ -237,6 +238,8 @@ class PluginMarket:
         Returns:
             PluginRegData: 插件注册数据
         """
+        if self.plugin_id_name_map is None:
+            self.plugin_id_name_map = self.get_plugin_id_name_map()
         plugin_name = self.plugin_id_name_map.get(plugin_id)
         if plugin_name is None:
             raise KeyError(f"无法通过 ID: {plugin_id} 查找插件")
@@ -341,7 +344,7 @@ class PluginMarket:
             ), exist_ok=True)
             all_files_len = len(download_paths)
             for i, paths in enumerate(download_paths):
-                Print.print_with_info(f"正在下载附带文件 ({i}/{all_files_len})", end="\r")
+                Print.clean_print(f"正在下载附带文件 ({i}/{all_files_len})", end="\r")
                 if not paths.strip():
                     # 该路径为空
                     continue
