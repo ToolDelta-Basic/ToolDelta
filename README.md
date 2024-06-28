@@ -17,7 +17,7 @@
   <br/><a href="https://tooldelta-wiki.tblstudio.cn/">维基和用户指南</a> | <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ywf-Y9Sb7G3McLAN7TveI-qh-g1FEtLB&authKey=C0ZLK09UWRzWv9dpReVnZljSnZ15crGpNpdT5O%2BX%2B%2BQvZ%2Bsm2BWfN8qqdJ5OMnTq&noverify=0&group_code=194838530">交流群</a>  
 </p>
 
-> WARNING: 禁止在 GitCode 上搬运此项目或者镜像该项目：六十四，八十九
+> WARNING: 禁止在 GitCode 上搬运此项目或者镜像该项目：六十四，八十九，六四，八九
 
 ## 目录
 - [目录](#目录)
