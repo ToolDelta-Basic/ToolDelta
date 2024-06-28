@@ -230,7 +230,7 @@ class PluginManager:
 
         Args:
             kws (list[str]): 关键词列表
-            plugins (list[PluginRegData]): 、插件注册信息列表
+            plugins (list[PluginRegData]): 插件注册信息列表
 
         Returns:
             list[PluginRegData]: 插件注册信息列表
