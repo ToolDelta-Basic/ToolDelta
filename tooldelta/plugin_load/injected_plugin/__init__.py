@@ -1,4 +1,5 @@
 "ToolDelta 注入式插件"
+
 import asyncio
 from dataclasses import dataclass
 import os
@@ -10,8 +11,9 @@ from ...color_print import Print
 from ...plugin_load import (
     plugin_is_enabled,
     PluginAPINotFoundError,
-    PluginAPIVersionError
+    PluginAPIVersionError,
 )
+
 if TYPE_CHECKING:
     from tooldelta.plugin_load.PluginGroup import PluginGroup
 
@@ -36,6 +38,7 @@ def player_message(priority: int | None = None) -> Callable:
     Returns:
         Callable: 插件处理函数
     """
+
     def decorator(func):
         player_message_funcs[func] = priority
         return func
@@ -69,6 +72,7 @@ def player_join(priority: int | None = None) -> Callable:
     Returns:
         Callable: 插件处理函数
     """
+
     def decorator(func):
         player_join_funcs[func] = priority
         return func
@@ -85,6 +89,7 @@ def player_left(priority: int | None = None) -> Callable:
     Returns:
         Callable: 插件处理函数
     """
+
     def decorator(func):
         player_left_funcs[func] = priority
         return func
@@ -101,6 +106,7 @@ def player_death(priority: int | None = None) -> Callable:
     Returns:
         Callable: 插件处理函数
     """
+
     def decorator(func):
         player_death_funcs[func] = priority
         return func
@@ -117,6 +123,7 @@ def init(priority: int | None = None) -> Callable:
     Returns:
         Callable: 插件处理函数
     """
+
     def decorator(func):
         init_plugin_funcs[func] = priority
         return func
@@ -133,6 +140,7 @@ def frame_exit(priority: int | None = None) -> Callable:
     Returns:
         Callable: 插件处理函数
     """
+
     def decorator(func):
         frame_exit_funcs[func] = priority
         return func
@@ -164,11 +172,13 @@ async def command_say(priority: int | None = None) -> Callable:
         name (str): 命令名
         priority (int | None, optional): 插件优先级
     """
+
     def decorator(func):
         commmand_message_funcs[func] = priority
         return func
 
     return decorator
+
 
 async def repeat_task(func: Callable, time: int | float) -> None:
     """执行重复任务（执行完等待一段时间再执行）
@@ -198,12 +208,9 @@ async def execute_asyncio_task(func_dict: dict, *args, **kwargs) -> None:
     # 将任务添加到 tasks 列表或 none_tasks 列表中
     for func, priority in func_dict.items():
         if priority is not None:
-            tasks.append(
-                (priority, asyncio.create_task(func(*args, **kwargs))))
+            tasks.append((priority, asyncio.create_task(func(*args, **kwargs))))
         else:
-            none_tasks.append(
-                (priority, asyncio.create_task(func(*args, **kwargs)))
-            )
+            none_tasks.append((priority, asyncio.create_task(func(*args, **kwargs))))
 
     # 按优先级对非 None 任务排序
     tasks.sort(key=lambda x: x[0])
@@ -243,6 +250,7 @@ main_task: asyncio.Task
 @dataclass(order=True)
 class command_message_info:
     "命令消息信息"
+
     name: str
     message: str
 
@@ -250,18 +258,21 @@ class command_message_info:
 @dataclass(order=True)
 class player_name:
     "玩家名字"
+
     playername: str
 
 
 @dataclass(order=True)
 class player_message_info(player_name):
     "玩家消息信息"
+
     message: str
 
 
 @dataclass(order=True)
 class player_death_info(player_name):
     "玩家死亡信息"
+
     message: str
     killer: str | None = None
 
@@ -283,10 +294,15 @@ async def execute_player_message(playername: str, message: str) -> None:
         playername (str): 玩家名字
         message (str): 消息
     """
-    await execute_asyncio_task(player_message_funcs, player_message_info(playername=playername, message=message))
+    await execute_asyncio_task(
+        player_message_funcs,
+        player_message_info(playername=playername, message=message),
+    )
 
 
-async def execute_death_message(playername: str, killer: str | None, message: str) -> None:
+async def execute_death_message(
+    playername: str, killer: str | None, message: str
+) -> None:
     """执行玩家死亡处理函数
 
     Args:
@@ -294,7 +310,10 @@ async def execute_death_message(playername: str, killer: str | None, message: st
         killer (str | None): 凶手
         message (str): 消息
     """
-    await execute_asyncio_task(player_death_funcs, player_death_info(playername=playername, killer=killer, message=message))
+    await execute_asyncio_task(
+        player_death_funcs,
+        player_death_info(playername=playername, killer=killer, message=message),
+    )
 
 
 async def execute_player_join(playername: str) -> None:
@@ -330,7 +349,9 @@ async def execute_command_say(name: str, message: str) -> None:
     Args:
         message (str): 消息 say
     """
-    await execute_asyncio_task(commmand_message_funcs, command_message_info(name=name, message=message))
+    await execute_asyncio_task(
+        commmand_message_funcs, command_message_info(name=name, message=message)
+    )
 
 
 async def execute_frame_exit() -> None:
@@ -397,7 +418,8 @@ async def load_plugin_file(file: str) -> PluginMetadata:
         return meta_data
     except PluginAPIVersionError as err:
         Print.print_err(
-            f"插件 {file} 加载出现问题：需要 {err.name} 的 API 最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}")
+            f"插件 {file} 加载出现问题：需要 {err.name} 的 API 最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}"
+        )
         raise
     except PluginAPINotFoundError as err:
         Print.print_err(f"插件 {file} 加载出现问题：需要前置插件 API {err.name}")

@@ -6,11 +6,12 @@ from tooldelta.constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
-    PLUGIN_TYPE_MAPPING
+    PLUGIN_TYPE_MAPPING,
 )
 from tooldelta.color_print import Print
 
 TYPE_CHECKING = 0
+
 
 def NON_FUNC(*_) -> None:
     "空函数"
@@ -44,7 +45,13 @@ class PluginAPIVersionError(ModuleNotFoundError):
 class PluginRegData:
     "插件注册数据"
 
-    def __init__(self, name: str, plugin_data: dict | None = None, is_registered=True, is_enabled=True):
+    def __init__(
+        self,
+        name: str,
+        plugin_data: dict | None = None,
+        is_registered=True,
+        is_enabled=True,
+    ):
         """插件注册数据
 
         Args:
@@ -78,8 +85,11 @@ class PluginRegData:
     def dir(self):
         return os.path.join(
             str(TOOLDELTA_PLUGIN_DIR),
-            {"classic": TOOLDELTA_CLASSIC_PLUGIN, "injected": TOOLDELTA_INJECTED_PLUGIN}[self.plugin_type],
-            self.name
+            {
+                "classic": TOOLDELTA_CLASSIC_PLUGIN,
+                "injected": TOOLDELTA_INJECTED_PLUGIN,
+            }[self.plugin_type],
+            self.name,
         )
 
     def dump(self) -> dict[str, Any]:
@@ -91,7 +101,7 @@ class PluginRegData:
             "description": self.description,
             "pre-plugins": self.pre_plugins,
             "plugin-id": self.plugin_id,
-            "enabled": self.is_enabled
+            "enabled": self.is_enabled,
         }
 
     @property
@@ -128,6 +138,7 @@ def plugin_is_enabled(pname: str) -> bool:
     """
     return not pname.endswith("+disabled")
 
+
 def auto_move_plugin_dir(fdname: str):
     """
     自动尝试移动一个总插件文件夹下可能为插件文件夹的文件夹至正确的插件路径
@@ -147,8 +158,10 @@ def auto_move_plugin_dir(fdname: str):
                     return
             shutil.move(
                 os.path.join(TOOLDELTA_PLUGIN_DIR, fdname),
-                os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[p_type])
+                os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[p_type]),
             )
-            Print.print_suc(f"已将插件 {fdname} 智能移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内")
+            Print.print_suc(
+                f"已将插件 {fdname} 智能移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内"
+            )
         except Exception as err:
             Print.print_err(f"智能移动插件文件夹 {fdname} 出错：{err}")

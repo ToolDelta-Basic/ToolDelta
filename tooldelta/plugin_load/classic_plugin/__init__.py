@@ -1,4 +1,5 @@
 "ToolDelta 类式插件"
+
 import importlib
 import os
 import sys
@@ -16,14 +17,12 @@ if TYPE_CHECKING:
     from ...frame import ToolDelta
     from ...plugin_load.PluginGroup import PluginGroup
 
-__caches__ = {
-    "plugin": None,
-    "api_name": "",
-    "frame": None
-}
+__caches__ = {"plugin": None, "api_name": "", "frame": None}
+
 
 class Plugin:
     "插件信息主类"
+
     name: str = ""
     version = (0, 0, 1)
     author = "?"
@@ -47,7 +46,9 @@ class Plugin:
     def make_data_path(self):
         os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
 
+
 _PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
+
 
 def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
     """添加ToolDelta类式插件的插件主类
@@ -66,17 +67,17 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
             raise NotValidPluginError(f"插件主类必须继承 Plugin 类 而不是 {plugin}")
     except TypeError as exc:
         raise NotValidPluginError(
-            f"插件主类必须继承 Plugin 类 而不是 {plugin.__class__}") from exc
+            f"插件主类必须继承 Plugin 类 而不是 {plugin.__class__}"
+        ) from exc
     if __caches__["plugin"] is not None:
-        raise NotValidPluginError(
-            "调用了多次 @add_plugin"
-        )
+        raise NotValidPluginError("调用了多次 @add_plugin")
     if __caches__["frame"] is None:
         Print.clean_print("§d正在以直接运行模式运行插件..")
         return plugin
-    plugin_ins = plugin(__caches__["frame"]) # type: ignore
+    plugin_ins = plugin(__caches__["frame"])  # type: ignore
     __caches__["plugin"] = plugin_ins
     return plugin
+
 
 def add_plugin_as_api(apiName: str):
     """添加 ToolDelta 类式插件主类，同时作为 API 插件提供接口供其他插件进行使用
@@ -84,17 +85,16 @@ def add_plugin_as_api(apiName: str):
     Args:
         apiName (str): API 名
     """
+
     def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         if not Plugin.__subclasscheck__(api_plugin):
             raise NotValidPluginError("API 插件主类必须继承 Plugin 类")
         if __caches__["plugin"] is not None:
-            raise NotValidPluginError(
-                "调用了多次 @add_plugin"
-            )
+            raise NotValidPluginError("调用了多次 @add_plugin")
         if __caches__["frame"] is None:
             Print.clean_print("§d正在以直接运行模式运行插件..")
             return api_plugin
-        plugin_ins = api_plugin(__caches__["frame"]) # type: ignore
+        plugin_ins = api_plugin(__caches__["frame"])  # type: ignore
         __caches__["plugin"] = plugin_ins
         __caches__["api_name"] = apiName
         return api_plugin
@@ -103,6 +103,7 @@ def add_plugin_as_api(apiName: str):
 
 
 # Plugin get and execute
+
 
 def read_plugins(plugin_grp: "PluginGroup") -> None:
     """读取插件
@@ -116,8 +117,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
         if not plugin_is_enabled(plugin_dir):
             continue
         if (
-            not os.path.isdir(os.path.join(
-                PLUGIN_PATH, plugin_dir.strip(".zip")))
+            not os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir.strip(".zip")))
             and os.path.isfile(os.path.join(PLUGIN_PATH, plugin_dir))
             and plugin_dir.endswith(".zip")
         ):
@@ -134,7 +134,9 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
             plugin_grp.loaded_plugins_name.append(plugin_dir)
 
 
-def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None, Plugin]:
+def load_plugin(
+    plugin_group: "PluginGroup", plugin_dirname: str
+) -> Union[None, Plugin]:
     """加载插件
 
     Args:
@@ -173,7 +175,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         else:
             Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件，跳过加载")
             return
-        plugin_or_none : Plugin | None = __caches__.get("plugin")
+        plugin_or_none: Plugin | None = __caches__.get("plugin")
         if plugin_or_none is None:
             raise NotValidPluginError(
                 "需要调用 1 次 @plugins.add_plugin 以注册插件主类，然而没有调用"
@@ -192,7 +194,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
             "on_player_death",
             "on_player_leave",
             "on_command",
-            "on_frame_exit"
+            "on_frame_exit",
         ):
             if hasattr(plugin, evt_name):
                 plugin_group.plugins_funcs[evt_name].append(
@@ -208,9 +210,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
                 if ins_func is None:
                     raise NotValidPluginError("数据包监听不能在主插件类以外定义")
                 plugin_group._add_listen_packet_id(pktType)
-                plugin_group._add_listen_packet_func(
-                    pktType, ins_func
-                )
+                plugin_group._add_listen_packet_func(pktType, ins_func)
         if __caches__["api_name"] != "":
             plugin_group.plugins_api[__caches__["api_name"]] = plugin
         if plugin_group.broadcast_evts_cache != {}:
@@ -226,7 +226,9 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         raise SystemExit from err
     except Cfg.ConfigError as err:
         Print.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
-        Print.print_err("你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件")
+        Print.print_err(
+            "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"
+        )
         raise SystemExit from err
     except Utils.SimpleJsonDataReader.DataReadError as err:
         Print.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
@@ -238,6 +240,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> Union[None,
         Print.print_err("§c" + traceback.format_exc())
         raise SystemExit from err
     return None
+
 
 def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
     """解压插件 ZIP 包
@@ -252,6 +255,7 @@ def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
     except Exception as err:
         Print.print_err(f"zipfile: 解压失败：{err}")
         raise EOFError("解压失败") from err
+
 
 def _init_frame(frame: "ToolDelta"):
     __caches__["frame"] = frame

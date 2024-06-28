@@ -8,19 +8,15 @@ import random
 import subprocess
 import platform
 from typing import Callable, Optional
-import ujson as json
-import requests
 import tooldelta
 
-from tooldelta import constants
 from .neo_libs import file_download as neo_fd, neo_conn
-from .bews_libs import ws_con
 from .cfg import Cfg
 from .utils import Utils
 from .color_print import Print
 from .sys_args import sys_args_to_dict
 from .packets import Packet_CommandOutput
-from .urlmethod import download_file_singlethreaded, get_free_port
+from .urlmethod import get_free_port
 
 Config = Cfg()
 
@@ -36,6 +32,7 @@ class SysStatus:
     CRASHED_EXIT: 启动器崩溃退出
     NEED_RESTART: 需要重启
     """
+
     LOADING = 100
     LAUNCHING = 101
     RUNNING = 102
@@ -48,6 +45,7 @@ class SysStatus:
 
 class StandardFrame:
     """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""
+
     launch_type = "Original"
 
     def __init__(self) -> None:
@@ -109,7 +107,9 @@ class StandardFrame:
             tooldelta.safe_jump(out_task=False)
             self.exit_event.set()
 
-    def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: int | float = 30
+    ) -> Optional[Packet_CommandOutput]:
         """以玩家身份发送命令
 
         Args:
@@ -125,7 +125,9 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: int | float = 30) -> Optional[Packet_CommandOutput]:
+    def sendwscmd(
+        self, cmd: str, waitForResp: bool = False, timeout: int | float = 30
+    ) -> Optional[Packet_CommandOutput]:
         """以 ws 身份发送命令
 
         Args:
@@ -180,9 +182,13 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def place_command_block_with_nbt_data(self, block_name: str, block_states: str,
-                                          position: tuple[int, int, int],
-                                          nbt_data: neo_conn.CommandBlockNBTData):
+    def place_command_block_with_nbt_data(
+        self,
+        block_name: str,
+        block_states: str,
+        position: tuple[int, int, int],
+        nbt_data: neo_conn.CommandBlockNBTData,
+    ):
         """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
         同时向该方块写入 nbt_data 所指代的 NBT 数据
 
@@ -200,6 +206,7 @@ class StandardFrame:
 
 class FrameNeOmg(StandardFrame):
     """使用 NeOmega 框架连接到游戏"""
+
     launch_type = "NeOmega"
 
     def __init__(self) -> None:
@@ -221,7 +228,7 @@ class FrameNeOmg(StandardFrame):
         self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:24013",
-            accountOption=None
+            accountOption=None,
         )
 
     def init(self):
@@ -232,7 +239,9 @@ class FrameNeOmg(StandardFrame):
         self.status = SysStatus.LAUNCHING
         self.secret_exit_key = ""
 
-    def set_launch_data(self, serverNumber: int, password: str, fbToken: str, auth_server_url: str):
+    def set_launch_data(
+        self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
+    ):
         self.serverNumber = serverNumber
         self.serverPassword = password
         self.fbToken = fbToken
@@ -249,7 +258,7 @@ class FrameNeOmg(StandardFrame):
         self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:24013",
-            accountOption=self.neomega_account_opt
+            accountOption=self.neomega_account_opt,
         )
 
     def set_omega(self, openat_port: int) -> None:
@@ -411,7 +420,9 @@ class FrameNeOmg(StandardFrame):
         if self.status != SysStatus.RUNNING:
             raise ValueError("未连接到游戏")
 
-    def sendcmd(self, cmd: str, waitForResp: bool = False, timeout: float = 30) -> Optional[Packet_CommandOutput]:
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Optional[Packet_CommandOutput]:
         """以玩家身份发送命令
 
         Args:
@@ -427,15 +438,16 @@ class FrameNeOmg(StandardFrame):
         """
         self.check_avaliable()
         if waitForResp:
-            res = self.omega.send_player_command_need_response(
-                cmd, timeout)
+            res = self.omega.send_player_command_need_response(cmd, timeout)
             if res is None:
                 raise TimeoutError("指令超时")
             return res
         self.omega.send_player_command_omit_response(cmd)
         return
 
-    def sendwscmd(self, cmd: str, waitForResp: bool = False, timeout: float = 30) -> Optional[Packet_CommandOutput]:
+    def sendwscmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Optional[Packet_CommandOutput]:
         """以玩家身份发送命令
 
         Args:
@@ -451,8 +463,7 @@ class FrameNeOmg(StandardFrame):
         """
         self.check_avaliable()
         if waitForResp:
-            res = self.omega.send_websocket_command_need_response(
-                cmd, timeout)
+            res = self.omega.send_websocket_command_need_response(cmd, timeout)
             if res is None:
                 raise TimeoutError("指令超时")
             return res
@@ -502,9 +513,13 @@ class FrameNeOmg(StandardFrame):
             raise ValueError("未能获取玩家对象")
         return player_obj.op_permissions_level > 1
 
-    def place_command_block_with_nbt_data(self, block_name: str, block_states: str,
-                                          position: tuple[int, int, int],
-                                          nbt_data: neo_conn.CommandBlockNBTData):
+    def place_command_block_with_nbt_data(
+        self,
+        block_name: str,
+        block_states: str,
+        position: tuple[int, int, int],
+        nbt_data: neo_conn.CommandBlockNBTData,
+    ):
         """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
         同时向该方块写入 nbt_data 所指代的 NBT 数据
 
@@ -518,17 +533,22 @@ class FrameNeOmg(StandardFrame):
             NotImplementedError: 未实现此方法
         """
         self.check_avaliable()
-        self.omega.place_command_block(neo_conn.CommandBlockPlaceOption(
-            X=position[0], Y=position[1], Z=position[2],
-            BlockName=block_name, BockState=block_states,
-            NeedRedStone=(not nbt_data.ConditionalMode),
-            Conditional=nbt_data.ConditionalMode,
-            Command=nbt_data.Command,
-            Name=nbt_data.CustomName,
-            TickDelay=nbt_data.TickDelay,
-            ShouldTrackOutput=nbt_data.TrackOutput,
-            ExecuteOnFirstTick=nbt_data.ExecuteOnFirstTick
-        ))
+        self.omega.place_command_block(
+            neo_conn.CommandBlockPlaceOption(
+                X=position[0],
+                Y=position[1],
+                Z=position[2],
+                BlockName=block_name,
+                BockState=block_states,
+                NeedRedStone=(not nbt_data.ConditionalMode),
+                Conditional=nbt_data.ConditionalMode,
+                Command=nbt_data.Command,
+                Name=nbt_data.CustomName,
+                TickDelay=nbt_data.TickDelay,
+                ShouldTrackOutput=nbt_data.TrackOutput,
+                ExecuteOnFirstTick=nbt_data.ExecuteOnFirstTick,
+            )
+        )
 
     @Utils.thread_func("检测 Omega 断开连接线程")
     def wait_omega_disconn_thread(self):
@@ -545,6 +565,7 @@ class FrameNeOmgRemote(FrameNeOmg):
     Args:
         FrameNeOmg (FrameNeOmg): FrameNeOmg 框架
     """
+
     launch_type = "NeOmega Remote"
 
     def launch(self) -> SystemExit | Exception | SystemError:
@@ -557,8 +578,7 @@ class FrameNeOmgRemote(FrameNeOmg):
             SystemExit | Exception | SystemError: 退出状态
         """
         try:
-            openat_port = int(sys_args_to_dict().get(
-                "access-point-port") or "24020")
+            openat_port = int(sys_args_to_dict().get("access-point-port") or "24020")
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):
@@ -598,15 +618,16 @@ class FrameBEConnect(StandardFrame):
     def init(self):
         self.cmd_resp = {}
 
-    def prepare_apis(self):
-        ...
+    def prepare_apis(self): ...
 
     def handler(self, data):
-        message_purpose = data['header']['messagePurpose']
-        if message_purpose == 'commandResponse':
-            request_id = data['header']['requestId']
+        message_purpose = data["header"]["messagePurpose"]
+        if message_purpose == "commandResponse":
+            request_id = data["header"]["requestId"]
             if request_id in self.cmd_resp.keys():
-                self.cmd_resp[request_id] = Packet_CommandOutput({
-                    "CommandOrigin": [],
-                    "OutputType": 1,
-                })
+                self.cmd_resp[request_id] = Packet_CommandOutput(
+                    {
+                        "CommandOrigin": [],
+                        "OutputType": 1,
+                    }
+                )

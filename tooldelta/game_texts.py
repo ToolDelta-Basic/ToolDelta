@@ -1,4 +1,5 @@
 "还原游戏常见字符串"
+
 import os
 import re
 import tarfile
@@ -16,9 +17,11 @@ from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 from .sys_args import sys_args_to_dict
 from .constants import TDSPECIFIC_MIRROR
+
 # 关闭警告
 urllib3.disable_warnings()
 warnings.filterwarnings("ignore")
+
 
 class GameTextsLoader:
     "还原游戏常见字符串"
@@ -39,11 +42,17 @@ class GameTextsLoader:
         Returns:
             str: 版本号
         """
-        if "no-download-libs" in sys_args_to_dict().keys() or "no-update-check" in sys_args_to_dict().keys():return '.'.join(map(str, get_tool_delta_version()))
+        if (
+            "no-download-libs" in sys_args_to_dict().keys()
+            or "no-update-check" in sys_args_to_dict().keys()
+        ):
+            return ".".join(map(str, get_tool_delta_version()))
         result = re.match(
             r"(\d+\.\d+\.\d+)",
             requests.get(
-                "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/GameText/releases/latest", timeout=5, verify=True
+                "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
+                timeout=5,
+                verify=True,
             ).json()["tag_name"],
         )
         if not isinstance(result, type(None)):
@@ -76,11 +85,8 @@ class GameTextsLoader:
 
     def download_and_extract(self, version) -> None:
         "下载并解压"
-        packets_url: str = (
-            f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
-        )
-        archive_path = os.path.join(
-            self.base_path, "ToolDelta_Game_Texts.tar.gz")
+        packets_url: str = f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
+        archive_path = os.path.join(self.base_path, "ToolDelta_Game_Texts.tar.gz")
         download_file_singlethreaded(packets_url, archive_path)
         self.extract_data_archive(archive_path)
 
@@ -93,21 +99,15 @@ class GameTextsLoader:
         try:
             all_values: Dict[str, str] = {}
             for file_path in glob(
-                pathname=os.path.join(self.base_path, "src", "**", "*.py"), recursive=True
+                pathname=os.path.join(self.base_path, "src", "**", "*.py"),
+                recursive=True,
             ):
-                module_name: str = os.path.basename(
-                    file_path).replace(".py", "")
-                spec = (
-                    util.spec_from_file_location(
-                        module_name, file_path)
-                )
+                module_name: str = os.path.basename(file_path).replace(".py", "")
+                spec = util.spec_from_file_location(module_name, file_path)
                 if isinstance(spec, type(None)) or isinstance(spec.loader, type(None)):
-                    Print.print_war(
-                        f"Failed to load module from {file_path}")
+                    Print.print_war(f"Failed to load module from {file_path}")
                     continue
-                module = (
-                    util.module_from_spec(spec)
-                )
+                module = util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 for var_name in dir(module):
                     if not var_name.startswith("__"):
@@ -130,7 +130,8 @@ class GameTextsLoader:
         """
         try:
             with gzip.open(zip_path, "rb") as f_in, tarfile.open(
-                fileobj=f_in, mode="r:gz"  # type: ignore
+                fileobj=f_in,  # type: ignore
+                mode="r:gz",
             ) as tar:
                 tar.extractall(self.base_path)
                 with open(
@@ -162,105 +163,182 @@ class GameTextsHandle:
         if isinstance(packet, list):  # 如果 packet 是 list 类型
             for item in packet:  # 遍历 packet 中的每个 item
                 # 从 self.Game_Texts 中获取原始消息文本
-                if not isinstance((original_message := self.Game_Texts.get(item["Message"].replace("%", ""))), type(None)):
+                if not isinstance(
+                    (
+                        original_message := self.Game_Texts.get(
+                            item["Message"].replace("%", "")
+                        )
+                    ),
+                    type(None),
+                ):
                     # 检查原始消息中是否包含格式化参数%
-                    if not len(re.findall(r'%[a-zA-Z]', original_message)) >= 1:
+                    if not len(re.findall(r"%[a-zA-Z]", original_message)) >= 1:
                         if original_message:  # 如果原始消息不为空
-                            original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
+                            original_message = re.sub(
+                                r'\$[^"\'\]/\]\)）}\s]{0,3}', "", original_message
+                            )  # 删除$后的内容
                             param_list = list(item["Parameters"])  # 获取参数列表
                             for n, value in enumerate(param_list, start=1):
                                 original_message = original_message.replace(
-                                    "%{}".format(n), "{" + str(n-1) + "}")
+                                    "%{}".format(n), "{" + str(n - 1) + "}"
+                                )
                             # 检查参数中是否包含%
-                            if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                            if (
+                                len(
+                                    [
+                                        str(param)
+                                        for param in param_list
+                                        if "%" in str(param)
+                                    ]
+                                )
+                                >= 1
+                            ):
                                 # 提取参数中的%后的字符并替换为实际的值
                                 filtered_param_list = [
-                                    re.sub(r'%', '', param) for param in param_list if "%" in param]
+                                    re.sub(r"%", "", param)
+                                    for param in param_list
+                                    if "%" in param
+                                ]
                                 for filtered_param in filtered_param_list:
                                     for i in range(len(param_list)):
                                         if filtered_param in param_list[i]:
                                             param_list[i] = param_list[i].replace(
-                                                f"%{filtered_param}", self.Game_Texts.get(filtered_param, "???"))
+                                                f"%{filtered_param}",
+                                                self.Game_Texts.get(
+                                                    filtered_param, "???"
+                                                ),
+                                            )
                             # 格式化消息文本
-                            filled_message = original_message.format(
-                                *param_list)
+                            filled_message = original_message.format(*param_list)
                     else:
                         if original_message:  # 如果原始消息不为空
-                            original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
+                            original_message = re.sub(
+                                r'\$[^"\'\]/\]\)）}\s]{0,3}', "", original_message
+                            )  # 删除$后的内容
                             param_list = list(item["Parameters"])  # 获取参数列表
-                            format_specifiers = re.findall(
-                                r'%[a-zA-Z]', original_message)  # 查找格式化参数
+                            re.findall(r"%[a-zA-Z]", original_message)  # 查找格式化参数
                             formatted_string = original_message
                             for i, arg in enumerate(param_list, start=0):
                                 formatted_string = re.sub(
-                                    r'%[a-zA-Z]', str(arg), formatted_string, count=1)
-                            if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                                    r"%[a-zA-Z]", str(arg), formatted_string, count=1
+                                )
+                            if (
+                                len(
+                                    [
+                                        str(param)
+                                        for param in param_list
+                                        if "%" in str(param)
+                                    ]
+                                )
+                                >= 1
+                            ):
                                 # 提取参数中的%后的字符并替换为实际的值
                                 filtered_param_list = [
-                                    re.sub(r'%', '', param) for param in param_list if "%" in param]
+                                    re.sub(r"%", "", param)
+                                    for param in param_list
+                                    if "%" in param
+                                ]
                                 for filtered_param in filtered_param_list:
                                     for i in range(len(param_list)):
                                         if filtered_param in param_list[i]:
                                             param_list[i] = param_list[i].replace(
-                                                f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                                                f"%{filtered_param}",
+                                                self.Game_Texts.get(filtered_param),
+                                            )
                             # 格式化消息文本
-                            filled_message = formatted_string.format(
-                                *param_list)
+                            filled_message = formatted_string.format(*param_list)
                 else:
                     filled_message = item["Message"]
                 # 将填充后的消息文本转换为 json 格式，并添加到结果列表中
-                json_output = json.dumps(
-                    filled_message, indent=2, ensure_ascii=False
-                )
+                json_output = json.dumps(filled_message, indent=2, ensure_ascii=False)
                 json_result.append(json_output)
         elif isinstance(packet, dict):  # 如果 packet 不是 list 类型
             # 从 self.Game_Texts 中获取原始消息文本
-            if not isinstance((original_message := self.Game_Texts.get(packet["Message"].replace("%", ""))), type(None)):
-                if not len(re.findall(r'%[a-zA-Z]', original_message)) >= 1:
+            if not isinstance(
+                (
+                    original_message := self.Game_Texts.get(
+                        packet["Message"].replace("%", "")
+                    )
+                ),
+                type(None),
+            ):
+                if not len(re.findall(r"%[a-zA-Z]", original_message)) >= 1:
                     if original_message:  # 如果原始消息不为空
-                        original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
+                        original_message = re.sub(
+                            r'\$[^"\'\]/\]\)）}\s]{0,3}', "", original_message
+                        )  # 删除$后的内容
                         param_list = list(packet["Parameters"])  # 获取参数列表
                         for n, value in enumerate(param_list, start=1):
                             original_message = original_message.replace(
-                                "%{}".format(n), "{" + str(n-1) + "}")
-                        if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                                "%{}".format(n), "{" + str(n - 1) + "}"
+                            )
+                        if (
+                            len(
+                                [
+                                    str(param)
+                                    for param in param_list
+                                    if "%" in str(param)
+                                ]
+                            )
+                            >= 1
+                        ):
                             # 提取参数中的%后的字符并替换为实际的值
                             filtered_param_list = [
-                                re.sub(r'%', '', param) for param in param_list if "%" in param]
+                                re.sub(r"%", "", param)
+                                for param in param_list
+                                if "%" in param
+                            ]
                             for filtered_param in filtered_param_list:
                                 for i in range(len(param_list)):
                                     if filtered_param in param_list[i]:
                                         param_list[i] = param_list[i].replace(
-                                            f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                                            f"%{filtered_param}",
+                                            self.Game_Texts.get(filtered_param),
+                                        )
                         # 格式化消息文本
-                        filled_message = original_message.format(
-                            *param_list)
+                        filled_message = original_message.format(*param_list)
                 else:
-                    if (original_message := self.Game_Texts.get(
-                            packet["Message"].replace("%", ""))):  # 如果原始消息不为空
+                    if original_message := self.Game_Texts.get(
+                        packet["Message"].replace("%", "")
+                    ):  # 如果原始消息不为空
                         param_list = list(packet["Parameters"])  # 获取参数列表
-                        original_message = re.sub(r'\$[^"\'\]/\]\)）}\s]{0,3}', '', original_message) # 删除$后的内容
+                        original_message = re.sub(
+                            r'\$[^"\'\]/\]\)）}\s]{0,3}', "", original_message
+                        )  # 删除$后的内容
                         formatted_string = original_message
                         for i, arg in enumerate(param_list, start=1):
                             formatted_string = re.sub(
-                                r'%[a-zA-Z]', str(arg), formatted_string, count=1)
-                        if len([str(param) for param in param_list if "%" in str(param)]) >= 1:
+                                r"%[a-zA-Z]", str(arg), formatted_string, count=1
+                            )
+                        if (
+                            len(
+                                [
+                                    str(param)
+                                    for param in param_list
+                                    if "%" in str(param)
+                                ]
+                            )
+                            >= 1
+                        ):
                             # 提取参数中的%后的字符并替换为实际的值
                             filtered_param_list = [
-                                re.sub(r'%', '', param) for param in param_list if "%" in param]
+                                re.sub(r"%", "", param)
+                                for param in param_list
+                                if "%" in param
+                            ]
                             for filtered_param in filtered_param_list:
                                 for i in range(len(param_list)):
                                     if filtered_param in param_list[i]:
                                         param_list[i] = param_list[i].replace(
-                                            f"%{filtered_param}", self.Game_Texts.get(filtered_param))
+                                            f"%{filtered_param}",
+                                            self.Game_Texts.get(filtered_param),
+                                        )
 
                         filled_message = formatted_string
             else:
                 filled_message = packet["Message"]
             # 将填充后的消息文本转换为 json 格式，并添加到结果列表中
-            json_output = json.dumps(
-                filled_message, indent=2, ensure_ascii=False
-            )
+            json_output = json.dumps(filled_message, indent=2, ensure_ascii=False)
             json_result.append(json_output)
         return json_result  # 返回处理结果的 json 格式列表
 

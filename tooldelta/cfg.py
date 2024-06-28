@@ -1,7 +1,7 @@
 """配置文件模块"""
 
 import os
-from typing import Any, Union
+from typing import Any
 import ujson
 
 NoneType = type(None)
@@ -19,7 +19,7 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
         Cfg.PNumber: lambda: isinstance(obj, (int, float)) and obj > 0,
         Cfg.NNNumber: lambda: isinstance(obj, (int, float)) and obj >= 0,
-        int: lambda: type(obj) == int
+        int: lambda: type(obj) is int
     }.get(typ, lambda: isinstance(obj, typ))()
 
 

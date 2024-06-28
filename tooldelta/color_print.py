@@ -7,6 +7,7 @@ from .logger import publicLogger
 
 colorama.init(autoreset=True)
 
+
 def simple_fmt(kw: dict, arg: str) -> str:
     """简单的字符串格式化
 
@@ -21,10 +22,12 @@ def simple_fmt(kw: dict, arg: str) -> str:
         arg = arg.replace(k, str(v))
     return arg
 
+
 class Print:
     """
     生成多样彩色输出的类
     """
+
     INFO_NORMAL = "§f 信息 "
     INFO_WARN = "§6 警告 "
     INFO_ERROR = "§4 报错 "
@@ -79,7 +82,7 @@ class Print:
         Returns:
             str: 替换后的字符串
         """
-            # 1 = bg_color
+        # 1 = bg_color
         text = Print._strike(text)
         return (
             simple_fmt(
@@ -103,7 +106,7 @@ class Print:
                     "§u": "\033[4m",
                     "§l": "\033[1m",
                 },
-            text,
+                text,
             )
             + "\033[0m"
         )
@@ -183,7 +186,7 @@ class Print:
                     if "§" in text_line:
                         try:
                             n = text_line.rfind("§")
-                            _setNextCol = text_line[n: n + 2]
+                            _setNextCol = text_line[n : n + 2]
                             if setNextColor == -1:
                                 raise AssertionError
                             setNextColor = _setNextCol
@@ -296,7 +299,7 @@ class Print:
                     if "§" in text_line:
                         try:
                             n = text_line.rfind("§")
-                            _setNextCol = text_line[n: n + 2]
+                            _setNextCol = text_line[n : n + 2]
                             if setNextColor == -1:
                                 raise AssertionError
                             setNextColor = _setNextCol

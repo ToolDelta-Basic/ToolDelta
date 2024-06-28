@@ -2,12 +2,11 @@ import platform
 import ctypes
 import ujson as json
 import os.path
-import traceback
 import threading
 import enum
-from typing import Iterable, Tuple, Optional, Union, Any, Callable, List, Dict
+from typing import Tuple, Optional, Union, Any, Callable, List, Dict
 from threading import Thread
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput
 from tooldelta.utils import Utils
@@ -15,6 +14,7 @@ from tooldelta.utils import Utils
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
 CBytes = ctypes.POINTER(ctypes.c_char)
+
 
 class byteCSlice(ctypes.Structure):
     _fields_ = [
@@ -39,17 +39,16 @@ def toPyString(cstring: bytes):
 
 
 def toByteCSlice(bs: bytes):
-    l = len(bs)
+    length = len(bs)
     kwargs = {
-        "data": (ctypes.c_char * l)(*bs),
-        "len": l,
-        "cap": l,
+        "data": (ctypes.c_char * length)(*bs),
+        "len": length,
+        "cap": length,
     }
     return byteCSlice(**kwargs)
 
 
 # define lib path and how to load it
-
 
 
 def ConnectOmega(address):
@@ -76,8 +75,6 @@ def StartOmega(address, AccountOptions):
         raise Exception(toPyString(r))
 
 
-
-
 def OmegaAvailable():
     if LIB.OmegaAvailable() != 1:
         raise Exception("omega Core disconnected")
@@ -89,8 +86,6 @@ def OmegaAvailable():
 # lib core: event basic
 class Event(ctypes.Structure):
     _fields_ = [("type", CString), ("retriever", CString)]
-
-
 
 
 def EventPoll() -> tuple[str, str]:
@@ -111,18 +106,13 @@ class MCPacketEvent(ctypes.Structure):
     _fields_ = [("packetDataAsJsonStr", CString), ("convertError", CString)]
 
 
-
 # Async Actions
 # cmds
 
 
-
 def SendWebSocketCommandNeedResponse(cmd: str, retrieverID: str):
     OmegaAvailable()
-    LIB.SendWebSocketCommandNeedResponse(
-        toCString(cmd), toCString(retrieverID))
-
-
+    LIB.SendWebSocketCommandNeedResponse(toCString(cmd), toCString(retrieverID))
 
 
 def SendPlayerCommandNeedResponse(cmd: str, retrieverID: str):
@@ -138,13 +128,9 @@ def SendSettingsCommand(cmd: str):
     LIB.SendWOCommand(toCString(cmd))
 
 
-
-
 def SendWebSocketCommandOmitResponse(cmd: str):
     OmegaAvailable()
     LIB.SendWebSocketCommandOmitResponse(toCString(cmd))
-
-
 
 
 def SendPlayerCommandOmitResponse(cmd: str):
@@ -159,8 +145,6 @@ class JsonStrAsIsGamePacketBytes_return(ctypes.Structure):
     _fields_ = [("pktBytes", CBytes), ("l", CInt), ("err", CString)]
 
 
-
-
 def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
     r = LIB.JsonStrAsIsGamePacketBytes(to_GoInt(packetID), toCString(jsonStr))
     if toPyString(r.err) != "":
@@ -170,14 +154,10 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
     return bs
 
 
-
-
 def SendGamePacket(packetID: int, jsonStr: str) -> None:
     r = LIB.SendGamePacket(to_GoInt(packetID), toCString(jsonStr))
     if toPyString(r) != "":
         raise ValueError(toPyString(r))
-
-
 
 
 # ClientMaintainedBotBasicInfo will not change
@@ -188,8 +168,6 @@ class ClientMaintainedBotBasicInfo:
     BotUniqueID: int = 0
     BotIdentity: str = ""
     BotUUIDStr: str = ""
-
-
 
 
 # any member of ClientMaintainedExtendInfo could be not found(which means related info not currently received from server)
@@ -239,6 +217,7 @@ class AdventureFlagsMap:
     AdventureSettingsFlagsNoMvP: bool = False
     AdventureSettingsFlagsNoPvM: bool = False
     AdventureSettingsFlagsShowNameTags: bool = False
+
 
 @dataclass
 class CommandOrigin:
@@ -291,7 +270,7 @@ def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[CommandOutput]:
             outputMessage = OutputMessage(
                 Success=outputMessageData["Success"],
                 Message=outputMessageData["Message"],
-                Parameters=[]
+                Parameters=[],
             )
             parameters = []
             if "Parameters" in outputMessageData.keys():
@@ -299,7 +278,7 @@ def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[CommandOutput]:
                 for parameterData in parametersData:
                     try:
                         parameters.append(json.loads(parameterData))
-                    except:
+                    except json.JSONDecodeError:
                         parameters.append(parameterData)
             outputMessage.Parameters = parameters
             outputMessages.append(outputMessage)
@@ -341,6 +320,7 @@ class CommandBlockNBTData:
         ConditionalMode (bool; TAG_Byte): 命令块是否是“有条件的”，默认为 无条件
         Auto (bool; TAG_Byte): 命令块是否自动运行 (无需红石控制)，默认为 自动运行 (无需红石控制)
     """
+
     Command: str = ""
     CustomName: str = ""
     TickDelay: int = 0
@@ -468,7 +448,7 @@ class PlayerKit:
         else:
             query_str += "," + ",".join(conditions) + "]"
         ret = self.parent.send_websocket_command_need_response(query_str)
-        return ret # type: ignore
+        return ret  # type: ignore
 
     def check_conditions(self, conditions: Union[None, str, List[str]] = None) -> bool:
         return self.query(conditions).SuccessCount > 0
@@ -508,6 +488,7 @@ class ThreadOmega:
         self.connect_type = connect_type
         self.address = address
         self.accountOption = accountOption
+
     def connect(self):
         if self.connect_type == ConnectType.Local:
             StartOmega(self.address, self.accountOption)
@@ -538,8 +519,7 @@ class ThreadOmega:
             self._packet_listeners[packet_name] = []
 
         LIB.ListenPlayerChange()
-        self._player_change_listeners: List[Callable[[
-            PlayerKit, str], None]] = []
+        self._player_change_listeners: List[Callable[[PlayerKit, str], None]] = []
 
         # get bot basic info (this info will not change so we need to get it only once)
         self._bot_basic_info = ClientMaintainedBotBasicInfo(
@@ -547,7 +527,7 @@ class ThreadOmega:
         )
 
         # start routine
-        Utils.createThread(self._react,usage="Omega React Thread")
+        Utils.createThread(self._react, usage="Omega React Thread")
 
     def _react(self):
         while True:
@@ -565,7 +545,9 @@ class ThreadOmega:
                 if retriever in self._omega_cmd_callback_events.keys():
                     self._omega_cmd_callback_events[retriever](cmdResp)
                 else:
-                    Print.print_war(f"接入点核心进程: 指令返回 {retriever} 没有对应的回调, 已忽略")
+                    Print.print_war(
+                        f"接入点核心进程：指令返回 {retriever} 没有对应的回调，已忽略"
+                    )
             elif eventType == "MCPacket":
                 packetTypeName = retriever
                 if packetTypeName == "":
@@ -581,7 +563,10 @@ class ThreadOmega:
                     jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
                     for listener in listeners:
                         Utils.createThread(
-                            listener, (packetTypeName, jsonPkt),usage="Packet Callback Thread")
+                            listener,
+                            (packetTypeName, jsonPkt),
+                            usage="Packet Callback Thread",
+                        )
             elif eventType == "PlayerChange":
                 playerUUID = retriever
                 if len(self._player_change_listeners) == 0:
@@ -590,8 +575,9 @@ class ThreadOmega:
                     action = toPyString(LIB.ConsumePlayerChange())
                     for callback in self._player_change_listeners:
                         Utils.createThread(
-                            callback, (self._get_bind_player(
-                                playerUUID), action),usage="Player Change Callback Thread"
+                            callback,
+                            (self._get_bind_player(playerUUID), action),
+                            usage="Player Change Callback Thread",
                         )
 
             elif eventType == "PlayerInterceptInput":
@@ -702,14 +688,14 @@ class ThreadOmega:
         self, packet_type: Union[int, str], content: Any
     ) -> tuple[int, bytes]:
         if isinstance(packet_type, str):
-            packet_type = self.get_packet_name_to_id_mapping(packet_type) # type: ignore
-        return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content)) # type: ignore
+            packet_type = self.get_packet_name_to_id_mapping(packet_type)  # type: ignore
+        return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content))  # type: ignore
 
     def send_game_packet_in_json_as_is(
         self, packet_type: Union[int, str], content: Any
     ):
         if isinstance(packet_type, str):
-            packet_type = self.get_packet_name_to_id_mapping(packet_type) # type: ignore
+            packet_type = self.get_packet_name_to_id_mapping(packet_type)  # type: ignore
         OmegaAvailable()
         SendGamePacket(packet_type, json.dumps(content))  # type: ignore
 

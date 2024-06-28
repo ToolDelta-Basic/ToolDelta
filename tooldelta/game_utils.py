@@ -9,6 +9,7 @@ Methods:
     getScore (scoreboardNameToGet, targetNameToGet): 获取计分板分数
     isCmdSuccess (cmd: str, timeout=30): 获取命令执行成功与否的状态
 """
+
 from typing import TYPE_CHECKING
 from .color_print import Print
 from .packets import Packet_CommandOutput
@@ -16,21 +17,25 @@ from .packets import Packet_CommandOutput
 if TYPE_CHECKING:
     from tooldelta import ToolDelta, GameCtrl
 
-game_ctrl: "GameCtrl" = None # type: ignore
+game_ctrl: "GameCtrl" = None  # type: ignore
 
 # set_frame
+
 
 def _check_gamectrl_avali():
     "检查 GameCtrl 是否可用"
     if game_ctrl is None:
         raise ValueError("GameControl 不可用")
 
+
 def _set_frame(frame: "ToolDelta"):
     "载入系统框架"
     global game_ctrl
     game_ctrl = frame.get_game_control()
 
+
 # utils
+
 
 def getTarget(sth: str, timeout: int = 5) -> list:
     """
@@ -51,9 +56,10 @@ def getTarget(sth: str, timeout: int = 5) -> list:
         return result.split(", ")
     else:
         if result.OutputMessages[0].Message == "commands.generic.syntax":
-            raise ValueError(f"getTarget 目标选择器表达式错误: {sth}")
+            raise ValueError(f"getTarget 目标选择器表达式错误：{sth}")
         else:
             return []
+
 
 def getPos(target: str, timeout: float | int = 5) -> dict:
     """获取目标玩家的详细位置信息
@@ -68,7 +74,11 @@ def getPos(target: str, timeout: float | int = 5) -> dict:
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
     _check_gamectrl_avali()
-    if target not in game_ctrl.allplayers and not target.startswith("@") and target != game_ctrl.bot_name:
+    if (
+        target not in game_ctrl.allplayers
+        and not target.startswith("@")
+        and target != game_ctrl.bot_name
+    ):
         raise ValueError(f'玩家 "{target}" 不存在')
     result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{target}"]', timeout)
     if not result.OutputMessages[0].Success:
@@ -111,13 +121,14 @@ def getPos(target: str, timeout: float | int = 5) -> dict:
         return list(result.values())[0]
     return result[target]
 
+
 def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
     """
     获取玩家背包内指定的物品的数量
     参数:
         targetName (str): 玩家选择器 / 玩家名
         itemName (str): 物品 ID
-        itemSpecialID (int): 物品特殊值, 默认值 -1
+        itemSpecialID (int): 物品特殊值，默认值 -1
     """
     if (
         (target not in game_ctrl.allplayers)
@@ -126,12 +137,14 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
     ):
         raise ValueError("未找到目标玩家")
     result: Packet_CommandOutput = game_ctrl.sendcmd_with_resp(
-        f"/clear {target} {itemName} {itemSpecialID} 0")
+        f"/clear {target} {itemName} {itemSpecialID} 0"
+    )
     if result.OutputMessages[0].Message == "commands.generic.syntax":
         raise ValueError("物品 ID 错误")
     if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
         return 0
     return int(result.OutputMessages[0].Parameters[1])
+
 
 def getPosXYZ(player, timeout: int | float = 30) -> tuple[float, float, float]:
     """
@@ -144,6 +157,7 @@ def getPosXYZ(player, timeout: int | float = 30) -> tuple[float, float, float]:
     """
     res = getPos(player, timeout=timeout)["position"]
     return res["x"], res["y"], res["z"]
+
 
 def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     """
@@ -189,11 +203,14 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     except KeyError as err:
         raise Exception(f"获取计分板分数失败：{err}")
 
-def getScore(scb_name: str, target: str, timeout = 30) -> int:
+
+def getScore(scb_name: str, target: str, timeout=30) -> int:
     _check_gamectrl_avali()
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
-    resp = game_ctrl.sendcmd_with_resp(f"/scoreboard players test {target} {scb_name} 0 0", timeout).OutputMessages[0]
+    resp = game_ctrl.sendcmd_with_resp(
+        f"/scoreboard players test {target} {scb_name} 0 0", timeout
+    ).OutputMessages[0]
     if resp.Message == "commands.scoreboard.objectiveNotFound":
         raise ValueError(f"计分板 {scb_name} 未找到")
     elif resp.Message == "commands.scoreboard.players.list.player.empty":
@@ -201,6 +218,7 @@ def getScore(scb_name: str, target: str, timeout = 30) -> int:
     elif resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     return int(resp.Parameters[0])
+
 
 def isCmdSuccess(cmd: str, timeout=30):
     """

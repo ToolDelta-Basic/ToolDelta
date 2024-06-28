@@ -1,4 +1,5 @@
 """ToolDelta 启动器"""
+
 import os
 import time
 import traceback
@@ -10,6 +11,7 @@ from .color_print import Print
 from .plugin_load.PluginGroup import plugin_group
 
 tooldelta = ToolDelta()
+
 
 def start_tool_delta() -> None:
     """启动 ToolDelta"""

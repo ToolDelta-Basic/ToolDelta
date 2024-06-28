@@ -2,7 +2,6 @@
 提供了一些实用方法的类
 """
 
-
 import os
 import time
 import copy
@@ -20,15 +19,19 @@ event_pool = {"tmpjson_save": threading.Event()}
 event_flags_pool = {"tmpjson_save": True}
 threads_list: list["Utils.createThread"] = []
 
+
 class Utils:
     """提供了一些实用方法的类"""
+
     class ThreadExit(SystemExit):
         """线程退出."""
 
     class ToolDeltaThread(threading.Thread):
         """简化 ToolDelta 子线程创建的 threading.Thread 的子类."""
 
-        def __init__(self, func: Callable, args: Iterable[Any] = (), usage="", **kwargs):
+        def __init__(
+            self, func: Callable, args: Iterable[Any] = (), usage="", **kwargs
+        ):
             """新建一个 ToolDelta 子线程
 
             Args:
@@ -60,7 +63,9 @@ class Utils:
                     Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
             except Exception:
                 Print.print_err(
-                    f"线程 {self.usage or self.func.__name__} 出错:\n" + traceback.format_exc())
+                    f"线程 {self.usage or self.func.__name__} 出错:\n"
+                    + traceback.format_exc()
+                )
             finally:
                 threads_list.remove(self)
 
@@ -88,7 +93,8 @@ class Utils:
             self._thread_id = self.ident
             thread_id = self.get_id()
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                thread_id, ctypes.py_object(SystemExit))
+                thread_id, ctypes.py_object(SystemExit)
+            )
             if res > 1:
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
                 Print.print_err(f"§c终止线程 {self.name} 失败")
@@ -97,6 +103,7 @@ class Utils:
 
     class TMPJson:
         """提供了加载、卸载、读取和写入 JSON 文件到缓存区的方法的类."""
+
         @staticmethod
         def loadPathJson(path: str, needFileExists: bool = True) -> None:
             """
@@ -113,7 +120,7 @@ class Utils:
             if path in jsonPathTmp:
                 return
             try:
-                with open(path, 'r', encoding='utf-8') as file:
+                with open(path, "r", encoding="utf-8") as file:
                     js = Utils.SimpleJsonDataReader.SafeJsonLoad(file)
             except FileNotFoundError as err:
                 if not needFileExists:
@@ -137,7 +144,7 @@ class Utils:
             if jsonPathTmp.get(path) is not None:
                 isChanged, dat = jsonPathTmp[path]
                 if isChanged:
-                    with open(path, 'w', encoding='utf-8') as file:
+                    with open(path, "w", encoding="utf-8") as file:
                         Utils.SimpleJsonDataReader.SafeJsonDump(dat, file)
                 del jsonPathTmp[path]
                 return True
@@ -196,7 +203,9 @@ class Utils:
                 raise ValueError("json 路径未初始化，不能进行读取和写入操作：" + path)
 
         @staticmethod
-        def read_as_tmp(path: str, needFileExists: bool = True, timeout: int = 60) -> Any:
+        def read_as_tmp(
+            path: str, needFileExists: bool = True, timeout: int = 60
+        ) -> Any:
             """读取 json 文件并将其从磁盘加载到缓存区，以便一段时间内能快速读写.
 
             Args:
@@ -213,7 +222,9 @@ class Utils:
             return Utils.TMPJson.read(path)
 
         @staticmethod
-        def write_as_tmp(path: str, obj: Any, needFileExists: bool = True, timeout: int = 60) -> None:
+        def write_as_tmp(
+            path: str, obj: Any, needFileExists: bool = True, timeout: int = 60
+        ) -> None:
             """写入 json 文件并将其从磁盘加载到缓存区，以便一段时间内能快速读写.
 
             Args:
@@ -239,6 +250,7 @@ class Utils:
 
     class JsonIO:
         """提供了安全的 JSON 文件操作方法的类."""
+
         @staticmethod
         def SafeJsonDump(obj: Any, fp: TextIOWrapper | str, indent=4) -> None:
             """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
@@ -274,7 +286,9 @@ class Utils:
             """读取数据时发生错误"""
 
         @staticmethod
-        def readFileFrom(plugin_name: str, file: str, default: dict | None = None) -> Any:
+        def readFileFrom(
+            plugin_name: str, file: str, default: dict | None = None
+        ) -> Any:
             """从插件数据文件夹读取一个 json 文件，会自动创建文件夹和文件.
 
             Args:
@@ -291,8 +305,12 @@ class Utils:
             """
             if file.endswith(".json"):
                 file = file[:-5]
-            filepath = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name, f"{file}.json")
-            os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name), exist_ok=True)
+            filepath = os.path.join(
+                TOOLDELTA_PLUGIN_DATA_DIR, plugin_name, f"{file}.json"
+            )
+            os.makedirs(
+                os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name), exist_ok=True
+            )
             try:
                 if default is not None and not os.path.isfile(filepath):
                     with open(filepath, "w", encoding="utf-8") as f:
@@ -303,9 +321,7 @@ class Utils:
                 return res
             except rjson.JSONDecodeError as err:
                 # 判断是否有 msg.doc.pos 属性
-                raise Utils.JsonIO.DataReadError(
-                    err.msg, err.doc, err.pos
-                )
+                raise Utils.JsonIO.DataReadError(err.msg, err.doc, err.pos)
             except Exception as err:
                 Print.print_err(f"读文件路径 {filepath} 发生错误")
                 raise err
@@ -320,7 +336,11 @@ class Utils:
                 obj (str | dict[Any, Any] | list[Any]): JSON 对象
             """
             os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
-            with open(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w", encoding="utf-8") as f:
+            with open(
+                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json",
+                "w",
+                encoding="utf-8",
+            ) as f:
                 Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
 
     SimpleJsonDataReader = JsonIO
@@ -347,7 +367,8 @@ class Utils:
                 ...
         ```
         """
-        def __init__(self, player: str, oth_cb: Callable[[str], None] = lambda _:None):
+
+        def __init__(self, player: str, oth_cb: Callable[[str], None] = lambda _: None):
             self.player = player
             self.oth_cb = oth_cb
 
@@ -386,7 +407,6 @@ class Utils:
                 sub = sub.replace(k, str(v))
         return sub
 
-
     SimpleFmt = simple_fmt
 
     @staticmethod
@@ -417,24 +437,24 @@ class Utils:
         ```
         """
         if isinstance(func_or_name, str):
+
             def _recv_func(func: Callable):
                 def thread_fun(*args: tuple, **kwargs: Any) -> None:
-                    Utils.createThread(
-                        func,
-                        usage=func_or_name,
-                        args=args,
-                        **kwargs
-                )
+                    Utils.createThread(func, usage=func_or_name, args=args, **kwargs)
+
                 return thread_fun
+
             return _recv_func
         else:
+
             def thread_fun(*args: tuple, **kwargs: Any) -> None:
                 Utils.createThread(
                     func_or_name,
                     usage="简易线程方法：" + func_or_name.__name__,
                     args=args,
-                    **kwargs
+                    **kwargs,
                 )
+
         return thread_fun
 
     @staticmethod
@@ -468,6 +488,7 @@ def safe_close() -> None:
     event_pool["tmpjson_save"].set()
     event_flags_pool["tmpjson_save"] = False
 
+
 @Utils.thread_func("JSON 缓存文件定时保存")
 def tmpjson_save_thread():
     evt = event_pool["tmpjson_save"]
@@ -487,6 +508,7 @@ def tmpjson_save_thread():
                 del jsonUnloadPathTmp[k]
         if not event_flags_pool["tmpjson_save"]:
             return
+
 
 jsonPathTmp = {}
 chatbar_lock_list = []

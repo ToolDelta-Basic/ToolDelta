@@ -1,12 +1,10 @@
 "注入式执行函数"
+
 import time
 from typing import TYPE_CHECKING, Any, Optional
 from ...color_print import Print
 from ...packets import Packet_CommandOutput
-from ...game_utils import (
-    getTarget,
-    getPos
-)
+from ...game_utils import getTarget, getPos
 
 if TYPE_CHECKING:
     from tooldelta.frame import ToolDelta, GameCtrl
@@ -100,8 +98,7 @@ def rawText(playername: str, text: str) -> None:
         playername: 玩家名称
         text: 要发送的文本
     """
-    sendcmd(
-        r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
+    sendcmd(r"""/tellraw %s {"rawtext":[{"text":"%s"}]}""" % (playername, text))
 
 
 def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
@@ -114,8 +111,7 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
         text: 消息文本
     """
     if title is None:
-        sendcmd(
-            r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
+        sendcmd(r"""/tellraw %s {"rawtext":[{"text":"§r%s"}]}""" % (playername, text))
     else:
         sendcmd(
             r"""/tellraw %s {"rawtext":[{"text":"<%s> §r%s"}]}"""
@@ -146,6 +142,7 @@ def is_op(playername: str) -> bool | None:
     # 检测框架是否为"Frame"NeOmg
     if movent_frame.launcher.is_op is not None:
         return movent_frame.launcher.is_op(playername)
+
 
 def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
     """

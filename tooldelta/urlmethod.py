@@ -1,4 +1,5 @@
 """自定义常用 URL 方法"""
+
 import os
 import re
 import shutil
@@ -13,8 +14,13 @@ from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
 
 # 使用方法 mirror_github[value: int].format(url: str)
-mirror_github = ["https://tdload.tblstudio.cn/{}", "https://hub.gitmirror.com/{}",
-                 "https://gh.con.sh/{}", "https://mirror.ghproxy.com/{}"]
+mirror_github = [
+    "https://tdload.tblstudio.cn/{}",
+    "https://hub.gitmirror.com/{}",
+    "https://gh.con.sh/{}",
+    "https://mirror.ghproxy.com/{}",
+]
+
 
 def format_mirror_url(url: str) -> list:
     """填充 url 到镜像 url 列表
@@ -26,8 +32,10 @@ def format_mirror_url(url: str) -> list:
         list: 填充原始 url 后的镜像列表
     """
     mir_url: list = []
-    for mirror in mirror_github:mir_url.append(mirror.format(url))
+    for mirror in mirror_github:
+        mir_url.append(mirror.format(url))
     return mir_url
+
 
 def githubdownloadurl_to_rawurl(url: str) -> str:
     """将 GitHub 下载链接转换为原始链接
@@ -46,8 +54,13 @@ def githubdownloadurl_to_rawurl(url: str) -> str:
     except:
         return url
 
+
 def progress_bar(
-    current: float | int, total: float | int, length: int | float = 20, color1: str = "§f", color2: str = "§b"
+    current: float | int,
+    total: float | int,
+    length: int | float = 20,
+    color1: str = "§f",
+    color2: str = "§b",
 ) -> str:
     """执行进度条
 
@@ -81,7 +94,8 @@ def download_progress_bar(
     b = f"{progressBar} {pretty_kb(current_bytes)}B / {pretty_kb(total_bytes)}B"
     if speed != 0:
         b += f" ({pretty_kb(speed)}B/s)    "
-    with Print.lock:Print.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
+    with Print.lock:
+        Print.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
 
 
 def pretty_kb(n: float) -> str:
@@ -111,7 +125,19 @@ def is_common_text_file(url_path: str) -> bool:
     """
     return any(
         url_path.endswith(i)
-        for i in [".txt", ".yml", ".md", ".xml", ".html", ".py", ".h", ".c", ".pyi", ".js", ".json"]
+        for i in [
+            ".txt",
+            ".yml",
+            ".md",
+            ".xml",
+            ".html",
+            ".py",
+            ".h",
+            ".c",
+            ".pyi",
+            ".js",
+            ".json",
+        ]
     )
 
 
@@ -154,9 +180,7 @@ def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str)
         return downloaded_bytes
 
 
-def download_file_singlethreaded(
-    url: str, save_dir: str
-) -> None:
+def download_file_singlethreaded(url: str, save_dir: str) -> None:
     """下载单个文件
 
     Args:
@@ -243,8 +267,7 @@ def measure_latencyt(url: str) -> float:
     """
     try:
         # 提取域名
-        domain = re.search(
-            r"(?<=http[s]://)[.\w-]*(:\d{1,8})?((?=/)|(?!/))", url)
+        domain = re.search(r"(?<=http[s]://)[.\w-]*(:\d{1,8})?((?=/)|(?!/))", url)
         if isinstance(domain, type(None)):  # 如果没有匹配到域名
             raise ValueError("Invalid URL")
         st = pyspeedtest.SpeedTest(domain.group())  # 传入域名
@@ -282,9 +305,10 @@ def check_update() -> None:
     """检查更新"""
     try:
         latest_version: str = requests.get(
-            "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest", timeout=5).json()["tag_name"]
-        current_version = ".".join(
-            map(str, get_tool_delta_version()[:3]))
+            "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest",
+            timeout=5,
+        ).json()["tag_name"]
+        current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
         if not latest_version.replace(".", "") <= current_version.replace(".", ""):
             # Print.print_suc(f"当前为最新版本 -> v{current_version}，无需更新")
@@ -293,6 +317,7 @@ def check_update() -> None:
             )
     except KeyError:
         Print.print_war("获取最新版本失败，请检查网络连接")
+
 
 def if_token() -> None:
     """检查路径下是否有 fbtoken，没有就提示输入

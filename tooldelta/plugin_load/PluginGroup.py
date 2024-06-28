@@ -1,7 +1,7 @@
 "插件加载器框架"
+
 import asyncio
 import os
-import time
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
 
@@ -29,7 +29,6 @@ from ..plugin_load import (
     classic_plugin,
     injected_plugin,
     NON_FUNC,
-    NotValidPluginError,
     PluginAPINotFoundError,
     PluginAPIVersionError,
     auto_move_plugin_dir,
@@ -41,7 +40,6 @@ from ..constants import (
     TOOLDELTA_INJECTED_PLUGIN,
 )
 from ..game_utils import _set_frame
-from ..launch_cli import SysStatus
 from .injected_plugin.movent import set_frame as _set_frame_inj
 
 if TYPE_CHECKING:
@@ -53,6 +51,7 @@ _SUPER_CLS = TypeVar("_SUPER_CLS")
 
 class PluginGroup:
     "插件组"
+
     plugins: list[Plugin] = []
     plugins_funcs: dict[str, list] = {
         "on_def": [],
@@ -89,17 +88,17 @@ class PluginGroup:
 
     def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
         """
-        对外源导入 (import) 的API插件类进行类型实例化。
-        可以使得你所使用的 IDE 对导入的插件API类进行识别和高亮其所含方法。
+        对外源导入 (import) 的 API 插件类进行类型实例化。
+        可以使得你所使用的 IDE 对导入的插件 API 类进行识别和高亮其所含方法。
 
         Args:
-            api_cls (type[_PLUGIN_CLS_TYPE]): 导入的API插件类
+            api_cls (type[_PLUGIN_CLS_TYPE]): 导入的 API 插件类
 
         Raises:
-            ValueError: API插件类未被注册
+            ValueError: API 插件类未被注册
 
         Returns:
-            _PLUGIN_CLS_TYPE: API插件实例
+            _PLUGIN_CLS_TYPE: API 插件实例
 
         使用方法如下:
         ```python
@@ -111,16 +110,16 @@ class PluginGroup:
         for v in self.plugins_api.values():
             if isinstance(v, api_cls):
                 return v
-        raise ValueError(f"无法找到API插件类 {api_cls.__name__}, 有可能是还没有注册")
+        raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
 
     def add_packet_listener(self, pktID: int | list[int]):
         """
         添加数据包监听器
-        将下面的方法作为一个MC数据包接收器
+        将下面的方法作为一个 MC 数据包接收器
         Tips: 只能在插件主类里的函数使用此装饰器!
 
         Args:
-            pktID (int | list[int]): 数据包ID或多个ID
+            pktID (int | list[int]): 数据包 ID 或多个 ID
 
         Returns:
             Callable[[Callable], Callable]: 添加数据包监听器
@@ -149,14 +148,14 @@ class PluginGroup:
             Callable[[Callable], Callable]: 添加广播事件监听器
 
         原理:
-        方法1 广播: hi, what's ur name? 附加参数=english_only
-            - 方法2 接收到广播并被执行: 方法2(english_only) -> my name is Super. -> 收集表
+        方法 1 广播：hi, what's ur name? 附加参数=english_only
+            - 方法 2 接收到广播并被执行：方法 2(english_only) -> my name is Super. -> 收集表
 
-        事件1 获取到 收集表 作为返回: ["my name is Super."]
+        事件 1 获取到 收集表 作为返回：["my name is Super."]
         """
 
         def deco(
-            func: Callable[[_SUPER_CLS, _TV], bool]
+            func: Callable[[_SUPER_CLS, _TV], bool],
         ) -> Callable[[_SUPER_CLS, _TV], bool]:
             if self.broadcast_evts_cache.get(evt_name):
                 self.broadcast_evts_cache[evt_name].append(func)
@@ -168,12 +167,12 @@ class PluginGroup:
 
     def broadcastEvt(self, evt_name: str, data: Any = None) -> list[Any]:
         """
-        向全局广播一个特定事件, 可以传入附加信息参数
+        向全局广播一个特定事件，可以传入附加信息参数
         Args:
             evt_name (str): 事件名
             data (Any, optional): 附加信息参数
         Returns:
-             list[Any]: 收集到的数据的列表(如果接收到广播的方法返回了数据的话)
+             list[Any]: 收集到的数据的列表 (如果接收到广播的方法返回了数据的话)
         """
         callback_list = []
         res = self._broadcast_listeners.get(evt_name)
@@ -190,7 +189,7 @@ class PluginGroup:
         查看插件帮助.
         常用于查看 get_plugin_api() 方法获取到的插件实例的帮助.
         """
-        plugin_docs = "<plugins.help>: " + plugin.name + "开放的API接口说明:\n"
+        plugin_docs = "<plugins.help>: " + plugin.name + "开放的 API 接口说明:\n"
         for attr_name, attr in plugin.__dict__.items():
             if not attr_name.startswith("__") and attr.__doc__ is not None:
                 plugin_docs += (
@@ -202,42 +201,42 @@ class PluginGroup:
         Print.clean_print(plugin_docs)
 
     def checkSystemVersion(self, need_vers: tuple[int, int, int]):
-        """检查ToolDelta系统的版本
+        """检查 ToolDelta 系统的版本
 
         Args:
             need_vers (tuple[int, int, int]): 需要的版本
 
         Raises:
-            self.linked_frame.SystemVersionException: 该组件需要的ToolDelta系统版本
+            self.linked_frame.SystemVersionException: 该组件需要的 ToolDelta 系统版本
         """
         if (
             self.linked_frame is not None
             and need_vers > self.linked_frame.sys_data.system_version
         ):
             raise self.linked_frame.SystemVersionException(
-                f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本, 请及时更新"
+                f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
             )
         elif self.linked_frame is None:
             raise ValueError(
-                "无法检查ToolDelta系统版本，请确保已经加载了ToolDelta系统组件"
+                "无法检查 ToolDelta 系统版本，请确保已经加载了 ToolDelta 系统组件"
             )
 
     def get_plugin_api(
         self, apiName: str, min_version: tuple | None = None, force=True
     ) -> Any:
-        """获取插件API
+        """获取插件 API
 
         Args:
-            apiName (str): 插件API名
-            min_version (tuple | None, optional): API最低版本(若不填则默认不检查最低版本)
-            force: 若为False, 则在找不到插件API时不报错而是返回None
+            apiName (str): 插件 API 名
+            min_version (tuple | None, optional): API 最低版本 (若不填则默认不检查最低版本)
+            force: 若为 False, 则在找不到插件 API 时不报错而是返回 None
 
         Raises:
-            PluginAPIVersionError: 插件API版本错误
-            PluginAPINotFoundError: 无法找到API插件
+            PluginAPIVersionError: 插件 API 版本错误
+            PluginAPINotFoundError: 无法找到 API 插件
 
         Returns:
-            Plugin: 插件API
+            Plugin: 插件 API
         """
         api = self.plugins_api.get(apiName)
         if api:
@@ -245,7 +244,7 @@ class PluginGroup:
                 raise PluginAPIVersionError(apiName, min_version, api.version)
             return api
         if force:
-            raise PluginAPINotFoundError(f"无法找到API插件：{apiName}")
+            raise PluginAPINotFoundError(f"无法找到 API 插件：{apiName}")
         else:
             return None
 
@@ -273,7 +272,7 @@ class PluginGroup:
             asyncio.run(injected_plugin.load_plugin(self))
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
-            Print.print_err(f"加载插件出现问题: \n{err_str}")
+            Print.print_err(f"加载插件出现问题：\n{err_str}")
             raise SystemExit from err
 
     def load_plugin_hot(self, plugin_name: str, plugin_type: str) -> None:
@@ -288,16 +287,16 @@ class PluginGroup:
             plugin = classic_plugin.load_plugin(self, plugin_name)
         elif plugin_type == "injected":
             asyncio.run(injected_plugin.load_plugin_file(plugin_name))
-        # 检查是否有on_def成员再执行
+        # 检查是否有 on_def 成员再执行
         if plugin and hasattr(plugin, "on_def"):
             plugin.on_def()  # type: ignore
-        Print.print_suc(f"成功热加载插件: {plugin_name}")
+        Print.print_suc(f"成功热加载插件：{plugin_name}")
 
     def _add_listen_packet_id(self, packetType: int) -> None:
-        """添加数据包监听, 仅在系统内部使用
+        """添加数据包监听，仅在系统内部使用
 
         Args:
-            packetType (int): 数据包ID
+            packetType (int): 数据包 ID
 
         Raises:
             ValueError: 无法添加数据包监听，请确保已经加载了系统组件
@@ -308,10 +307,10 @@ class PluginGroup:
         self.linked_frame.link_game_ctrl._add_listen_pkt(packetType)
 
     def _add_listen_packet_func(self, packetType: int, func: Callable) -> None:
-        """添加数据包监听器, 仅在系统内部使用
+        """添加数据包监听器，仅在系统内部使用
 
         Args:
-            packetType (int): 数据包ID
+            packetType (int): 数据包 ID
             func (Callable): 数据包监听器
         """
         if self._packet_funcs.get(str(packetType)):
@@ -320,7 +319,7 @@ class PluginGroup:
             self._packet_funcs[str(packetType)] = [func]
 
     def _add_broadcast_evt(self, evt: str, func: Callable) -> None:
-        """添加广播事件监听器, 仅在系统内部使用
+        """添加广播事件监听器，仅在系统内部使用
 
         Args:
             evt (str): 事件名
@@ -332,7 +331,7 @@ class PluginGroup:
             self._broadcast_listeners[evt] = [func]
 
     def _add_listen_update_player_attributes_func(self, func: Callable) -> None:
-        """添加玩家属性更新监听器, 仅在系统内部使用
+        """添加玩家属性更新监听器，仅在系统内部使用
 
         Args:
             func (Callable): 数据包监听器
@@ -345,7 +344,7 @@ class PluginGroup:
         """执行插件的二次初始化方法
 
         Args:
-            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法. Defaults to NON_FUNC.
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法。Defaults to NON_FUNC.
 
         Raises:
             SystemExit: 缺少前置
@@ -355,11 +354,11 @@ class PluginGroup:
             for name, func in self.plugins_funcs["on_def"]:
                 func()
         except PluginAPINotFoundError as err:
-            Print.print_err(f"插件 {name} 需要包含该种接口的前置组件: {err.name}")
+            Print.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
             raise SystemExit from err
         except PluginAPIVersionError as err:
             Print.print_err(
-                f"插件 {name} 需要该前置组件 {err.name} 版本: {err.m_ver}, 但是现有版本过低: {err.n_ver}"
+                f"插件 {name} 需要该前置组件 {err.name} 版本：{err.m_ver}, 但是现有版本过低：{err.n_ver}"
             )
             raise SystemExit from err
         except Exception as err:
@@ -481,7 +480,7 @@ class PluginGroup:
         msg: str,
         onerr: Callable[[str, Exception, str], None] = NON_FUNC,
     ) -> None:
-        """执行命令say的方法
+        """执行命令 say 的方法
 
         Args:
             player (str): 玩家
@@ -514,7 +513,7 @@ class PluginGroup:
         """处理数据包监听器
 
         Args:
-            pktID (int): 数据包ID
+            pktID (int): 数据包 ID
             pkt (dict): 数据包
 
         Returns:
@@ -531,5 +530,6 @@ class PluginGroup:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
         return False
+
 
 plugin_group = PluginGroup()

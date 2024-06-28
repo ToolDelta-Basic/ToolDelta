@@ -1,4 +1,5 @@
 "启动页面"
+
 import os
 import signal
 import traceback
@@ -30,7 +31,9 @@ def client_title() -> None:
                 raise ValueError("启动模式参数不合法")
             r = launch_mode["l"]
         else:
-            Print.clean_print("§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):")
+            Print.clean_print(
+                "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
+            )
             Print.clean_print("1 - §b启动 ToolDelta")
             Print.clean_print("2 - §d打开 ToolDelta 插件管理器")
             Print.clean_print("3 - §d打开 ToolDelta 插件市场")

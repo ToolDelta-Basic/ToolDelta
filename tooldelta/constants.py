@@ -1,4 +1,4 @@
-" ToolDelta 常量定义 "
+"ToolDelta 常量定义"
 
 PRG_NAME = "ToolDelta"
 "程序名"
@@ -11,7 +11,7 @@ LAUNCH_CFG: dict = {
     "验证服务器地址(更换时记得更改fbtoken)": "",
     "是否记录日志": True,
     "是否使用github镜像": True,
-    "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL
+    "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL,
 }
 "默认登录配置"
 
@@ -20,32 +20,28 @@ LAUNCH_CFG_STD: dict = {
     "验证服务器地址(更换时记得更改fbtoken)": str,
     "是否记录日志": bool,
     "是否使用github镜像": bool,
-    "插件市场源": str
+    "插件市场源": str,
 }
 "默认登录配置标准验证格式"
 
 LAUNCHER_NEOMEGA_STD: dict = {
     "服务器号": int,
     "密码": int,
-    "验证服务器地址(更换时记得更改fbtoken)": str
+    "验证服务器地址(更换时记得更改fbtoken)": str,
 }
 "启动器：NeOmega 启动配置验证格式"
 
 LAUNCHER_NEOMEGA_DEFAULT: dict = {
     "服务器号": 0,
     "密码": 0,
-    "验证服务器地址(更换时记得更改fbtoken)": ""
+    "验证服务器地址(更换时记得更改fbtoken)": "",
 }
 "启动器：NeOmega 默认启动配置"
 
-LAUNCHER_BEWS_STD: dict = {
-    "服务端开放地址": str
-}
+LAUNCHER_BEWS_STD: dict = {"服务端开放地址": str}
 "启动器：BEWSServer 启动配置验证格式"
 
-LAUNCHER_BEWS_DEFAULT: dict = {
-    "服务端开放地址": ""
-}
+LAUNCHER_BEWS_DEFAULT: dict = {"服务端开放地址": ""}
 "启动器：BEWSServer 默认启动配置"
 
 FB_APIS = [
@@ -85,7 +81,7 @@ TOOLDELTA_PLUGIN_DATA_DIR = "插件数据文件"
 
 PLUGIN_TYPE_MAPPING = {
     "classic": TOOLDELTA_CLASSIC_PLUGIN,
-    "injected": TOOLDELTA_INJECTED_PLUGIN
+    "injected": TOOLDELTA_INJECTED_PLUGIN,
 }
 "插件属性名映射"
 

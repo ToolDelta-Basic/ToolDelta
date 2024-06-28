@@ -1,9 +1,9 @@
 "插件管理器"
+
 import os
 import platform
 import shutil
 import shlex
-import time
 from typing import Optional
 import ujson as json
 from .utils import Utils
@@ -14,7 +14,7 @@ from .constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
-    PLUGIN_TYPE_MAPPING
+    PLUGIN_TYPE_MAPPING,
 )
 
 JsonIO = Utils.SimpleJsonDataReader
@@ -32,6 +32,7 @@ def clear_screen() -> None:
 
 class PluginManager:
     "插件管理器"
+
     plugin_reg_data_path = "插件注册表"
     default_reg_data = {"classic": {}, "injected": {}, "unknown": {}}
     _plugin_datas_cache = []
@@ -60,17 +61,18 @@ class PluginManager:
 
     def plugin_operation(self, plugin: PluginRegData) -> None:
         "插件操作"
-        description_fixed = plugin.description.replace('\n', '\n    ')
+        description_fixed = plugin.description.replace("\n", "\n    ")
         clear_screen()
         Print.clean_print(f"§d插件名: §f{plugin.name}")
         Print.clean_print(f" - 版本：{plugin.version_str}")
         Print.clean_print(f" - 作者：{plugin.author}")
         Print.clean_print(f" 描述：{description_fixed}")
         Print.clean_print(
-            f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  4.查看手册  §c回车退出")
+            f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  4.查看手册  §c回车退出"
+        )
         f_dirname = {
             "classic": TOOLDELTA_CLASSIC_PLUGIN,
-            "injected": TOOLDELTA_INJECTED_PLUGIN
+            "injected": TOOLDELTA_INJECTED_PLUGIN,
         }[plugin.plugin_type]
         match input(Print.clean_fmt("§f请选择选项: ")):
             case "1":
@@ -87,39 +89,42 @@ class PluginManager:
                 input("[Enter 键继续..]")
                 return
             case "2":
-                latest_version = market.get_latest_plugin_version(
-                    plugin.plugin_id)
+                latest_version = market.get_latest_plugin_version(plugin.plugin_id)
                 if latest_version is None:
                     Print.clean_print("§6无法获取其的最新版本, 回车键继续")
                 elif latest_version == plugin.version_str:
                     Print.clean_print("§a此插件已经为最新版本, 回车键继续")
                 else:
                     Print.clean_print(
-                        f"§a插件有新版本可用 ({plugin.version_str} => {latest_version})")
-                    r = input(Print.clean_fmt(
-                        "输入§a1§f=立刻更新, §62§f=取消更新: ")).strip()
+                        f"§a插件有新版本可用 ({plugin.version_str} => {latest_version})"
+                    )
+                    r = input(
+                        Print.clean_fmt("输入§a1§f=立刻更新, §62§f=取消更新: ")
+                    ).strip()
                     if r == "1":
                         Print.clean_print("§a正在下载新版插件...", end="\r")
                         market.download_plugin(plugin)
                         Print.clean_print("§a插件更新完成, 回车键继续")
-                        plugin.version = tuple(int(i) for i in latest_version.split("."))
+                        plugin.version = tuple(
+                            int(i) for i in latest_version.split(".")
+                        )
                     else:
                         Print.clean_print("§6已取消, 回车键返回")
             case "3":
                 if plugin.is_enabled:
                     os.rename(
                         os.path.join("插件文件", f_dirname, plugin.name),
-                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled")
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
                     )
                 else:
                     os.rename(
-                        os.path.join("插件文件", f_dirname,
-                                     plugin.name + "+disabled"),
-                        os.path.join("插件文件", f_dirname, plugin.name)
+                        os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
+                        os.path.join("插件文件", f_dirname, plugin.name),
                     )
                 plugin.is_enabled = [True, False][plugin.is_enabled]
                 Print.clean_print(
-                    f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}§6, 回车键继续")
+                    f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}§6, 回车键继续"
+                )
             case "4":
                 self.lookup_readme(plugin)
             case _:
@@ -146,10 +151,12 @@ class PluginManager:
             clear_screen()
             Print.clean_print("§f以下插件可进行更新:")
             for plugin, v in need_updates:
-                Print.clean_print(
-                    f" - {plugin.name} §6{plugin.version_str}§f -> §a{v}")
-            r = input(Print.clean_fmt(
-                "§f输入§a y §f开始更新, §c n §f取消: ")).strip().lower()
+                Print.clean_print(f" - {plugin.name} §6{plugin.version_str}§f -> §a{v}")
+            r = (
+                input(Print.clean_fmt("§f输入§a y §f开始更新, §c n §f取消: "))
+                .strip()
+                .lower()
+            )
             if r == "y":
                 for plugin, v in need_updates:
                     self.update_plugin_from_market(plugin)
@@ -167,13 +174,18 @@ class PluginManager:
         Args:
             plugin (PluginRegData): 插件注册信息，新旧皆可
         """
-        Print.clean_print(f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r")
+        Print.clean_print(
+            f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r"
+        )
         old_plugins = self.get_all_plugin_datas()
         new_plugin_datas = market.get_plugin_data_from_market(plugin.plugin_id)
         new_plugins = market.download_plugin(new_plugin_datas, False, plugin.is_enabled)
         for new_plugin in new_plugins:
             for old_plugin in old_plugins:
-                if new_plugin.plugin_id == old_plugin.plugin_id and new_plugin.name != old_plugin.name:
+                if (
+                    new_plugin.plugin_id == old_plugin.plugin_id
+                    and new_plugin.name != old_plugin.name
+                ):
                     shutil.rmtree(old_plugin.dir)
 
     def search_plugin(self, resp, plugins) -> Optional[PluginRegData]:
@@ -191,8 +203,7 @@ class PluginManager:
         if len(res) > 1:
             Print.clean_print("§a☑ §f关键词查找到的插件:")
             for i, plugin in enumerate(res):
-                Print.clean_print(str(i + 1) + ". " +
-                                  self.make_plugin_icon(plugin))
+                Print.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
             r = Utils.try_int(input(Print.clean_fmt("§f请选择序号: ")))
             if r is None or r not in range(1, len(res) + 1):
                 Print.clean_print("§c序号无效, 回车键继续")
@@ -206,7 +217,7 @@ class PluginManager:
             TOOLDELTA_PLUGIN_DIR,
             PLUGIN_TYPE_MAPPING[plugin.plugin_type],
             plugin.name,
-            "readme.txt"
+            "readme.txt",
         )
         if os.path.isfile(readme_path):
             with open(readme_path, encoding="utf-8") as f:
@@ -225,7 +236,9 @@ class PluginManager:
             Print.clean_print("§6此插件没有手册文档 [回车键继续]")
 
     @staticmethod
-    def search_plugin_by_kw(kws: list[str], plugins: list[PluginRegData]) -> list[PluginRegData]:
+    def search_plugin_by_kw(
+        kws: list[str], plugins: list[PluginRegData]
+    ) -> list[PluginRegData]:
         """根据关键词搜索插件
 
         Args:
@@ -235,8 +248,7 @@ class PluginManager:
         Returns:
             list[PluginRegData]: 插件注册信息列表
         """
-        res = [plugin for plugin in plugins if all(
-            kw in plugin.name for kw in kws)]
+        res = [plugin for plugin in plugins if all(kw in plugin.name for kw in kws)]
         return res
 
     def is_valid_registered(self, plugin_name: str) -> bool:
@@ -267,13 +279,26 @@ class PluginManager:
             p_dirs = os.path.join(TOOLDELTA_PLUGIN_DIR, type_dir)
             for fd in os.listdir(p_dirs):
                 datpath = os.path.join(p_dirs, fd, "datas.json")
-                is_enabled=not fd.endswith("+disabled")
+                is_enabled = not fd.endswith("+disabled")
                 if os.path.isfile(datpath):
                     with open(datpath, "r", encoding="utf-8") as f:
                         jsdata = json.load(f)
-                        plugins.append(PluginRegData(fd.replace("+disabled", ""), jsdata, is_enabled=is_enabled))
+                        plugins.append(
+                            PluginRegData(
+                                fd.replace("+disabled", ""),
+                                jsdata,
+                                is_enabled=is_enabled,
+                            )
+                        )
                 else:
-                    plugins.append(PluginRegData(fd.replace("+disabled", ""), {"plugin-type": ptype}, is_registered=False, is_enabled=is_enabled))
+                    plugins.append(
+                        PluginRegData(
+                            fd.replace("+disabled", ""),
+                            {"plugin-type": ptype},
+                            is_registered=False,
+                            is_enabled=is_enabled,
+                        )
+                    )
         return plugins
 
     def push_plugin_reg_data(self, plugin_data: PluginRegData) -> None:
@@ -283,13 +308,17 @@ class PluginManager:
             plugin_data (PluginRegData): 插件注册信息
         """
         end_str = "" if plugin_data.is_enabled else "+disabled"
-        f_dir = os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[plugin_data.plugin_type], plugin_data.name + end_str)
+        f_dir = os.path.join(
+            TOOLDELTA_PLUGIN_DIR,
+            PLUGIN_TYPE_MAPPING[plugin_data.plugin_type],
+            plugin_data.name + end_str,
+        )
         if not os.path.isdir(f_dir):
             os.mkdir(f_dir)
         try:
             old_dat: dict = JsonIO.SafeJsonLoad(
                 open(os.path.join(f_dir, "datas.json"), "r", encoding="utf-8")
-            ) # type: ignore
+            )  # type: ignore
         except:
             old_dat = {}
             pass
@@ -313,8 +342,7 @@ class PluginManager:
         return (
             ico_colors.get(plugin.plugin_type, "§7")
             + "■ "
-            + (("§a"if plugin.is_enabled else "§7")
-               if plugin.is_registered else "§6")
+            + (("§a" if plugin.is_enabled else "§7") if plugin.is_registered else "§6")
             + plugin.name
         )
 
@@ -325,7 +353,7 @@ class PluginManager:
             plugins (list[PluginRegData]): 插件注册信息列表
         """
         texts = []
-        for plugin in sorted(plugins, key=lambda x:x.is_registered):
+        for plugin in sorted(plugins, key=lambda x: x.is_registered):
             texts.append(self.make_plugin_icon(plugin))
         lfts = []
         rgts = []
@@ -336,8 +364,9 @@ class PluginManager:
                 rgts.append(t)
         for i, t in enumerate(lfts):
             if i in range(len(rgts)):
-                Print.clean_print("§f" + Print.align(t, 35) +
-                                  "§f" + Print.align(rgts[i]))
+                Print.clean_print(
+                    "§f" + Print.align(t, 35) + "§f" + Print.align(rgts[i])
+                )
             else:
                 Print.clean_print("§f" + Print.align(t, 35))
 

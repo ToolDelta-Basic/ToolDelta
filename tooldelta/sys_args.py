@@ -1,8 +1,9 @@
 "解析启动参数"
+
 import sys
 
 
-def sys_args_to_dict(argv: list[str] = sys.argv)-> dict[str, str | None]:
+def sys_args_to_dict(argv: list[str] = sys.argv) -> dict[str, str | None]:
     """将启动参数转换为字典
 
     Args:
@@ -29,6 +30,7 @@ def sys_args_to_dict(argv: list[str] = sys.argv)-> dict[str, str | None]:
             d[arg] = val
         i += 1
     return d
+
 
 def print_help():
     print("启动参数帮助：")

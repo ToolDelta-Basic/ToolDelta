@@ -2,9 +2,11 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class PacketIDS:
     "数据包 ID 常量表"
+
     IDLogin = 1  # 登录
     IDPlayStatus = 2  # 播放地址
     IDServerToClientHandshake = 3  # 服务器到客户端握手
@@ -182,9 +184,11 @@ class PacketIDS:
     IDChangeMobProperty = 182  # 改变生物属性
     IDPyRpc = 183  # Python 远程过程调用
 
+
 @dataclass
 class ActorEventType:
     "演员事件常量表"
+
     ActorEventJump = 1  # 角色跳跃
     ActorEventHurt = 2  # 角色受伤
     ActorEventDeath = 3  # 角色死亡
@@ -215,7 +219,7 @@ class ActorEventType:
     ActorEventGuardianAttackSound = 28  # 守卫者攻击音效
     ActorEventDrinkPotion = 29  # 喝药水
     ActorEventThrowPotion = 30  # 扔药水
-    ActorEventCartWithPrimeTNT = 31  # 载有TNT的车
+    ActorEventCartWithPrimeTNT = 31  # 载有 TNT 的车
     ActorEventPrimeCreeper = 32  # 充能的爬行者
     ActorEventAirSupply = 33  # 空气供应
     ActorEventAddPlayerLevels = 34  # 增加玩家等级
@@ -225,58 +229,61 @@ class ActorEventType:
     ActorEventGroundDust = 38  # 地面灰尘
     ActorEventShake = 39  # 摇动
     ActorEventFeed = 57  # 喂养角色
-    ActorEventBabyEat = 60 # 宝宝吃东西
-    ActorEventInstantDeath = 61 # 瞬间死亡
-    ActorEventNotifyTrade = 62 # 通知交易
-    ActorEventLeashDestroyed = 63 # 绳索被销毁
-    ActorEventCaravanUpdated = 64 # 更新马车
-    ActorEventTalismanActivate = 65 # 法宝激活
-    ActorEventUpdateStructureFeature = 66 # 更新结构特征
-    ActorEventPlayerSpawnedMob = 67 # 玩家产生的生物
-    ActorEventPuke = 68 # 呕吐
-    ActorEventUpdateStackSize = 69 # 更新堆叠大小
-    ActorEventStartSwimming = 70 # 开始游泳
-    ActorEventBalloonPop = 71 # 气球爆破
-    ActorEventTreasureHunt = 72 # 寻宝
-    ActorEventSummonAgent = 73 # 召唤代理
-    ActorEventFinishedChargingCrossbow = 74 # 弩完成充能
-    ActorEventLandedOnGround = 75 # 降落在地面
-    ActorEventActorGrowUp = 76 # 角色成长
-    ActorEventVibrationDetected = 77 # 检测到振动
-    
+    ActorEventBabyEat = 60  # 宝宝吃东西
+    ActorEventInstantDeath = 61  # 瞬间死亡
+    ActorEventNotifyTrade = 62  # 通知交易
+    ActorEventLeashDestroyed = 63  # 绳索被销毁
+    ActorEventCaravanUpdated = 64  # 更新马车
+    ActorEventTalismanActivate = 65  # 法宝激活
+    ActorEventUpdateStructureFeature = 66  # 更新结构特征
+    ActorEventPlayerSpawnedMob = 67  # 玩家产生的生物
+    ActorEventPuke = 68  # 呕吐
+    ActorEventUpdateStackSize = 69  # 更新堆叠大小
+    ActorEventStartSwimming = 70  # 开始游泳
+    ActorEventBalloonPop = 71  # 气球爆破
+    ActorEventTreasureHunt = 72  # 寻宝
+    ActorEventSummonAgent = 73  # 召唤代理
+    ActorEventFinishedChargingCrossbow = 74  # 弩完成充能
+    ActorEventLandedOnGround = 75  # 降落在地面
+    ActorEventActorGrowUp = 76  # 角色成长
+    ActorEventVibrationDetected = 77  # 检测到振动
+
+
 @dataclass
 class EventType:
     "事件类型常量表"
-    EventTypeAchievementAwarded  = 0  # 成就奖励
-    EventTypeEntityInteract  = 1  # 实体交互
-    EventTypePortalBuilt  = 2  # 传送门建立
-    EventTypePortalUsed  = 3  # 传送门使用
-    EventTypeMobKilled  = 4  # 生物被杀
-    EventTypeCauldronUsed  = 5  # 釜子使用
-    EventTypePlayerDied  = 6  # 玩家死亡
-    EventTypeBossKilled  = 7  # Boss被杀
-    EventTypeAgentCommand  = 8  # 代理命令
-    EventTypeAgentCreated  = 9  # 代理创建（目前无用？）
-    EventTypePatternRemoved  = 10  # 模式移除
-    EventTypeSlashCommandExecuted  = 11  # 斜杠命令执行
-    EventTypeFishBucketed  = 12  # 鱼桶
-    EventTypeMobBorn  = 13  # 生物出生
-    EventTypePetDied  = 14  # 宠物死亡
-    EventTypeCauldronInteract  = 15  # 釜子交互
-    EventTypeComposterInteract  = 16  # 堆肥桶交互
-    EventTypeBellUsed  = 17  # 钟声
-    EventTypeEntityDefinitionTrigger  = 18  # 实体定义触发
-    EventTypeRaidUpdate  = 19  # 袭击更新
-    EventTypeMovementAnomaly  = 20  # 移动异常
-    EventTypeMovementCorrected  = 21  # 移动校正
-    EventTypeExtractHoney  = 22  # 提取蜂蜜
-    EventTypeTargetBlockHit  = 23  # 目标方块被击中
-    EventTypePiglinBarter  = 24  # 畏怯者交易
-    EventTypePlayerWaxedOrUnwaxedCopper  = 25  # 玩家给覆蜡/未覆蜡铜
-    EventTypeCodeBuilderRuntimeAction  = 26  # 代码构建器运行时动作
-    EventTypeCodeBuilderScoreboard  = 27  # 代码构建器计分板
-    EventTypeStriderRiddenInLavaInOverworld  = 28  # 熔岩中骑猪灵
-    EventTypeSneakCloseToSculkSensor  = 29  # 靠近鸾石感应器潜行
+
+    EventTypeAchievementAwarded = 0  # 成就奖励
+    EventTypeEntityInteract = 1  # 实体交互
+    EventTypePortalBuilt = 2  # 传送门建立
+    EventTypePortalUsed = 3  # 传送门使用
+    EventTypeMobKilled = 4  # 生物被杀
+    EventTypeCauldronUsed = 5  # 釜子使用
+    EventTypePlayerDied = 6  # 玩家死亡
+    EventTypeBossKilled = 7  # Boss 被杀
+    EventTypeAgentCommand = 8  # 代理命令
+    EventTypeAgentCreated = 9  # 代理创建（目前无用？）
+    EventTypePatternRemoved = 10  # 模式移除
+    EventTypeSlashCommandExecuted = 11  # 斜杠命令执行
+    EventTypeFishBucketed = 12  # 鱼桶
+    EventTypeMobBorn = 13  # 生物出生
+    EventTypePetDied = 14  # 宠物死亡
+    EventTypeCauldronInteract = 15  # 釜子交互
+    EventTypeComposterInteract = 16  # 堆肥桶交互
+    EventTypeBellUsed = 17  # 钟声
+    EventTypeEntityDefinitionTrigger = 18  # 实体定义触发
+    EventTypeRaidUpdate = 19  # 袭击更新
+    EventTypeMovementAnomaly = 20  # 移动异常
+    EventTypeMovementCorrected = 21  # 移动校正
+    EventTypeExtractHoney = 22  # 提取蜂蜜
+    EventTypeTargetBlockHit = 23  # 目标方块被击中
+    EventTypePiglinBarter = 24  # 畏怯者交易
+    EventTypePlayerWaxedOrUnwaxedCopper = 25  # 玩家给覆蜡/未覆蜡铜
+    EventTypeCodeBuilderRuntimeAction = 26  # 代码构建器运行时动作
+    EventTypeCodeBuilderScoreboard = 27  # 代码构建器计分板
+    EventTypeStriderRiddenInLavaInOverworld = 28  # 熔岩中骑猪灵
+    EventTypeSneakCloseToSculkSensor = 29  # 靠近鸾石感应器潜行
+
 
 @dataclass
 class PlayerActionType:
@@ -311,8 +318,10 @@ class PlayerActionType:
     PlayerActionStartItemUseOn = 28  # 开始使用物品
     PlayerActionStopItemUseOn = 29  # 停止使用物品
 
+
 class SubPacket_CmdOutputMsg:
     """命令输出消息子包构建"""
+
     Success: bool
     Message: str
     Parameters: list[str]
@@ -325,6 +334,7 @@ class SubPacket_CmdOutputMsg:
 
 class SubPacket_CmdOrigin:
     "命令来源子包构建"
+
     Origin: int
     UUID: str
     RequestID: str
@@ -339,6 +349,7 @@ class SubPacket_CmdOrigin:
 
 class Packet_CommandOutput:
     "命令输出包构建"
+
     CommandOrigin: SubPacket_CmdOrigin
     OutputType: int
     SuccessCount: int

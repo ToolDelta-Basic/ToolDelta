@@ -9,6 +9,7 @@ from tooldelta.sys_args import sys_args_to_dict
 from tooldelta.cfg import Config
 from tooldelta import constants
 
+
 def download_libs() -> bool:
     """根据系统架构和平台下载所需的库。"""
     if "no-download-libs" in sys_args_to_dict().keys():
@@ -17,18 +18,22 @@ def download_libs() -> bool:
     cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
     is_mir: bool = cfgs["是否使用github镜像"]
     if is_mir:
-        mirror_src = constants.TDSPECIFIC_MIRROR + \
-            "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
-        depen_url = constants.TDSPECIFIC_MIRROR + \
-            "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+        mirror_src = (
+            constants.TDSPECIFIC_MIRROR
+            + "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
+        )
+        depen_url = (
+            constants.TDSPECIFIC_MIRROR
+            + "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+        )
     else:
         mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
-        depen_url = "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+        depen_url = (
+            "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+        )
     try:
         require_depen = json.loads(
-            requests.get(
-            f"{mirror_src}require_files.json", timeout=5
-            ).text
+            requests.get(f"{mirror_src}require_files.json", timeout=5).text
         )
     except Exception as err:
         Print.print_err(f"获取依赖库表出现问题：{err}")
@@ -43,11 +48,8 @@ def download_libs() -> bool:
     else:
         sys_info_fmt: str = f"{platform.uname().system}:{sys_machine.lower()}"
     source_dict: list[str] = require_depen[sys_info_fmt]
-    commit_remote = requests.get(
-        f"{depen_url}commit", timeout=5
-    ).text
-    commit_file_path = os.path.join(
-        os.getcwd(), "tooldelta", "neo_libs", "commit")
+    commit_remote = requests.get(f"{depen_url}commit", timeout=5).text
+    commit_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "commit")
     replace_file = False
     if os.path.isfile(commit_file_path):
         with open(commit_file_path, "r", encoding="utf-8") as f:
