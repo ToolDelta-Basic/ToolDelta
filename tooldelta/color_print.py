@@ -87,6 +87,7 @@ class Print:
         return (
             simple_fmt(
                 {
+                    "§0": f"\033[{showmode};37;90m",
                     "§1": f"\033[{showmode};37;34m",
                     "§2": f"\033[{showmode};37;32m",
                     "§3": f"\033[{showmode};37;36m",
