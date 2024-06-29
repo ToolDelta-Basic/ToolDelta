@@ -12,7 +12,7 @@ Methods:
 
 from typing import TYPE_CHECKING
 
-import jsonschema_specifications
+import json
 
 from .color_print import Print
 from .packets import Packet_CommandOutput
