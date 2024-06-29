@@ -249,47 +249,11 @@ class CommandOutput:
     DataSet: Optional[Any] = None
 
 
-def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[CommandOutput]:
+def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[Packet_CommandOutput]:
     if jsonStr is None:
         return None
-    commandOutputData = json.loads(jsonStr)
-    commandOrigin = CommandOrigin(**commandOutputData["CommandOrigin"])
-    dataset = None
-    if (
-        "DataSet" in commandOutputData.keys()
-        and commandOutputData["DataSet"] is not None
-        and commandOutputData["DataSet"] != ""
-    ):
-        dataset = json.loads(commandOutputData["DataSet"])
-    outputMessages = []
-    if (
-        "OutputMessages" in commandOutputData.keys()
-        and commandOutputData["OutputMessages"] is not None
-        and commandOutputData["OutputMessages"] != ""
-    ):
-        outputMessagesData = commandOutputData["OutputMessages"]
-        for outputMessageData in outputMessagesData:
-            outputMessage = OutputMessage(
-                Success=outputMessageData["Success"],
-                Message=outputMessageData["Message"],
-            )
-            parameters = []
-            if "Parameters" in outputMessageData.keys():
-                parametersData = outputMessageData["Parameters"]
-                for parameterData in parametersData:
-                    try:
-                        parameters.append(json.loads(parameterData))
-                    except Exception:
-                        parameters.append(parameterData)
-            outputMessage.Parameters = parameters
-            outputMessages.append(outputMessage)
-    return CommandOutput(
-        CommandOrigin=commandOrigin,
-        OutputType=commandOutputData["OutputType"],
-        SuccessCount=commandOutputData["SuccessCount"],
-        OutputMessages=outputMessages,
-        DataSet=dataset,
-    )
+    else:
+        return Packet_CommandOutput(json.loads(jsonStr))
 
 
 @dataclass

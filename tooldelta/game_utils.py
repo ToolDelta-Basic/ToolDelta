@@ -12,6 +12,8 @@ Methods:
 
 from typing import TYPE_CHECKING
 
+import jsonschema_specifications
+
 from .color_print import Print
 from .packets import Packet_CommandOutput
 
@@ -84,7 +86,7 @@ def getPos(target: str, timeout: float | int = 5) -> dict:
     result = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{target}"]', timeout)
     if not result.OutputMessages[0].Success:
         raise ValueError(f"无法获取坐标信息：{result.OutputMessages[0].Message}")
-    parameter = result.OutputMessages[0].Parameters[0]
+    parameter = json.loads(result.OutputMessages[0].Parameters[0])
     if isinstance(parameter, str):
         raise ValueError("无法获取坐标信息：" + parameter)
     result = {}

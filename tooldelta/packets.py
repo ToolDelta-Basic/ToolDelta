@@ -1,7 +1,7 @@
 "数据包类构建器"
 
 from dataclasses import dataclass
-
+import json
 
 @dataclass
 class PacketIDS:
@@ -324,7 +324,7 @@ class SubPacket_CmdOutputMsg:
 
     Success: bool
     Message: str
-    Parameters: list[str]
+    Parameters: list
 
     def __init__(self, pkt: dict):
         self.Success = pkt["Success"]
