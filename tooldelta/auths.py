@@ -3,9 +3,12 @@
 import getpass
 import hashlib
 from typing import Any
+
 import requests
 import ujson as json
+
 from tooldelta import constants
+
 from .color_print import Print
 
 

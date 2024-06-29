@@ -11,11 +11,12 @@ Methods:
 """
 
 from typing import TYPE_CHECKING
+
 from .color_print import Print
 from .packets import Packet_CommandOutput
 
 if TYPE_CHECKING:
-    from tooldelta import ToolDelta, GameCtrl
+    from tooldelta import GameCtrl, ToolDelta
 
 game_ctrl: "GameCtrl" = None  # type: ignore
 

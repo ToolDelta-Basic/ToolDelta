@@ -2,7 +2,9 @@
 
 import datetime
 import threading
+
 import colorama
+
 from .logger import publicLogger
 
 colorama.init(autoreset=True)

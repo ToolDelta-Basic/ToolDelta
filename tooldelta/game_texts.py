@@ -1,22 +1,24 @@
 "还原游戏常见字符串"
 
+import gzip
 import os
 import re
 import tarfile
-import gzip
-from importlib import util
 import threading
-from glob import glob
-from typing import Dict
 import warnings
+from glob import glob
+from importlib import util
+from typing import Dict
+
 import requests
 import ujson as json
 import urllib3
-from .urlmethod import download_file_singlethreaded
-from .get_tool_delta_version import get_tool_delta_version
+
 from .color_print import Print
-from .sys_args import sys_args_to_dict
 from .constants import TDSPECIFIC_MIRROR
+from .get_tool_delta_version import get_tool_delta_version
+from .sys_args import sys_args_to_dict
+from .urlmethod import download_file_singlethreaded
 
 # 关闭警告
 urllib3.disable_warnings()

@@ -2,20 +2,22 @@
 
 import os
 import platform
-import shutil
 import shlex
+import shutil
 from typing import Optional
+
 import ujson as json
-from .utils import Utils
+
 from .color_print import Print
-from .plugin_market import market
-from .plugin_load import PluginRegData
 from .constants import (
-    TOOLDELTA_PLUGIN_DIR,
+    PLUGIN_TYPE_MAPPING,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
-    PLUGIN_TYPE_MAPPING,
+    TOOLDELTA_PLUGIN_DIR,
 )
+from .plugin_load import PluginRegData
+from .plugin_market import market
+from .utils import Utils
 
 JsonIO = Utils.SimpleJsonDataReader
 

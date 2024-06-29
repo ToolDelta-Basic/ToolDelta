@@ -1,22 +1,24 @@
 """客户端启动器框架"""
 
 import os
-import threading
-import shlex
-import time
-import random
-import subprocess
 import platform
+import random
+import shlex
+import subprocess
+import threading
+import time
 from typing import Callable, Optional
+
 import tooldelta
 
-from .neo_libs import file_download as neo_fd, neo_conn
 from .cfg import Cfg
-from .utils import Utils
 from .color_print import Print
-from .sys_args import sys_args_to_dict
+from .neo_libs import file_download as neo_fd
+from .neo_libs import neo_conn
 from .packets import Packet_CommandOutput
+from .sys_args import sys_args_to_dict
 from .urlmethod import get_free_port
+from .utils import Utils
 
 Config = Cfg()
 
@@ -509,9 +511,11 @@ class FrameNeOmg(StandardFrame):
         """
         self.check_avaliable()
         player_obj = self.omega.get_player_by_name(player)
-        if player_obj is None or player_obj.op_permissions_level is None:
+        if isinstance(player_obj, type(None)) or isinstance(
+            player_obj.can_operator_commands, type(None)
+        ):
             raise ValueError("未能获取玩家对象")
-        return player_obj.op_permissions_level > 1
+        return bool(player_obj.can_operator_commands)
 
     def place_command_block_with_nbt_data(
         self,

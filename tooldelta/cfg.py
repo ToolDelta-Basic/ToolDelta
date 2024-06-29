@@ -2,6 +2,7 @@
 
 import os
 from typing import Any
+
 import ujson
 
 NoneType = type(None)

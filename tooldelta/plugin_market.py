@@ -2,24 +2,26 @@
 
 import os
 import platform
+import shlex
 import shutil
 import tempfile
-import traceback
 import time
-import shlex
+import traceback
+
 import requests
 import ujson as json
+
 from . import urlmethod
-from .utils import Utils
-from .color_print import Print
-from .plugin_load import PluginRegData
 from .cfg import Cfg
+from .color_print import Print
 from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
 )
+from .plugin_load import PluginRegData
 from .plugin_load.PluginGroup import plugin_group
+from .utils import Utils
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"

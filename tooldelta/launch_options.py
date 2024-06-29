@@ -3,12 +3,13 @@
 import os
 import signal
 import traceback
+
 from .color_print import Print
-from .starter import start_tool_delta
 from .frame import ToolDelta
 from .plugin_manager import plugin_manager
 from .plugin_market import market
-from .sys_args import sys_args_to_dict, print_help
+from .starter import start_tool_delta
+from .sys_args import print_help, sys_args_to_dict
 
 
 def signal_handler(*_) -> None:

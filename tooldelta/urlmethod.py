@@ -5,13 +5,14 @@ import re
 import shutil
 import socket
 import time
-from typing import Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Union
+
 import pyspeedtest
 import requests
 
-from .get_tool_delta_version import get_tool_delta_version
 from .color_print import Print
+from .get_tool_delta_version import get_tool_delta_version
 
 # 使用方法 mirror_github[value: int].format(url: str)
 mirror_github = [

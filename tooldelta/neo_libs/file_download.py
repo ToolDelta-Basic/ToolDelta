@@ -1,13 +1,14 @@
-import requests
-import platform
-import os
 import json
+import os
+import platform
 
-from tooldelta.color_print import Print
-from tooldelta.urlmethod import download_file_singlethreaded
-from tooldelta.sys_args import sys_args_to_dict
-from tooldelta.cfg import Config
+import requests
+
 from tooldelta import constants
+from tooldelta.cfg import Config
+from tooldelta.color_print import Print
+from tooldelta.sys_args import sys_args_to_dict
+from tooldelta.urlmethod import download_file_singlethreaded
 
 
 def download_libs() -> bool:
