@@ -4,7 +4,6 @@ import importlib
 import os
 import sys
 import traceback
-import zipfile
 from typing import TYPE_CHECKING, Union, TypeVar
 from ...color_print import Print
 from ...utils import Utils
@@ -116,18 +115,6 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
     for plugin_dir in os.listdir(PLUGIN_PATH):
         if not plugin_is_enabled(plugin_dir):
             continue
-        if (
-            not os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir.strip(".zip")))
-            and os.path.isfile(os.path.join(PLUGIN_PATH, plugin_dir))
-            and plugin_dir.endswith(".zip")
-        ):
-            Print.print_with_info(f"§6正在解压插件{plugin_dir}, 请稍后", "§6 解压 ")
-            _unzip_plugin(
-                os.path.join(PLUGIN_PATH, plugin_dir),
-                os.path.join(PLUGIN_PATH, plugin_dir.strip(".zip")),
-            )
-            Print.print_suc(f"§a成功解压插件{plugin_dir} -> 插件目录")
-            plugin_dir = plugin_dir.strip(".zip")
         if os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir)):
             sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
             load_plugin(plugin_grp, plugin_dir)
@@ -241,22 +228,6 @@ def load_plugin(
         plugin_group.plugin_added_cache["packets"].clear()
         plugin_group.broadcast_evts_cache.clear()
     return None
-
-
-def _unzip_plugin(zip_dir: str, exp_dir: str) -> None:
-    """解压插件 ZIP 包
-
-    Args:
-        zip_dir (str): 压缩文件路径
-        exp_dir (str): 解压目录
-    """
-    try:
-        f = zipfile.ZipFile(zip_dir, "r")
-        f.extractall(exp_dir)
-    except Exception as err:
-        Print.print_err(f"zipfile: 解压失败：{err}")
-        raise EOFError("解压失败") from err
-
 
 def _init_frame(frame: "ToolDelta"):
     __caches__["frame"] = frame

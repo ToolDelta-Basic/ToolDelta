@@ -27,6 +27,7 @@ websocket-client = "^1.7.0"
 fcwslib = "^3.0.0"
 pyyaml = "6.0.1"
 brotli = "^1.1.0"
+bdxconverter = "^1.1.15"
 
 [build-system]
 requires = ["poetry-core"]
