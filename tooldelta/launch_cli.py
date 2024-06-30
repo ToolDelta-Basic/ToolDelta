@@ -295,7 +295,10 @@ class FrameNeOmg(StandardFrame):
         """
         free_port = get_free_port(24016)
         sys_machine = platform.uname().machine
-        sys_machine = "amd64" if sys_machine == "x86_64" else sys_machine
+        if sys_machine == "x86_64":
+            sys_machine = "amd64"
+        elif sys_machine == "aarch64":
+            sys_machine = "arm64"
         access_point_file = (
             f"neomega_{platform.uname().system.lower()}_access_point_{sys_machine}"
         )

@@ -74,9 +74,7 @@ class PluginGroup:
         self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
-        self._repeat_funcs = {}
         self.plugins_api: dict[str, Plugin] = {}
-        self.excType = 0
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugins_name = []
@@ -85,32 +83,6 @@ class PluginGroup:
     add_plugin = staticmethod(add_plugin)
 
     add_plugin_as_api = staticmethod(add_plugin_as_api)
-
-    def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
-        """
-        对外源导入 (import) 的 API 插件类进行类型实例化。
-        可以使得你所使用的 IDE 对导入的插件 API 类进行识别和高亮其所含方法。
-
-        Args:
-            api_cls (type[_PLUGIN_CLS_TYPE]): 导入的 API 插件类
-
-        Raises:
-            ValueError: API 插件类未被注册
-
-        Returns:
-            _PLUGIN_CLS_TYPE: API 插件实例
-
-        使用方法如下:
-        ```python
-            p_api = plugins.get_plugin_api("...")
-            from outer_api import api_cls_xx
-            p_api = plugins.instant_plugin_api(api_cls_xx)
-        ```
-        """
-        for v in self.plugins_api.values():
-            if isinstance(v, api_cls):
-                return v
-        raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
 
     def add_packet_listener(self, pktID: int | list[int]):
         """
@@ -305,6 +277,32 @@ class PluginGroup:
             raise ValueError("无法添加数据包监听，请确保已经加载了系统组件")
         self._listen_packet_ids.add(packetType)
         self.linked_frame.link_game_ctrl._add_listen_pkt(packetType)
+
+    def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
+        """
+        对外源导入 (import) 的 API 插件类进行类型实例化。
+        可以使得你所使用的 IDE 对导入的插件 API 类进行识别和高亮其所含方法。
+
+        Args:
+            api_cls (type[_PLUGIN_CLS_TYPE]): 导入的 API 插件类
+
+        Raises:
+            ValueError: API 插件类未被注册
+
+        Returns:
+            _PLUGIN_CLS_TYPE: API 插件实例
+
+        使用方法如下:
+        ```python
+            p_api = plugins.get_plugin_api("...")
+            from outer_api import api_cls_xx
+            p_api = plugins.instant_plugin_api(api_cls_xx)
+        ```
+        """
+        for v in self.plugins_api.values():
+            if isinstance(v, api_cls):
+                return v
+        raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
 
     def _add_listen_packet_func(self, packetType: int, func: Callable) -> None:
         """添加数据包监听器，仅在系统内部使用

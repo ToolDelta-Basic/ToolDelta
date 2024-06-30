@@ -161,8 +161,6 @@ def load_plugin(
         raise ValueError("插件组未初始化读取")
     if isinstance(plugin_group.linked_frame, type(None)):
         raise ValueError("插件组未绑定框架")
-    plugin_group.plugin_added_cache["packets"].clear()
-    plugin_group.broadcast_evts_cache.clear()
     __caches__["plugin"] = None
     __caches__["api_name"] = ""
     try:
@@ -239,6 +237,9 @@ def load_plugin(
         Print.print_err(f"加载插件 {plugin_dirname} 出现问题，报错如下：")
         Print.print_err("§c" + traceback.format_exc())
         raise SystemExit from err
+    finally:
+        plugin_group.plugin_added_cache["packets"].clear()
+        plugin_group.broadcast_evts_cache.clear()
     return None
 
 
