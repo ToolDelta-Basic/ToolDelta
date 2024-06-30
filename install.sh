@@ -25,8 +25,8 @@ apt-get install python3 -y
 
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
-apt-get install libjpeg-turbo
-apt-get install zlib
+apt-get install libjpeg-turbo -y
+apt-get install zlib -y
 
 # 安装tooldelta库
 echo "安装tooldelta库..."
