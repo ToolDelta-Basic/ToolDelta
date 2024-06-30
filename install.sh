@@ -18,9 +18,15 @@ function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
 chown -R $(whoami):$(whoami) "$install_dir"
+
 # 使用apt安装Python
-echo "使用apt安装Python..."
+echo "正在使用 apt 安装 Python..."
 apt-get install python3 -y
+
+# 安装 PIL 的前置库
+echo "正在安装图片处理依赖库(用于地图画导入)..."
+apt-get install libjpeg-turbo
+apt-get install zlib
 
 # 安装tooldelta库
 echo "安装tooldelta库..."
