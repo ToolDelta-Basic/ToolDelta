@@ -456,17 +456,6 @@ class PlayerKit:
         OmegaAvailable()
         return json.loads(toPyString(LIB.PlayerEntityMetadata(self._c_uuid)))
 
-    def say(self, msg: str):
-        OmegaAvailable()
-        LIB.PlayerChat(self._c_uuid, toCString(msg))
-
-    def title(self, title: str = "", subtitle: str = ""):
-        # subtitle 只有在 title 给出时才能实际生效
-        LIB.PlayerTitle(self._c_uuid, toCString(title), toCString(subtitle))
-
-    def action_bar(self, msg: str):
-        LIB.PlayerActionBar(self._c_uuid, toCString(msg))
-
     def query(
         self, conditions: Union[None, str, List[str]] = None
     ) -> Packet_CommandOutput:
@@ -913,13 +902,4 @@ def load_lib():
     LIB.GetPlayerByName.restype = CString
 
     LIB.ConsumePlayerChange.restype = CString
-    LIB.InterceptPlayerJustNextInput.argtypes = [CString, CString]
-    LIB.ConsumeChat.restype = CString
-
-    LIB.PlayerChat.argtypes = [CString, CString]
-    LIB.PlayerTitle.argtypes = [CString, CString, CString]
-    LIB.PlayerActionBar.argtypes = [CString, CString]
-    # LIB.SetPlayerAbility.argtypes=[CString,CString]
-
-    LIB.ListenCommandBlock.argtypes = [CString]
     LIB.PlaceCommandBlock.argtypes = [CString]
