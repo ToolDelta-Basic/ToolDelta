@@ -2,12 +2,12 @@
 name = "Tooldelta"
 version = "0.0.0" # This field is automatically set to the value in the version file
 description = "Plugin Loader for NeteaseRentalServer on Panel"
-authors = ["SuperScript-PRC"]
+authors = ["SuperScript-PRC", "ToolDelta Studio Staff"]
 license = ""
 
 readme = "README.md"
-homepage = "https://github.com/SuperScript-PRC/ToolDelta"
-repository = "https://github.com/SuperScript-PRC/ToolDelta"
+homepage = "https://github.com/ToolDelta/ToolDelta"
+repository = "https://github.com/ToolDelta/ToolDelta"
 
 # Please don't change this manually, your changes may invalidate other people's package management, use poetry to make changes!
 [tool.poetry.dependencies]
