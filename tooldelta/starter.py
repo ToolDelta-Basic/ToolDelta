@@ -13,7 +13,6 @@ from .utils import tmpjson_save_thread
 
 tooldelta = ToolDelta()
 
-
 def start_tool_delta() -> None:
     """启动 ToolDelta"""
     try:
@@ -39,6 +38,7 @@ def start_tool_delta() -> None:
         pass
     except Exception:
         Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
+        input(Print.clean_fmt("§c按回车键退出..."))
 
 
 def safe_jump(out_task: bool = True, exit_directly: bool = True) -> None:
@@ -52,10 +52,9 @@ def safe_jump(out_task: bool = True, exit_directly: bool = True) -> None:
         tooldelta.system_exit()
     tooldelta.safelyExit()
     if exit_directly:
-        for _ in range(3, 0, -1):
+        for _ in range(3, -1, -1):
             Print.print_war(f"{_}秒后强制退出...", end="\r")
             time.sleep(1)
-        Print.print_war("0 秒后强制退出...", end="\r")
         Print.print_suc("ToolDelta 已退出。")
         os._exit(0)
     Print.print_suc("ToolDelta 已退出。")

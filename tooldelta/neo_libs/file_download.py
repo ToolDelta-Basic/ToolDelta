@@ -74,5 +74,5 @@ def download_libs() -> bool:
         # 写入 commit_remote，文字写入
         with open(commit_file_path, "w", encoding="utf-8") as f:
             f.write(commit_remote)
-        Print.print_suc("已完成依赖更新！")
+        Print.print_suc("已完成 NeOmega框架 的依赖更新！")
     return True
