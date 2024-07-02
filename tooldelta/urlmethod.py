@@ -318,6 +318,8 @@ def check_update() -> None:
             )
     except KeyError:
         Print.print_war("获取最新版本失败，请检查网络连接")
+    except Exception as err:
+        Print.print_war(f"无法获取最新版本: {str(err)[:30]}.., 已忽略")
 
 
 def if_token() -> None:
