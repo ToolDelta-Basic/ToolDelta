@@ -309,11 +309,13 @@ class Cfg:
             raise self.ConfigValueError(
                 f'JSON 键 "{fromkey}" 需要列表 而不是 {_CfgShowType(value)}'
             )
-        if pattern.len_limit != -1:
-            if len(value) != pattern.len_limit:
-                raise self.ConfigValueError(
-                    f'JSON 键 "{fromkey}" 所对应的值列表有误：需要 {pattern.len_limit} 项，实际上为 {len(value)} 项'
-                )
+        if (
+            pattern.len_limit != -1
+            and len(value) != pattern.len_limit
+        ):
+            raise self.ConfigValueError(
+                f'JSON 键 "{fromkey}" 所对应的值列表有误：需要 {pattern.len_limit} 项，实际上为 {len(value)} 项'
+            )
         for val in value:
             self.check_auto(pattern.patt, val, fromkey)
 
