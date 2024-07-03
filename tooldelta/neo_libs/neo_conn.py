@@ -546,7 +546,7 @@ class ThreadOmega:
                 )
                 self._omega_disconnected_lock.set()
                 break
-            elif eventType == "CommandResponseCB":
+            if eventType == "CommandResponseCB":
                 cmdResp = unpackCommandOutput(
                     toPyString(LIB.ConsumeCommandResponseCB())
                 )
