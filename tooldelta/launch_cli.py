@@ -625,7 +625,7 @@ class FrameBEConnect(StandardFrame):
     def init(self):
         self.cmd_resp = {}
 
-    def prepare_apis(self): ...
+    def prepare_apis(self): raise NotImplementedError()
 
     def handler(self, data):
         message_purpose = data["header"]["messagePurpose"]
