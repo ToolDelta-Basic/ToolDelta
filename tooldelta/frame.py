@@ -8,9 +8,12 @@ ToolDelta 基本框架
     PluginGroup: 负责对插件进行统一管理
 """
 
+
 import asyncio
+import contextlib
 import getpass
 import os
+import signal
 import sys
 import time
 import traceback
@@ -480,7 +483,7 @@ class ToolDelta:
                 self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
-                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: self.system_exit()
+                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: None
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -509,12 +512,16 @@ class ToolDelta:
                         break
                     if res in ("", "^C", "^D"):
                         Print.print_inf("按退出键退出中...")
-                        self.system_exit()
+                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
                         return
                     rsp += res
                 for _, _, func, triggers in self.consoleMenu:
                     if not rsp:
                         continue
+                    if rsp == "exit":
+                        Print.print_inf("用户命令退出中...")
+                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
+                        return
                     if rsp.split()[0] in triggers:
                         res = _try_execute_console_cmd(func, rsp, 0, None)
                         if res == -1:
@@ -535,16 +542,15 @@ class ToolDelta:
         asyncio.run(safe_jump())
         self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
         exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
-        if self.link_game_ctrl.allplayers and not isinstance(
+        if  not isinstance(
             self.launcher, (FrameNeOmgRemote,)
         ):
-            try:
+            with contextlib.suppress(Exception):
                 self.link_game_ctrl.sendwscmd(
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中 (看到这条消息请重新加入游戏)\nSTATUS CODE: {exit_status_code}"
                 )
-            except Exception:
-                pass
-        time.sleep(0.5)
+            if not isinstance(self.launcher.neomg_proc, type(None)):
+                self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
         if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
             self.launcher.exit_event.set()
 

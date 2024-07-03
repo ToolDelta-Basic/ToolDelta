@@ -5,6 +5,7 @@ import platform
 import random
 import shlex
 import subprocess
+import sys
 import threading
 import time
 from typing import Callable, Optional
@@ -255,7 +256,7 @@ class FrameNeOmg(StandardFrame):
                 AuthServer=self.auth_server,
                 UserToken=self.fbToken,
                 ServerCode=str(self.serverNumber),
-                ServerPassword=str(self.serverPassword),
+                ServerPassword=self.serverPassword,
             )
         self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
@@ -310,7 +311,7 @@ class FrameNeOmg(StandardFrame):
             os.getcwd(), "tooldelta", "neo_libs", access_point_file
         )
         if platform.uname().system.lower() == "linux":
-            os.system("chmod +x " + shlex.quote(exe_file_path))
+            os.system(f"chmod +x {shlex.quote(exe_file_path)}")
         # 只需要+x 即可
         self.neomg_proc = subprocess.Popen(
             [
@@ -328,7 +329,8 @@ class FrameNeOmg(StandardFrame):
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+            text=True,
         )
         return free_port
 
@@ -337,10 +339,10 @@ class FrameNeOmg(StandardFrame):
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
             raise ValueError("NEOMG 进程未启动")
         while True:
-            msg_orig = self.neomg_proc.stdout.readline().decode("utf-8").strip("\n")
+            msg_orig = self.neomg_proc.stdout.readline().strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
                 Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
-                return
+                break
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()
             elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
@@ -377,7 +379,6 @@ class FrameNeOmg(StandardFrame):
         self._launcher_listener()
         Print.print_suc("接入点已就绪！")
         self.exit_event.wait()  # 等待事件的触发
-        self.update_status(SysStatus.NORMAL_EXIT)
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
         if self.status == SysStatus.CRASHED_EXIT:
@@ -611,7 +612,6 @@ class FrameNeOmgRemote(FrameNeOmg):
         self._launcher_listener()
         Print.print_suc("接入点已就绪")
         self.exit_event.wait()
-        self.update_status(SysStatus.NORMAL_EXIT)
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
         if self.status == SysStatus.CRASHED_EXIT:
