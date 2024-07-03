@@ -51,7 +51,7 @@ class PluginManager:
                 continue
             if r1 == "q":
                 return
-            elif r1 == "u":
+            if r1 == "u":
                 self.update_all_plugins(self.get_all_plugin_datas())
             else:
                 res = self.search_plugin(r, plugins)
