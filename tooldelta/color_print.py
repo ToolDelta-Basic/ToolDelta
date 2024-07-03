@@ -26,9 +26,7 @@ def simple_fmt(kw: dict, arg: str) -> str:
 
 
 class Print:
-    """
-    生成多样彩色输出的类
-    """
+    """生成多样彩色输出的类"""
 
     INFO_NORMAL = "§f 信息 "
     INFO_WARN = "§6 警告 "

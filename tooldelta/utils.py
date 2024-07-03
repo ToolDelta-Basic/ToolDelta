@@ -1,6 +1,4 @@
-"""
-提供了一些实用方法的类
-"""
+"""提供了一些实用方法的类"""
 
 import copy
 import ctypes
@@ -413,9 +411,7 @@ class Utils:
 
     @staticmethod
     def simple_assert(cond: Any, exc: Any) -> None:
-        """
-        相当于 assert cond, 但是可以自定义引发的异常的类型
-        """
+        """相当于 assert cond, 但是可以自定义引发的异常的类型"""
         if not cond:
             raise exc
 
