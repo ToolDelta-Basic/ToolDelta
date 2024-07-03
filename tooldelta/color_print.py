@@ -68,7 +68,6 @@ class Print:
         Returns:
             str: 格式化后的字符串
         """
-
         return simple_fmt(kw, arg)
 
     @staticmethod
@@ -139,7 +138,6 @@ class Print:
         Returns:
             str: 删除线后的字符串
         """
-
         text_ok = ""
         strikeMode = False
         i = 0

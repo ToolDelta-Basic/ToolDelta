@@ -227,7 +227,6 @@ class Cfg:
             ValueError: 未知标准检测类型
             ConfigValueError: 值错误
         """
-
         if fromkey == Cfg.FindNone:
             raise ValueError("不允许传入 FindNone")
         if isinstance(standard, type):

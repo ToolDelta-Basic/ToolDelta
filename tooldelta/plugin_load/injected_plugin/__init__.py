@@ -187,7 +187,6 @@ async def repeat_task(func: Callable, time: int | float) -> None:
         func (Callable): 定时执行的函数
         time (int | float): 重复时间
     """
-
     while True:
         await asyncio.sleep(time)
         # 防止出错
