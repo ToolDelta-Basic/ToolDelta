@@ -1,6 +1,8 @@
 "插件加载主模块"
 
-import os, json, shutil
+import os
+import json
+import shutil
 from typing import Any
 from tooldelta.constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
