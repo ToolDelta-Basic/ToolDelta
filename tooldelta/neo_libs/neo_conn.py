@@ -198,31 +198,8 @@ class Counter:
         return f"{self.prefix}_{self.current_i}"
 
 
-# @dataclass
-# class ActionPermissionMap:
-#     ActionPermissionAttackMobs: bool = False
-#     ActionPermissionAttackPlayers: bool = False
-#     ActionPermissionBuild: bool = False
-#     ActionPermissionDoorsAndSwitches: bool = False
-#     ActionPermissionMine: bool = False
-#     ActionPermissionOpenContainers: bool = False
-#     ActionPermissionOperator: bool = False
-#     ActionPermissionTeleport: bool = False
-#     ActionPermissionUnknown: bool = False
 
 
-# @dataclass
-# class AdventureFlagsMap:
-#     AdventureFlagAllowFlight: bool = False
-#     AdventureFlagAutoJump: bool = False
-#     AdventureFlagFlying: bool = False
-#     AdventureFlagMuted: bool = False
-#     AdventureFlagNoClip: bool = False
-#     AdventureFlagWorldBuilder: bool = False
-#     AdventureFlagWorldImmutable: bool = False
-#     AdventureSettingsFlagsNoMvP: bool = False
-#     AdventureSettingsFlagsNoPvM: bool = False
-#     AdventureSettingsFlagsShowNameTags: bool = False
 
 
 @dataclass
@@ -842,18 +819,6 @@ def load_lib():
     LIB.PlayerBuildPlatform.restype = ctypes.c_int32
     LIB.PlayerSkinID.argtypes = [CString]
     LIB.PlayerSkinID.restype = CString
-    # LIB.PlayerPropertiesFlag.argtypes = [CString]
-    # LIB.PlayerPropertiesFlag.restype = ctypes.c_uint32
-    # LIB.PlayerCommandPermissionLevel.argtypes = [CString]
-    # LIB.PlayerCommandPermissionLevel.restype = ctypes.c_uint32
-    # LIB.PlayerActionPermissions.argtypes = [CString]
-    # LIB.PlayerActionPermissions.restype = ctypes.c_uint32
-    # LIB.PlayerGetAbilityString.argtypes = [CString]
-    # LIB.PlayerGetAbilityString.restype = CString
-    # LIB.PlayerOPPermissionLevel.argtypes = [CString]
-    # LIB.PlayerOPPermissionLevel.restype = ctypes.c_uint32
-    # LIB.PlayerCustomStoredPermissions.argtypes = [CString]
-    # LIB.PlayerCustomStoredPermissions.restype = ctypes.c_uint32
     LIB.PlayerDeviceID.argtypes = [CString]
     LIB.PlayerDeviceID.restype = CString
     LIB.PlayerEntityRuntimeID.argtypes = [CString]
