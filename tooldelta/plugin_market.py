@@ -134,7 +134,8 @@ class PluginMarket:
                         else:
                             plugin_type = plugin_basic_datas["plugin-type"]
                         Print.print_inf(
-                            f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} §b@{plugin_basic_datas['author']} §d{plugin_type}插件",
+                            (f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} "
+                             f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"),
                             need_log=False,
                         )
                     else:

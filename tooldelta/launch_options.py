@@ -1,6 +1,5 @@
 "启动页面"
 
-import os
 import signal
 import traceback
 
@@ -21,7 +20,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def client_title() -> None:
-    "选择启动模式"
+    """选择启动模式"""
     try:
         if "h" in sys_args_to_dict() or "help" in sys_args_to_dict():
             print_help()

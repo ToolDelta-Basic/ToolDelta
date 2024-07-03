@@ -6,7 +6,7 @@ import os
 import sys
 import importlib
 
-from typing import TYPE_CHECKING, Callable, List, Tuple, Any
+from typing import TYPE_CHECKING, Callable, List, Tuple
 from ...color_print import Print
 from ...plugin_load import (
     plugin_is_enabled,
@@ -221,12 +221,12 @@ async def execute_asyncio_task(func_dict: dict, *args, **kwargs) -> None:
 
 
 async def execute_init() -> None:
-    "执行初始化插件函数"
+    """执行初始化插件函数"""
     await execute_asyncio_task(init_plugin_funcs)
 
 
 async def run_repeat():
-    "执行重复任务"
+    """执行重复任务"""
     # 为字典中的每一个函数创建一个循环特定时间的任务
     tasks = []
     for func, time in repeat_funcs.items():
@@ -236,7 +236,7 @@ async def run_repeat():
 
 
 async def safe_jump():
-    "安全跳出重复任务"
+    """安全跳出重复任务"""
     try:
         main_task.cancel()
     except NameError:
@@ -248,7 +248,7 @@ main_task: asyncio.Task
 
 @dataclass(order=True)
 class command_message_info:
-    "命令消息信息"
+    """命令消息信息"""
 
     name: str
     message: str
@@ -256,28 +256,29 @@ class command_message_info:
 
 @dataclass(order=True)
 class player_name:
-    "玩家名字"
+    """玩家名字"""
 
     playername: str
 
 
 @dataclass(order=True)
 class player_message_info(player_name):
-    "玩家消息信息"
+    """玩家消息信息"""
 
     message: str
 
 
 @dataclass(order=True)
 class player_death_info(player_name):
-    "玩家死亡信息"
+    """玩家死亡信息"""
 
     message: str
     killer: str | None = None
 
 
 async def execute_repeat() -> None:
-    "执行重复任务"
+    """执行重复任务"""
+    # skipcq: PYL-W0603
     global main_task
     main_task = asyncio.create_task(run_repeat())
     try:
@@ -359,7 +360,7 @@ async def execute_frame_exit() -> None:
 
 
 class PluginMetadata:
-    "插件元数据"
+    """插件元数据"""
 
     def __init__(
         self,

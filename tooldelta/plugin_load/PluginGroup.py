@@ -70,7 +70,7 @@ class PluginGroup:
 
     def __init__(self):
         "初始化"
-        self._listen_packet_ids = set()
+        self.listen_packet_ids = set()
         self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
@@ -220,7 +220,7 @@ class PluginGroup:
         return None
 
     def set_frame(self, frame: "ToolDelta") -> None:
-        "设置关联的系统框架"
+        """设置关联的系统框架"""
         self.linked_frame = frame
         _set_frame(frame)
         _set_frame_inj(frame)
@@ -263,7 +263,7 @@ class PluginGroup:
             plugin.on_def()  # type: ignore
         Print.print_suc(f"成功热加载插件：{plugin_name}")
 
-    def _add_listen_packet_id(self, packetType: int) -> None:
+    def add_listen_packet_id(self, packetType: int) -> None:
         """添加数据包监听，仅在系统内部使用
 
         Args:
@@ -274,8 +274,8 @@ class PluginGroup:
         """
         if self.linked_frame is None:
             raise ValueError("无法添加数据包监听，请确保已经加载了系统组件")
-        self._listen_packet_ids.add(packetType)
-        self.linked_frame.link_game_ctrl._add_listen_pkt(packetType)
+        self.listen_packet_ids.add(packetType)
+        self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
     def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
         """
@@ -303,7 +303,7 @@ class PluginGroup:
                 return v
         raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
 
-    def _add_listen_packet_func(self, packetType: int, func: Callable) -> None:
+    def add_listen_packet_func(self, packetType: int, func: Callable) -> None:
         """添加数据包监听器，仅在系统内部使用
 
         Args:
@@ -315,7 +315,7 @@ class PluginGroup:
         else:
             self._packet_funcs[str(packetType)] = [func]
 
-    def _add_broadcast_evt(self, evt: str, func: Callable) -> None:
+    def add_broadcast_evt(self, evt: str, func: Callable) -> None:
         """添加广播事件监听器，仅在系统内部使用
 
         Args:
@@ -351,6 +351,7 @@ class PluginGroup:
             for name, func in self.plugins_funcs["on_def"]:
                 func()
         except PluginAPINotFoundError as err:
+            name = err.name
             Print.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
             raise SystemExit from err
         except PluginAPIVersionError as err:
@@ -484,11 +485,11 @@ class PluginGroup:
             cmd (str): 命令
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_command"]:
+        for plugin_name, func in self.plugins_funcs["on_command"]:
             try:
-                func(name, msg)
+                func(plugin_name, msg)
             except Exception as err:
-                onerr(name, err, traceback.format_exc())
+                onerr(plugin_name, err, traceback.format_exc())
         asyncio.run(execute_command_say(name, msg))
 
     def execute_frame_exit(

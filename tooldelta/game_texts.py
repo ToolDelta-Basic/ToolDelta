@@ -87,7 +87,11 @@ class GameTextsLoader:
 
     def download_and_extract(self, version) -> None:
         "下载并解压"
-        packets_url: str = f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta/GameText/releases/download/{version}/ToolDelta_Game_Texts.tar.gz"
+        packets_url: str = (
+            f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta/"
+            f"GameText/releases/download/{version}/"
+            "ToolDelta_Game_Texts.tar.gz"
+        )
         archive_path = os.path.join(self.base_path, "ToolDelta_Game_Texts.tar.gz")
         download_file_singlethreaded(packets_url, archive_path)
         self.extract_data_archive(archive_path)
@@ -147,7 +151,7 @@ class GameTextsLoader:
 
 
 class GameTextsHandle:
-    "处理游戏文本返回"
+    """处理游戏文本返回"""
 
     def __init__(self, Game_Texts: dict) -> None:
         self.Game_Texts = Game_Texts
@@ -180,9 +184,9 @@ class GameTextsHandle:
                                 r'\$[^"\'\]/\]\)）}\s]{0,3}', "", original_message
                             )  # 删除$后的内容
                             param_list = list(item["Parameters"])  # 获取参数列表
-                            for n, value in enumerate(param_list, start=1):
+                            for n, _ in enumerate(param_list, start=1):
                                 original_message = original_message.replace(
-                                    "%{}".format(n), "{" + str(n - 1) + "}"
+                                    f"{n}", f"{{{n - 1}}}"
                                 )
                             # 检查参数中是否包含%
                             if (
@@ -270,9 +274,9 @@ class GameTextsHandle:
                             r'\$[^"\'\]/\]\)）}\s]{0,3}', "", original_message
                         )  # 删除$后的内容
                         param_list = list(packet["Parameters"])  # 获取参数列表
-                        for n, value in enumerate(param_list, start=1):
+                        for n, _ in enumerate(param_list, start=1):
                             original_message = original_message.replace(
-                                "%{}".format(n), "{" + str(n - 1) + "}"
+                                f"%{n}", "{" + str(n - 1) + "}"
                             )
                         if (
                             len(
@@ -343,8 +347,3 @@ class GameTextsHandle:
             json_output = json.dumps(filled_message, indent=2, ensure_ascii=False)
             json_result.append(json_output)
         return json_result  # 返回处理结果的 json 格式列表
-
-    # TODO：处理文本返回方法 2
-    def Handle_Text_Class2(self, Pkt: dict) -> str:
-        "处理文本返回方法 2（未实现）"
-        raise NotImplementedError()

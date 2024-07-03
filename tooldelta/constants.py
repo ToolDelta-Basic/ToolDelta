@@ -3,7 +3,10 @@
 PRG_NAME = "ToolDelta"
 "程序名"
 
-PLUGIN_MARKET_SOURCE_OFFICIAL = "https://tdload.tblstudio.cn/https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
+PLUGIN_MARKET_SOURCE_OFFICIAL = (
+    "https://tdload.tblstudio.cn/"
+    "https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
+)
 "插件市场源"
 
 LAUNCH_CFG: dict = {

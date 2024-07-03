@@ -12,31 +12,29 @@ from tooldelta.constants import (
 )
 from tooldelta.color_print import Print
 
-TYPE_CHECKING = 0
-
 
 def NON_FUNC(*_) -> None:
-    "空函数"
+    """空函数"""
     return None
 
 
 class PluginSkip(EOFError):
-    "跳过插件加载"
+    """跳过插件加载"""
 
 
 class NotValidPluginError(AssertionError):
-    "仅加载插件时引发，不是合法插件的报错"
+    """仅加载插件时引发，不是合法插件的报错"""
 
 
 class PluginAPINotFoundError(ModuleNotFoundError):
-    "插件 API 未找到错误"
+    """插件 API 未找到错误"""
 
     def __init__(self, name):
         self.name = name
 
 
 class PluginAPIVersionError(ModuleNotFoundError):
-    "插件 API 版本错误"
+    """插件 API 版本错误"""
 
     def __init__(self, name, m_ver, n_ver):
         self.name = name
@@ -45,7 +43,7 @@ class PluginAPIVersionError(ModuleNotFoundError):
 
 
 class PluginRegData:
-    "插件注册数据"
+    """插件注册数据"""
 
     def __init__(
         self,
@@ -95,7 +93,7 @@ class PluginRegData:
         )
 
     def dump(self) -> dict[str, Any]:
-        "转储数据"
+        """转储数据"""
         return {
             "author": self.author,
             "version": ".".join([str(i) for i in self.version]),

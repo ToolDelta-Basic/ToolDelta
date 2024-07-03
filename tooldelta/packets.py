@@ -1,7 +1,6 @@
 "数据包类构建器"
 
 from dataclasses import dataclass
-import json
 
 
 @dataclass

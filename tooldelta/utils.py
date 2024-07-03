@@ -54,7 +54,7 @@ class Utils:
             threads_list.append(self)
             try:
                 self.func(*self.all_args[0], **self.all_args[1])
-            except (Utils.ThreadExit, SystemExit):
+            except SystemExit:
                 pass
             except ValueError as e:
                 if str(e) != "未连接到游戏":
@@ -215,7 +215,7 @@ class Utils:
             Returns:
                 Any: 该虚拟路径的 JSON
             """
-            if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
+            if path not in jsonUnloadPathTmp and path not in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Utils.TMPJson.loadPathJson(path, needFileExists)
             return Utils.TMPJson.read(path)
@@ -232,7 +232,7 @@ class Utils:
                 needFileExists (bool, optional): 默认为 True, 为 False 时，若文件路径不存在，就会自动创建一个文件，且写入默认值 null
                 timeout (int, optional): 多久没有再进行读取操作时卸载缓存
             """
-            if path not in jsonUnloadPathTmp and not path in jsonPathTmp:
+            if path not in jsonUnloadPathTmp and path not in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Utils.TMPJson.loadPathJson(path, needFileExists)
             Utils.TMPJson.write(path, obj)
@@ -345,7 +345,7 @@ class Utils:
     SimpleJsonDataReader = JsonIO
 
     class ChatbarLock:
-        """
+        r"""
         聊天栏锁, 用于防止玩家同时开启多个聊天栏对话\n
         调用了该锁的所有代码, 在另一个进程使用该锁的时候, 尝试调用其他锁会导致进程直接退出, 直到此锁退出为止\n
         示例(以类式插件为例):
@@ -383,7 +383,7 @@ class Utils:
 
     @staticmethod
     def get_threads_list() -> list["Utils.createThread"]:
-        "返回使用 createThread 创建的全线程列表。"
+        """返回使用 createThread 创建的全线程列表。"""
         return threads_list
 
     @staticmethod

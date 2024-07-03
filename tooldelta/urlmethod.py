@@ -51,7 +51,7 @@ def githubdownloadurl_to_rawurl(url: str) -> str:
         if url.startswith("https://github.com/"):
             return requests.head(url, allow_redirects=True).url
         return url
-    except:
+    except Exception:
         return url
 
 
@@ -154,6 +154,7 @@ def get_file_size(url: str) -> Union[int, None]:
     if "Content-Length" in response.headers:
         file_size = int(response.headers["Content-Length"])
         return file_size
+    return None
 
 
 def download_file_chunk(url: str, start_byte: int, end_byte: int, save_dir: str) -> int:

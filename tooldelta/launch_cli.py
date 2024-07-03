@@ -2,10 +2,8 @@
 
 import os
 import platform
-import random
 import shlex
 import subprocess
-import sys
 import threading
 import time
 from typing import Callable, Optional
@@ -69,7 +67,7 @@ class StandardFrame:
         self.status: int = SysStatus.LOADING
 
     def init(self):
-        "初始化启动器框架"
+        """初始化启动器框架"""
 
     def add_listen_packets(self, *pcks: int) -> None:
         """添加需要监听的数据包"""
@@ -233,6 +231,10 @@ class FrameNeOmg(StandardFrame):
             address="tcp://localhost:24013",
             accountOption=None,
         )
+        self.serverNumber: Optional[int] = None
+        self.serverPassword: Optional[str] = None
+        self.fbToken: Optional[str] = None
+        self.auth_server: Optional[str] = None
 
     def init(self):
         res = neo_fd.download_libs()
@@ -240,7 +242,6 @@ class FrameNeOmg(StandardFrame):
             raise SystemExit("ToolDelta 因下载库异常而退出")
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
-        self.secret_exit_key = ""
 
     def set_launch_data(
         self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
@@ -313,6 +314,13 @@ class FrameNeOmg(StandardFrame):
         if platform.uname().system.lower() == "linux":
             os.system(f"chmod +x {shlex.quote(exe_file_path)}")
         # 只需要+x 即可
+        if (
+            isinstance(self.serverNumber, type(None))
+            or isinstance(self.serverPassword, type(None))
+            or isinstance(self.fbToken, type(None))
+            or isinstance(self.auth_server, type(None))
+        ):
+            raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
         self.neomg_proc = subprocess.Popen(
             [
                 exe_file_path,
@@ -345,14 +353,7 @@ class FrameNeOmg(StandardFrame):
                 break
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()
-            elif f"STATUS CODE: {self.secret_exit_key}" in msg_orig:
-                Print.print_with_info("§a机器人已退出", "§b NOMG ")
-                continue
             Print.print_with_info(msg_orig, "§b NOMG ")
-
-    def make_secret_key(self) -> None:
-        """生成退出密钥"""
-        self.secret_exit_key = hex(random.randint(10000, 99999))
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
@@ -366,7 +367,6 @@ class FrameNeOmg(StandardFrame):
         openat_port = self.start_neomega_proc()
         Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega 的信息")
         self.launch_event.wait()
-        self.make_secret_key()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
@@ -449,7 +449,7 @@ class FrameNeOmg(StandardFrame):
                 raise TimeoutError("指令超时")
             return res
         self.omega.send_player_command_omit_response(cmd)
-        return
+        return None
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
@@ -474,7 +474,7 @@ class FrameNeOmg(StandardFrame):
                 raise TimeoutError("指令超时")
             return res
         self.omega.send_websocket_command_omit_response(cmd)
-        return
+        return None
 
     def sendwocmd(self, cmd: str) -> None:
         """以 wo 身份发送命令
@@ -622,10 +622,15 @@ class FrameNeOmgRemote(FrameNeOmg):
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.cmd_resp: dict = {}
+
     def init(self):
         self.cmd_resp = {}
 
-    def prepare_apis(self): raise NotImplementedError()
+    def prepare_apis(self):
+        raise NotImplementedError()
 
     def handler(self, data):
         message_purpose = data["header"]["messagePurpose"]

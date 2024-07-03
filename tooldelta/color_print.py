@@ -122,11 +122,11 @@ class Print:
         Returns:
             str: 对齐后的字符串
         """
-        l = len(text)
+        text_length = len(text)
         for char in text:
             if not char.isascii():
-                l += 1
-        return text + " " * (length - l)
+                text_length += 1
+        return text + " " * (length - text_length)
 
     @staticmethod
     def _strike(text: str) -> str:

@@ -71,10 +71,8 @@ class AccountOptions:
     ServerPassword: str = ""
 
 
-def StartOmega(address, AccountOptions):
-    r = LIB.StartOmega(
-        toCString(address), toCString(json.dumps(AccountOptions.__dict__))
-    )
+def StartOmega(address, options):
+    r = LIB.StartOmega(toCString(address), toCString(json.dumps(options.__dict__)))
     if r is not None:
         raise Exception(toPyString(r))
 
@@ -174,7 +172,6 @@ class ClientMaintainedBotBasicInfo:
     BotUUIDStr: str = ""
 
 
-# any member of ClientMaintainedExtendInfo could be not found(which means related info not currently received from server)
 @dataclass
 class ClientMaintainedExtendInfo:
     CompressThreshold: Optional[int] = None
@@ -440,7 +437,11 @@ class PlayerKit:
         return self.query(conditions).SuccessCount > 0
 
     def __repr__(self) -> str:
-        return f"uuid={self.uuid},name={self.name},entity_unique_id={self.entity_unique_id},op={self.op},online={self.online}"
+        return (
+            f"uuid={self.uuid},name={self.name},"
+            f"entity_unique_id={self.entity_unique_id},op={self.op},"
+            f"online={self.online}"
+        )
 
     def __del__(self):
         LIB.ReleaseBindPlayer(toCString(self._uuid))
@@ -463,6 +464,15 @@ class ThreadOmega:
         self.connect_type = connect_type
         self.address = address
         self.accountOption = accountOption
+        self._omega_disconnected_lock: threading.Event
+        self._omega_disconnected_reason: str
+        self._cmd_callback_retriever_counter: Counter
+        self._omega_cmd_callback_events: Dict[str, Callable]
+        self._packet_listeners: Dict[str, List[Callable[[str, Any], None]]]
+        self._player_change_listeners: List[Callable[[PlayerKit, str], None]]
+        self._bot_basic_info: ClientMaintainedBotBasicInfo
+        self._packet_name_to_id_mapping: dict[str, int]
+        self._packet_id_to_name_mapping: dict[int, str]
 
     def connect(self):
         if self.connect_type == ConnectType.Local:
@@ -540,7 +550,6 @@ class ThreadOmega:
     def _handle_mc_packet(self, packetTypeName):
         if packetTypeName == "":
             print("'', ignored")
-            # TODO: some bugs
         elif listeners := self._packet_listeners.get(packetTypeName, []):
             ret = LIB.ConsumeMCPacket()
             if convertError := toPyString(ret.convertError):
@@ -746,6 +755,7 @@ class ThreadOmega:
 
 
 def load_lib():
+    # skipcq: PYL-W0601
     global LIB
     sys_machine = platform.machine().lower()
     sys_type = platform.uname().system
