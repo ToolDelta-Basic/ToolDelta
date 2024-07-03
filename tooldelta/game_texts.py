@@ -347,4 +347,4 @@ class GameTextsHandle:
     # TODO：处理文本返回方法 2
     def Handle_Text_Class2(self, Pkt: dict) -> str:
         "处理文本返回方法 2（未实现）"
-        ...
+        raise NotImplementedError()
