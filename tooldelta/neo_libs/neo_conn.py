@@ -39,9 +39,7 @@ def to_GoInt(i: int):
 
 
 def toPyString(cstring: bytes):
-    if cstring is None:
-        return ""
-    return cstring.decode(encoding="utf-8")
+    return "" if cstring is None else cstring.decode(encoding="utf-8")
 
 
 def toByteCSlice(bs: bytes):
@@ -198,10 +196,6 @@ class Counter:
         return f"{self.prefix}_{self.current_i}"
 
 
-
-
-
-
 @dataclass
 class CommandOrigin:
     Origin: int = 0
@@ -227,9 +221,7 @@ class CommandOutput:
 
 
 def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[Packet_CommandOutput]:
-    if jsonStr is None:
-        return None
-    return Packet_CommandOutput(json.loads(jsonStr))
+    return None if jsonStr is None else Packet_CommandOutput(json.loads(jsonStr))
 
 
 @dataclass
@@ -439,11 +431,10 @@ class PlayerKit:
         if conditions is None:
             query_str += "]"
         elif isinstance(conditions, str):
-            query_str += "," + conditions + "]"
+            query_str += f",{conditions}]"
         else:
             query_str += "," + ",".join(conditions) + "]"
-        ret = self.parent.send_websocket_command_need_response(query_str)
-        return ret
+        return self.parent.send_websocket_command_need_response(query_str)
 
     def check_conditions(self, conditions: Union[None, str, List[str]] = None) -> bool:
         return self.query(conditions).SuccessCount > 0
@@ -516,59 +507,67 @@ class ThreadOmega:
     def _react(self):
         while True:
             eventType, retriever = EventPoll()
+
             if eventType == "OmegaConnErr":
-                self._omega_disconnected_reason = toPyString(
-                    LIB.ConsumeOmegaConnError()
-                )
-                self._omega_disconnected_lock.set()
+                self._handle_omega_conn_err()
                 break
+
             if eventType == "CommandResponseCB":
-                cmdResp = unpackCommandOutput(
-                    toPyString(LIB.ConsumeCommandResponseCB())
-                )
-                if retriever in self._omega_cmd_callback_events:
-                    self._omega_cmd_callback_events[retriever](cmdResp)
-                else:
-                    Print.print_war(
-                        f"接入点核心进程：指令返回 {retriever} 没有对应的回调，已忽略"
-                    )
+                self._handle_command_response_cb(retriever)
+
             elif eventType == "MCPacket":
-                packetTypeName = retriever
-                if packetTypeName == "":
-                    print("'', ignored")
-                    # TODO: some bugs
-                listeners = self._packet_listeners.get(packetTypeName, [])
-                if len(listeners) == 0:
-                    LIB.OmitEvent()
-                else:
-                    ret = LIB.ConsumeMCPacket()
-                    if toPyString(ret.convertError) != "":
-                        raise ValueError(toPyString(ret.convertError))
-                    jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
-                    for listener in listeners:
-                        Utils.createThread(
-                            listener,
-                            (packetTypeName, jsonPkt),
-                            usage="Packet Callback Thread",
-                        )
+                self._handle_mc_packet(retriever)
+
             elif eventType == "PlayerChange":
-                playerUUID = retriever
-                if len(self._player_change_listeners) == 0:
-                    LIB.OmitEvent()
-                else:
-                    action = toPyString(LIB.ConsumePlayerChange())
-                    for callback in self._player_change_listeners:
-                        Utils.createThread(
-                            callback,
-                            (self._get_bind_player(playerUUID), action),
-                            usage="Player Change Callback Thread",
-                        )
+                self._handle_player_change(retriever)
 
-            elif eventType == "PlayerInterceptInput":
-                OmitEvent()
+            elif eventType in ["PlayerInterceptInput", "Chat"]:
+                self._handle_player_intercept_or_chat()
 
-            elif eventType == "Chat":
-                OmitEvent()
+    def _handle_omega_conn_err(self):
+        self._omega_disconnected_reason = toPyString(LIB.ConsumeOmegaConnError())
+        self._omega_disconnected_lock.set()
+
+    def _handle_command_response_cb(self, retriever):
+        cmdResp = unpackCommandOutput(toPyString(LIB.ConsumeCommandResponseCB()))
+        if callback_event := self._omega_cmd_callback_events.get(retriever):
+            callback_event(cmdResp)
+        else:
+            Print.print_war(
+                f"接入点核心进程：指令返回 {retriever} 没有对应的回调，已忽略"
+            )
+
+    def _handle_mc_packet(self, packetTypeName):
+        if packetTypeName == "":
+            print("'', ignored")
+            # TODO: some bugs
+        elif listeners := self._packet_listeners.get(packetTypeName, []):
+            ret = LIB.ConsumeMCPacket()
+            if convertError := toPyString(ret.convertError):
+                raise ValueError(convertError)
+            jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
+            for listener in listeners:
+                Utils.createThread(
+                    listener, (packetTypeName, jsonPkt), usage="Packet Callback Thread"
+                )
+
+        else:
+            LIB.OmitEvent()
+
+    def _handle_player_change(self, playerUUID):
+        if not self._player_change_listeners:
+            LIB.OmitEvent()
+        else:
+            action = toPyString(LIB.ConsumePlayerChange())
+            for callback in self._player_change_listeners:
+                Utils.createThread(
+                    callback,
+                    (self._get_bind_player(playerUUID), action),
+                    usage="Player Change Callback Thread",
+                )
+
+    def _handle_player_intercept_or_chat(self):
+        LIB.OmitEvent()
 
     def wait_disconnect(self) -> str:
         """return: disconnect reason"""
@@ -601,9 +600,7 @@ class ThreadOmega:
             raise ValueError("retriever counter overflow") from err
         self._omega_cmd_callback_events[retriever_id] = setter
         SendWebSocketCommandNeedResponse(cmd, retriever_id)
-        res = getter(timeout=timeout)
-        del self._omega_cmd_callback_events[retriever_id]
-        return res
+        return self.send_cmd_resp(getter, timeout, retriever_id)
 
     def send_player_command_need_response(
         self, cmd: str, timeout: float = -1
@@ -611,10 +608,13 @@ class ThreadOmega:
         setter, getter = self._create_lock_and_result_setter()
         try:
             retriever_id = next(self._cmd_callback_retriever_counter)
-        except StopIteration:
-            raise ValueError("retriever counter overflow")
+        except StopIteration as e:
+            raise ValueError("retriever counter overflow") from e
         self._omega_cmd_callback_events[retriever_id] = setter
         SendPlayerCommandNeedResponse(cmd, retriever_id)
+        return self.send_cmd_resp(getter, timeout, retriever_id)
+
+    def send_cmd_resp(self, getter, timeout, retriever_id):
         res = getter(timeout=timeout)
         del self._omega_cmd_callback_events[retriever_id]
         return res
@@ -709,17 +709,14 @@ class ThreadOmega:
         )
 
     def _get_bind_player(self, uuidStr: str) -> Optional[PlayerKit]:
-        if uuidStr is None or uuidStr == "":
-            return None
-        return PlayerKit(uuidStr, self)
+        return None if uuidStr is None or not uuidStr else PlayerKit(uuidStr, self)
 
     def get_all_online_players(self):
         OmegaAvailable()
         playerUUIDS = json.loads(toPyString(LIB.GetAllOnlinePlayers()))
         ret: List[PlayerKit] = []
         for uuidStr in playerUUIDS:
-            r = self._get_bind_player(uuidStr)
-            if r:
+            if r := self._get_bind_player(uuidStr):
                 ret.append(r)
         return ret
 
@@ -745,10 +742,6 @@ class ThreadOmega:
     def __del__(self):
         for t in self._running_threads.values():
             t.join()
-
-
-def _unpack_output_msgs(c: OutputMessage):
-    return {"Success": c.Success, "Message": c.Message, "Parameters": c.Parameters}
 
 
 def load_lib():
@@ -784,9 +777,7 @@ def load_lib():
     LIB.ConnectOmega.restype = CString
     LIB.StartOmega.argtypes = [CString, CString]
     LIB.StartOmega.restype = CString
-
     LIB.OmegaAvailable.restype = ctypes.c_uint8
-
     LIB.EventPoll.restype = Event
     LIB.ConsumeOmegaConnError.restype = CString
     LIB.ConsumeCommandResponseCB.restype = CString
@@ -861,9 +852,7 @@ def load_lib():
     LIB.PlayerStatusMayFly.restype = ctypes.c_uint8
     LIB.GetPlayerByUUID.argtypes = [CString]
     LIB.GetPlayerByUUID.restype = CString
-
     LIB.GetPlayerByName.argtypes = [CString]
     LIB.GetPlayerByName.restype = CString
-
     LIB.ConsumePlayerChange.restype = CString
     LIB.PlaceCommandBlock.argtypes = [CString]
