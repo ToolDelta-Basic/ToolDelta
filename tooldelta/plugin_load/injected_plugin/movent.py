@@ -40,7 +40,8 @@ def set_frame(my_Frame: "ToolDelta") -> None:
 def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> None | Packet_CommandOutput:
-    """发送命令到游戏控制器，并可选择是否等待响应\n
+    r"""发送命令到游戏控制器，并可选择是否等待响应
+
     如果 waitForResp 为 False，则返回 None，否则返回 Packet_CommandOutput 对象
 
     参数:
@@ -135,6 +136,7 @@ def is_op(playername: str) -> bool | None:
     # 检测框架是否为"Frame"NeOmg
     if movent_frame.launcher.is_op is not None:
         return movent_frame.launcher.is_op(playername)
+    return None
 
 
 def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
@@ -148,6 +150,7 @@ def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
     for k, v in dic.items():
         if v == val:
             return k
+    return None
 
 
 def get_robotname() -> str:

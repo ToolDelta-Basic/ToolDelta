@@ -8,7 +8,6 @@ ToolDelta 基本框架
     PluginGroup: 负责对插件进行统一管理
 """
 
-
 import asyncio
 import contextlib
 import getpass
@@ -263,7 +262,7 @@ class ToolDelta:
 
     @staticmethod
     def change_config():
-        "修改配置文件"
+        """修改配置文件"""
         try:
             old_cfg = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
         except FileNotFoundError:
@@ -418,7 +417,7 @@ class ToolDelta:
     def comsole_cmd_start(self) -> None:
         """启动控制台命令"""
 
-        def _try_execute_console_cmd(func, rsp, mode, arg1):
+        def _try_execute_console_cmd(func, rsp, mode, arg1) -> int | None:
             try:
                 if mode == 0:
                     rsp_arg = rsp.split()[1:]
@@ -426,7 +425,7 @@ class ToolDelta:
                     rsp_arg = rsp[len(arg1) :].split()
             except IndexError:
                 Print.print_err("[控制台执行命令] 指令缺少参数")
-                return
+                return None
             try:
                 return func(rsp_arg) or 0
             except Exception:
@@ -542,13 +541,10 @@ class ToolDelta:
         """系统退出"""
         asyncio.run(safe_jump())
         self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
-        exit_status_code = getattr(self.launcher, "secret_exit_key", "null")
-        if  not isinstance(
-            self.launcher, (FrameNeOmgRemote,)
-        ):
+        if not isinstance(self.launcher, (FrameNeOmgRemote,)):
             with contextlib.suppress(Exception):
                 self.link_game_ctrl.sendwscmd(
-                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中 (看到这条消息请重新加入游戏)\nSTATUS CODE: {exit_status_code}"
+                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
                 )
             if not isinstance(self.launcher.neomg_proc, type(None)):
                 self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
@@ -632,7 +628,7 @@ class GameCtrl:
         else:
             self.requireUUIDPacket = True
 
-    def _set_listen_packets(self) -> None:
+    def set_listen_packets(self) -> None:
         """
         向启动器初始化监听的游戏数据包
         仅限内部调用
@@ -640,7 +636,7 @@ class GameCtrl:
         for pktID in self.require_listen_packets:
             self.launcher.add_listen_packets(pktID)
 
-    def _add_listen_pkt(self, pkt: int) -> None:
+    def add_listen_pkt(self, pkt: int) -> None:
         """
         添加监听的数据包
         仅限内部调用
@@ -765,8 +761,6 @@ class GameCtrl:
                     Print.print_with_info(msg_text, "§f 消息 ")
                 except Exception:
                     pass
-            case 10:
-                self.Game_Data_Handle.Handle_Text_Class2(pkt)
 
     def Inject(self) -> None:
         """载入游戏时的初始化"""

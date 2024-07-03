@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 
 import json
 
-from .color_print import Print
 from .packets import Packet_CommandOutput
 
 if TYPE_CHECKING:
@@ -26,13 +25,14 @@ game_ctrl: "GameCtrl" = None  # type: ignore
 
 
 def _check_gamectrl_avali():
-    "检查 GameCtrl 是否可用"
+    """检查 GameCtrl 是否可用"""
     if game_ctrl is None:
         raise ValueError("GameControl 不可用")
 
 
 def _set_frame(frame: "ToolDelta"):
-    "载入系统框架"
+    """载入系统框架"""
+    # skipcq: PYL-W0603
     global game_ctrl
     game_ctrl = frame.get_game_control()
 

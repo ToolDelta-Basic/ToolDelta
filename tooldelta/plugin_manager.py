@@ -215,7 +215,7 @@ class PluginManager:
 
     @staticmethod
     def lookup_readme(plugin: PluginRegData):
-        "查看插件的 readme.txt 文档"
+        """查看插件的 readme.txt 文档"""
         readme_path = os.path.join(
             TOOLDELTA_PLUGIN_DIR,
             PLUGIN_TYPE_MAPPING[plugin.plugin_type],
@@ -324,7 +324,7 @@ class PluginManager:
             old_dat: dict = JsonIO.SafeJsonLoad(
                 open(os.path.join(f_dir, "datas.json"), "r", encoding="utf-8")
             )  # type: ignore
-        except:
+        except Exception:
             old_dat = {}
         old_dat.update(plugin_data.dump())
         JsonIO.SafeJsonDump(

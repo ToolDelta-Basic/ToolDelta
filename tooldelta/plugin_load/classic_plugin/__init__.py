@@ -159,7 +159,7 @@ def load_plugin(
             importlib.import_module(plugin_dirname)
         else:
             Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件，跳过加载")
-            return
+            return None
         plugin_or_none: Plugin | None = __caches__.get("plugin")
         if plugin_or_none is None:
             raise NotValidPluginError(
@@ -194,8 +194,8 @@ def load_plugin(
                 ins_func = getattr(plugin, func.__name__)
                 if ins_func is None:
                     raise NotValidPluginError("数据包监听不能在主插件类以外定义")
-                plugin_group._add_listen_packet_id(pktType)
-                plugin_group._add_listen_packet_func(pktType, ins_func)
+                plugin_group.add_listen_packet_id(pktType)
+                plugin_group.add_listen_packet_func(pktType, ins_func)
         if __caches__["api_name"] != "":
             plugin_group.plugins_api[__caches__["api_name"]] = plugin
         if plugin_group.broadcast_evts_cache != {}:
@@ -204,7 +204,7 @@ def load_plugin(
                     ins_func = getattr(plugin, func.__name__)
                     if ins_func is None:
                         raise NotValidPluginError("广播事件监听不能在主插件类以外定义")
-                    plugin_group._add_broadcast_evt(evt, ins_func)
+                    plugin_group.add_broadcast_evt(evt, ins_func)
         return plugin
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法：{err.args[0]}")
