@@ -809,7 +809,6 @@ class GameCtrl:
 
     def inject_welcome(self) -> None:
         """初始化欢迎信息"""
-
         if isinstance(self.bot_name, str):
             Print.print_suc(
                 "初始化完成，在线玩家："
