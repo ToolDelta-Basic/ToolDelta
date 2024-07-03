@@ -443,15 +443,14 @@ class Utils:
                 return thread_fun
 
             return _recv_func
-        else:
 
-            def thread_fun(*args: tuple, **kwargs: Any) -> None:
-                Utils.createThread(
-                    func_or_name,
-                    usage="简易线程方法：" + func_or_name.__name__,
-                    args=args,
-                    **kwargs,
-                )
+        def thread_fun(*args: tuple, **kwargs: Any) -> None:
+            Utils.createThread(
+                func_or_name,
+                usage="简易线程方法：" + func_or_name.__name__,
+                args=args,
+                **kwargs,
+            )
 
         return thread_fun
 

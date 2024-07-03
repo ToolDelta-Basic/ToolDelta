@@ -820,8 +820,7 @@ class GameCtrl:
     def bot_name(self) -> str:
         if hasattr(self.launcher, "bot_name"):
             return self.launcher.get_bot_name()
-        else:
-            raise ValueError("此启动器框架无法产生机器人名")
+        raise ValueError("此启动器框架无法产生机器人名")
 
     def sendcmd_with_resp(
         self, cmd: str, timeout: int | float = 30
