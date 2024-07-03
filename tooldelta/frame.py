@@ -345,7 +345,8 @@ class ToolDelta:
             Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
         return need_upgrade_cfg
 
-    def welcome(self) -> None:
+    @staticmethod
+    def welcome() -> None:
         """欢迎提示"""
         Print.print_with_info(
             f"§d{PRG_NAME} Panel Embed By SuperScript", Print.INFO_LOAD

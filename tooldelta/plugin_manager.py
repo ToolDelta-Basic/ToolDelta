@@ -213,7 +213,8 @@ class PluginManager:
             return res[r - 1]
         return res[0]
 
-    def lookup_readme(self, plugin: PluginRegData):
+    @staticmethod
+    def lookup_readme(plugin: PluginRegData):
         "查看插件的 readme.txt 文档"
         readme_path = os.path.join(
             TOOLDELTA_PLUGIN_DIR,
@@ -269,7 +270,8 @@ class PluginManager:
                 return i.is_registered
         raise ValueError(f"插件 {plugin_name} 不存在")
 
-    def get_all_plugin_datas(self) -> list[PluginRegData]:
+    @staticmethod
+    def get_all_plugin_datas() -> list[PluginRegData]:
         """
         获取所有插件的注册信息 (包括没有正常注册的)
 
@@ -303,7 +305,8 @@ class PluginManager:
                     )
         return plugins
 
-    def push_plugin_reg_data(self, plugin_data: PluginRegData) -> None:
+    @staticmethod
+    def push_plugin_reg_data(plugin_data: PluginRegData) -> None:
         """将插件注册信息推送到插件注册表
 
         Args:

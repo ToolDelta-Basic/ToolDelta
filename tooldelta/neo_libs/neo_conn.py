@@ -566,7 +566,8 @@ class ThreadOmega:
                     usage="Player Change Callback Thread",
                 )
 
-    def _handle_player_intercept_or_chat(self):
+    @staticmethod
+    def _handle_player_intercept_or_chat():
         LIB.OmitEvent()
 
     def wait_disconnect(self) -> str:
