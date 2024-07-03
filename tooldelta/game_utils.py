@@ -57,11 +57,10 @@ def getTarget(sth: str, timeout: int = 5) -> list:
     if result.SuccessCount:
         result = result.OutputMessages[0].Parameters[0]
         return result.split(", ")
+    if result.OutputMessages[0].Message == "commands.generic.syntax":
+        raise ValueError(f"getTarget 目标选择器表达式错误：{sth}")
     else:
-        if result.OutputMessages[0].Message == "commands.generic.syntax":
-            raise ValueError(f"getTarget 目标选择器表达式错误：{sth}")
-        else:
-            return []
+        return []
 
 
 def getPos(target: str, timeout: float | int = 5) -> dict:

@@ -50,8 +50,7 @@ def githubdownloadurl_to_rawurl(url: str) -> str:
     try:
         if url.startswith("https://github.com/"):
             return requests.head(url, allow_redirects=True).url
-        else:
-            return url
+        return url
     except:
         return url
 

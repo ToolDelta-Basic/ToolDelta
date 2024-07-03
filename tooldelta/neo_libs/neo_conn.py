@@ -252,8 +252,7 @@ class CommandOutput:
 def unpackCommandOutput(jsonStr: Optional[str]) -> Optional[Packet_CommandOutput]:
     if jsonStr is None:
         return None
-    else:
-        return Packet_CommandOutput(json.loads(jsonStr))
+    return Packet_CommandOutput(json.loads(jsonStr))
 
 
 @dataclass
