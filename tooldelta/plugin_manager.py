@@ -49,7 +49,7 @@ class PluginManager:
             r1 = r.strip().lower()
             if r1 == "":
                 continue
-            elif r1 == "q":
+            if r1 == "q":
                 return
             elif r1 == "u":
                 self.update_all_plugins(self.get_all_plugin_datas())
