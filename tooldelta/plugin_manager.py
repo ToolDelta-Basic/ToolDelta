@@ -326,7 +326,6 @@ class PluginManager:
             )  # type: ignore
         except:
             old_dat = {}
-            pass
         old_dat.update(plugin_data.dump())
         JsonIO.SafeJsonDump(
             old_dat,
