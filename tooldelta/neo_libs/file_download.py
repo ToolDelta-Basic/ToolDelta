@@ -13,7 +13,7 @@ from tooldelta.urlmethod import download_file_singlethreaded
 
 def download_libs() -> bool:
     """根据系统架构和平台下载所需的库。"""
-    if "no-download-libs" in sys_args_to_dict().keys():
+    if "no-download-libs" in sys_args_to_dict():
         Print.print_war("将不会进行依赖库的下载和检测更新。")
         return True
     cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)

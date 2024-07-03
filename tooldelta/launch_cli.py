@@ -631,7 +631,7 @@ class FrameBEConnect(StandardFrame):
         message_purpose = data["header"]["messagePurpose"]
         if message_purpose == "commandResponse":
             request_id = data["header"]["requestId"]
-            if request_id in self.cmd_resp.keys():
+            if request_id in self.cmd_resp:
                 self.cmd_resp[request_id] = Packet_CommandOutput(
                     {
                         "CommandOrigin": [],

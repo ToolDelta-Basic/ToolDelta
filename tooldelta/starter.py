@@ -18,7 +18,7 @@ def start_tool_delta() -> None:
     """启动 ToolDelta"""
     try:
         tooldelta.welcome()
-        if "no-update-check" not in sys_args_to_dict().keys():
+        if "no-update-check" not in sys_args_to_dict():
             check_update()
         else:
             Print.print_war("将不会进行自动更新。")
