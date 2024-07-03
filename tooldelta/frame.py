@@ -132,7 +132,7 @@ class ToolDelta:
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]()
         # 每个启动器框架的单独启动配置
-        if type(self.launcher) == FrameNeOmg:
+        if type(self.launcher) is FrameNeOmg:
             launch_data = cfgs.get(
                 "NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
             )
