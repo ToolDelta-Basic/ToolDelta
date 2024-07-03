@@ -38,7 +38,7 @@ def start_tool_delta() -> None:
     except (KeyboardInterrupt, SystemExit, EOFError):
         pass
     except Exception:
-        Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
+        Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
         input(Print.clean_fmt("§c按回车键退出..."))
 
 
