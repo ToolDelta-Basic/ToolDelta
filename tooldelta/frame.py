@@ -289,7 +289,7 @@ class ToolDelta:
                 f" 1. 启动器启动模式：{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}"
             )
             Print.clean_print(f" 2. 是否记录日志：{old_cfg['是否记录日志']}")
-            Print.clean_print(f"    §a直接回车: 保存并退出")
+            Print.clean_print("    §a直接回车: 保存并退出")
             resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
                 Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
