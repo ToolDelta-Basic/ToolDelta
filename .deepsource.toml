@@ -14,3 +14,6 @@ name = "docker"
 
   [analyzers.meta]
   dockerfile_paths = ["Dockerfile"]
+
+[[transformers]]
+name = "ruff"
