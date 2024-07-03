@@ -40,10 +40,7 @@ def cfg_isinstance(obj: Any, typ: type | tuple[type]):
         return cfg_isinstance_single(obj, typ)
     elif isinstance(typ, tuple):
         try:
-            for i in typ:
-                if cfg_isinstance_single(obj, i):
-                    return True
-            return False
+            return any(cfg_isinstance_single(obj, i) for i in typ)
         except TypeError as e:
             raise ValueError(f"cfg_isinstance arg 2 can't be: {typ}") from e
     else:
