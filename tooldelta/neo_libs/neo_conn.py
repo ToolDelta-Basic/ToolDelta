@@ -549,7 +549,7 @@ class ThreadOmega:
                 cmdResp = unpackCommandOutput(
                     toPyString(LIB.ConsumeCommandResponseCB())
                 )
-                if retriever in self._omega_cmd_callback_events.keys():
+                if retriever in self._omega_cmd_callback_events:
                     self._omega_cmd_callback_events[retriever](cmdResp)
                 else:
                     Print.print_war(

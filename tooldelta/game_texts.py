@@ -32,7 +32,7 @@ class GameTextsLoader:
         "初始化"
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
-        if "no-download-libs" not in sys_args_to_dict().keys():
+        if "no-download-libs" not in sys_args_to_dict():
             self.start_auto_update_thread()
             self.auto_update()
         self.game_texts_data: Dict[str, str] = self.load_data()
@@ -45,8 +45,8 @@ class GameTextsLoader:
             str: 版本号
         """
         if (
-            "no-download-libs" in sys_args_to_dict().keys()
-            or "no-update-check" in sys_args_to_dict().keys()
+            "no-download-libs" in sys_args_to_dict()
+            or "no-update-check" in sys_args_to_dict()
         ):
             return ".".join(map(str, get_tool_delta_version()))
         result = re.match(

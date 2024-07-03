@@ -153,7 +153,7 @@ def auto_move_plugin_dir(fdname: str):
             with open(data_path, "r", encoding="utf-8") as f:
                 plugin_data_json = json.load((f))
                 p_type = plugin_data_json["plugin-type"]
-                if p_type not in PLUGIN_TYPE_MAPPING.keys():
+                if p_type not in PLUGIN_TYPE_MAPPING:
                     Print.print_war(f"无法识别插件 {fdname} 的类型，跳过")
                     return
             shutil.move(
