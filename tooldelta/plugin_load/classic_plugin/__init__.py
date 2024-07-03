@@ -229,5 +229,6 @@ def load_plugin(
         plugin_group.broadcast_evts_cache.clear()
     return None
 
+
 def _init_frame(frame: "ToolDelta"):
     __caches__["frame"] = frame

@@ -1,10 +1,12 @@
 "日志记录器"
+
 import os
 import time
 
 
 class ToolDeltaLogger:
     "ToolDelta 的日志记录器"
+
     INFO = "INFO"
     WARNING = "WARNING"
     ERROR = "ERROR"

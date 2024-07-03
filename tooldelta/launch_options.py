@@ -16,6 +16,7 @@ def signal_handler(*_) -> None:
     """排除信号中断"""
     return
 
+
 signal.signal(signal.SIGINT, signal_handler)
 
 

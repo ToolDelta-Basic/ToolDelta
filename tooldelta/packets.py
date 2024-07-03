@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import json
 
+
 @dataclass
 class PacketIDS:
     "数据包 ID 常量表"

@@ -13,6 +13,7 @@ from .utils import tmpjson_save_thread
 
 tooldelta = ToolDelta()
 
+
 def start_tool_delta() -> None:
     """启动 ToolDelta"""
     try:
