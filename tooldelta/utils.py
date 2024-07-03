@@ -280,9 +280,9 @@ class Utils:
             """
             if isinstance(fp, str):
                 with open(fp, "r", encoding="utf-8") as file:
-                    return json.loads(file.read())
+                    return json.load(file)
             with fp as file:
-                return json.loads(file.read())
+                return json.load(file)
 
         class DataReadError(json.JSONDecodeError):
             """读取数据时发生错误"""
