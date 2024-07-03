@@ -40,7 +40,8 @@ def liliya_login() -> str:
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {auth_key}",
-        }, timeout=5
+        },
+        timeout=5,
     )
     repo_text: dict[str, Any] = json.loads(repo.text)
     repo_message: str = repo_text["message"]
@@ -69,15 +70,11 @@ def fbuc_login() -> str:
     hash_obj = hashlib.sha256()
     username = input(Print.fmt_info("请输入账号：", "§6 账号 "))
     hash_obj.update(
-        getpass.getpass(
-            Print.fmt_info("请输入密码 (已隐藏):", "§6 密码 ")
-        ).encode()
+        getpass.getpass(Print.fmt_info("请输入密码 (已隐藏):", "§6 密码 ")).encode()
     )
     password = hash_obj.hexdigest()
     mfa_code = getpass.getpass(
-        Print.fmt_info(
-            "请输入双重验证码 (已隐藏)(如未设置请直接回车):", "§6 MFA  "
-        )
+        Print.fmt_info("请输入双重验证码 (已隐藏)(如未设置请直接回车):", "§6 MFA  ")
     )
     auth_key = requests.get(url=constants.FB_APIS[1], timeout=5).text
     repo = requests.post(
@@ -94,7 +91,7 @@ def fbuc_login() -> str:
             "Content-Type": "application/json",
             "authorization": f"Bearer {auth_key}",
         },
-        timeout=5
+        timeout=5,
     )
     repo_text: dict[str, Any] = json.loads(repo.text)
     repo_message: str = repo_text["message"]

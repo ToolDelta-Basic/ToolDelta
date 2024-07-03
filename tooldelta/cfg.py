@@ -10,6 +10,7 @@ NoneType = type(None)
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
 
+
 def cfg_isinstance_single(obj: Any, typ: type) -> bool:
     if not isinstance(typ, type):
         raise TypeError(f"cfg_isinstance arg 1 must be a type, not {typ}")
@@ -20,7 +21,7 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
         Cfg.PNumber: lambda: isinstance(obj, (int, float)) and obj > 0,
         Cfg.NNNumber: lambda: isinstance(obj, (int, float)) and obj >= 0,
-        int: lambda: type(obj) is int
+        int: lambda: type(obj) is int,
     }.get(typ, lambda: isinstance(obj, typ))()
 
 
@@ -77,6 +78,7 @@ def _CfgShowType(typ: Any) -> str:
 
 class Cfg:
     """配置文件模块"""
+
     class ConfigError(Exception):
         "配置文件错误"
 
@@ -101,6 +103,7 @@ class Cfg:
 
     class KeyGroup:
         "配置文件的键组，充当 dict_key 使用"
+
         def __init__(self, *keys: str):
             self.keys = keys
 
@@ -142,7 +145,8 @@ class Cfg:
                 obj = ujson.load(f)
             except ujson.JSONDecodeError as exc:
                 raise self.ConfigValueError(
-                    "JSON 配置文件格式不正确，请修正或直接删除", None) from exc
+                    "JSON 配置文件格式不正确，请修正或直接删除", None
+                ) from exc
         self.check_dict(standard_type, obj)
         return obj
 
@@ -209,7 +213,12 @@ class Cfg:
 
     getPluginConfigAndVersion = get_plugin_config_and_version
 
-    def check_auto(self, standard: type | dict | JsonList | tuple[type | dict, ...], val: Any, fromkey: str = "?"):
+    def check_auto(
+        self,
+        standard: type | dict | JsonList | tuple[type | dict, ...],
+        val: Any,
+        fromkey: str = "?",
+    ):
         """检查配置文件 (自动类型判断)
 
         Args:
@@ -247,7 +256,8 @@ class Cfg:
             else:
                 reason = "\n".join(str(err) for err in errs)
                 raise self.ConfigValueError(
-                    f'JSON 键 对应的键"{fromkey}" 类型不正确，以下为可能的原因：\n{reason}')
+                    f'JSON 键 对应的键"{fromkey}" 类型不正确，以下为可能的原因：\n{reason}'
+                )
         elif isinstance(standard, (dict, Cfg.AnyKeyValue)):
             self.check_dict(standard, val, fromkey)
         else:
@@ -265,7 +275,8 @@ class Cfg:
         """
         if not isinstance(jsondict, dict):
             raise ValueError(
-                f'json 键"{from_key}" 需要 json 对象，而不是 {_CfgShowType(jsondict)}')
+                f'json 键"{from_key}" 需要 json 对象，而不是 {_CfgShowType(jsondict)}'
+            )
         if isinstance(pattern, Cfg.AnyKeyValue):
             for key, val in jsondict.items():
                 self.check_auto(pattern.type, val, key)

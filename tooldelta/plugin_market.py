@@ -380,7 +380,9 @@ class PluginMarket:
             os.makedirs(os.path.join(cache_dir, plugin_data.name), exist_ok=True)
             all_files_len = len(download_paths)
             for i, paths in enumerate(download_paths):
-                Print.clean_print(f"正在下载附带文件 ({i} / {all_files_len}) 请稍后...", end="\r")
+                Print.clean_print(
+                    f"正在下载附带文件 ({i} / {all_files_len}) 请稍后...", end="\r"
+                )
                 if not paths.strip():
                     # 该路径为空
                     continue
