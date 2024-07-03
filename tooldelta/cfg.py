@@ -236,10 +236,9 @@ class Cfg:
                     raise self.ConfigValueError(
                         f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 json 对象：{ujson.dumps(val, ensure_ascii=False)}'
                     )
-                else:
-                    raise self.ConfigValueError(
-                        f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}'
-                    )
+                raise self.ConfigValueError(
+                    f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}'
+                )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
         elif isinstance(standard, (tuple, list)):
