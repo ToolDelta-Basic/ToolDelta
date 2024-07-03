@@ -59,8 +59,7 @@ def getTarget(sth: str, timeout: int = 5) -> list:
         return result.split(", ")
     if result.OutputMessages[0].Message == "commands.generic.syntax":
         raise ValueError(f"getTarget 目标选择器表达式错误：{sth}")
-    else:
-        return []
+    return []
 
 
 def getPos(target: str, timeout: float | int = 5) -> dict:
@@ -215,9 +214,9 @@ def getScore(scb_name: str, target: str, timeout=30) -> int:
     ).OutputMessages[0]
     if resp.Message == "commands.scoreboard.objectiveNotFound":
         raise ValueError(f"计分板 {scb_name} 未找到")
-    elif resp.Message == "commands.scoreboard.players.list.player.empty":
+    if resp.Message == "commands.scoreboard.players.list.player.empty":
         raise ValueError(f"计分板项或玩家 {target} 未找到")
-    elif resp.Message == "commands.scoreboard.players.score.notFound":
+    if resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     return int(resp.Parameters[0])
 

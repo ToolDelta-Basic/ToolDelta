@@ -59,8 +59,7 @@ class Utils:
             except ValueError as e:
                 if str(e) != "未连接到游戏":
                     raise
-                else:
-                    Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
+                Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
             except Exception:
                 Print.print_err(
                     f"线程 {self.usage or self.func.__name__} 出错:\n"

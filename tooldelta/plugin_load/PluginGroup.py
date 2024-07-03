@@ -188,7 +188,7 @@ class PluginGroup:
             raise self.linked_frame.SystemVersionException(
                 f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
             )
-        elif self.linked_frame is None:
+        if self.linked_frame is None:
             raise ValueError(
                 "无法检查 ToolDelta 系统版本，请确保已经加载了 ToolDelta 系统组件"
             )
@@ -217,8 +217,7 @@ class PluginGroup:
             return api
         if force:
             raise PluginAPINotFoundError(f"无法找到 API 插件：{apiName}")
-        else:
-            return None
+        return None
 
     def set_frame(self, frame: "ToolDelta") -> None:
         "设置关联的系统框架"
