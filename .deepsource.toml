@@ -13,4 +13,5 @@ name = "shell"
 name = "docker"
 
   [analyzers.meta]
+  type_checker = "mypy"
   dockerfile_paths = ["Dockerfile"]
