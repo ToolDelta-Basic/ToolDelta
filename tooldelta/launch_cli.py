@@ -337,7 +337,6 @@ class FrameNeOmg(StandardFrame):
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             text=True,
         )
         return free_port

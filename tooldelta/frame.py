@@ -444,7 +444,7 @@ class ToolDelta:
             """
             cmd = " ".join(cmd)
             try:
-                result = self.link_game_ctrl.sendcmd(cmd, True, 10)
+                result = self.link_game_ctrl.sendwscmd(cmd, True, 10)
                 if isinstance(result, type(None)):
                     raise ValueError("指令执行失败")
                 if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
