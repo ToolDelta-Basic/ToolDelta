@@ -1,10 +1,8 @@
 {
-    "terminal.integrated.defaultProfile.windows": "Command Prompt",
-    "python.languageServer": "Pylance",
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": false,
     "pylint.args": [
         "--max-line-length=200",
         "--disable=W0718,C0103,I1101,C0415,W0603"
     ],
+    "commentTranslate.hover.enabled": true,
 }
