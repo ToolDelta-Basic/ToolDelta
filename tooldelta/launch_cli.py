@@ -335,6 +335,7 @@ class FrameNeOmg(StandardFrame):
                 "-auth-server",
                 self.auth_server,
             ],
+            encoding="utf-8",
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
