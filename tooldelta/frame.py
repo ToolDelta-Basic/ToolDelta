@@ -814,6 +814,7 @@ class GameCtrl:
             Print.print_suc("初始化完成，在线玩家：" + ", ".join(self.allplayers))
             Print.print_war("未能获取机器人 ID")
         self.sendcmd("/tag @s add robot")
+        Print.print_inf("在控制台输入 §b插件市场§r 以获取ToolDelta的官方和第三方插件!")
         Print.print_suc("§f在控制台输入 §ahelp / ?§f 可查看控制台命令")
 
     @property
@@ -825,7 +826,7 @@ class GameCtrl:
     def sendcmd_with_resp(
         self, cmd: str, timeout: int | float = 30
     ) -> Packet_CommandOutput:
-        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
+        resp: Packet_CommandOutput = self.sendcmd_with_resp(cmd, True, timeout)  # type: ignore
         return resp
 
     def say_to(self, target: str, text: str) -> None:
