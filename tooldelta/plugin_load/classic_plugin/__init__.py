@@ -23,9 +23,13 @@ class Plugin:
     "插件信息主类"
 
     name: str = ""
+    "插件名"
     version = (0, 0, 1)
+    "插件版本号"
     author = "?"
+    "作者名"
     description = "..."
+    "简介"
 
     __path_created__ = False
 
