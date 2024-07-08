@@ -777,7 +777,7 @@ class GameCtrl:
         else:
             while 1:
                 try:
-                    cmd_result = self.sendcmd_with_resp("/list", True)
+                    cmd_result = self.sendcmd_with_resp("/list")
                     if (
                         cmd_result.OutputMessages is None
                         or len(cmd_result.OutputMessages) < 2
