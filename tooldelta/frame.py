@@ -826,7 +826,7 @@ class GameCtrl:
     def sendcmd_with_resp(
         self, cmd: str, timeout: int | float = 30
     ) -> Packet_CommandOutput:
-        resp: Packet_CommandOutput = self.sendcmd_with_resp(cmd, True, timeout)  # type: ignore
+        resp = self.sendcmd_with_resp(cmd, timeout)
         return resp
 
     def say_to(self, target: str, text: str) -> None:
