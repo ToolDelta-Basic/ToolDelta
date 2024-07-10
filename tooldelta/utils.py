@@ -8,7 +8,7 @@ import threading
 import time
 import traceback
 from io import TextIOWrapper
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional, TypeVar
 
 import ujson as json
 
@@ -21,6 +21,7 @@ event_pool = {
 threads_list: list["Utils.createThread"] = []
 timer_events_table: dict[int, tuple[str, Callable]] = {}
 
+VT = TypeVar("VT")
 
 class Utils:
     """提供了一些实用方法的类"""
@@ -495,6 +496,20 @@ class Utils:
             if sub in i:
                 res.append(i)
         return res
+
+    @staticmethod
+    def split_list(lst: list[VT], length: int) -> list[list[VT]]:
+        """
+        将列表进行块分割
+
+        Args:
+            lst (list[VT]): 传入列表
+            length (int): 分割的单个列表的长度
+
+        Returns:
+            list[list[VT]]: 传出的被分割的列表
+        """
+        return [lst[i:i+length] for i in range(0, len(lst), length)]
 
 def safe_close() -> None:
     """安全关闭"""
