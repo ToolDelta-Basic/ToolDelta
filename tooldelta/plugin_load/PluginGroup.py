@@ -34,7 +34,6 @@ from ..plugin_load import (
     auto_move_plugin_dir,
 )
 from ..constants import (
-    PRG_NAME,
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
@@ -186,7 +185,7 @@ class PluginGroup:
             and need_vers > self.linked_frame.sys_data.system_version
         ):
             raise self.linked_frame.SystemVersionException(
-                f"该组件需要{PRG_NAME}为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
+                f"该组件需要ToolDelta为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
             )
         if self.linked_frame is None:
             raise ValueError(
@@ -238,9 +237,15 @@ class PluginGroup:
             if fdir not in (TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN):
                 auto_move_plugin_dir(fdir)
         try:
+            Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin.read_plugins(self)
+            Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
+            Print.print_suc("所有插件读取完毕, 将进行插件初始化")
+            Print.print_suc(
+                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个组合式插件，§f{self.injected_plugin_loaded_num}§a 个注入式插件"
+            )
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
             Print.print_err(f"加载插件出现问题：\n{err_str}")

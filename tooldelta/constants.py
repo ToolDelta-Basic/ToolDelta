@@ -1,8 +1,5 @@
 "ToolDelta 常量定义"
 
-PRG_NAME = "ToolDelta"
-"程序名"
-
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
     "https://tdload.tblstudio.cn/"
     "https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"

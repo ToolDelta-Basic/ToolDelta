@@ -29,7 +29,6 @@ from tooldelta import (
 
 from .cfg import Config
 from .color_print import Print
-from .constants import PRG_NAME
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
@@ -348,29 +347,18 @@ class ToolDelta:
     def welcome() -> None:
         """欢迎提示"""
         Print.print_with_info(
-            f"§d{PRG_NAME} Panel Embed By SuperScript", Print.INFO_LOAD
+            f"§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+            f"§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
+            f"§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§d{PRG_NAME} v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
+            f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
         )
-        Print.print_with_info(f"§d{PRG_NAME} Panel 已启动", Print.INFO_LOAD)
-
-    @staticmethod
-    def plugin_load_finished(plugins: "PluginGroup"):
-        """插件加载完成时的回调函数
-
-        Args:
-            plugins (PluginGroup): 插件组对象，包含已加载的插件信息
-        """
-        Print.print_suc(
-            f"成功载入 §f{plugins.normal_plugin_loaded_num}§a 个组合式插件，§f{plugins.injected_plugin_loaded_num}§a 个注入式插件"
-        )
+        Print.print_with_info(f"§dToolDelta Panel 已启动", Print.INFO_LOAD)
 
     @staticmethod
     def basic_operation():
@@ -416,6 +404,7 @@ class ToolDelta:
 
     def comsole_cmd_start(self) -> None:
         """启动控制台命令"""
+        Print.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
 
         def _try_execute_console_cmd(func, rsp, mode, arg1) -> int | None:
             try:
@@ -429,10 +418,10 @@ class ToolDelta:
             try:
                 return func(rsp_arg) or 0
             except Exception:
-                Print.print_err(f"控制台指令出错： {traceback.format_exc()}")
+                Print.print_err(f"控制台指令出错: {traceback.format_exc()}")
                 return 0
 
-        @Utils.thread_func
+        @Utils.thread_func("控制台执行指令并获取回调")
         def _execute_mc_command_and_get_callback(cmd: str) -> None:
             """执行 Minecraft 指令并获取回调结果。
 
@@ -444,32 +433,31 @@ class ToolDelta:
             """
             cmd = " ".join(cmd)
             try:
-                result = self.link_game_ctrl.sendwscmd(cmd, True, 10)
-                if isinstance(result, type(None)):
-                    raise ValueError("指令执行失败")
+                result = self.link_game_ctrl.sendcmd_with_resp(cmd, 10)
                 if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
                     result.OutputMessages[0].Message == "commands.generic.unknown"
                 ):
-                    Print.print_err(f'未知的 MC 指令，可能是指令格式有误： "{cmd}"')
+                    Print.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
                 else:
                     mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(
                         result.as_dict["OutputMessages"]
                     )
-                    if not result.SuccessCount:
-                        print_str = "指令执行失败：" + " ".join(mjon)
-                        Print.print_war(print_str)
-                        Print.print_war(result.as_dict["OutputMessages"])
-                    else:
-                        print_str = "指令执行成功：" + " ".join(mjon)
+                    desc = json.dumps(result.as_dict["OutputMessages"], indent=2, ensure_ascii=False)
+                    if result.SuccessCount:
+                        print_str = "指令执行成功: " + " ".join(mjon)
                         Print.print_suc(print_str)
-                        Print.print_suc(result.as_dict["OutputMessages"])
+                        Print.print_suc(desc)
+                    else:
+                        print_str = "指令执行失败: " + " ".join(mjon)
+                        Print.print_war(print_str)
+                        Print.print_war(desc)
 
             except IndexError as exec_err:
                 if isinstance(result, type(None)):
                     raise ValueError("指令执行失败") from exec_err
                 if result.SuccessCount:
                     Print.print_suc(
-                        f"指令执行成功：\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
+                        f"指令执行成功, 详细返回结果:\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
                     )
             except TimeoutError:
                 Print.print_err("[超时] 指令获取结果返回超时")
@@ -483,7 +471,7 @@ class ToolDelta:
                 self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
-                ["exit"], None, f"退出并关闭{PRG_NAME}", lambda _: None
+                ["exit"], None, f"退出并关闭ToolDelta", lambda _: None
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -562,7 +550,7 @@ class ToolDelta:
     def set_game_control(self, game_ctrl: "GameCtrl") -> None:
         """使用外源 GameControl
 
-        Args:
+        Args:help
             game_ctrl (_type_): GameControl 对象
         """
         self.link_game_ctrl = game_ctrl
@@ -798,24 +786,19 @@ class GameCtrl:
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
-        Print.print_suc("初始化注入式函数 init 任务执行完毕")
         self.inject_welcome()
 
     def inject_welcome(self) -> None:
         """初始化欢迎信息"""
-        if isinstance(self.bot_name, str):
-            Print.print_suc(
-                "初始化完成，在线玩家："
-                + ", ".join(self.allplayers)
-                + ", 机器人 ID: "
-                + self.bot_name
-            )
-        else:
-            Print.print_suc("初始化完成，在线玩家：" + ", ".join(self.allplayers))
-            Print.print_war("未能获取机器人 ID")
+        Print.print_suc(
+            "成功连接到游戏网络并初始化, 在线玩家: "
+            + ", ".join(self.allplayers)
+            + ", 机器人 ID: "
+            + self.bot_name
+        )
         self.sendcmd("/tag @s add robot")
-        Print.print_inf("在控制台输入 §b插件市场§r 以获取ToolDelta的官方和第三方插件!")
-        Print.print_suc("§f在控制台输入 §ahelp / ?§f 可查看控制台命令")
+        Print.print_inf("在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件")
+        Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
 
     @property
     def bot_name(self) -> str:

@@ -30,7 +30,6 @@ def start_tool_delta() -> None:
         tooldelta.set_plugin_group(plugin_group)
         plugin_group.set_frame(tooldelta)
         plugin_group.read_all_plugins()
-        tooldelta.plugin_load_finished(plugin_group)
         timer_event_boostrap()
         tooldelta.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()

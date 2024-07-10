@@ -345,11 +345,11 @@ class FrameNeOmg(StandardFrame):
     def _msg_show_thread(self) -> None:
         """显示来自 NeOmega 的信息"""
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
-            raise ValueError("NEOMG 进程未启动")
+            raise ValueError("接入点进程未启动")
         while True:
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
-                Print.print_with_info("ToolDelta: NEOMG 进程已结束", "§b NOMG ")
+                Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 break
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()
@@ -365,24 +365,24 @@ class FrameNeOmg(StandardFrame):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
-        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega 的信息")
+        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
         self.launch_event.wait()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
-        Print.print_suc("已开启接入点进程")
+        Print.print_suc("已获取游戏网络接入点最高权限")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        Print.print_suc("接入点已就绪！")
+        Print.print_suc("接入点注入已就绪")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
-            return SystemExit("正常退出。")
+            return SystemExit("正常退出")
         if self.status == SysStatus.CRASHED_EXIT:
-            return Exception("NeOmega 已崩溃")
+            return Exception("接入点进程已崩溃")
         return SystemError("未知的退出状态")
 
     def get_players_and_uuids(self):
@@ -599,18 +599,18 @@ class FrameNeOmgRemote(FrameNeOmg):
             Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口。")
             openat_port = 24015
             return SystemExit("未指定端口号")
-        Print.print_inf(f"将从端口 {openat_port} 连接至接入点 (等待接入中).")
+        Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
-        Print.print_suc("已连接上接入点进程。")
+        Print.print_suc("已与接入点进程建立通信网络")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
-        Print.print_suc("接入点已就绪")
+        Print.print_suc("ToolDelta 待命中")
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
