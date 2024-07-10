@@ -259,7 +259,7 @@ class Utils:
                 fp (Any): open(...) 打开的文件读写口 或 文件路径
             """
             if isinstance(fp, str):
-                with open(fp, "w", encoding="utf-8") as file:
+                with open(fp, "w") as file:
                     file.write(json.dumps(obj, indent=indent, ensure_ascii=False))
             else:
                 with fp:
@@ -312,7 +312,7 @@ class Utils:
             )
             try:
                 if default is not None and not os.path.isfile(filepath):
-                    with open(filepath, "w", encoding="utf-8") as f:
+                    with open(filepath, "w") as f:
                         Utils.JsonIO.SafeJsonDump(default, f)
                     return default
                 with open(filepath, "r", encoding="utf-8") as f:
@@ -337,17 +337,18 @@ class Utils:
             os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
             with open(
                 f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json",
-                "w",
-                encoding="utf-8",
+                "w"
             ) as f:
                 Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
 
     SimpleJsonDataReader = JsonIO
 
     class ChatbarLock:
-        r"""
-        聊天栏锁, 用于防止玩家同时开启多个聊天栏对话\n
-        调用了该锁的所有代码, 在另一个进程使用该锁的时候, 尝试调用其他锁会导致进程直接退出, 直到此锁退出为止\n
+        """
+        聊天栏锁, 用于防止玩家同时开启多个聊天栏对话
+
+        调用了该锁的所有代码, 在另一个进程使用该锁的时候, 尝试调用其他锁会导致进程直接退出, 直到此锁退出为止
+
         示例(以类式插件为例):
         ```python
         class MyPlugin(Plugin):
