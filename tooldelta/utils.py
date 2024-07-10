@@ -19,7 +19,7 @@ event_pool = {
     "timer_events": threading.Event()
 }
 threads_list: list["Utils.createThread"] = []
-timer_events_table: dict[int, tuple[str, Callable[[], None]]] = {}
+timer_events_table: dict[int, tuple[str, Callable]] = {}
 
 
 class Utils:
@@ -466,7 +466,7 @@ class Utils:
             seconds (int): 周期秒数
             name (Optional[str], optional): 名字, 默认为自动生成的
         """
-        def receiver(func: Callable[[], None]):
+        def receiver(func: Callable[[], None] | Callable[[Any], None]):
             func_name = name or f"简易方法:{func.__name__}"
             timer_events_table[t] = (func_name, func)
         return receiver
