@@ -21,6 +21,7 @@ event_pool = {
 threads_list: list["Utils.createThread"] = []
 timer_events_table: dict[int, tuple[str, Callable[[], None]]] = {}
 
+
 class Utils:
     """提供了一些实用方法的类"""
 
@@ -465,7 +466,6 @@ class Utils:
             seconds (int): 周期秒数
             name (Optional[str], optional): 名字, 默认为自动生成的
         """
-        name = name
         def receiver(func: Callable[[], None]):
             func_name = name or f"简易方法:{func.__name__}"
             timer_events_table[t] = (func_name, func)
@@ -500,9 +500,11 @@ def safe_close() -> None:
     """安全关闭"""
     event_pool["timer_events"].set()
 
+
 @Utils.timer_event(20, "缓存JSON数据定时保存")
 @Utils.thread_func("JSON 缓存文件定时保存")
 def tmpjson_save_thread():
+    "请不要在系统调用以外调用"
     for k, (isChanged, dat) in jsonPathTmp.copy().items():
         if isChanged:
             Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
@@ -512,8 +514,10 @@ def tmpjson_save_thread():
             Utils.TMPJson.unloadPathJson(k)
             del jsonUnloadPathTmp[k]
 
+
 @Utils.thread_func("ToolDelta 定时任务")
 def timer_event_boostrap():
+    "请不要在系统调用以外调用"
     timer = 0
     evt = event_pool["timer_events"]
     while not evt.is_set():

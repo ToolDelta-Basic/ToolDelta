@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from tooldelta.frame import ToolDelta, GameCtrl
 
 
-def check_avaliable(sth: "GameCtrl") -> Optional[AttributeError]:
+def check_avaliable(sth: "GameCtrl"):
     """
     检查给定的 "GameCtrl" 对象是否可用
 
