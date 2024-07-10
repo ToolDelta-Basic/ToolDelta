@@ -501,7 +501,7 @@ def safe_close() -> None:
     event_pool["timer_events"].set()
 
 
-@Utils.timer_event(20, "缓存JSON数据定时保存")
+@Utils.timer_event(120, "缓存JSON数据定时保存")
 @Utils.thread_func("JSON 缓存文件定时保存")
 def tmpjson_save_thread():
     "请不要在系统调用以外调用"
