@@ -15,10 +15,11 @@ import ujson as json
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
-event_pool = {"tmpjson_save": threading.Event()}
-event_flags_pool = {"tmpjson_save": True}
+event_pool = {
+    "timer_events": threading.Event()
+}
 threads_list: list["Utils.createThread"] = []
-
+timer_events_table: dict[int, tuple[str, Callable[[], None]]] = {}
 
 class Utils:
     """提供了一些实用方法的类"""
@@ -455,6 +456,22 @@ class Utils:
         return thread_fun
 
     @staticmethod
+    def timer_event(t: int, name: Optional[str] = None):
+        """
+        将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
+        注意: 请不要在函数内放可能造成堵塞的内容
+
+        Args:
+            seconds (int): 周期秒数
+            name (Optional[str], optional): 名字, 默认为自动生成的
+        """
+        name = name
+        def receiver(func: Callable[[], None]):
+            func_name = name or f"简易方法:{func.__name__}"
+            timer_events_table[t] = (func_name, func)
+        return receiver
+
+    @staticmethod
     def try_int(arg: Any) -> Optional[int]:
         """尝试将提供的参数化为 int 类型并返回，否则返回 None"""
         try:
@@ -479,33 +496,32 @@ class Utils:
                 res.append(i)
         return res
 
-
 def safe_close() -> None:
     """安全关闭"""
-    event_pool["tmpjson_save"].set()
-    event_flags_pool["tmpjson_save"] = False
+    event_pool["timer_events"].set()
 
-
+@Utils.timer_event(20, "缓存JSON数据定时保存")
 @Utils.thread_func("JSON 缓存文件定时保存")
 def tmpjson_save_thread():
-    evt = event_pool["tmpjson_save"]
-    secs = 0
-    while 1:
-        evt.wait(2)
-        secs += 2
-        if secs >= 60:
-            secs = 0
-            for k, (isChanged, dat) in jsonPathTmp.copy().items():
-                if isChanged:
-                    Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
-                    jsonPathTmp[k][0] = False
-        for k, v in jsonUnloadPathTmp.copy().items():
-            if time.time() - v > 0:
-                Utils.TMPJson.unloadPathJson(k)
-                del jsonUnloadPathTmp[k]
-        if not event_flags_pool["tmpjson_save"]:
-            return
+    for k, (isChanged, dat) in jsonPathTmp.copy().items():
+        if isChanged:
+            Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
+            jsonPathTmp[k][0] = False
+    for k, v in jsonUnloadPathTmp.copy().items():
+        if time.time() - v > 0:
+            Utils.TMPJson.unloadPathJson(k)
+            del jsonUnloadPathTmp[k]
 
+@Utils.thread_func("ToolDelta 定时任务")
+def timer_event_boostrap():
+    timer = 0
+    evt = event_pool["timer_events"]
+    while not evt.is_set():
+        for k, (_, v) in timer_events_table.items():
+            if timer % k == 0:
+                v()
+        evt.wait(1)
+        timer += 1
 
 jsonPathTmp = {}
 chatbar_lock_list = []
