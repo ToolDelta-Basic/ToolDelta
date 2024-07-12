@@ -295,7 +295,7 @@ class FrameNeOmg(StandardFrame):
         Returns:
             int: 端口号
         """
-        free_port = get_free_port(24016)
+        free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
             sys_machine = "amd64"
@@ -321,6 +321,7 @@ class FrameNeOmg(StandardFrame):
             or isinstance(self.auth_server, type(None))
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
+        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
         self.neomg_proc = subprocess.Popen(
             [
                 exe_file_path,
