@@ -274,19 +274,20 @@ class FrameNeOmg(StandardFrame):
         Raises:
             SystemExit: 系统退出
         """
-        retries = 0
+        retries = 1
         self.omega.address = f"tcp://localhost:{openat_port}"
         while retries <= 10:
             try:
                 self.omega.connect()
-                retries = 0
+                retries = 1
                 break
             except Exception as err:
-                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
+                Print.print_war(f"OMEGA 连接失败第 {err} (第{retries}次)")
                 time.sleep(5)
                 retries += 1
                 if retries > 5:
                     Print.print_err("最大重试次数已超过")
+                    time.sleep(5)
                     raise SystemExit from err
 
     def start_neomega_proc(self) -> int:

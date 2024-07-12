@@ -36,6 +36,7 @@ def start_tool_delta() -> None:
         game_control.set_listen_packets()
         raise tooldelta.launcher.launch()
     except (KeyboardInterrupt, SystemExit, EOFError):
+        Print.print_inf("ToolDelta 已关闭")
         pass
     except Exception:
         Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
