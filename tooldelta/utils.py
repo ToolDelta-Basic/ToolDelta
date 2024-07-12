@@ -19,7 +19,7 @@ event_pool = {
     "timer_events": threading.Event()
 }
 threads_list: list["Utils.createThread"] = []
-timer_events_table: dict[int, tuple[str, Callable]] = {}
+timer_events_table: dict[int, tuple[str, Callable, tuple, dict]] = {}
 
 VT = TypeVar("VT")
 
@@ -469,9 +469,9 @@ class Utils:
             name (Optional[str], optional): 名字, 默认为自动生成的
         """
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
-            def caller():
+            def caller(*args, **kwargs):
                 func_name = name or f"简易方法:{func.__name__}"
-                timer_events_table[t] = (func_name, func)
+                timer_events_table[t] = (func_name, func, args, kwargs)
             return caller
         return receiver
 
@@ -539,9 +539,9 @@ def timer_event_boostrap():
     timer = 0
     evt = event_pool["timer_events"]
     while not evt.is_set():
-        for k, (_, v) in timer_events_table.items():
+        for k, (_, v, a, kwa) in timer_events_table.items():
             if timer % k == 0:
-                v()
+                v(*a, **kwa)
         evt.wait(1)
         timer += 1
 
