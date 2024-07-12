@@ -462,14 +462,17 @@ class Utils:
         """
         将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
         注意: 请不要在函数内放可能造成堵塞的内容
+        注意: 当此函数被修饰后, 需要调用一次才能开始定时任务线程!
 
         Args:
             seconds (int): 周期秒数
             name (Optional[str], optional): 名字, 默认为自动生成的
         """
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
-            func_name = name or f"简易方法:{func.__name__}"
-            timer_events_table[t] = (func_name, func)
+            def caller():
+                func_name = name or f"简易方法:{func.__name__}"
+                timer_events_table[t] = (func_name, func)
+            return caller
         return receiver
 
     @staticmethod
@@ -516,7 +519,7 @@ def safe_close() -> None:
     event_pool["timer_events"].set()
 
 
-@Utils.timer_event(120, "缓存JSON数据定时保存")
+@Utils.timer_event(1, "缓存JSON数据定时保存")
 @Utils.thread_func("JSON 缓存文件定时保存")
 def tmpjson_save_thread():
     "请不要在系统调用以外调用"

@@ -9,7 +9,7 @@ from .frame import GameCtrl, ToolDelta
 from .plugin_load.PluginGroup import plugin_group
 from .sys_args import sys_args_to_dict
 from .urlmethod import check_update
-from .utils import timer_event_boostrap
+from .utils import timer_event_boostrap, tmpjson_save_thread
 
 tooldelta = ToolDelta()
 
@@ -31,6 +31,7 @@ def start_tool_delta() -> None:
         plugin_group.set_frame(tooldelta)
         plugin_group.read_all_plugins()
         timer_event_boostrap()
+        tmpjson_save_thread()
         tooldelta.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
         raise tooldelta.launcher.launch()
