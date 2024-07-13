@@ -29,8 +29,8 @@ mirror_github = [
 init(autoreset=True)
 
 
-async def download_file_urls(download_dict):
-    async def download_file(session, url, i, sem, sem2, save_path):
+async def download_file_urls(download_url2dst: list[tuple[str, str]]):
+    async def download_file(session: aiohttp.ClientSession, url: str, i: int, sem: asyncio.Semaphore, sem2: asyncio.Semaphore, file_path: str):
         async with sem2:
             progress_bar = tqdm(
                 desc=f"• Installing {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.YELLOW}Pending...{Style.RESET_ALL}",
@@ -43,7 +43,6 @@ async def download_file_urls(download_dict):
             async with sem:
                 async with session.get(url) as response:
                     filename = url.split("/")[-1]
-                    file_path = os.path.join(save_path, filename)
                     total_size = int(response.headers.get("content-length", 0))
                     total_size_mb = total_size / (1024 * 1024)  # 转换为 MB
                     progress_bar.reset(total=total_size_mb)
@@ -77,14 +76,12 @@ async def download_file_urls(download_dict):
         tasks = []
         progress_bars = []
 
-        for save_path, urls in download_dict.items():
-            os.makedirs(save_path, exist_ok=True)  # 确保保存路径存在
-
-            for i, url in enumerate(urls):
-                task = asyncio.create_task(
-                    download_file(session, url, i, sem, sem2, save_path)
-                )
-                tasks.append(task)
+        for i, (url, dst) in enumerate(download_url2dst):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            task = asyncio.create_task(
+                download_file(session, url, i, sem, sem2, dst)
+            )
+            tasks.append(task)
 
         progress_bars = await asyncio.gather(*tasks)
         for progress_bar in progress_bars:

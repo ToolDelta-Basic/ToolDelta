@@ -337,7 +337,8 @@ class PluginMarket:
         return res1
 
     def get_download_list(self, plugin_data: PluginRegData) -> dict[str, PluginRegData]:
-        """获取一个插件的下载列表
+        """
+        获取一个插件的下载列表
 
         Args:
             plugin_data (PluginRegData): 插件注册数据
@@ -377,47 +378,46 @@ class PluginMarket:
         """
         if self.plugin_id_name_map is None:
             self.plugin_id_name_map = self.get_plugin_id_name_map()
-        # 打印正在解决插件下载树
+        # 打印正在获取的插件下载树
         Print.clean_print(
-            f"§6正在解决插件下载树 §f{plugin_data.name}§6.." + " " * 15, end="\r"
+            f"§6正在获取插件下载树 §f{plugin_data.name}§6.." + " " * 15, end="\r"
         )
         plugin_list = self.get_download_list(plugin_data)
-        plugin_dict = {}
+        plugin_filepaths_dict = {}
         for k, v in plugin_list.items():
-            plugin_dict[k] = self.find_dirs(v)
-        Print.clean_print(f"§a成功解决插件下载树 §f{plugin_data.name}§a" + " " * 15)
-        dict_solve = {}
+            plugin_filepaths_dict[k] = self.find_dirs(v)
+        Print.clean_print(f"§a成功获取插件下载树 §f{plugin_data.name}§a" + " " * 15)
+        plugins_url2dst_solve: list[tuple[str, str]] = []
         for plugin_name, plugin_data in plugin_list.items():
             match plugin_data.plugin_type:
                 case "classic":
-                    download_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
+                    plugintype_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
                 case "injected":
-                    download_path = os.path.join("插件文件", TOOLDELTA_INJECTED_PLUGIN)
+                    plugintype_path = os.path.join("插件文件", TOOLDELTA_INJECTED_PLUGIN)
                 case _:
                     raise ValueError(
                         f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                     )
-            target_path = os.path.join(download_path, plugin_data.name)
-            urls = []
-            for path in plugin_dict[plugin_name]:
-                urls.append(url_join(self.plugins_download_url, path))
-            dict_solve[target_path] = urls
+            # urls tuple: url, dst
+            for path in plugin_filepaths_dict[plugin_name]:
+                plugins_url2dst_solve.append((url_join(self.plugins_download_url, path), os.path.join(plugintype_path, path)))
         Print.clean_print(
-            f"§b包管理器: §7需要下载 §c{sum([len(v) for v in dict_solve.values()])} §7个文件"
+            f"§bTD下载管理器: §7需要下载 §c{len(plugins_url2dst_solve)} §7个文件"
         )
-
-        asyncio.run(urlmethod.download_file_urls(dict_solve))
+        asyncio.run(urlmethod.download_file_urls(plugins_url2dst_solve))
+        Print.clean_print("§a• 插件安装已完成")
         return list(plugin_list.values())
 
     def find_dirs(self, plugin_data: PluginRegData) -> list[str]:
-        """查找插件目录
+        """
+        查找插件目录
 
         Args:
             plugin_data (PluginRegData): 插件注册数据
 
         Raises:
             KeyError: 目录结构错误
-            eExceptionrr: 获取插件市场插件目录结构出现问题
+            Exception: 获取插件市场插件目录结构出现问题
 
         Returns:
             list[str]: 插件目录列表
@@ -428,7 +428,7 @@ class PluginMarket:
             )
             data_list = []
             for folder, files in data.items():
-                if plugin_data.name == folder.split("/")[0]:
+                if plugin_data.name == folder.split(r"/")[0]:
                     # 展开
                     for file in files:
                         data_list.append(folder + r"/" + file)
