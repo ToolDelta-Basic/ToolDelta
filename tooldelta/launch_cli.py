@@ -237,9 +237,11 @@ class FrameNeOmg(StandardFrame):
         self.auth_server: Optional[str] = None
 
     def init(self):
+        Print.print_inf("检测接入点和依赖库的最新版本..", end="\r")
         res = neo_fd.download_libs()
         if not res:
             raise SystemExit("ToolDelta 因下载库异常而退出")
+        Print.print_inf("检测接入点和依赖库的最新版本..完成")
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 

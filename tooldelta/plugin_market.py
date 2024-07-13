@@ -1,10 +1,10 @@
 "插件市场客户端"
 
+import asyncio
 import os
 import platform
 import shlex
-import shutil
-import tempfile
+
 import time
 import traceback
 
@@ -134,8 +134,10 @@ class PluginMarket:
                         else:
                             plugin_type = plugin_basic_datas["plugin-type"]
                         Print.print_inf(
-                            (f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} "
-                             f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"),
+                            (
+                                f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} "
+                                f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"
+                            ),
                             need_log=False,
                         )
                     else:
@@ -334,6 +336,27 @@ class PluginMarket:
         self.plugin_id_name_map = res1
         return res1
 
+    def get_download_list(self, plugin_data: PluginRegData) -> dict[str, PluginRegData]:
+        """获取一个插件的下载列表
+
+        Args:
+            plugin_data (PluginRegData): 插件注册数据
+
+        Returns:
+            list[str]: 下载列表
+        """
+        if self.plugin_id_name_map is None:
+            self.plugin_id_name_map = self.get_plugin_id_name_map()
+        download_paths = {}
+        stack = [plugin_data]
+        while stack:
+            current_plugin = stack.pop()
+            download_paths[current_plugin.name] = current_plugin
+            for plugin_id in current_plugin.pre_plugins:
+                plugin_datas = self.get_plugin_data_from_market(plugin_id)
+                stack.append(plugin_datas)
+        return download_paths
+
     def download_plugin(
         self, plugin_data: PluginRegData, with_pres=True, is_enabled=True
     ) -> list[PluginRegData]:
@@ -354,76 +377,37 @@ class PluginMarket:
         """
         if self.plugin_id_name_map is None:
             self.plugin_id_name_map = self.get_plugin_id_name_map()
-        pres = [plugin_data]
-        download_paths = self.find_dirs(plugin_data)
-        if with_pres:
-            for plugin_id in plugin_data.pre_plugins:
-                plugin_name = self.plugin_id_name_map[plugin_id]
-                Print.clean_print(
-                    f"§6正在下载 §f{plugin_data.name}§6 的前置插件 §f{plugin_name}"
-                )
-                plugin_datas = self.get_plugin_data_from_market(plugin_id)
-                pres += self.download_plugin(plugin_datas)
-        cache_dir = tempfile.mkdtemp()
+        # 打印正在解决插件下载树
         Print.clean_print(
-            f"§6正在下载插件 §f{plugin_data.name}§6.." + " " * 15, end="\r"
+            f"§6正在解决插件下载树 §f{plugin_data.name}§6.." + " " * 15, end="\r"
         )
-        match plugin_data.plugin_type:
-            case "classic":
-                download_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
-            case "injected":
-                download_path = os.path.join("插件文件", TOOLDELTA_INJECTED_PLUGIN)
-            case _:
-                raise ValueError(
-                    f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
-                )
-        try:
-            os.makedirs(os.path.join(cache_dir, plugin_data.name), exist_ok=True)
-            all_files_len = len(download_paths)
-            for i, paths in enumerate(download_paths):
-                Print.clean_print(
-                    f"正在下载附带文件 ({i} / {all_files_len}) 请稍后...", end="\r"
-                )
-                if not paths.strip():
-                    # 该路径为空
-                    continue
-                url = url_join(self.plugins_download_url, paths)
-                # 按照插件类型选择下载到的文件夹
-                path_last = path_dir(paths)
-                if path_last is not None:
-                    # 自动创建文件夹
-                    folder_path = os.path.join(cache_dir, path_last)
-                    os.makedirs(folder_path, exist_ok=True)
-                urlmethod.download_unknown_file(url, os.path.join(cache_dir, paths))
-            # 将缓存文件夹的插件移动到本文件夹
-            target_path = download_path
-            os.makedirs(target_path, exist_ok=True)
-            # 制作所需的目录结构
-            for root, _, files in os.walk(cache_dir):
-                for filename in files:
-                    source_file = os.path.join(root, filename)
-                    target_file = os.path.join(
-                        target_path, os.path.relpath(source_file, cache_dir)
+        plugin_list = self.get_download_list(plugin_data)
+        plugin_dict = {}
+        for k, v in plugin_list.items():
+            plugin_dict[k] = self.find_dirs(v)
+        Print.clean_print(f"§a成功解决插件下载树 §f{plugin_data.name}§a" + " " * 15)
+        dict_solve = {}
+        for plugin_name, plugin_data in plugin_list.items():
+            match plugin_data.plugin_type:
+                case "classic":
+                    download_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
+                case "injected":
+                    download_path = os.path.join("插件文件", TOOLDELTA_INJECTED_PLUGIN)
+                case _:
+                    raise ValueError(
+                        f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                     )
-                    os.makedirs(os.path.dirname(target_file), exist_ok=True)
-                    shutil.move(source_file, target_file)
-            if not is_enabled:
-                shutil.rmtree(os.path.join(target_path, plugin_data.name + "+disabled"))
-                os.rename(
-                    os.path.join(target_path, plugin_data.name),
-                    os.path.join(target_path, plugin_data.name + "+disabled"),
-                )
-            from .plugin_manager import plugin_manager
+            target_path = os.path.join(download_path, plugin_data.name)
+            urls = []
+            for path in plugin_dict[plugin_name]:
+                urls.append(url_join(self.plugins_download_url, path))
+            dict_solve[target_path] = urls
+        Print.clean_print(
+            f"§b包管理器: §7需要下载 §c{sum([len(v) for v in dict_solve.values()])} §7个文件"
+        )
 
-            plugin_data = self.get_plugin_data_from_market(plugin_data.plugin_id)
-            plugin_data.is_enabled = is_enabled
-            plugin_manager.push_plugin_reg_data(plugin_data)
-            Print.clean_print(
-                f"§a成功下载插件 §f{plugin_data.name}§a 至插件文件夹" + " " * 15
-            )
-        finally:
-            shutil.rmtree(cache_dir)
-        return pres
+        asyncio.run(urlmethod.download_file_urls(dict_solve))
+        return list(plugin_list.values())
 
     def find_dirs(self, plugin_data: PluginRegData) -> list[str]:
         """查找插件目录

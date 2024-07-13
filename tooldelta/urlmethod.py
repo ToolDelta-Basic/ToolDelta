@@ -1,5 +1,9 @@
 """自定义常用 URL 方法"""
 
+from colorama import Fore, Style, init
+from tqdm.asyncio import tqdm
+import aiohttp
+import asyncio
 import os
 import re
 import shutil
@@ -7,7 +11,6 @@ import socket
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Union
-
 import pyspeedtest
 import requests
 
@@ -21,6 +24,71 @@ mirror_github = [
     "https://gh.con.sh/{}",
     "https://mirror.ghproxy.com/{}",
 ]
+
+# Initialize colorama
+init(autoreset=True)
+
+
+async def download_file_urls(download_dict):
+    async def download_file(session, url, i, sem, sem2, save_path):
+        async with sem2:
+            progress_bar = tqdm(
+                desc=f"• Installing {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.YELLOW}Pending...{Style.RESET_ALL}",
+                total=0,
+                unit="MB",
+                unit_scale=True,
+                bar_format="{desc} {n:.2f}MB/{total:.2f}MB",
+                position=i,
+            )
+            async with sem:
+                async with session.get(url) as response:
+                    filename = url.split("/")[-1]
+                    file_path = os.path.join(save_path, filename)
+                    total_size = int(response.headers.get("content-length", 0))
+                    total_size_mb = total_size / (1024 * 1024)  # 转换为 MB
+                    progress_bar.reset(total=total_size_mb)
+
+                    # 标记为正在
+                    progress_bar.set_description_str(
+                        f"• Installing {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.YELLOW}Pending...{Style.RESET_ALL}"
+                    )
+                    downloaded = 0
+
+                    with open(file_path, "wb") as f:
+                        async for chunk in response.content.iter_chunked(1024):
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            progress_bar.update(
+                                len(chunk) / (1024 * 1024)
+                            )  # 更新进度为 MB
+
+                    # 下载完成后更新进度条描述并添加颜色
+                    progress_bar.set_description_str(
+                        f"• Installing {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.GREEN}Succeed{Style.RESET_ALL}"
+                    )
+                    progress_bar.bar_format = "{desc}"  # 只显示描述
+                    progress_bar.refresh()
+            return progress_bar
+
+    sem = asyncio.Semaphore(4)  # 限制同时进行的下载任务数量为5
+    sem2 = asyncio.Semaphore(10)  # 只显示 10 个下载任务
+
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        progress_bars = []
+
+        for save_path, urls in download_dict.items():
+            os.makedirs(save_path, exist_ok=True)  # 确保保存路径存在
+
+            for i, url in enumerate(urls):
+                task = asyncio.create_task(
+                    download_file(session, url, i, sem, sem2, save_path)
+                )
+                tasks.append(task)
+
+        progress_bars = await asyncio.gather(*tasks)
+        for progress_bar in progress_bars:
+            progress_bar.close()
 
 
 def format_mirror_url(url: str) -> list:
