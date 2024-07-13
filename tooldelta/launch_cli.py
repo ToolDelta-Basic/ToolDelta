@@ -287,8 +287,7 @@ class FrameNeOmg(StandardFrame):
                 retries += 1
                 if retries > 5:
                     Print.print_err("最大重试次数已超过")
-                    time.sleep(5)
-                    raise SystemExit from err
+                    self.update_status(SysStatus.CRASHED_EXIT)
 
     def start_neomega_proc(self) -> int:
         """启动 NeOmega 进程
