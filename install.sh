@@ -55,7 +55,7 @@ else
     echo "创建快捷指令 '$shortcut_command' 失败。请检查权限或手动创建快捷指令。"
 fi
 # 生成start.sh脚本
-echo "pushd $install_dir && python main.py && popd " >  "$install_dir/start.sh"
+echo "pushd $install_dir && python3 main.py && popd " >  "$install_dir/start.sh"
 chmod 777 "$install_dir/start.sh"
 echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
 
