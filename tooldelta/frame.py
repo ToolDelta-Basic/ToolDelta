@@ -465,7 +465,7 @@ class ToolDelta:
         def _console_cmd_thread() -> None:
             """控制台线程"""
             self.add_console_cmd_trigger(
-                ["?", "help", "帮助"],
+                ["?", "help", "帮助", "？"],
                 None,
                 "查询可用菜单指令",
                 self.init_basic_help_menu,
