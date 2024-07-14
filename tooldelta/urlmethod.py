@@ -30,7 +30,14 @@ init(autoreset=True)
 
 
 async def download_file_urls(download_url2dst: list[tuple[str, str]]):
-    async def download_file(session: aiohttp.ClientSession, url: str, i: int, sem: asyncio.Semaphore, sem2: asyncio.Semaphore, file_path: str):
+    async def download_file(
+        session: aiohttp.ClientSession,
+        url: str,
+        i: int,
+        sem: asyncio.Semaphore,
+        sem2: asyncio.Semaphore,
+        file_path: str,
+    ):
         async with sem2:
             progress_bar = tqdm(
                 desc=f"• Installing {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.YELLOW}Pending...{Style.RESET_ALL}",
@@ -78,9 +85,7 @@ async def download_file_urls(download_url2dst: list[tuple[str, str]]):
 
         for i, (url, dst) in enumerate(download_url2dst):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
-            task = asyncio.create_task(
-                download_file(session, url, i, sem, sem2, dst)
-            )
+            task = asyncio.create_task(download_file(session, url, i, sem, sem2, dst))
             tasks.append(task)
 
         progress_bars = await asyncio.gather(*tasks)

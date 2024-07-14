@@ -279,7 +279,9 @@ class PluginMarket:
             self.plugin_id_name_map = self.get_plugin_id_name_map()
         plugin_name = self.plugin_id_name_map.get(plugin_id)
         if plugin_name is None:
-            raise requests.RequestException(f"无法通过 ID: {plugin_id} 查找插件, 你可能需要反馈此问题至开发者")
+            raise requests.RequestException(
+                f"无法通过 ID: {plugin_id} 查找插件, 你可能需要反馈此问题至开发者"
+            )
         data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
         datas = get_json_from_url(data_url)
         return PluginRegData(plugin_name, datas)
@@ -393,14 +395,21 @@ class PluginMarket:
                 case "classic":
                     plugintype_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
                 case "injected":
-                    plugintype_path = os.path.join("插件文件", TOOLDELTA_INJECTED_PLUGIN)
+                    plugintype_path = os.path.join(
+                        "插件文件", TOOLDELTA_INJECTED_PLUGIN
+                    )
                 case _:
                     raise ValueError(
                         f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                     )
             # urls tuple: url, dst
             for path in plugin_filepaths_dict[plugin_name]:
-                plugins_url2dst_solve.append((url_join(self.plugins_download_url, path), os.path.join(plugintype_path, path)))
+                plugins_url2dst_solve.append(
+                    (
+                        url_join(self.plugins_download_url, path),
+                        os.path.join(plugintype_path, path),
+                    )
+                )
         Print.clean_print(
             f"§bTD下载管理器: §7需要下载 §c{len(plugins_url2dst_solve)} §7个文件"
         )

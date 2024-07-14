@@ -15,13 +15,12 @@ import ujson as json
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
-event_pool = {
-    "timer_events": threading.Event()
-}
+event_pool = {"timer_events": threading.Event()}
 threads_list: list["Utils.createThread"] = []
 timer_events_table: dict[int, tuple[str, Callable, tuple, dict]] = {}
 
 VT = TypeVar("VT")
+
 
 class Utils:
     """提供了一些实用方法的类"""
@@ -339,8 +338,7 @@ class Utils:
             """
             os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
             with open(
-                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json",
-                "w"
+                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w"
             ) as f:
                 Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
 
@@ -468,11 +466,14 @@ class Utils:
             seconds (int): 周期秒数
             name (Optional[str], optional): 名字, 默认为自动生成的
         """
+
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
             def caller(*args, **kwargs):
                 func_name = name or f"简易方法:{func.__name__}"
                 timer_events_table[t] = (func_name, func, args, kwargs)
+
             return caller
+
         return receiver
 
     @staticmethod
@@ -512,12 +513,14 @@ class Utils:
         Returns:
             list[list[VT]]: 传出的被分割的列表
         """
-        return [lst[i:i+length] for i in range(0, len(lst), length)]
+        return [lst[i : i + length] for i in range(0, len(lst), length)]
+
 
 def safe_close() -> None:
     """安全关闭"""
     event_pool["timer_events"].set()
     _tmpjson_save()
+
 
 def _tmpjson_save():
     "请不要在系统调用以外调用"
@@ -530,11 +533,13 @@ def _tmpjson_save():
             Utils.TMPJson.unloadPathJson(k)
             del jsonUnloadPathTmp[k]
 
+
 @Utils.timer_event(1, "缓存JSON数据定时保存")
 @Utils.thread_func("JSON 缓存文件定时保存")
 def tmpjson_save():
     "请不要在系统调用以外调用"
     _tmpjson_save()
+
 
 @Utils.thread_func("ToolDelta 定时任务")
 def timer_event_boostrap():
@@ -547,6 +552,7 @@ def timer_event_boostrap():
                 v(*a, **kwa)
         evt.wait(1)
         timer += 1
+
 
 jsonPathTmp = {}
 chatbar_lock_list = []

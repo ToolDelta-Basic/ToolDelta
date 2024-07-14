@@ -347,18 +347,18 @@ class ToolDelta:
     def welcome() -> None:
         """欢迎提示"""
         Print.print_with_info(
-            f"§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD
+            "§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+            "§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
         )
         Print.print_with_info(
-            f"§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
+            "§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
         )
         Print.print_with_info(
             f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
         )
-        Print.print_with_info(f"§dToolDelta Panel 已启动", Print.INFO_LOAD)
+        Print.print_with_info("§dToolDelta Panel 已启动", Print.INFO_LOAD)
 
     @staticmethod
     def basic_operation():
@@ -442,7 +442,9 @@ class ToolDelta:
                     mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(
                         result.as_dict["OutputMessages"]
                     )
-                    desc = json.dumps(result.as_dict["OutputMessages"], indent=2, ensure_ascii=False)
+                    desc = json.dumps(
+                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
+                    )
                     if result.SuccessCount:
                         print_str = "指令执行成功: " + " ".join(mjon)
                         Print.print_suc(print_str)
@@ -471,7 +473,7 @@ class ToolDelta:
                 self.init_basic_help_menu,
             )
             self.add_console_cmd_trigger(
-                ["exit"], None, f"退出并关闭ToolDelta", lambda _: None
+                ["exit"], None, "退出并关闭ToolDelta", lambda _: None
             )
             self.add_console_cmd_trigger(
                 ["插件市场"],
@@ -797,7 +799,9 @@ class GameCtrl:
             + self.bot_name
         )
         self.sendcmd("/tag @s add robot")
-        Print.print_inf("在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件")
+        Print.print_inf(
+            "在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件"
+        )
         Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
 
     @property
@@ -809,7 +813,7 @@ class GameCtrl:
     def sendcmd_with_resp(
         self, cmd: str, timeout: int | float = 30
     ) -> Packet_CommandOutput:
-        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout) # type: ignore
+        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 
     def say_to(self, target: str, text: str) -> None:
