@@ -6,7 +6,12 @@ import shlex
 import subprocess
 import threading
 import time
+import uuid
+import random
+import string
+import ujson
 from typing import Callable, Optional
+from websocket_server import WebsocketServer
 
 import tooldelta
 
@@ -618,6 +623,28 @@ class FrameNeOmgRemote(FrameNeOmg):
             return Exception("接入点已崩溃")
         return SystemError("未知的退出状态")
 
+class FrameJavaServerConnect(StandardFrame):
+    """使用 Java 服务端插件连接到Java服务端"""
+
+    CoreVersion: str = "0.0.1"
+
+    def __init__(self, host: str, port: int) -> None:
+        super().__init__()
+        self.ClientStatus: Optional[int] = None
+        self.ServerConfig: dict = {"host": host, "port": port, "token": self.get_connect_token()}
+        self.sign_client: dict = {self.ServerConfig["token"]: {"client": [], "version": self.CoreVersion}}
+        self.WsServer = WebsocketServer(host = self.host, port = self.port)
+
+    def get_connect_token(self) -> str:
+        random_uuid = uuid.uuid4().hex
+        token_parts = [random_uuid[i:i+4] for i in range(0, len(random_uuid), 4)]
+        for i in range(len(token_parts)):
+            token_parts[i] = token_parts[i].upper()
+            for j in range(len(token_parts[i])):
+                if random.random() < 0.2:
+                    token_parts[i] = token_parts[i][:j] + random.choice(string.digits) + token_parts[i][j+1:]
+        token = '-'.join(token_parts)
+        return token
 
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
