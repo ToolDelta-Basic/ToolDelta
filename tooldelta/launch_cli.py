@@ -633,7 +633,7 @@ class FrameJavaServerConnect(StandardFrame):
         self.ClientStatus: Optional[int] = None
         self.ServerConfig: dict = {"host": host, "port": port, "token": self.get_connect_token()}
         self.sign_client: dict = {self.ServerConfig["token"]: {"client": [], "version": self.CoreVersion}}
-        self.WsServer = WebsocketServer(host = self.host, port = self.port)
+        self.WsServer = WebsocketServer(host = self.ServerConfig["host"], port = self.ServerConfig["port"])
 
     def get_connect_token(self) -> str:
         random_uuid = uuid.uuid4().hex
