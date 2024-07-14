@@ -279,7 +279,7 @@ class PluginMarket:
             self.plugin_id_name_map = self.get_plugin_id_name_map()
         plugin_name = self.plugin_id_name_map.get(plugin_id)
         if plugin_name is None:
-            raise KeyError(f"无法通过 ID: {plugin_id} 查找插件")
+            raise requests.RequestException(f"无法通过 ID: {plugin_id} 查找插件, 你可能需要反馈此问题至开发者")
         data_url = self.plugins_download_url + "/" + plugin_name + "/datas.json"
         datas = get_json_from_url(data_url)
         return PluginRegData(plugin_name, datas)
