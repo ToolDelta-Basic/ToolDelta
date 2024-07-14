@@ -253,7 +253,7 @@ class Utils:
         """提供了安全的 JSON 文件操作方法的类."""
 
         @staticmethod
-        def SafeJsonDump(obj: Any, fp: TextIOWrapper | str, indent=4) -> None:
+        def SafeJsonDump(obj: Any, fp: TextIOWrapper | str, indent=2) -> None:
             """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
 
             Args:
@@ -519,6 +519,7 @@ class Utils:
 def safe_close() -> None:
     """安全关闭"""
     event_pool["timer_events"].set()
+    print(jsonPathTmp)
     _tmpjson_save()
 
 
