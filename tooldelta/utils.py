@@ -517,11 +517,9 @@ class Utils:
 def safe_close() -> None:
     """安全关闭"""
     event_pool["timer_events"].set()
+    _tmpjson_save()
 
-
-@Utils.timer_event(1, "缓存JSON数据定时保存")
-@Utils.thread_func("JSON 缓存文件定时保存")
-def tmpjson_save_thread():
+def _tmpjson_save():
     "请不要在系统调用以外调用"
     for k, (isChanged, dat) in jsonPathTmp.copy().items():
         if isChanged:
@@ -532,6 +530,11 @@ def tmpjson_save_thread():
             Utils.TMPJson.unloadPathJson(k)
             del jsonUnloadPathTmp[k]
 
+@Utils.timer_event(1, "缓存JSON数据定时保存")
+@Utils.thread_func("JSON 缓存文件定时保存")
+def tmpjson_save():
+    "请不要在系统调用以外调用"
+    _tmpjson_save()
 
 @Utils.thread_func("ToolDelta 定时任务")
 def timer_event_boostrap():
