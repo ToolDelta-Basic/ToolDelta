@@ -10,6 +10,7 @@ import uuid
 import random
 import string
 import ujson
+import socket
 from typing import Callable, Optional
 from websocket_server import WebsocketServer
 
@@ -23,6 +24,8 @@ from .packets import Packet_CommandOutput
 from .sys_args import sys_args_to_dict
 from .urlmethod import get_free_port
 from .utils import Utils
+from .pkt_type import id_map
+from .constants import LAUNCH_CFG_STD
 
 Config = Cfg()
 
@@ -623,17 +626,41 @@ class FrameNeOmgRemote(FrameNeOmg):
             return Exception("接入点已崩溃")
         return SystemError("未知的退出状态")
 
-class FrameJavaServerConnect(StandardFrame):
+class FrameJavaPluginConnect(StandardFrame):
     """使用 Java 服务端插件连接到Java服务端"""
 
     CoreVersion: str = "0.0.1"
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.ClientStatus: Optional[int] = None
-        self.ServerConfig: dict = {"host": host, "port": port, "token": self.get_connect_token()}
+        self.status = SysStatus.LOADING
+        self.Config = Cfg().get_cfg("ToolDelta基本配置.json", LAUNCH_CFG_STD)
+        self.ClientStatus: bool = None
+        self.ServerConfig: dict = {"host": self.Config['Java版服务端插件连接启动模式']['主机地址'], "port": self.Config['Java版服务端插件连接启动模式']['端口'], "token": self.get_connect_token()}
         self.sign_client: dict = {self.ServerConfig["token"]: {"client": [], "version": self.CoreVersion}}
         self.WsServer = WebsocketServer(host = self.ServerConfig["host"], port = self.ServerConfig["port"])
+        self.WsServer.set_fn_new_client(self.new_client)
+        self.WsServer.set_fn_client_left(self.client_left)
+        self.WsServer.set_fn_message_received(self.handle_message)
+
+    def launch(self) -> SystemExit | Exception | SystemError:
+        """启动 NeOmega 进程
+
+        returns:
+            SystemExit: 正常退出
+            Exception: 异常退出
+            SystemError: 未知的退出状态
+        """ 
+        self.status = SysStatus.LAUNCHING
+        threading.Thread(target=self.WsServer.serve_forever, daemon=True, name="WebsocketServer").start()
+        self.update_status(SysStatus.RUNNING)
+        Print.print_suc(f"WebSocket服务端正在监听地址 -> ws://{socket.gethostbyname(socket.gethostname())}:{str(self.Config['Java版服务端插件连接启动模式']['端口'])}")
+        Print.print_suc(f"ToolDelta将为ToolDelta在Java服务端插件开放Token -> {self.ServerConfig['token']}")
+        Print.print_war(f"因代码结构限制，该启动方式无法保证完全正常运行，如发现报错请前往Github提交issue，我们会尽快解决！")
+        self.exit_event.wait()
+        if self.status == SysStatus.NORMAL_EXIT:
+            return SystemExit("正常退出")
+        return SystemError("未知的退出状态")
 
     def get_connect_token(self) -> str:
         random_uuid = uuid.uuid4().hex
@@ -646,6 +673,24 @@ class FrameJavaServerConnect(StandardFrame):
         token = '-'.join(token_parts)
         return token
 
+    def new_client(self, client, server) -> None:
+        if self.ClientStatus == True:
+            self.WsServer.close_request()
+        self.ClientStatus = True
+
+        self.WsServer.send_message(client, id_map.IDMap[0].OnClientConnectBuild(True).result)
+
+    def handle_message(self, client, server, message) -> None:
+        print(ujson.loads(message))
+        pkt_id:int = int(ujson.loads(message)["pkt_id"])
+        handle = id_map.IDMap[pkt_id].handlePacket
+        result = handle(ujson.loads(message), client, server, self.ServerConfig["token"], self.sign_client)
+        self.WsServer.send_message(client, result.result)
+
+    def client_left(self, client, server) -> None:
+        self.ClientStatus = False
+        self.status = SysStatus.CRASHED_EXIT
+        
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
 

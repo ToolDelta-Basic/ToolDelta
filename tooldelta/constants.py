@@ -44,6 +44,12 @@ LAUNCHER_BEWS_STD: dict = {"服务端开放地址": str}
 LAUNCHER_BEWS_DEFAULT: dict = {"服务端开放地址": ""}
 "启动器：BEWSServer 默认启动配置"
 
+LAUNCHER_JavaPluginWs_STD: dict = {"主机地址": str, "端口": int, "WebSocket开放地址": str}
+"启动器：JSWS 启动配置验证格式"
+
+LAUNCHER_JavaPluginWs_DEFAULT: dict = {"主机地址": "127.0.0.1", "端口": 0,  "WebSocket开放地址": "ws://127.0.0.1:0"}
+"启动器：JSWS 默认启动配置"
+
 FB_APIS = [
     "https://api.fastbuilder.pro/api/phoenix/login",
     "https://api.fastbuilder.pro/api/new",
@@ -76,12 +82,15 @@ TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
 TOOLDELTA_INJECTED_PLUGIN = "ToolDelta注入式插件"
 "插件文件：ToolDelta 注入式插件 路径"
 
+TOOLDELTA_JAVACONNECT_PLUGIN = "ToolDeltaJavaConnect插件"
+
 TOOLDELTA_PLUGIN_DATA_DIR = "插件数据文件"
 "插件数据文件文件夹路径"
 
 PLUGIN_TYPE_MAPPING = {
     "classic": TOOLDELTA_CLASSIC_PLUGIN,
     "injected": TOOLDELTA_INJECTED_PLUGIN,
+    "javaconnect": TOOLDELTA_JAVACONNECT_PLUGIN,
 }
 "插件属性名映射"
 

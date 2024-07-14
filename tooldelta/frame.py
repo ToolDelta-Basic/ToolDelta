@@ -16,6 +16,7 @@ import signal
 import sys
 import time
 import traceback
+import socket
 from typing import TYPE_CHECKING, Callable
 
 import requests
@@ -36,6 +37,7 @@ from .launch_cli import (
     FrameBEConnect,
     FrameNeOmg,
     FrameNeOmgRemote,
+    FrameJavaPluginConnect,
     SysStatus,
 )
 from .logger import publicLogger
@@ -53,10 +55,8 @@ if TYPE_CHECKING:
 
 LAUNCHERS: list[tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]] = [
     ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmg),
-    (
-        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
-        FrameNeOmgRemote,
-    ),
+    ("NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)", FrameNeOmgRemote),
+    ("JavaPlugin 框架 (FrameJavaPlugin 连接模式，需要在Java插件服务端(Bukkit)装载对应的ToolDelta Java插件)", FrameJavaPluginConnect),
 ]
 
 
@@ -255,6 +255,14 @@ class ToolDelta:
                     addr = "ws://" + addr
                 launch_data["服务端开放地址"] = addr
                 Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+        elif type(self.launcher) is FrameJavaPluginConnect:
+            cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+            launch_data = cfgs.get("Java版服务端插件连接启动模式", constants.LAUNCHER_JavaPluginWs_DEFAULT)
+            if len(launch_data["主机地址"]) <= 1 or len(str(launch_data["端口"])) <= 1:
+                Print.print_inf(f"默认设置WebSocket服务端地址为 -> ws://{socket.gethostbyname(socket.gethostname())}:{str(launch_data['端口'])}")
+                cfgs["主机地址"] = f"ws://{socket.gethostname()}:{launch_data['端口']}"
+            cfgs["Java版服务端插件连接启动模式"] = launch_data
+            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         else:
             raise ValueError("LAUNCHER Error")
         Print.print_suc("配置文件读取完成")

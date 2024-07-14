@@ -7,6 +7,7 @@ from typing import Any
 from tooldelta.constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
+    TOOLDELTA_JAVACONNECT_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
     PLUGIN_TYPE_MAPPING,
 )
