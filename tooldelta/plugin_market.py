@@ -402,7 +402,6 @@ class PluginMarket:
                     raise ValueError(
                         f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                     )
-            # urls tuple: url, dst
             for path in plugin_filepaths_dict[plugin_name]:
                 plugins_url2dst_solve.append(
                     (
