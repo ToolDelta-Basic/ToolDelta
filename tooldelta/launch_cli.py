@@ -247,9 +247,11 @@ class FrameNeOmg(StandardFrame):
         self.auth_server: Optional[str] = None
 
     def init(self):
+        Print.print_inf("检测接入点和依赖库的最新版本..", end="\r")
         res = neo_fd.download_libs()
         if not res:
             raise SystemExit("ToolDelta 因下载库异常而退出")
+        Print.print_inf("检测接入点和依赖库的最新版本..完成")
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
@@ -284,20 +286,20 @@ class FrameNeOmg(StandardFrame):
         Raises:
             SystemExit: 系统退出
         """
-        retries = 0
+        retries = 1
         self.omega.address = f"tcp://localhost:{openat_port}"
         while retries <= 10:
             try:
                 self.omega.connect()
-                retries = 0
+                retries = 1
                 break
             except Exception as err:
-                Print.print_war(f"OMEGA 连接失败，重连：第 {retries} 次：{err}")
+                Print.print_war(f"OMEGA 连接失败第 {err} (第{retries}次)")
                 time.sleep(5)
                 retries += 1
                 if retries > 5:
                     Print.print_err("最大重试次数已超过")
-                    raise SystemExit from err
+                    self.update_status(SysStatus.CRASHED_EXIT)
 
     def start_neomega_proc(self) -> int:
         """启动 NeOmega 进程
@@ -305,7 +307,7 @@ class FrameNeOmg(StandardFrame):
         Returns:
             int: 端口号
         """
-        free_port = get_free_port(24016)
+        free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
             sys_machine = "amd64"
@@ -331,6 +333,7 @@ class FrameNeOmg(StandardFrame):
             or isinstance(self.auth_server, type(None))
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
+        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
         self.neomg_proc = subprocess.Popen(
             [
                 exe_file_path,
@@ -360,6 +363,8 @@ class FrameNeOmg(StandardFrame):
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                if self.status == SysStatus.RUNNING:
+                    self.update_status(SysStatus.CRASHED_EXIT)
                 break
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()

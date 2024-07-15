@@ -15,13 +15,12 @@ import ujson as json
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
-event_pool = {
-    "timer_events": threading.Event()
-}
+event_pool = {"timer_events": threading.Event()}
 threads_list: list["Utils.createThread"] = []
-timer_events_table: dict[int, tuple[str, Callable]] = {}
+timer_events_table: dict[int, tuple[str, Callable, tuple, dict]] = {}
 
 VT = TypeVar("VT")
+
 
 class Utils:
     """提供了一些实用方法的类"""
@@ -254,7 +253,7 @@ class Utils:
         """提供了安全的 JSON 文件操作方法的类."""
 
         @staticmethod
-        def SafeJsonDump(obj: Any, fp: TextIOWrapper | str, indent=4) -> None:
+        def SafeJsonDump(obj: Any, fp: TextIOWrapper | str, indent=2) -> None:
             """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
 
             Args:
@@ -339,8 +338,7 @@ class Utils:
             """
             os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
             with open(
-                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json",
-                "w"
+                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w"
             ) as f:
                 Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
 
@@ -462,14 +460,20 @@ class Utils:
         """
         将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
         注意: 请不要在函数内放可能造成堵塞的内容
+        注意: 当此函数被修饰后, 需要调用一次才能开始定时任务线程!
 
         Args:
             seconds (int): 周期秒数
             name (Optional[str], optional): 名字, 默认为自动生成的
         """
+
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
-            func_name = name or f"简易方法:{func.__name__}"
-            timer_events_table[t] = (func_name, func)
+            def caller(*args, **kwargs):
+                func_name = name or f"简易方法:{func.__name__}"
+                timer_events_table[t] = (func_name, func, args, kwargs)
+
+            return caller
+
         return receiver
 
     @staticmethod
@@ -509,16 +513,16 @@ class Utils:
         Returns:
             list[list[VT]]: 传出的被分割的列表
         """
-        return [lst[i:i+length] for i in range(0, len(lst), length)]
+        return [lst[i : i + length] for i in range(0, len(lst), length)]
+
 
 def safe_close() -> None:
     """安全关闭"""
     event_pool["timer_events"].set()
+    _tmpjson_save()
 
 
-@Utils.timer_event(120, "缓存JSON数据定时保存")
-@Utils.thread_func("JSON 缓存文件定时保存")
-def tmpjson_save_thread():
+def _tmpjson_save():
     "请不要在系统调用以外调用"
     for k, (isChanged, dat) in jsonPathTmp.copy().items():
         if isChanged:
@@ -530,17 +534,25 @@ def tmpjson_save_thread():
             del jsonUnloadPathTmp[k]
 
 
+@Utils.timer_event(1, "缓存JSON数据定时保存")
+@Utils.thread_func("JSON 缓存文件定时保存")
+def tmpjson_save():
+    "请不要在系统调用以外调用"
+    _tmpjson_save()
+
+
 @Utils.thread_func("ToolDelta 定时任务")
 def timer_event_boostrap():
     "请不要在系统调用以外调用"
     timer = 0
     evt = event_pool["timer_events"]
     while not evt.is_set():
-        for k, (_, v) in timer_events_table.items():
+        for k, (_, v, a, kwa) in timer_events_table.items():
             if timer % k == 0:
-                v()
+                v(*a, **kwa)
         evt.wait(1)
         timer += 1
+
 
 jsonPathTmp = {}
 chatbar_lock_list = []

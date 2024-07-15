@@ -10,7 +10,7 @@ from .launch_cli import FrameJavaPluginConnect
 from .plugin_load.PluginGroup import plugin_group
 from .sys_args import sys_args_to_dict
 from .urlmethod import check_update
-from .utils import timer_event_boostrap
+from .utils import timer_event_boostrap, tmpjson_save
 
 tooldelta = ToolDelta()
 
@@ -34,6 +34,7 @@ def start_tool_delta() -> None:
         plugin_group.set_frame(tooldelta)
         plugin_group.read_all_plugins()
         timer_event_boostrap()
+        tmpjson_save()
         if type(tooldelta.launcher) == FrameJavaPluginConnect:
             tooldelta.launcher.listen_launched(server_control.Inject)
         else:
@@ -41,6 +42,7 @@ def start_tool_delta() -> None:
         game_control.set_listen_packets()
         raise tooldelta.launcher.launch()
     except (KeyboardInterrupt, SystemExit, EOFError):
+        Print.print_inf("ToolDelta 已关闭")
         pass
     except Exception:
         Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")

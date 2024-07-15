@@ -1,13 +1,16 @@
 """自定义常用 URL 方法"""
 
+from colorama import Fore, Style, init
+from tqdm.asyncio import tqdm
+import aiohttp
+import asyncio
 import os
 import re
 import shutil
 import socket
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Union
-
+from typing import Union, List, Tuple
 import pyspeedtest
 import requests
 
@@ -21,6 +24,106 @@ mirror_github = [
     "https://gh.con.sh/{}",
     "https://mirror.ghproxy.com/{}",
 ]
+
+# Initialize colorama
+init(autoreset=True)
+
+
+async def download_file_urls(download_url2dst: List[Tuple[str, str]]) -> None:
+    """
+    从给定的URL并发下载文件到指定的目标路径。
+
+    Args:
+        download_url2dst (List[Tuple[str, str]]): 包含多个元组的列表，每个元组包含：
+            - url (str): 要下载的文件的URL。
+            - dst (str): 下载的文件将保存的目标路径。
+
+    Returns:
+        None
+    """
+
+    async def download_file(
+        session: aiohttp.ClientSession,
+        url: str,
+        i: int,
+        sem: asyncio.Semaphore,
+        sem2: asyncio.Semaphore,
+        file_path: str,
+    ) -> tqdm:
+        """
+        从给定的URL下载单个文件到指定的目标路径。
+
+        Args:
+            session (aiohttp.ClientSession): 用于发送HTTP请求的aiohttp客户端会话。
+            url (str): 要下载的文件的URL。
+            i (int): 下载任务的索引，用于进度条定位。
+            sem (asyncio.Semaphore): 用于限制同时进行的下载任务数量的信号量。
+            sem2 (asyncio.Semaphore): 用于限制显示的进度条数量的信号量。
+            file_path (str): 下载的文件将保存的目标路径。
+
+        Returns:
+            tqdm: 下载任务的进度条。
+        """
+        async with sem2:
+            progress_bar = tqdm(
+                desc=f"• Downloading {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.YELLOW}Pending...{Style.RESET_ALL}",
+                total=0,
+                unit="MB",
+                unit_scale=True,
+                bar_format="{desc} {n:.2f}MB/{total:.2f}MB",
+                position=i,
+            )
+            async with sem:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        filename = url.split("/")[-1]
+                        total_size = int(response.headers.get("content-length", 0))
+                        total_size_mb = total_size / (1024 * 1024)  # 转换为 MB
+                        progress_bar.reset(total=total_size_mb)
+
+                        progress_bar.set_description_str(
+                            f"• Downloading {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.YELLOW}In Progress...{Style.RESET_ALL}"
+                        )
+                        downloaded = 0
+
+                        with open(file_path, "wb") as f:
+                            async for chunk in response.content.iter_chunked(1024):
+                                f.write(chunk)
+                                downloaded += len(chunk)
+                                progress_bar.update(
+                                    len(chunk) / (1024 * 1024)
+                                )  # 更新进度为 MB
+
+                        progress_bar.set_description_str(
+                            f"• Downloading {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.GREEN}Succeed{Style.RESET_ALL}"
+                        )
+                        progress_bar.bar_format = "{desc}"  # 只显示描述
+                        progress_bar.refresh()
+                    else:
+                        progress_bar.set_description_str(
+                            f"• Downloading {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.RED}Failed (HTTP {response.status}){Style.RESET_ALL}"
+                        )
+                        progress_bar.bar_format = "{desc}"  # 只显示描述
+                        progress_bar.refresh()
+            return progress_bar
+
+    sem: asyncio.Semaphore = asyncio.Semaphore(4)  # 限制同时进行的下载任务数量为4
+    sem2: asyncio.Semaphore = asyncio.Semaphore(10)  # 只显示 10 个下载任务
+
+    async with aiohttp.ClientSession() as session:
+        tasks: List[asyncio.Task] = []
+        progress_bars: List[tqdm] = []
+
+        for i, (url, dst) in enumerate(download_url2dst):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            task: asyncio.Task = asyncio.create_task(
+                download_file(session, url, i, sem, sem2, dst)
+            )
+            tasks.append(task)
+
+        progress_bars = await asyncio.gather(*tasks)
+        for progress_bar in progress_bars:
+            progress_bar.close()
 
 
 def format_mirror_url(url: str) -> list:

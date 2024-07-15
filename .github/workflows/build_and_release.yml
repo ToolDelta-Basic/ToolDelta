@@ -1,5 +1,4 @@
 name: Build binaries and Upload to Release
-
 on:
   workflow_run:
     workflows: ["Sync Version"]
@@ -13,40 +12,66 @@ defaults:
 
 jobs:
   build:
-    name: Build and Release for ${{ matrix.os }}
+    name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
-        python-version: ["3.12"]
+        include:
+          - os: windows-latest
+            artifact_name: ToolDelta-windows.exe
+          - os: ubuntu-latest
+            artifact_name: ToolDelta-linux
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: "Setup Python, Poetry and Dependencies"
+      - name: "Setup Python, Poetry and Dependencaies"
         uses: packetcoders/action-setup-cache-python-poetry@main
         with:
           poetry-version: 1.7.1
-          python-version: ${{matrix.python-version}}
+          python-version: 3.12
+      - name: Install dependencies
+        run: poetry install
 
-      - name: Build
+      - name: Install Nuitka
+        run: poetry add nuitka
+
+      - name: Build for Windows
+        if: matrix.os == 'windows-latest'
         run: |
-          poetry add pyinstaller
-          poetry run pyinstaller -F -n ToolDelta-${{ matrix.os == 'windows-latest' && 'windows.exe' || 'linux' }} -i logo.ico main.py
+          poetry run python -m nuitka --assume-yes-for-downloads --onefile --windows-icon-from-ico=logo.ico --output-filename=${{ matrix.artifact_name }} main.py
+
+      - name: Build for Linux x86_64
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          poetry run python -m nuitka --onefile --output-filename=${{ matrix.artifact_name }} main.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
+
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Get Version
         run: echo "VERSION=$(<version)" >> $GITHUB_ENV
 
-      # - name: Combine Certificates && Sign Binaries
-      #   run: |
-      #     if [ ${{ matrix.os }} == 'windows-latest' ]; then
-      #       ./signtool.exe sign /fd certHash /f ToolDelta.pfx /p ${{secrets.CERTIFICATE_PASSWORD}} /t http://timestamp.digicert.com ToolDelta-windows.exe
-      #     fi
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          files: dist/*
+          files: |
+            ToolDelta-windows.exe/ToolDelta-windows.exe
+            ToolDelta-linux/ToolDelta-linux

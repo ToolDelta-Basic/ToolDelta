@@ -1,10 +1,13 @@
+import asyncio
 import json
 import os
 import platform
+from typing import List, Tuple
 
 import requests
 
 from tooldelta import constants
+from tooldelta import urlmethod
 from tooldelta.cfg import Config
 from tooldelta.color_print import Print
 from tooldelta.sys_args import sys_args_to_dict
@@ -60,16 +63,12 @@ def download_libs() -> bool:
             replace_file = True
     else:
         replace_file = True
+    solve_dict: List[Tuple[str, str]] = []
     for v in source_dict:
         pathdir = os.path.join(os.getcwd(), "tooldelta", "neo_libs", v)
-        url = depen_url + v
         if not os.path.isfile(pathdir) or replace_file:
-            Print.print_with_info(f"正在下载依赖库 {pathdir} ...", "§a 下载 §r")
-            try:
-                download_file_singlethreaded(url, pathdir)
-            except Exception as err:
-                Print.print_err(f"下载依赖库出现问题：{err}")
-                return False
+            solve_dict.append((depen_url + v, pathdir))
+    asyncio.run(urlmethod.download_file_urls(solve_dict))
     if replace_file:
         # 写入 commit_remote，文字写入
         with open(commit_file_path, "w", encoding="utf-8") as f:
