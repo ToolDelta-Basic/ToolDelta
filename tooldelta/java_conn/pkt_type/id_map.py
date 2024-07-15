@@ -1,4 +1,4 @@
-from tooldelta.pkt_type import (
+from tooldelta.java_conn.pkt_type import (
     on_client_connect,
     verify_token,
     core_version,
