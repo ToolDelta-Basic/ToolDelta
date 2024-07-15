@@ -35,7 +35,7 @@ def start_tool_delta() -> None:
         plugin_group.read_all_plugins()
         timer_event_boostrap()
         tmpjson_save()
-        if type(tooldelta.launcher) == FrameJavaPluginConnect:
+        if type(tooldelta.launcher) is FrameJavaPluginConnect:
             tooldelta.launcher.listen_launched(server_control.Inject)
         else:
             tooldelta.launcher.listen_launched(game_control.Inject)

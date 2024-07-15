@@ -606,7 +606,7 @@ class ToolDelta:
         """
         gcl: "GameCtrl" = self.link_game_ctrl
         return gcl
-    
+
     def get_server_control(self) -> "ServerCtrl":
         """获取 ServerControl 对象
 

@@ -30,7 +30,6 @@ def handlePacket(message: Any, client, server, token, sign_token) -> VerifyToken
         if message["data"] == token:
             sign_token[token]["client"].append(client)
             return VerifyTokenResult(True)
-        else:
-            return VerifyTokenResult(False)
+        return VerifyTokenResult(False)
     except Exception as err:
         return VerifyTokenResult(False)
