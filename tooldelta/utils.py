@@ -519,7 +519,6 @@ class Utils:
 def safe_close() -> None:
     """安全关闭"""
     event_pool["timer_events"].set()
-    print(jsonPathTmp)
     _tmpjson_save()
 
 
