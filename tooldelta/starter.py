@@ -5,7 +5,8 @@ import time
 import traceback
 
 from .color_print import Print
-from .frame import GameCtrl, ToolDelta
+from .frame import GameCtrl, ToolDelta, ServerCtrl
+from .launch_cli import FrameJavaPluginConnect
 from .plugin_load.PluginGroup import plugin_group
 from .sys_args import sys_args_to_dict
 from .urlmethod import check_update
@@ -26,12 +27,17 @@ def start_tool_delta() -> None:
         tooldelta.loadConfiguration()
         tooldelta.launcher.init()
         game_control = GameCtrl(tooldelta)
+        server_control = ServerCtrl(tooldelta)
         tooldelta.set_game_control(game_control)
+        tooldelta.set_server_control(server_control)
         tooldelta.set_plugin_group(plugin_group)
         plugin_group.set_frame(tooldelta)
         plugin_group.read_all_plugins()
         timer_event_boostrap()
-        tooldelta.launcher.listen_launched(game_control.Inject)
+        if type(tooldelta.launcher) == FrameJavaPluginConnect:
+            tooldelta.launcher.listen_launched(server_control.Inject)
+        else:
+            tooldelta.launcher.listen_launched(game_control.Inject)
         game_control.set_listen_packets()
         raise tooldelta.launcher.launch()
     except (KeyboardInterrupt, SystemExit, EOFError):

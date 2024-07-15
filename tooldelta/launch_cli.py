@@ -11,6 +11,8 @@ import random
 import string
 import ujson
 import socket
+import logging
+import asyncio
 from typing import Callable, Optional
 from websocket_server import WebsocketServer
 
@@ -634,14 +636,13 @@ class FrameJavaPluginConnect(StandardFrame):
     def __init__(self) -> None:
         super().__init__()
         self.status = SysStatus.LOADING
+        self.ClientConnect = threading.Event()
         self.Config = Cfg().get_cfg("ToolDelta基本配置.json", LAUNCH_CFG_STD)
         self.ClientStatus: bool = None
-        self.ServerConfig: dict = {"host": self.Config['Java版服务端插件连接启动模式']['主机地址'], "port": self.Config['Java版服务端插件连接启动模式']['端口'], "token": self.get_connect_token()}
+        self.ClientObj: any = None
+        self.response_queue = asyncio.Queue()
+        self.ServerConfig: dict = {"host": None, "port": None, "token": self.get_connect_token()}
         self.sign_client: dict = {self.ServerConfig["token"]: {"client": [], "version": self.CoreVersion}}
-        self.WsServer = WebsocketServer(host = self.ServerConfig["host"], port = self.ServerConfig["port"])
-        self.WsServer.set_fn_new_client(self.new_client)
-        self.WsServer.set_fn_client_left(self.client_left)
-        self.WsServer.set_fn_message_received(self.handle_message)
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
@@ -652,15 +653,28 @@ class FrameJavaPluginConnect(StandardFrame):
             SystemError: 未知的退出状态
         """ 
         self.status = SysStatus.LAUNCHING
+        if self.ServerConfig["host"] is None or self.ServerConfig["port"] is None:
+            Print.print_err("未设置Java版服务端插件连接启动模式的主机地址或端口")
+            self.status = SysStatus.CRASHED_EXIT
+            raise SystemExit("启动参数错误")
+        self.WsServer = WebsocketServer(host = self.ServerConfig["host"], port = self.ServerConfig["port"], loglevel = logging.ERROR)
+        self.WsServer.set_fn_new_client(self.new_client)
+        self.WsServer.set_fn_client_left(self.client_left)
+        self.WsServer.set_fn_message_received(self.handle_message)
         threading.Thread(target=self.WsServer.serve_forever, daemon=True, name="WebsocketServer").start()
         self.update_status(SysStatus.RUNNING)
-        Print.print_suc(f"WebSocket服务端正在监听地址 -> ws://{socket.gethostbyname(socket.gethostname())}:{str(self.Config['Java版服务端插件连接启动模式']['端口'])}")
+        Print.print_suc(f"WebSocket服务端正在监听地址 -> ws://{self.ServerConfig['host']}:{str(self.ServerConfig['port'])}")
         Print.print_suc(f"ToolDelta将为ToolDelta在Java服务端插件开放Token -> {self.ServerConfig['token']}")
         Print.print_war(f"因代码结构限制，该启动方式无法保证完全正常运行，如发现报错请前往Github提交issue，我们会尽快解决！")
+        self._launcher_listener()
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
         return SystemError("未知的退出状态")
+    
+    def set_launch_data(self, host: str, port: int) -> None:
+        self.ServerConfig["host"] = host
+        self.ServerConfig["port"] = port
 
     def get_connect_token(self) -> str:
         random_uuid = uuid.uuid4().hex
@@ -672,15 +686,18 @@ class FrameJavaPluginConnect(StandardFrame):
                     token_parts[i] = token_parts[i][:j] + random.choice(string.digits) + token_parts[i][j+1:]
         token = '-'.join(token_parts)
         return token
+        # return "0000-0000"
 
     def new_client(self, client, server) -> None:
         if self.ClientStatus == True:
-            self.WsServer.close_request()
+            self.WsServer.close_request(client)
+        self.ClientObj = client
+        self.ClientConnect.set()
         self.ClientStatus = True
-
         self.WsServer.send_message(client, id_map.IDMap[0].OnClientConnectBuild(True).result)
 
     def handle_message(self, client, server, message) -> None:
+        self.response_queue.put_nowait(ujson.loads(message))
         print(ujson.loads(message))
         pkt_id:int = int(ujson.loads(message)["pkt_id"])
         handle = id_map.IDMap[pkt_id].handlePacket
@@ -689,7 +706,17 @@ class FrameJavaPluginConnect(StandardFrame):
 
     def client_left(self, client, server) -> None:
         self.ClientStatus = False
+        self.ClientConnect.clear()
+        self.ClientObj = None
         self.status = SysStatus.CRASHED_EXIT
+        
+    async def send_message_and_get_pkt(self, message: str) -> dict:
+        pkt_id: int = int(ujson.loads(message)["pkt_id"])
+        self.WsServer.send_message_to_all(message)
+        while True:
+            response = await self.response_queue.get()
+            if response.get("pkt_id") == pkt_id:
+                return response
         
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"

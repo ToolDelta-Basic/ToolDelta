@@ -4,9 +4,6 @@ import ujson
 
 @dataclass
 class CoreVersionBuild:
-    """
-        CoreVersionBuild: 请求Core版本号
-    """
     pkt_id: int
     type: str
     build: str
@@ -16,9 +13,6 @@ class CoreVersionBuild:
         self.build = ujson.dumps({"pkt_id": self.pkt_id, "type": self.type, "paramTypes": ["int", "string"], "paramValues": [self.pkt_id, self.type]})
 
 class CoreVersionResult:
-    """
-        CoreVersionResult: Core版本号返回结果
-    """
     pkt_id: int
     type: str
     version: str
@@ -30,8 +24,4 @@ class CoreVersionResult:
         self.result = ujson.dumps({"pkt_id": self.pkt_id, "type": self.type, "version": self.version, "paramTypes": ["int", "string", "string"], "paramValues": [self.pkt_id, self.type, self.version]})
 
 def handlePacket(message: Any, client, server, token, sign_token) -> CoreVersionResult:
-    """
-        Returns: CoreVersionResult
-        处理客户端发来的Core版本请求
-    """
     return CoreVersionResult(sign_token[token]["version"])

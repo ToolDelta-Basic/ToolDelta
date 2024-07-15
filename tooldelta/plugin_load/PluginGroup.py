@@ -28,6 +28,7 @@ from .injected_plugin import (
 from ..plugin_load import (
     classic_plugin,
     injected_plugin,
+    java_connect_plugin,
     NON_FUNC,
     PluginAPINotFoundError,
     PluginAPIVersionError,
@@ -76,6 +77,7 @@ class PluginGroup:
         self.plugins_api: dict[str, Plugin] = {}
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
+        self.javaconnect_plugin_loaded_num = 0
         self.loaded_plugins_name = []
         self.linked_frame: Union["ToolDelta", None] = None
 
@@ -239,12 +241,12 @@ class PluginGroup:
         try:
             Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin.read_plugins(self)
-            Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
+            java_connect_plugin.read_plugins(self)
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             Print.print_suc(
-                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个组合式插件，§f{self.injected_plugin_loaded_num}§a 个注入式插件"
+                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个组合式插件，§f{self.injected_plugin_loaded_num}§a 个注入式插件，§f{self.javaconnect_plugin_loaded_num}§a 个 Java 连接插件"
             )
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])

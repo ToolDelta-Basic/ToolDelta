@@ -3,10 +3,6 @@ import ujson
 
 @dataclass
 class OnClientConnectResult:
-    """
-        Args: data: bool
-        OnClientConnectResult: 客户端连接结果
-    """
     pkt_id: int
     type: str
     data: bool
@@ -17,10 +13,6 @@ class OnClientConnectResult:
         self.data = self.result["data"]
 
 class OnClientConnectBuild:
-    """
-        Args: data: bool
-        OnClientConnectResult: 客户端连接结果
-    """    
     pkt_id: int
     type: str
     data: bool

@@ -46,6 +46,7 @@ from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
 from .urlmethod import fbtokenFix, if_token
 from .utils import Utils, safe_close
+from .pkt_type import id_map
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
@@ -53,7 +54,7 @@ VERSION = get_tool_delta_version()
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
-LAUNCHERS: list[tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]] = [
+LAUNCHERS: list[tuple[str, type[FrameNeOmg | FrameNeOmgRemote | FrameJavaPluginConnect]]] = [
     ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmg),
     ("NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)", FrameNeOmgRemote),
     ("JavaPlugin 框架 (FrameJavaPlugin 连接模式，需要在Java插件服务端(Bukkit)装载对应的ToolDelta Java插件)", FrameJavaPluginConnect),
@@ -84,10 +85,11 @@ class ToolDelta:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.launcher: FrameNeOmg | FrameNeOmgRemote
+        self.launcher: FrameNeOmg | FrameNeOmgRemote | FrameJavaPluginConnect
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
+        self.link_server_ctrl: "ServerCtrl"
         self.link_plugin_group: "PluginGroup"
 
     def loadConfiguration(self) -> None:
@@ -256,13 +258,27 @@ class ToolDelta:
                 launch_data["服务端开放地址"] = addr
                 Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         elif type(self.launcher) is FrameJavaPluginConnect:
+            def is_port_open(port) -> bool:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    return s.connect_ex((socket.gethostbyname(socket.gethostname()), port)) == 0
             cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
             launch_data = cfgs.get("Java版服务端插件连接启动模式", constants.LAUNCHER_JavaPluginWs_DEFAULT)
-            if len(launch_data["主机地址"]) <= 1 or len(str(launch_data["端口"])) <= 1:
-                Print.print_inf(f"默认设置WebSocket服务端地址为 -> ws://{socket.gethostbyname(socket.gethostname())}:{str(launch_data['端口'])}")
-                cfgs["主机地址"] = f"ws://{socket.gethostname()}:{launch_data['端口']}"
+            if len(launch_data["主机地址"]) <= 1 or int(launch_data["端口"]) <= 1:
+                if not is_port_open(launch_data['端口']):
+                    Print.print_war(f"端口 {launch_data['端口']} 未开启，正在为您查找可用端口!")
+                    for i in range(49152, 65535):
+                        if not is_port_open(i):
+                            launch_data['端口'] = i
+                            break
+                    else:
+                        raise ValueError("没有可用端口")
+                Print.print_inf(f"默认设置WebSocket服务端地址为 -> ws://{launch_data['主机地址']}:{str(launch_data['端口'])}")
             cfgs["Java版服务端插件连接启动模式"] = launch_data
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+            self.launcher.set_launch_data(
+                launch_data["主机地址"],
+                launch_data["端口"],
+            )
         else:
             raise ValueError("LAUNCHER Error")
         Print.print_suc("配置文件读取完成")
@@ -373,6 +389,7 @@ class ToolDelta:
         """初始化文件夹"""
         os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
+        os.makedirs(f"插件文件/{constants.TOOLDELTA_JAVACONNECT_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
         os.makedirs("插件数据文件/game_texts", exist_ok=True)
@@ -563,6 +580,14 @@ class ToolDelta:
         """
         self.link_game_ctrl = game_ctrl
 
+    def set_server_control(self, server_ctrl: "ServerCtrl") -> None:
+        """使用外源 ServerControl
+
+        Args:
+            server_ctrl (_type_): ServerControl 对象
+        """
+        self.link_server_ctrl = server_ctrl
+
     def set_plugin_group(self, plug_grp) -> None:
         """使用外源 PluginGroup
 
@@ -579,6 +604,14 @@ class ToolDelta:
         """
         gcl: "GameCtrl" = self.link_game_ctrl
         return gcl
+    
+    def get_server_control(self) -> "ServerCtrl":
+        """获取 ServerControl 对象
+
+        Returns:
+            ServerCtrl: ServerControl 对象
+        """
+        scl: "ServerCtrl" = self.link_server_ctrl
 
     @staticmethod
     def safelyExit() -> None:
@@ -903,3 +936,51 @@ class GameCtrl:
         self.sendwocmd(
             f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
         )
+
+class ServerCtrl:
+    """与Java服务端交互部分"""
+
+    def __init__(self, frame: "ToolDelta"):
+        """初始化
+
+        Args:
+            frame (Frame): 继承 Frame 的对象
+        """
+        frame.basic_operation()
+        self.linked_frame = frame
+        self.linked_frame: ToolDelta
+        self.launcher = self.linked_frame.launcher
+
+    def Inject(self) -> None:
+        """载入游戏时的初始化"""
+        if self.launcher.ClientObj is None:
+            self.launcher.ClientConnect.wait()
+        self.allplayers = self.get_online_players()
+        self.linked_frame.comsole_cmd_start()
+        self.linked_frame.link_plugin_group.execute_init(
+            self.linked_frame.on_plugin_err
+        )
+        self.inject_welcome()
+
+    def inject_welcome(self) -> None:
+        """初始化欢迎信息"""
+        if not self.all_players_data == []:
+            Print.print_suc(
+                "成功连接到游戏网络并初始化, 当前无在线玩家！"
+            )
+        else:
+            Print.print_suc(
+                "成功连接到游戏网络并初始化, 在线玩家: "
+                + ", ".join(self.allplayers)
+            )
+        Print.print_inf("在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件")
+        Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
+
+    def get_online_players(self) -> list:
+        """获取在线玩家列表
+
+        Returns:
+            list: 在线玩家列表
+        """
+        response = asyncio.run(self.launcher.send_message_and_get_pkt(id_map.get_online_players.GetOnlinePlayersBuild().build))
+        print(response)

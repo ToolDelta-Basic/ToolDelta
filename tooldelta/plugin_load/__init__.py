@@ -89,6 +89,7 @@ class PluginRegData:
             {
                 "classic": TOOLDELTA_CLASSIC_PLUGIN,
                 "injected": TOOLDELTA_INJECTED_PLUGIN,
+                "javaconnect": TOOLDELTA_JAVACONNECT_PLUGIN,
             }[self.plugin_type],
             self.name,
         )

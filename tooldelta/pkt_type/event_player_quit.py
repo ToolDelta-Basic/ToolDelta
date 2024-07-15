@@ -3,7 +3,7 @@ from typing import Any, Collection
 import ujson
 
 @dataclass
-class EventPlayerJoinPlayer:
+class EventPlayerQuitPlayer:
     player_is_op: bool
     player_level: int
     player_name: str
@@ -34,15 +34,15 @@ class EventPlayerJoinPlayer:
         self.player_height = player_height
 
 @dataclass
-class EventPlayerJoinBuild:
+class EventPlayerQuitBuild:
     pkt_id: int
     type: str
-    data: EventPlayerJoinPlayer
+    data: EventPlayerQuitPlayer
     build: str
 
     def __init__(self, data) -> None:
-        self.pkt_id = 3
-        self.type = "event_player_join"
+        self.pkt_id = 4
+        self.type = "event_player_quit"
         self.data = data
         self.build = ujson.dumps({
             "pkt_id": self.pkt_id,
@@ -52,15 +52,15 @@ class EventPlayerJoinBuild:
             "paramValues": [self.pkt_id, self.type, self.data]
         })
 
-class EventPlayerJoinResult:
+class EventPlayerQuitResult:
     pkt_id: int
     type: str
     data: str
     result: str
 
     def __init__(self, data) -> None:
-        self.pkt_id = 3
-        self.type = "event_player_join"
+        self.pkt_id = 4
+        self.type = "event_player_quit"
         self.data = str(data)
         self.result = ujson.dumps({
             "pkt_id": self.pkt_id,
@@ -70,6 +70,6 @@ class EventPlayerJoinResult:
             "paramValues": [self.pkt_id, self.type, self.data]
         })
 
-def handlePacket(message: Any, client, server, token, sign_token) -> EventPlayerJoinResult:
+def handlePacket(message: Any, client, server, token, sign_token) -> EventPlayerQuitResult:
     message["data"] = ujson.loads(message["data"])
-    return EventPlayerJoinResult(True)
+    return EventPlayerQuitResult(True)
