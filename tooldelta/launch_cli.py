@@ -26,7 +26,7 @@ from .packets import Packet_CommandOutput
 from .sys_args import sys_args_to_dict
 from .urlmethod import get_free_port
 from .utils import Utils
-from .pkt_type import id_map
+from .java_conn.pkt_type import id_map
 from .constants import LAUNCH_CFG_STD
 
 Config = Cfg()

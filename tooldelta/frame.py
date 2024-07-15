@@ -46,7 +46,7 @@ from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
 from .urlmethod import fbtokenFix, if_token
 from .utils import Utils, safe_close
-from .pkt_type import id_map
+from .java_conn.pkt_type import id_map
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
