@@ -353,7 +353,7 @@ class FrameNeOmg(StandardFrame):
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
-                if self.status == SysStatus.RUNNING:
+                if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
             if "[neOmega 接入点]: 就绪" in msg_orig:

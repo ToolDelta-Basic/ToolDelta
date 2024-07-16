@@ -216,9 +216,9 @@ class ToolDelta:
                             "验证服务器地址(更换时记得更改fbtoken)"
                         ]:
                             case "https://liliya233.uk":
-                                token = auths.liliya_login()
+                                token = auths.sign_login(constants.GUGU_APIS)
                             case "https://api.fastbuilder.pro":
-                                token = auths.fbuc_login()
+                                token = auths.sign_login(constants.FB_APIS)
                             case _:
                                 Print.print_err("暂无法登录该验证服务器")
                                 raise SystemExit
@@ -228,7 +228,7 @@ class ToolDelta:
                         Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
             if_token()
             fbtokenFix()
-            with open("fbtoken", "r", encoding="utf-8") as f:
+            with open("fbtoken", encoding="utf-8") as f:
                 fbtoken = f.read()
             self.launcher.set_launch_data(
                 serverNumber, serverPasswd, fbtoken, auth_server
@@ -346,9 +346,7 @@ class ToolDelta:
     @staticmethod
     def welcome() -> None:
         """欢迎提示"""
-        Print.print_with_info(
-            "§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD
-        )
+        Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
         Print.print_with_info(
             "§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
         )
