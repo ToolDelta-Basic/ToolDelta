@@ -57,8 +57,6 @@ select = [
     "PT",    # flake8-pytest-style
     "Q",     # flake8-quotes
     "RUF",   # Ruff-specific rules
-    "PL",    # pylint
-
 ]
 ignore = [
     "E402",   # module-import-not-at-top-of-file

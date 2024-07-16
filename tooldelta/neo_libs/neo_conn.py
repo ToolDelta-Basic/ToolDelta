@@ -452,9 +452,8 @@ class PlayerKit:
             f"online={self.online}"
         )
 
-    def __del__(self):
-        LIB.ReleaseBindPlayer(toCString(self._uuid))
-
+def ReleaseBindPlayer( uuid: str):
+    LIB.ReleaseBindPlayer(toCString(uuid))
 
 class ConnectType(enum.Enum):
     Remote = "Remote"  # 连接到一个 neOmega Access Point
@@ -583,6 +582,8 @@ class ThreadOmega:
                     (self._get_bind_player(playerUUID), action),
                     usage="Player Change Callback Thread",
                 )
+
+
 
     @staticmethod
     def _handle_player_intercept_or_chat():
