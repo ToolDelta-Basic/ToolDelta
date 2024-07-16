@@ -62,7 +62,7 @@ def getTarget(sth: str, timeout: int = 5) -> list:
     return []
 
 
-def getPos(target: str, timeout: float | int = 5) -> dict:
+def getPos(target: str, timeout: float = 5) -> dict:
     """获取目标玩家的详细位置信息
 
     参数:
@@ -147,7 +147,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
     return int(result.OutputMessages[0].Parameters[1])
 
 
-def getPosXYZ(player, timeout: int | float = 30) -> tuple[float, float, float]:
+def getPosXYZ(player, timeout: float = 30) -> tuple[float, float, float]:
     """
     获取玩家的简略坐标值，并以坐标三元元组返回
     参数:

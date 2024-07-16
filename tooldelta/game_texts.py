@@ -8,7 +8,6 @@ import threading
 import warnings
 from glob import glob
 from importlib import util
-from typing import Dict
 
 import requests
 import ujson as json
@@ -35,7 +34,7 @@ class GameTextsLoader:
         if "no-download-libs" not in sys_args_to_dict():
             self.start_auto_update_thread()
             self.auto_update()
-        self.game_texts_data: Dict[str, str] = self.load_data()
+        self.game_texts_data: dict[str, str] = self.load_data()
 
     @staticmethod
     def get_latest_version() -> str:
@@ -77,7 +76,7 @@ class GameTextsLoader:
     def auto_update(self) -> None:
         "自动更新"
         version_file_path: str = os.path.join(self.base_path, "version")
-        with open(version_file_path, "r", encoding="utf-8") as f:
+        with open(version_file_path, encoding="utf-8") as f:
             version: str = f.read()
         latest_version: str = self.get_latest_version()
         if version != latest_version:
@@ -96,14 +95,14 @@ class GameTextsLoader:
         download_file_singlethreaded(packets_url, archive_path)
         self.extract_data_archive(archive_path)
 
-    def load_data(self) -> Dict[str, str]:
+    def load_data(self) -> dict[str, str]:
         """加载数据
 
         Returns:
-            Dict[str, str]: 数据
+            dict[str, str]: 数据
         """
         try:
-            all_values: Dict[str, str] = {}
+            all_values: dict[str, str] = {}
             for file_path in glob(
                 pathname=os.path.join(self.base_path, "src", "**", "*.py"),
                 recursive=True,
@@ -135,10 +134,13 @@ class GameTextsLoader:
             bool: 是否成功
         """
         try:
-            with gzip.open(zip_path, "rb") as f_in, tarfile.open(
-                fileobj=f_in,  # type: ignore
-                mode="r:gz",
-            ) as tar:
+            with (
+                gzip.open(zip_path, "rb") as f_in,
+                tarfile.open(
+                    fileobj=f_in,  # type: ignore
+                    mode="r:gz",
+                ) as tar,
+            ):
                 tar.extractall(self.base_path)
                 with open(
                     os.path.join(self.base_path, "src_tree.json"), "w", encoding="utf-8"

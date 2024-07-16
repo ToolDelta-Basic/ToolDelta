@@ -529,14 +529,14 @@ class ToolDelta:
         """系统退出"""
         asyncio.run(safe_jump())
         self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
-        if not isinstance(self.launcher, (FrameNeOmgRemote,)):
+        if not isinstance(self.launcher, FrameNeOmgRemote):
             with contextlib.suppress(Exception):
                 self.link_game_ctrl.sendwscmd(
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
                 )
             if not isinstance(self.launcher.neomg_proc, type(None)):
                 self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
-        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
+        if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -602,7 +602,7 @@ class GameCtrl:
         self.require_listen_packets = {9, 79, 63}
         self.store_uuid_pkt: dict[str, str] | None = None
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, (FrameNeOmgRemote, FrameNeOmg)):
+        if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理"
             )
@@ -716,7 +716,7 @@ class GameCtrl:
                     "§e%multiplayer.player.joined"
                 ) and not pkt["Message"].startswith("§e%multiplayer.player.left"):
                     jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
-                    Print.print_inf(("§1" + " ".join(jon)))
+                    Print.print_inf("§1" + " ".join(jon))
                     if pkt["Message"].startswith("death."):
                         if len(pkt["Parameters"]) >= 2:
                             killer = pkt["Parameters"][1]
@@ -808,9 +808,7 @@ class GameCtrl:
             return self.launcher.get_bot_name()
         raise ValueError("此启动器框架无法产生机器人名")
 
-    def sendcmd_with_resp(
-        self, cmd: str, timeout: int | float = 30
-    ) -> Packet_CommandOutput:
+    def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 

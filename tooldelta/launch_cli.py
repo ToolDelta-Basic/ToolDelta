@@ -60,7 +60,7 @@ class StandardFrame:
         """
         self.system_type = platform.uname().system
         self.inject_events: list = []
-        self.packet_handler: Optional[Callable] = lambda pckType, pck: None
+        self.packet_handler: Callable = lambda pckType, pck: None
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launcher_listener: Callable
         self.exit_event = threading.Event()
@@ -109,8 +109,8 @@ class StandardFrame:
             self.exit_event.set()
 
     def sendcmd(
-        self, cmd: str, waitForResp: bool = False, timeout: int | float = 30
-    ) -> Optional[Packet_CommandOutput]:
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
         """以玩家身份发送命令
 
         Args:
@@ -127,8 +127,8 @@ class StandardFrame:
         raise NotImplementedError
 
     def sendwscmd(
-        self, cmd: str, waitForResp: bool = False, timeout: int | float = 30
-    ) -> Optional[Packet_CommandOutput]:
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
         """以 ws 身份发送命令
 
         Args:
@@ -231,10 +231,10 @@ class FrameNeOmg(StandardFrame):
             address="tcp://localhost:24013",
             accountOption=None,
         )
-        self.serverNumber: Optional[int] = None
-        self.serverPassword: Optional[str] = None
-        self.fbToken: Optional[str] = None
-        self.auth_server: Optional[str] = None
+        self.serverNumber: int | None = None
+        self.serverPassword: str | None = None
+        self.fbToken: str | None = None
+        self.auth_server: str | None = None
 
     def init(self):
         Print.print_inf("检测接入点和依赖库的最新版本..", end="\r")
@@ -519,6 +519,8 @@ class FrameNeOmg(StandardFrame):
             bool: 是否为 OP
         """
         self.check_avaliable()
+        if player not in [i.name for i in self.omega.get_all_online_players()]:
+            raise ValueError(f"玩家 '{player}' 不处于全局玩家中")
         player_obj = self.omega.get_player_by_name(player)
         if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
             raise ValueError("未能获取玩家对象")
