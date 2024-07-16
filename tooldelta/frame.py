@@ -39,7 +39,6 @@ from .launch_cli import (
     SysStatus,
 )
 from .logger import publicLogger
-from .neo_libs.neo_conn import ReleaseBindPlayer
 from .packets import Packet_CommandOutput, PacketIDS
 from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
@@ -694,7 +693,6 @@ class GameCtrl:
                 if playername != "???" and not res:
                     self.allplayers.remove(playername)
                 Print.print_inf(f"§e{playername} 退出了游戏")
-                ReleaseBindPlayer(player["UUID"])
                 self.all_players_data = self.launcher.omega.get_all_online_players()
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
