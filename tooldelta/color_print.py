@@ -6,6 +6,7 @@ import threading
 import colorama
 
 from .logger import publicLogger
+from typing import ClassVar
 
 colorama.init(autoreset=True)
 
@@ -34,7 +35,7 @@ class Print:
     INFO_FAIL = "§c 失败 "
     INFO_SUCC = "§a 成功 "
     INFO_LOAD = "§d 加载 "
-    STD_COLOR_LIST = [
+    STD_COLOR_LIST: ClassVar[list[list[str]]] = [
         ["0", "#000000"],
         ["1", "#0000AA"],
         ["2", "#00AA00"],
