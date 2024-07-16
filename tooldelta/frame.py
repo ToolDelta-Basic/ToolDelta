@@ -16,7 +16,8 @@ import signal
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 import requests
 import ujson as json

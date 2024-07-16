@@ -6,7 +6,6 @@ import shlex
 import subprocess
 import threading
 import time
-import json
 from collections.abc import Callable
 
 import tooldelta
