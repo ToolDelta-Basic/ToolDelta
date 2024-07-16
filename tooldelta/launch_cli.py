@@ -520,11 +520,9 @@ class FrameNeOmg(StandardFrame):
         """
         self.check_avaliable()
         player_obj = self.omega.get_player_by_name(player)
-        if isinstance(player_obj, type(None)) or isinstance(
-            player_obj.can_operator_commands, type(None)
-        ):
+        if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
             raise ValueError("未能获取玩家对象")
-        return bool(player_obj.can_operator_commands)
+        return player_obj.op
 
     def place_command_block_with_nbt_data(
         self,
