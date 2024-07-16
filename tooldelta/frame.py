@@ -821,7 +821,7 @@ class GameCtrl:
             msg (str): 消息
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
-        (f"tellraw {target} {text_json}")
+        self.sendwocmd(f"tellraw {target} {text_json}")
 
     def player_title(self, target: str, text: str) -> None:
         """向玩家展示标题文本
