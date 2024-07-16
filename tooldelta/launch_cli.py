@@ -18,7 +18,6 @@ from .packets import Packet_CommandOutput
 from .sys_args import sys_args_to_dict
 from .urlmethod import get_free_port
 from .utils import Utils
-from .packets import PacketIDS
 
 Config = Cfg()
 
@@ -428,9 +427,6 @@ class FrameNeOmg(StandardFrame):
             raise ValueError("未连接到接入点")
         packetType = self.omega.get_packet_name_to_id_mapping(pkt_type)
         self.packet_handler(packetType, pkt)
-        if packetType == PacketIDS.PlayerList and pkt["ActionType"] == 1:
-            for player_pkt in pkt["Entries"]:
-                neo_conn.ReleaseBindPlayer(player_pkt["UUID"])
 
     def check_avaliable(self):
         if self.status != SysStatus.RUNNING:
