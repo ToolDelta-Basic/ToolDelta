@@ -19,7 +19,7 @@ from .packets import Packet_CommandOutput
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
 
-game_ctrl: "GameCtrl" = None
+game_ctrl: "GameCtrl" = None  # type: ignore
 
 # set_frame
 
