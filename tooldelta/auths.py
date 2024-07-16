@@ -44,7 +44,8 @@ def sign_login(API_urls: list[str]) -> str:
     repo_text: dict[str, Any] = json.loads(repo.text)
     repo_message: str = repo_text["message"]
     repo_success: bool = repo_text["success"]
-    if repo.status_code != 200:
+    SUCCESS_CODE = 200
+    if repo.status_code != SUCCESS_CODE:
         Print.print_war(
             f"请求 Api 接口失败，将自动使用 Token 登陆！状态码:{repo.status_code}，返回值:{repo.text}"
         )

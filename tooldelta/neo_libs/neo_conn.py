@@ -5,7 +5,8 @@ import platform
 import threading
 from dataclasses import dataclass
 from threading import Thread
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Optional, ClassVar
+from collections.abc import Callable
 
 import ujson as json
 
@@ -19,7 +20,7 @@ CBytes = ctypes.POINTER(ctypes.c_char)
 
 
 class byteCSlice(ctypes.Structure):
-    _fields_ = [
+    _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("data", ctypes.POINTER(ctypes.c_char)),
         ("len", ctypes.c_longlong),
         ("cap", ctypes.c_longlong),
@@ -87,7 +88,10 @@ def OmegaAvailable():
 
 # lib core: event basic
 class Event(ctypes.Structure):
-    _fields_ = [("type", CString), ("retriever", CString)]
+    _fields_: ClassVar[list[tuple[str, Any]]] = [
+        ("type", CString),
+        ("retriever", CString),
+    ]
 
 
 def EventPoll() -> tuple[str, str]:
@@ -105,7 +109,10 @@ def OmitEvent():
 
 
 class MCPacketEvent(ctypes.Structure):
-    _fields_ = [("packetDataAsJsonStr", CString), ("convertError", CString)]
+    _fields_: ClassVar[list[tuple[str, Any]]] = [
+        ("packetDataAsJsonStr", CString),
+        ("convertError", CString),
+    ]
 
 
 # Async Actions
@@ -144,7 +151,11 @@ def SendPlayerCommandOmitResponse(cmd: str):
 
 
 class JsonStrAsIsGamePacketBytes_return(ctypes.Structure):
-    _fields_ = [("pktBytes", CBytes), ("l", CInt), ("err", CString)]
+    _fields_: ClassVar[list[tuple[str, Any]]] = [
+        ("pktBytes", CBytes),
+        ("l", CInt),
+        ("err", CString),
+    ]
 
 
 def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
@@ -174,13 +185,13 @@ class ClientMaintainedBotBasicInfo:
 
 @dataclass
 class ClientMaintainedExtendInfo:
-    CompressThreshold: Optional[int] = None
-    WorldGameMode: Optional[int] = None
-    WorldDifficulty: Optional[int] = None
-    Time: Optional[int] = None
-    DayTime: Optional[int] = None
-    TimePercent: Optional[float] = None
-    GameRules: Optional[Dict[str, Any]] = None
+    CompressThreshold: int | None = None
+    WorldGameMode: int | None = None
+    WorldDifficulty: int | None = None
+    Time: int | None = None
+    DayTime: int | None = None
+    TimePercent: float | None = None
+    GameRules: dict[str, Any] | None = None
 
 
 class Counter:
@@ -205,7 +216,7 @@ class CommandOrigin:
 class OutputMessage:
     Success: bool = False
     Message: str = ""
-    Parameters: Optional[List[Any]] = None
+    Parameters: list[Any] | None = None
 
 
 @dataclass
@@ -421,9 +432,7 @@ class PlayerKit:
         OmegaAvailable()
         return json.loads(toPyString(LIB.PlayerEntityMetadata(self._c_uuid)))
 
-    def query(
-        self, conditions: Union[None, str, List[str]] = None
-    ) -> Packet_CommandOutput:
+    def query(self, conditions: None | str | list[str] = None) -> Packet_CommandOutput:
         query_str = f'querytarget @a[name="{self.name}"'
         if conditions is None:
             query_str += "]"
@@ -433,7 +442,7 @@ class PlayerKit:
             query_str += "," + ",".join(conditions) + "]"
         return self.parent.send_websocket_command_need_response(query_str)
 
-    def check_conditions(self, conditions: Union[None, str, List[str]] = None) -> bool:
+    def check_conditions(self, conditions: None | str | list[str] = None) -> bool:
         return self.query(conditions).SuccessCount > 0
 
     def __repr__(self) -> str:
@@ -460,16 +469,16 @@ class ThreadOmega:
         accountOption: AccountOptions | None,
     ) -> None:
         self._thread_counter = Counter("thread")
-        self._running_threads: Dict[str, Thread] = {}
+        self._running_threads: dict[str, Thread] = {}
         self.connect_type = connect_type
         self.address = address
         self.accountOption = accountOption
         self._omega_disconnected_lock: threading.Event
         self._omega_disconnected_reason: str
         self._cmd_callback_retriever_counter: Counter
-        self._omega_cmd_callback_events: Dict[str, Callable]
-        self._packet_listeners: Dict[str, List[Callable[[str, Any], None]]]
-        self._player_change_listeners: List[Callable[[PlayerKit, str], None]]
+        self._omega_cmd_callback_events: dict[str, Callable]
+        self._packet_listeners: dict[str, list[Callable[[str, Any], None]]]
+        self._player_change_listeners: list[Callable[[PlayerKit, str], None]]
         self._bot_basic_info: ClientMaintainedBotBasicInfo
         self._packet_name_to_id_mapping: dict[str, int]
         self._packet_id_to_name_mapping: dict[int, str]
@@ -488,10 +497,10 @@ class ThreadOmega:
 
         # cmd events
         self._cmd_callback_retriever_counter = Counter("cmd_callback")
-        self._omega_cmd_callback_events: Dict[str, Callable] = {}
+        self._omega_cmd_callback_events: dict[str, Callable] = {}
 
         # packet listeners
-        self._packet_listeners: Dict[str, List[Callable[[str, Any], None]]] = {}
+        self._packet_listeners: dict[str, list[Callable[[str, Any], None]]] = {}
 
         # setup actions
         # make LIB listen to all packets and new packets will have eventType="MCPacket"
@@ -504,7 +513,7 @@ class ThreadOmega:
             self._packet_listeners[packet_name] = []
 
         LIB.ListenPlayerChange()
-        self._player_change_listeners: List[Callable[[PlayerKit, str], None]] = []
+        self._player_change_listeners: list[Callable[[PlayerKit, str], None]] = []
 
         # get bot basic info (this info will not change so we need to get it only once)
         self._bot_basic_info = ClientMaintainedBotBasicInfo(
@@ -614,7 +623,7 @@ class ThreadOmega:
 
     def send_player_command_need_response(
         self, cmd: str, timeout: float = -1
-    ) -> Optional[Packet_CommandOutput]:
+    ) -> Packet_CommandOutput | None:
         setter, getter = self._create_lock_and_result_setter()
         try:
             retriever_id = next(self._cmd_callback_retriever_counter)
@@ -642,8 +651,8 @@ class ThreadOmega:
         SendPlayerCommandOmitResponse(cmd)
 
     def get_packet_name_to_id_mapping(
-        self, requires: Optional[Union[List[str], str]] = None
-    ) -> Union[Dict[str, int], int]:
+        self, requires: list[str] | str | None = None
+    ) -> dict[str, int] | int:
         if requires is None:
             return dict(self._packet_name_to_id_mapping.items())
         if isinstance(requires, list):
@@ -651,8 +660,8 @@ class ThreadOmega:
         return self._packet_name_to_id_mapping[requires]
 
     def get_packet_id_to_name_mapping(
-        self, requires: Optional[Union[List[int], int]] = None
-    ) -> Union[Dict[int, str], str]:
+        self, requires: list[int] | int | None = None
+    ) -> dict[int, str] | str:
         if requires is None:
             return dict(self._packet_id_to_name_mapping.items())
         if isinstance(requires, list):
@@ -661,7 +670,7 @@ class ThreadOmega:
 
     def listen_packets(
         self,
-        targets: Union[str | int, list[Dict[int, str] | str]],
+        targets: str | int | list[dict[int, str] | str],
         callback: Callable[[str, Any], None],
     ):
         for k in self._packet_listeners.copy():
@@ -673,21 +682,20 @@ class ThreadOmega:
         res = []
         for t in targets:
             if isinstance(t, int):
-                t = self.get_packet_id_to_name_mapping(t)
+                res.append(self.get_packet_id_to_name_mapping(t))
+                continue
             res.append(t)
         for t in res:
             self._packet_listeners[t].append(callback)
 
     def construct_game_packet_bytes_in_json_as_is(
-        self, packet_type: Union[int, str], content: Any
+        self, packet_type: int | str, content: Any
     ) -> tuple[int, bytes]:
         if isinstance(packet_type, str):
             packet_type = self.get_packet_name_to_id_mapping(packet_type)  # type: ignore
         return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content))  # type: ignore
 
-    def send_game_packet_in_json_as_is(
-        self, packet_type: Union[int, str], content: Any
-    ):
+    def send_game_packet_in_json_as_is(self, packet_type: int | str, content: Any):
         if isinstance(packet_type, str):
             packet_type = self.get_packet_name_to_id_mapping(packet_type)  # type: ignore
         OmegaAvailable()
@@ -718,24 +726,24 @@ class ThreadOmega:
             **json.loads(toPyString(LIB.GetClientMaintainedExtendInfo()))
         )
 
-    def _get_bind_player(self, uuidStr: str) -> Optional[PlayerKit]:
+    def _get_bind_player(self, uuidStr: str) -> PlayerKit | None:
         return None if uuidStr is None or not uuidStr else PlayerKit(uuidStr, self)
 
     def get_all_online_players(self):
         OmegaAvailable()
         playerUUIDS = json.loads(toPyString(LIB.GetAllOnlinePlayers()))
-        ret: List[PlayerKit] = []
+        ret: list[PlayerKit] = []
         for uuidStr in playerUUIDS:
             if r := self._get_bind_player(uuidStr):
                 ret.append(r)
         return ret
 
-    def get_player_by_name(self, name: str) -> Optional[PlayerKit]:
+    def get_player_by_name(self, name: str) -> PlayerKit | None:
         OmegaAvailable()
         playerUUID = toPyString(LIB.GetPlayerByName(toCString(name)))
         return self._get_bind_player(playerUUID)
 
-    def get_player_by_uuid(self, uuidStr: str) -> Optional[PlayerKit]:
+    def get_player_by_uuid(self, uuidStr: str) -> PlayerKit | None:
         OmegaAvailable()
         playerUUID = toPyString(LIB.GetPlayerByUUID(toCString(uuidStr)))
         return self._get_bind_player(playerUUID)
@@ -754,32 +762,33 @@ class ThreadOmega:
             t.join()
 
 
-def load_lib():
-    # skipcq: PYL-W0601
-    global LIB
+def load_lib():  # noqa: PLR0915
+    global LIB  # noqa: PLW0603
+
     sys_machine = platform.machine().lower()
     sys_type = platform.uname().system
     sys_fn = os.path.join(os.getcwd(), "tooldelta")
-    if sys_machine == "x86_64":
-        sys_machine = "amd64"
-    elif sys_machine == "aarch64":
-        sys_machine = "arm64"
+
+    # Mapping architecture names to common naming
+    arch_map = {"x86_64": "amd64", "aarch64": "arm64"}
+    sys_machine = arch_map.get(sys_machine, sys_machine)
+
+    # Mapping system types to library file names
     if sys_type == "Windows":
         lib_path = f"neomega_windows_{sys_machine}.dll"
-        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-        LIB = ctypes.cdll.LoadLibrary(lib_path)
     elif "TERMUX_VERSION" in os.environ:
         lib_path = "neomega_android_arm64.so"
-        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-        LIB = ctypes.CDLL(lib_path)
     elif sys_type == "Linux":
         lib_path = f"neomega_linux_{sys_machine}.so"
-        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-        LIB = ctypes.CDLL(lib_path)
     else:
         lib_path = f"neomega_macos_{sys_machine}.dylib"
-        lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
-        LIB = ctypes.CDLL(lib_path)
+
+    lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
+    LIB = (
+        ctypes.CDLL(lib_path)
+        if sys_type != "Windows"
+        else ctypes.cdll.LoadLibrary(lib_path)
+    )
 
     # define lib functions
 

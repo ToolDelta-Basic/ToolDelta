@@ -19,25 +19,22 @@ from .packets import Packet_CommandOutput
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
 
-game_ctrl: "GameCtrl" = None  # type: ignore
+game_ctrl: "GameCtrl" = None
 
 # set_frame
 
 
-def _check_gamectrl_avali():
+def get_game_ctrl():
     """检查 GameCtrl 是否可用"""
-    if game_ctrl is None:
+    if isinstance(game_ctrl, type(None)):
         raise ValueError("GameControl 不可用")
+    return game_ctrl
 
 
 def _set_frame(frame: "ToolDelta"):
     """载入系统框架"""
-    # skipcq: PYL-W0603
-    global game_ctrl
+    global game_ctrl  # noqa: PLW0603
     game_ctrl = frame.get_game_control()
-
-
-# utils
 
 
 def getTarget(sth: str, timeout: int = 5) -> list:
@@ -50,7 +47,7 @@ def getTarget(sth: str, timeout: int = 5) -> list:
     异常:
         ValueError: 指令返回超时，或者无法获取目标
     """
-    _check_gamectrl_avali()
+    game_ctrl = get_game_ctrl()
     if not sth.startswith("@"):
         raise ValueError("我的世界目标选择器格式错误 (getTarget 必须使用目标选择器)")
     result = game_ctrl.sendcmd_with_resp(f"/testfor {sth}", timeout)
@@ -74,7 +71,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
         ValueError: 当获取位置信息失败时抛出该异常
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
-    _check_gamectrl_avali()
+    game_ctrl = get_game_ctrl()
     if (
         target not in game_ctrl.allplayers
         and not target.startswith("@")
@@ -119,7 +116,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
     if len(result) != 1:
         raise ValueError("获取坐标失败")
     if target.startswith("@a"):
-        return list(result.values())[0]
+        return next(iter(result.values()))
     return result[target]
 
 
@@ -131,6 +128,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         itemName (str): 物品 ID
         itemSpecialID (int): 物品特殊值，默认值 -1
     """
+    game_ctrl = get_game_ctrl()
     if (
         (target not in game_ctrl.allplayers)
         and (target != game_ctrl.bot_name)
@@ -171,6 +169,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     异常:
         ValueError: 无法获取分数
     """
+    game_ctrl = get_game_ctrl()
     resultList = game_ctrl.sendcmd_with_resp(
         f"/scoreboard players list {targetNameToGet}"
     ).OutputMessages
@@ -206,7 +205,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
 
 
 def getScore(scb_name: str, target: str, timeout=30) -> int:
-    _check_gamectrl_avali()
+    game_ctrl = get_game_ctrl()
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
     resp = game_ctrl.sendcmd_with_resp(
@@ -230,5 +229,6 @@ def isCmdSuccess(cmd: str, timeout=30):
     返回:
         命令执行是否成功：bool
     """
+    game_ctrl = get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)

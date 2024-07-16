@@ -46,7 +46,8 @@ class ToolDeltaLogger:
             raise TypeError("only allows string")
         if "\n" in msg:
             msg = msg.replace("\n", "\n    ")
-        if len(msg) > 200:
+        MAX_MSG_LENGTH = 200
+        if len(msg) > MAX_MSG_LENGTH:
             msg = msg[:200] + "..."
         self._check_is_another_day()
         self._wrapper.write(
@@ -54,7 +55,8 @@ class ToolDeltaLogger:
             + f" [{level}] "
             + (msg if msg.endswith("\n") else msg + "\n")
         )
-        if time.time() - self.lastLogTime > 15:
+        LOG_INTERVAL = 15 # 15 秒保存一次日志
+        if time.time() - self.lastLogTime > LOG_INTERVAL:
             self._save_log()
             self.lastLogTime = time.time()
 

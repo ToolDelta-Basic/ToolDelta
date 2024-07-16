@@ -140,21 +140,21 @@ class Print:
             str: 删除线后的字符串
         """
         text_ok = ""
-        strikeMode = False
+        strike_mode = False
         i = 0
         while i < len(text):
             char = text[i]
             try:
                 if char == "§":
                     if text[i + 1] == "s":
-                        strikeMode = True
+                        strike_mode = True
                         i += 2
                         continue
                     if text[i + 1] == "r":
-                        strikeMode = False
+                        strike_mode = False
             except IndexError:
                 pass
-            if strikeMode:
+            if strike_mode:
                 text_ok += "\u0336" + char
             else:
                 text_ok += char
@@ -179,24 +179,24 @@ class Print:
         with Print.lock:
             if need_log:
                 Print.c_log(info, text)
-            setNextColor = "§r"
+            set_next_color = "§r"
             if "\n" in text:
                 output_txts = []
                 for text_line in str(text).split("\n"):
                     if "§" in text_line:
                         try:
                             n = text_line.rfind("§")
-                            _setNextCol = text_line[n : n + 2]
-                            if setNextColor == -1:
+                            _set_next_col_value = text_line[n : n + 2]
+                            if set_next_color == -1:
                                 raise AssertionError
-                            setNextColor = _setNextCol
+                            set_next_color = _set_next_col_value
                         except Exception:
                             pass
                     output_txts.append(
                         datetime.datetime.now().strftime("[%H:%M] ")
                         + Print.colormode_replace(info, 7)
                         + " "
-                        + Print.colormode_replace(setNextColor + text_line)
+                        + Print.colormode_replace(set_next_color + text_line)
                     )
                 print("\n".join(output_txts), **print_kwargs)
             else:
@@ -292,24 +292,24 @@ class Print:
             str: 格式化后的信息
         """
         with Print.lock:
-            setNextColor = "§r"
+            nextcolor = "§r"
             if "\n" in text:
                 output_txts = []
                 for text_line in str(text).split("\n"):
                     if "§" in text_line:
                         try:
                             n = text_line.rfind("§")
-                            _setNextCol = text_line[n : n + 2]
-                            if setNextColor == -1:
+                            _setnextcol = text_line[n : n + 2]
+                            if nextcolor == -1:
                                 raise AssertionError
-                            setNextColor = _setNextCol
+                            nextcolor = _setnextcol
                         except Exception:
                             pass
                     output_txts.append(
                         datetime.datetime.now().strftime("[%H:%M] ")
                         + Print.colormode_replace(info, 7)
                         + " "
-                        + Print.colormode_replace(setNextColor + text_line)
+                        + Print.colormode_replace(nextcolor + text_line)
                     )
                 return "\n".join(output_txts)
             return (
@@ -339,10 +339,10 @@ class Print:
                     inf = _s
                     break
             for col, _ in Print.STD_COLOR_LIST:
-                col = "§" + col
-                msg = msg.replace(col, "")
+                color_code = "§" + col
+                msg = msg.replace(color_code, "")
             for col, _ in Print.STD_COLOR_LIST:
-                col = "§" + col
-                inf = inf.replace(col, "")
+                color_code = "§" + col
+                inf = inf.replace(color_code, "")
             inf = inf.replace(" ", "")
             publicLogger.log_in(msg, inf)

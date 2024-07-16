@@ -6,7 +6,7 @@ import shlex
 import subprocess
 import threading
 import time
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import tooldelta
 
@@ -278,18 +278,19 @@ class FrameNeOmg(StandardFrame):
         """
         retries = 1
         self.omega.address = f"tcp://localhost:{openat_port}"
-        while retries <= 10:
+        MAX_RETRIES = 5  # 最大重试次数
+
+        while retries <= MAX_RETRIES:
             try:
                 self.omega.connect()
                 retries = 1
-                break
+                return
             except Exception as err:
                 Print.print_war(f"OMEGA 连接失败第 {err} (第{retries}次)")
                 time.sleep(5)
                 retries += 1
-                if retries > 5:
-                    Print.print_err("最大重试次数已超过")
-                    self.update_status(SysStatus.CRASHED_EXIT)
+        Print.print_err("最大重试次数已超过")
+        self.update_status(SysStatus.CRASHED_EXIT)
 
     def start_neomega_proc(self) -> int:
         """启动 NeOmega 进程
@@ -433,7 +434,7 @@ class FrameNeOmg(StandardFrame):
 
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Optional[Packet_CommandOutput]:
+    ) -> Packet_CommandOutput | None:
         """以玩家身份发送命令
 
         Args:
@@ -458,7 +459,7 @@ class FrameNeOmg(StandardFrame):
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Optional[Packet_CommandOutput]:
+    ) -> Packet_CommandOutput | None:
         """以玩家身份发送命令
 
         Args:
