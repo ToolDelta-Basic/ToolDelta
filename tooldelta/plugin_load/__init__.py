@@ -1,7 +1,7 @@
 "插件加载主模块"
 
 import os
-import json
+import ujson as json
 import shutil
 from typing import Any
 from tooldelta.constants import (

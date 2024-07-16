@@ -12,7 +12,7 @@ Methods:
 
 from typing import TYPE_CHECKING
 
-import json
+import ujson as json
 
 from .packets import Packet_CommandOutput
 
