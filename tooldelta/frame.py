@@ -952,6 +952,8 @@ class ServerCtrl:
         """
         frame.basic_operation()
         self.linked_frame = frame
+        self.all_players_data: list[id_map.get_online_players.GetOnlinePlayers] = []
+        self.allplayers: list = []
         self.linked_frame: ToolDelta
         self.launcher = self.linked_frame.launcher
 
@@ -959,7 +961,8 @@ class ServerCtrl:
         """载入游戏时的初始化"""
         if self.launcher.ClientObj is None:
             self.launcher.ClientConnect.wait()
-        self.allplayers = self.get_online_players()
+        self.allplayers = self.get_online_players()[0]
+        self.all_players_data  = self.get_online_players()[1]
         self.linked_frame.comsole_cmd_start()
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
@@ -968,23 +971,35 @@ class ServerCtrl:
 
     def inject_welcome(self) -> None:
         """初始化欢迎信息"""
-        if not self.all_players_data == []:
+        if len(self.allplayers) == 0:
             Print.print_suc(
-                "成功连接到游戏网络并初始化, 当前无在线玩家！"
+                "成功连接到服务端并初始化, 当前无在线玩家！"
             )
         else:
             Print.print_suc(
-                "成功连接到游戏网络并初始化, 在线玩家: "
+                "成功连接到服务端并初始化, 在线玩家: "
                 + ", ".join(self.allplayers)
             )
         Print.print_inf("在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件")
         Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
 
     def get_online_players(self) -> list:
-        """获取在线玩家列表
+        """获取在线玩家列表及数据
 
         Returns:
-            list: 在线玩家列表
+            [0]players_list (list): 在线玩家列表
+            [1]players_data (list): 在线玩家数据
         """
         response = asyncio.run(self.launcher.send_message_and_get_pkt(id_map.get_online_players.GetOnlinePlayersBuild().build))
-        print(response)
+        
+        players_data = [
+            id_map.get_online_players.GetOnlinePlayers(
+                player_name=list(json.loads(player))[0],
+                player_entity_id=json.loads(player)[list(json.loads(player))[0]]["PlayerEntityId"],
+                player_is_op=json.loads(player)[list(json.loads(player))[0]]["PlayerIsOp"]
+            )
+            for player in response['data']
+        ]
+
+        players_list = [list(json.loads(player))[0] for player in response['data']]
+        return players_list, players_data

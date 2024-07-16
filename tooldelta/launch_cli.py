@@ -692,6 +692,7 @@ class FrameJavaPluginConnect(StandardFrame):
                     token_parts[i] = token_parts[i][:j] + random.choice(string.digits) + token_parts[i][j+1:]
         token = '-'.join(token_parts)
         return token
+        # return "0000-0000"
 
     def new_client(self, client, server) -> None:
         if self.ClientStatus is True:
@@ -719,9 +720,11 @@ class FrameJavaPluginConnect(StandardFrame):
         pkt_id: int = int(ujson.loads(message)["pkt_id"])
         self.WsServer.send_message_to_all(message)
         while True:
-            response = await self.response_queue.get()
-            if response.get("pkt_id") == pkt_id:
-                return response
+            await asyncio.sleep(0.05 * 2)
+            if not self.response_queue.empty():
+                response = await self.response_queue.get()
+                if response.get("pkt_id") == pkt_id:
+                    return response
 
 class FrameBEConnect(StandardFrame):
     "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
