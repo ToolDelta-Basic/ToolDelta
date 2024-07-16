@@ -262,7 +262,7 @@ class Utils:
                 fp (Any): open(...) 打开的文件读写口 或 文件路径
             """
             if isinstance(fp, str):
-                with open(fp, "w") as file:
+                with open(fp, "w", encoding="utf-8") as file:
                     file.write(json.dumps(obj, indent=indent, ensure_ascii=False))
             else:
                 with fp:
