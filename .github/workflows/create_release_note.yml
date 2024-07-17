@@ -1,0 +1,15 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_run:
+    workflows: ["Build binaries and Upload to Release"]
+    types: [completed]
+
+jobs:
+  job-name:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: mougenko/create-release-note@v1.0.0
+      with:
+        github-token: ${{ secrets.CreateReleaseNoteToken }}
