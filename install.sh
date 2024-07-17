@@ -5,10 +5,7 @@ install_dir="$PWD/tooldelta"
 app_name="ToolDelta"
 # 设置快捷指令
 shortcut_command="td"
-# 获取ToolDelta的最新版本
-LatestTag=$(wget -qO- -t1 -T2 "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest" | jq -r '.tag_name')
-# 设置 GitHub release URL
-github_release_url="https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
+
 
 function EXIT_FAILURE(){
     exit -1
@@ -19,14 +16,20 @@ function download_exec_for_termux(){
 mkdir -p "$install_dir"
 chown -R $(whoami):$(whoami) "$install_dir"
 
+#更换termux源
+sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && apt update && apt upgrade
+
 # 使用apt安装Python
 echo "正在使用 apt 安装 Python..."
-pkg install python
+apt-get install python3 -y
 
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
 apt-get install libjpeg-turbo -y
 apt-get install zlib -y
+
+#更换pip源
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 安装tooldelta库
 echo "安装tooldelta库..."
@@ -55,7 +58,7 @@ else
     echo "创建快捷指令 '$shortcut_command' 失败。请检查权限或手动创建快捷指令。"
 fi
 # 生成start.sh脚本
-echo "pushd $install_dir && python main.py && popd " >  "$install_dir/start.sh"
+echo "pushd $install_dir && python3 main.py && popd " >  "$install_dir/start.sh"
 chmod 777 "$install_dir/start.sh"
 echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
 
@@ -68,7 +71,10 @@ chown -R $(whoami):$(whoami) "$install_dir"
 
 # 切换到安装目录
 pushd "$install_dir" || exit
-
+# 获取ToolDelta的最新版本
+LatestTag=$(wget -qO- -t1 -T2 "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest" | jq -r '.tag_name')
+# 设置 GitHub release URL
+github_release_url="https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
 # 下载
 if curl -o "$app_name" -L "$github_release_url"; then
     echo "下载完成。"
