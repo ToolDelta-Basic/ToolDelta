@@ -1,17 +1,19 @@
+name: Test Action
+
 on:
-  push:
+  workflow_dispatch:
+  pull_request:
     branches:
       - main
-    targs:
-      - "**"
-  workflow_run:
-    workflows: ["Build binaries and Upload to Release"]
-    types: [completed]
 
 jobs:
-  job-name:
+  test-correct:
     runs-on: ubuntu-latest
     steps:
-    - uses: mougenko/create-release-note@v1.0.0
-      with:
-        github-token: ${{ secrets.CreateReleaseNoteToken }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Test action
+        uses: szymansd/auto-release-notes@v1.0.1
+        with:
+          github_token: ${{ secrets.CreateReleaseNoteToken }}
+          description_template_filepath: './.github/templates/deployment.md'
