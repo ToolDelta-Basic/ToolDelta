@@ -547,7 +547,10 @@ class ToolDelta:
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
                 )
             if not isinstance(self.launcher.neomg_proc, type(None)):
-                self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
+                if sys.platform == "win32":
+                    self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    self.launcher.neomg_proc.send_signal(signal.SIGKILL)
         if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
             self.launcher.exit_event.set()
 
