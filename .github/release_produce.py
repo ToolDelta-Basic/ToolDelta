@@ -5,9 +5,6 @@ import os
 import pytz
 from packaging.version import parse
 
-# repo_path = os.path.join('/home/xingchen/WorkSpace/ToolDelta/.github', 'test')
-# if not os.path.exists(repo_path):
-#     Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
 repo_path = "/home/runner/work/Test"
 Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
 repo = Repo(repo_path)
@@ -21,20 +18,13 @@ if max_version:
     print(f"最大版本号: {max_version.name}")
     print(f"Tag {max_version.name} 的创建日期是: {tag_creation_date}")
 else:
-    print("没有找到任何标签")
     exit()
-
 tag_creation_datetime = datetime.strptime(tag_creation_date, '%Y-%m-%d %H:%M')
-
-new_commits_log = repo.git.log('--pretty={"commit":"%h","author":"%an","summary":"%s","date":"%cd"}', 
-                               since=tag_creation_datetime, date='format:%Y-%m-%d %H:%M')
+new_commits_log = repo.git.log('--pretty={"commit":"%h","author":"%an","summary":"%s","date":"%cd"}', since=tag_creation_datetime, date='format:%Y-%m-%d %H:%M')
 new_commits_list = new_commits_log.split("\n")
 new_real_commits_list = [eval(item) for item in new_commits_list if item]
 print(new_real_commits_list)
-
 ToolDeltaVersion = open("version", "r").read().strip()
-print(ToolDeltaVersion)
-
 with open('/home/runner/work/ToolDelta/ToolDelta/CHANGELOG.md', 'w') as CHANGELOG:
     CHANGELOG.write(f"## ToolDelta Release v{ToolDeltaVersion} ({tag_creation_date})\n")
     for commit in new_real_commits_list:
