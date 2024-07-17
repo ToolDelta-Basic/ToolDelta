@@ -43,3 +43,5 @@ with open('/home/runner/work/ToolDelta/ToolDelta/CHANGELOG.md', 'w') as CHANGELO
         summary = commit["summary"]
         date = commit["date"]
         CHANGELOG.write(f"- [#{commit_id}](https://github.com/ToolDelta/commit/{commit_id}) [{author}](https://github.com/{author}) {summary} ({date})\n")
+    CHANGELOG.close()
+os.system(f"cd /home/runner/work/ToolDelta/ToolDelta/ && ls")
