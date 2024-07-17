@@ -452,7 +452,7 @@ class PlayerKit:
             f"entity_unique_id={self.entity_unique_id},op={self.op},"
             f"online={self.online}"
         )
-    
+
     def __del__(self):
         LIB.AddGPlayerUsingCount(toCString(self._uuid), -1)
 

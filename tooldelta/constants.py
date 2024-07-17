@@ -26,14 +26,14 @@ LAUNCH_CFG_STD: dict = {
 
 LAUNCHER_NEOMEGA_STD: dict = {
     "服务器号": int,
-    "密码": int,
+    "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
 "启动器：NeOmega 启动配置验证格式"
 
 LAUNCHER_NEOMEGA_DEFAULT: dict = {
     "服务器号": 0,
-    "密码": 0,
+    "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
 "启动器：NeOmega 默认启动配置"

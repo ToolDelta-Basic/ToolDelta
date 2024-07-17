@@ -258,7 +258,7 @@ class FrameNeOmg(StandardFrame):
             self.neomega_account_opt = neo_conn.AccountOptions(
                 AuthServer=self.auth_server,
                 UserToken=self.fbToken,
-                ServerCode=str(self.serverNumber),
+                ServerCode=str(self.serverNumber) ,
                 ServerPassword=self.serverPassword,
             )
         self.omega = neo_conn.ThreadOmega(

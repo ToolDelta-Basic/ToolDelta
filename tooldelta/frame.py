@@ -142,12 +142,16 @@ class ToolDelta:
             try:
                 Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
             except Config.ConfigError as err:
-                Print.print_err(
-                    f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
-                )
+                r = self.upgrade_cfg()
+                if r:
+                    Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    Print.print_err(
+                        f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
+                    )
                 raise SystemExit from err
             serverNumber = launch_data["服务器号"]
-            serverPasswd = launch_data["密码"]
+            serverPasswd: str = launch_data["密码"]
             auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
             if serverNumber == 0:
                 while 1:
@@ -162,10 +166,10 @@ class ToolDelta:
                                     "§b 输入 ",
                                 )
                             )
-                            or "0"
+                            or ""
                         )
                         launch_data["服务器号"] = int(serverNumber)
-                        launch_data["密码"] = int(serverPasswd)
+                        launch_data["密码"] = serverPasswd
                         cfgs["NeOmega启动模式"] = launch_data
                         Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
                         Print.print_suc("登录配置设置成功")
@@ -334,9 +338,15 @@ class ToolDelta:
         Returns:
             bool: 是否升级了配置文件
         """
-        old_cfg = Config.get_cfg("ToolDelta基本配置.json", {})
+        old_cfg:dict = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
+        if "NeOmega启动模式" in old_cfg:
+            if isinstance(old_cfg["NeOmega启动模式"]["密码"], int):
+                old_cfg["NeOmega启动模式"]["密码"] = str(old_cfg["NeOmega启动模式"]["密码"])
+                if old_cfg["NeOmega启动模式"]["密码"] == "0":
+                    old_cfg["NeOmega启动模式"]["密码"] = ""
+                need_upgrade_cfg = True
         for k, v in constants.LAUNCH_CFG.items():
             if k not in old_cfg_keys:
                 old_cfg[k] = v
