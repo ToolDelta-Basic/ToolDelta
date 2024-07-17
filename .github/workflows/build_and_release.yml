@@ -52,7 +52,6 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}
-
   build_changelog:
     runs-on: ubuntu-latest
     steps:
@@ -71,10 +70,16 @@ jobs:
 
       - name: Build Changelog
         run: |
-          python /home/runner/work/ToolDelta/ToolDelta/.github/release_produce.py
+          python .github/release_produce.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog
+          path: changelog.md
 
   release:
-    needs: [build]
+    needs: [build, build_changelog]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -91,7 +96,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          body_path: /home/runner/work/ToolDelta/ToolDelta/CHANGELOG.md
+          body_path: changelog/changelog.md
           files: |
             ToolDelta-windows.exe/ToolDelta-windows.exe
             ToolDelta-linux/ToolDelta-linux
