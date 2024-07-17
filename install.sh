@@ -14,19 +14,26 @@ function EXIT_FAILURE(){
 function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
-chown -R $(whoami):$(whoami) "$install_dir"
+chown -R +x "$install_dir"
+
+#更换termux源
+sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && pkg update && pkg upgrade
 
 #更换termux源
 sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && apt update && apt upgrade
 
 # 使用apt安装Python
-echo "正在使用 apt 安装 Python..."
-apt-get install python3 -y
+echo "正在使用 pkg 安装 Python..."
+pkg install python3 -y
+
 
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
-apt-get install libjpeg-turbo -y
-apt-get install zlib -y
+pkg install libjpeg-turbo -y
+pkg install zlib -y
+
+#更换pip源
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 #更换pip源
 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
@@ -48,7 +55,7 @@ case ${PLANTFORM} in
     EXIT_FAILURE
     ;;
 esac
-cat > $install_dir/main.py << EOF
+cat > "$install_dir/main.py" << EOF
 from tooldelta.launch_options import client_title
 client_title()
 EOF
@@ -67,7 +74,7 @@ echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command'
 function download_exec(){
 # 权限
 mkdir -p "$install_dir"
-chown -R $(whoami):$(whoami) "$install_dir"
+chown -R +x "$install_dir"
 
 # 切换到安装目录
 pushd "$install_dir" || exit
