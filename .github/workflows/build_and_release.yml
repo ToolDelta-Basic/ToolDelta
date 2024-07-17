@@ -71,7 +71,7 @@ jobs:
 
       - name: Build Changelog
         run: |
-          python .github/release_produce.py
+          python /home/runner/work/ToolDelta/ToolDelta/.github/release_produce.py
 
   release:
     needs: [build]

@@ -6,7 +6,7 @@ import pytz
 from packaging.version import parse
 
 # repo_path = os.path.join('/home/xingchen/WorkSpace/ToolDelta/.github', 'test')
-repo_path = os.path.join('/root/', 'test')
+repo_path = "/home/runner/work/ToolDelta/ToolDelta"
 if not os.path.exists(repo_path):
     Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
 repo = Repo(repo_path)
