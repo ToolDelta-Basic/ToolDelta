@@ -91,7 +91,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          body_path: /home/runner/work/ToolDelta/ToolDelta/CHANGELOG.md
+          body_path: /home/runner/work/ToolDelta/ToolDelta/.github/CHANGELOG.md
           files: |
             ToolDelta-windows.exe/ToolDelta-windows.exe
             ToolDelta-linux/ToolDelta-linux
