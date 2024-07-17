@@ -122,7 +122,9 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
         if os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir)):
             sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
             load_plugin(plugin_grp, plugin_dir)
-            plugin_grp.loaded_plugins_name.append(plugin_dir)
+            if os.path.isfile(data_path := os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "datas.json")):
+                plugin_data = Utils.JsonIO.SafeJsonLoad(data_path)
+                plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
 
 def load_plugin(
