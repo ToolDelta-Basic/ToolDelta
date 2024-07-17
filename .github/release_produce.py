@@ -27,7 +27,7 @@ else:
 tag_creation_datetime = datetime.strptime(tag_creation_date, '%Y-%m-%d %H:%M')
 
 new_commits_log = repo.git.log('--pretty={"commit":"%h","author":"%an","summary":"%s","date":"%cd"}', 
-                               since=tag_creation_date.strftime('%Y-%m-%d %H:%M'), date='format:%Y-%m-%d %H:%M')
+                               since=tag_creation_datetime, date='format:%Y-%m-%d %H:%M')
 new_commits_list = new_commits_log.split("\n")
 new_real_commits_list = [eval(item) for item in new_commits_list if item]
 print(new_real_commits_list)
