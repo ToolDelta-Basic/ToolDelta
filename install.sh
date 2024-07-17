@@ -14,7 +14,7 @@ function EXIT_FAILURE(){
 function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
-chown -R $(whoami):$(whoami) "$install_dir"
+chown -R +x "$install_dir"
 
 #更换termux源
 sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && pkg update && pkg upgrade
@@ -67,7 +67,7 @@ echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command'
 function download_exec(){
 # 权限
 mkdir -p "$install_dir"
-chown -R $(whoami):$(whoami) "$install_dir"
+chown -R +x "$install_dir"
 
 # 切换到安装目录
 pushd "$install_dir" || exit
