@@ -147,7 +147,7 @@ class PluginMarket:
             """
             ok, pres = self.choice_plugin(plugin_data)
             if ok:
-                if in_game and plugin_data.name not in plugin_group.loaded_plugins_name:
+                if in_game and plugin_data.plugin_id not in plugin_group.loaded_plugin_ids:
                     resp = (
                         input(
                             Print.fmt_info(
@@ -159,11 +159,11 @@ class PluginMarket:
                     )
                     if resp == "y":
                         for i in pres:
-                            if i not in plugin_group.loaded_plugins_name:
+                            if i.plugin_id not in plugin_group.loaded_plugin_ids:
                                 try:
                                     plugin_group.load_plugin_hot(i.name, i.plugin_type)
                                 except Exception as err:
-                                    Print.print_err(f"插件热加载出现问题：{err}")
+                                    input(Print.fmt_info(f"插件热加载出现问题：{err}", "§c 报错 §r"))
                 else:
                     Print.print_inf(
                         "插件已存在，若要更新版本，请重启 ToolDelta", need_log=False

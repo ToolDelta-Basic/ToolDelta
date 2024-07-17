@@ -21,7 +21,7 @@ chown -R $(whoami):$(whoami) "$install_dir"
 
 # 使用apt安装Python
 echo "正在使用 apt 安装 Python..."
-apt-get install python3 -y
+pkg install python
 
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
@@ -55,7 +55,7 @@ else
     echo "创建快捷指令 '$shortcut_command' 失败。请检查权限或手动创建快捷指令。"
 fi
 # 生成start.sh脚本
-echo "pushd $install_dir && python3 main.py && popd " >  "$install_dir/start.sh"
+echo "pushd $install_dir && python main.py && popd " >  "$install_dir/start.sh"
 chmod 777 "$install_dir/start.sh"
 echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
 
