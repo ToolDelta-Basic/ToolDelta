@@ -8,6 +8,8 @@ import importlib
 
 from typing import TYPE_CHECKING, Callable, List, Tuple
 from ...color_print import Print
+from ...utils import Utils
+from ...constants import TOOLDELTA_INJECTED_PLUGIN, TOOLDELTA_PLUGIN_DIR
 from ...plugin_load import (
     plugin_is_enabled,
     PluginAPINotFoundError,
@@ -435,15 +437,18 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
     tasks = []
 
     # 读取本目录下的文件夹名字
-    PLUGIN_PATH = os.path.join(os.getcwd(), "插件文件", "ToolDelta注入式插件")
+    PLUGIN_PATH = os.path.join(os.getcwd(), TOOLDELTA_PLUGIN_DIR, TOOLDELTA_INJECTED_PLUGIN)
     for file in os.listdir(PLUGIN_PATH):
         if not plugin_is_enabled(file):
             continue
         if os.path.isdir(os.path.join(PLUGIN_PATH, file)):
             plugin_grp.injected_plugin_loaded_num += 1
-            plugin_grp.loaded_plugins_name.append(file)
             task = asyncio.create_task(load_plugin_file(file))
             tasks.append(task)
+            if os.path.isfile(data_path := os.path.join(PLUGIN_PATH, file, "datas.json")):
+                plugin_data = Utils.JsonIO.SafeJsonLoad(data_path)
+                plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
+
 
     # 顺序加载插件并收集插件元数据
     all_plugin_metadata = []

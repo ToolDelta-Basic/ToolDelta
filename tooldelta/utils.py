@@ -8,7 +8,8 @@ import threading
 import time
 import traceback
 from io import TextIOWrapper
-from typing import Any, Callable, Iterable, Optional, TypeVar
+from typing import Any, TypeVar
+from collections.abc import Callable, Iterable
 
 import ujson as json
 
@@ -121,7 +122,7 @@ class Utils:
             if path in jsonPathTmp:
                 return
             try:
-                with open(path, "r", encoding="utf-8") as file:
+                with open(path, encoding="utf-8") as file:
                     js = Utils.SimpleJsonDataReader.SafeJsonLoad(file)
             except FileNotFoundError as err:
                 if not needFileExists:
@@ -168,7 +169,7 @@ class Utils:
                 val = jsonPathTmp.get(path)
                 if val is not None:
                     val = val[1]
-                    if isinstance(val, (list, dict)):
+                    if isinstance(val, list | dict):
                         val = copy.deepcopy(val)
                     return val
             raise ValueError("json 路径未初始化，不能进行读取和写入操作：" + path)
@@ -261,7 +262,7 @@ class Utils:
                 fp (Any): open(...) 打开的文件读写口 或 文件路径
             """
             if isinstance(fp, str):
-                with open(fp, "w") as file:
+                with open(fp, "w", encoding="utf-8") as file:
                     file.write(json.dumps(obj, indent=indent, ensure_ascii=False))
             else:
                 with fp:
@@ -278,7 +279,7 @@ class Utils:
                 dict | list: JSON 对象
             """
             if isinstance(fp, str):
-                with open(fp, "r", encoding="utf-8") as file:
+                with open(fp, encoding="utf-8") as file:
                     return json.load(file)
             with fp as file:
                 return json.load(file)
@@ -317,7 +318,7 @@ class Utils:
                     with open(filepath, "w") as f:
                         Utils.JsonIO.SafeJsonDump(default, f)
                     return default
-                with open(filepath, "r", encoding="utf-8") as f:
+                with open(filepath, encoding="utf-8") as f:
                     res = Utils.JsonIO.SafeJsonLoad(f)
                 return res
             except rjson.JSONDecodeError as err:
@@ -456,7 +457,7 @@ class Utils:
         return thread_fun
 
     @staticmethod
-    def timer_event(t: int, name: Optional[str] = None):
+    def timer_event(t: int, name: str | None = None):
         """
         将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
         注意: 请不要在函数内放可能造成堵塞的内容
@@ -477,7 +478,7 @@ class Utils:
         return receiver
 
     @staticmethod
-    def try_int(arg: Any) -> Optional[int]:
+    def try_int(arg: Any) -> int | None:
         """尝试将提供的参数化为 int 类型并返回，否则返回 None"""
         try:
             return int(arg)

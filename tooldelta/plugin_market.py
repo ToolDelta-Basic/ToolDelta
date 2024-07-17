@@ -94,7 +94,7 @@ class PluginMarket:
         except Exception:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
 
-    def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
+    def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:  # noqa: PLR0915
         """进入插件市场
 
         Args:
@@ -104,147 +104,133 @@ class PluginMarket:
         Print.clean_print("§6正在连接到插件市场..")
         self.plugin_id_name_map = self.get_plugin_id_name_map()
         CTXS = 12
+
+        def display_plugins(start_index: int, total_pages: int):
+            """显示插件列表
+
+            Args:
+                start_index (int): 起始索引
+                total_pages (int): 总页数
+            """
+            clear_screen()
+            Print.print_inf(
+                f"{market_datas['SourceName']}: {market_datas['Greetings']}",
+                need_log=False,
+            )
+            for i in range(start_index, min(start_index + CTXS, all_indexes)):
+                plugin_id = plugins_list[i][0]
+                plugin_name = plugin_ids_map[plugin_id]
+                plugin_basic_datas = plugins_list[i][1]
+                plugin_type = {"classic": "类式", "injected": "注入式"}.get(
+                    plugin_basic_datas.get("plugin-type", "unknown"),
+                    plugin_basic_datas.get("plugin-type", "unknown"),
+                )
+                Print.print_inf(
+                    f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} "
+                    f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件",
+                    need_log=False,
+                )
+            Print.print_inf(
+                f"§f第 {start_index // CTXS + 1} / {total_pages} 页，输入 §b+§f/§b- §f翻页",
+                need_log=False,
+            )
+            Print.print_inf("§f输入插件序号选中插件并查看其下载页", need_log=False)
+
+        def handle_plugin_selection(plugin_data: PluginRegData):
+            """处理插件选择
+
+            Args:
+                plugin_data (dict): 插件数据
+
+            Returns:
+                bool: 是否退出
+            """
+            ok, pres = self.choice_plugin(plugin_data)
+            if ok:
+                if in_game and plugin_data.plugin_id not in plugin_group.loaded_plugin_ids:
+                    resp = (
+                        input(
+                            Print.fmt_info(
+                                f"§f可以直接热加载该插件: {plugin_data.name}, 是否加载(§aY§f/§cN§f): "
+                            )
+                        )
+                        .strip()
+                        .lower()
+                    )
+                    if resp == "y":
+                        for i in pres:
+                            if i.plugin_id not in plugin_group.loaded_plugin_ids:
+                                try:
+                                    plugin_group.load_plugin_hot(i.name, i.plugin_type)
+                                except Exception as err:
+                                    input(Print.fmt_info(f"插件热加载出现问题：{err}", "§c 报错 §r"))
+                else:
+                    Print.print_inf(
+                        "插件已存在，若要更新版本，请重启 ToolDelta", need_log=False
+                    )
+                return (
+                    input(
+                        Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场")
+                    ).lower()
+                    == "q"
+                )
+            else:
+                Print.print_inf("已取消。", need_log=False)
+                time.sleep(1)
+            return False
+
         try:
-            if isinstance(source_url, str):
-                market_datas = self.get_datas_from_market(source_url)
-            market_datas = self.get_datas_from_market()
+            market_datas = self.get_datas_from_market(source_url or "")
             plugin_ids_map = self.plugin_id_name_map
             plugins_list = list(market_datas["MarketPlugins"].items())
             all_indexes = len(plugins_list)
             now_index = 0
-            sum_pages = int((all_indexes - 1) / CTXS) + 1
-            now_page = 0
+            sum_pages = (all_indexes - 1) // CTXS + 1
             last_operation = ""
+
             while True:
-                clear_screen()
-                Print.print_inf(
-                    market_datas["SourceName"] + ": " + market_datas["Greetings"],
-                    need_log=False,
-                )
-                now_page = int(now_index / CTXS) + 1
-                for i in range(now_index, now_index + CTXS):
-                    if i in range(all_indexes):
-                        plugin_id = plugins_list[i][0]
-                        plugin_name = plugin_ids_map[plugin_id]
-                        plugin_basic_datas = plugins_list[i][1]
-                        if plugin_basic_datas["plugin-type"] == "classic":
-                            plugin_type = "类式"
-                        elif plugin_basic_datas["plugin-type"] == "injected":
-                            plugin_type = "注入式"
-                        else:
-                            plugin_type = plugin_basic_datas["plugin-type"]
-                        Print.print_inf(
-                            (
-                                f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} "
-                                f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"
-                            ),
-                            need_log=False,
-                        )
-                    else:
-                        Print.print_inf("")
-                Print.print_inf(
-                    f"§f第 {now_page} / {sum_pages} 页，输入 §b+§f/§b- §f翻页",
-                    need_log=False,
-                )
-                Print.print_inf("§f输入插件序号选中插件并查看其下载页", need_log=False)
+                display_plugins(now_index, sum_pages)
+
                 last_operation = (
-                    (
-                        input(
-                            Print.fmt_info(
-                                "§f回车键继续上次操作，§bq§f 退出，请输入：", "§f 输入 "
-                            )
+                    input(
+                        Print.fmt_info(
+                            "§f回车键继续上次操作，§bq§f 退出，请输入：", "§f 输入 "
                         )
-                        or last_operation
                     )
-                    .lower()
-                    .strip()
+                    or last_operation
                 )
-                if last_operation == "+":
-                    now_index += CTXS
-                elif last_operation == "-":
-                    now_index -= CTXS
-                elif last_operation == "q":
+                last_operation = last_operation.lower().strip()
+
+                # 翻页操作
+                if last_operation in ["+", "-"]:
+                    now_index = max(
+                        0,
+                        min(
+                            now_index + (CTXS if last_operation == "+" else -CTXS),
+                            all_indexes - 1,
+                        ),
+                    )
+                elif last_operation == "q":  # 退出操作
                     break
                 else:
                     res = Utils.try_int(last_operation)
-                    if res:
-                        if res in range(1, all_indexes + 1):
-                            plugin_data = self.get_plugin_data_from_market(
-                                plugins_list[res - 1][0]
-                            )
-                            ok, pres = self.choice_plugin(plugin_data)
-                            if ok:
-                                if in_game:
-                                    if (
-                                        plugin_data.name
-                                        not in plugin_group.loaded_plugins_name
-                                    ):
-                                        resp = (
-                                            input(
-                                                Print.fmt_info(
-                                                    f"§f可以直接热加载该插件: {plugin_data.name}, 是否加载(§aY§f/§cN§f): "
-                                                )
-                                            )
-                                            .strip()
-                                            .lower()
-                                        )
-                                        if resp == "y":
-                                            for i in pres:
-                                                if (
-                                                    i
-                                                    not in plugin_group.loaded_plugins_name
-                                                ):
-                                                    try:
-                                                        plugin_group.load_plugin_hot(
-                                                            i.name, i.plugin_type
-                                                        )
-                                                    except BaseException as err:
-                                                        Print.print_err(
-                                                            f"插件热加载出现问题：{err}"
-                                                        )
-                                    else:
-                                        Print.print_inf(
-                                            "插件已存在，若要更新版本，请重启 ToolDelta",
-                                            need_log=False,
-                                        )
-                                        r = input(
-                                            Print.fmt_info(
-                                                "§f输入 §cq §f退出, 其他则返回插件市场"
-                                            )
-                                        )
-                                else:
-                                    Print.print_inf(
-                                        "下载插件后重启 ToolDelta 才能生效",
-                                        need_log=False,
-                                    )
-                                r = input(
-                                    Print.fmt_info(
-                                        "§f输入 §cq §f退出, 其他则返回插件市场"
-                                    )
-                                )
-                                if r.lower() == "q":
-                                    break
-                            else:
-                                Print.print_inf("已取消。", need_log=False)
-                                time.sleep(1)
-                        else:
-                            Print.print_err("超出序号范围")
-                if now_index >= all_indexes:
-                    now_index = 0
-                elif now_index < 0:
-                    now_index = max(now_index - CTXS, 0)
-        except KeyError as err:
-            Print.print_err(f"获取插件市场插件出现问题：键值对错误：{err}")
-            return
-        except requests.RequestException as err:
+                    if res and 1 <= res <= all_indexes:  # 插件选择操作
+                        plugin_data = self.get_plugin_data_from_market(
+                            plugins_list[res - 1][0]
+                        )
+                        if handle_plugin_selection(plugin_data):
+                            break
+                    else:  # 超出序号范围
+                        Print.print_err("超出序号范围")
+
+        except (KeyError, requests.RequestException) as err:
             Print.print_err(f"获取插件市场插件出现问题：{err}")
-            return
         except Exception:
             Print.print_err("获取插件市场插件出现问题，报错如下：")
             Print.print_err(traceback.format_exc())
-            return
-        clear_screen()
-        Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
+        finally:
+            clear_screen()
+            Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
 
     def get_datas_from_market(self, source_url: str | None = None) -> dict:
         """
@@ -390,8 +376,8 @@ class PluginMarket:
             plugin_filepaths_dict[k] = self.find_dirs(v)
         Print.clean_print(f"§a成功获取插件下载树 §f{plugin_data.name}§a" + " " * 15)
         plugins_url2dst_solve: list[tuple[str, str]] = []
-        for plugin_name, plugin_data in plugin_list.items():
-            match plugin_data.plugin_type:
+        for plugin_name, pluginInfo in plugin_list.items():
+            match pluginInfo.plugin_type:
                 case "classic":
                     plugintype_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
                 case "injected":
@@ -400,7 +386,7 @@ class PluginMarket:
                     )
                 case _:
                     raise ValueError(
-                        f"未知插件类型：{plugin_data.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
+                        f"未知插件类型：{pluginInfo.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                     )
             for path in plugin_filepaths_dict[plugin_name]:
                 plugins_url2dst_solve.append(

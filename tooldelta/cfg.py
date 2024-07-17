@@ -19,8 +19,8 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
         Cfg.NNInt: lambda: isinstance(obj, int) and obj >= 0,
         Cfg.PFloat: lambda: isinstance(obj, float) and obj > 0,
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
-        Cfg.PNumber: lambda: isinstance(obj, (int, float)) and obj > 0,
-        Cfg.NNNumber: lambda: isinstance(obj, (int, float)) and obj >= 0,
+        Cfg.PNumber: lambda: isinstance(obj, int | float) and obj > 0,
+        Cfg.NNNumber: lambda: isinstance(obj, int | float) and obj >= 0,
         int: lambda: type(obj) is int,
     }.get(typ, lambda: isinstance(obj, typ))()
 
@@ -137,7 +137,7 @@ class Cfg:
     def get_cfg(self, path: str, standard_type: dict):
         """从 path 路径获取 json 文件文本信息，并按照 standard_type 给出的标准形式进行检测。"""
         path = path if path.endswith(".json") else f"{path}.json"
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             try:
                 obj = ujson.load(f)
             except ujson.JSONDecodeError as exc:
@@ -204,7 +204,8 @@ class Cfg:
         cfg_stdtyp["配置项"] = standardType
         cfgGet = self.get_cfg(p, cfg_stdtyp)
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
-        if len(cfgVers) != 3:
+        VERSION_LENGTH = 3 # 版本长度
+        if len(cfgVers) != VERSION_LENGTH:
             raise ValueError("配置文件出错：版本出错")
         return cfgGet["配置项"], cfgVers
 
@@ -241,7 +242,7 @@ class Cfg:
                 )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
-        elif isinstance(standard, (tuple, list)):
+        elif isinstance(standard, tuple | list):
             errs = []
             for single_type in standard:
                 try:
@@ -254,7 +255,7 @@ class Cfg:
                 raise self.ConfigValueError(
                     f'JSON 键 对应的键"{fromkey}" 类型不正确，以下为可能的原因：\n{reason}'
                 )
-        elif isinstance(standard, (dict, Cfg.AnyKeyValue)):
+        elif isinstance(standard, dict | Cfg.AnyKeyValue):
             self.check_dict(standard, val, fromkey)
         else:
             raise ValueError(
@@ -329,15 +330,15 @@ class Cfg:
         if isinstance(cfg, dict):
             res = {}
             for k, v in cfg.items():
-                if isinstance(v, (dict, list)):
+                if isinstance(v, dict | list):
                     res[k] = self.auto_to_std(v)
-                elif isinstance(v, (str, int, float, bool)):
+                elif isinstance(v, str | int | float | bool):
                     res[k] = type(v)
             return res
         if isinstance(cfg, list):
             setting_types = []
             for v in cfg:
-                t = self.auto_to_std(v) if isinstance(v, (dict, list)) else type(v)
+                t = self.auto_to_std(v) if isinstance(v, dict | list) else type(v)
                 if t not in setting_types:
                     setting_types.append(t)
             if len(setting_types) == 1:

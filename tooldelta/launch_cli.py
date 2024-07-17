@@ -1,752 +1,898 @@
-"""客户端启动器框架"""
+"""
+ToolDelta 基本框架
 
-import os
-import platform
-import shlex
-import subprocess
-import threading
-import time
-import uuid
-import random
-import string
-import ujson
-import socket
-import logging
+整个系统由三个部分组成
+    Frame: 负责整个 ToolDelta 的基本框架运行
+    GameCtrl: 负责对接游戏
+        - Launchers: 负责将不同启动器的游戏接口统一成固定的接口，供插件在多平台游戏接口运行 (FastBuilder External, NeOmega, (BEWS, etc.))
+    PluginGroup: 负责对插件进行统一管理
+"""
+
 import asyncio
-from typing import Callable, Optional
-from websocket_server import WebsocketServer
+import contextlib
+import getpass
+import os
+import signal
+import sys
+import time
+import traceback
+from typing import TYPE_CHECKING
+from collections.abc import Callable
 
-import tooldelta
+import requests
+import ujson as json
 
-from .cfg import Cfg
+from tooldelta import (
+    auths,
+    constants,
+    plugin_market,
+)
+
+from .cfg import Config
 from .color_print import Print
-from .neo_libs import file_download as neo_fd
-from .neo_libs import neo_conn
-from .packets import Packet_CommandOutput
+from .game_texts import GameTextsHandle, GameTextsLoader
+from .game_utils import getPosXYZ
+from .get_tool_delta_version import get_tool_delta_version
+from .launch_cli import (
+    FrameBEConnect,
+    FrameNeOmg,
+    FrameNeOmgRemote,
+    SysStatus,
+)
+from .logger import publicLogger
+from .packets import Packet_CommandOutput, PacketIDS
+from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
-from .urlmethod import get_free_port
-from .utils import Utils
-from .java_conn.pkt_type import id_map
-from .constants import LAUNCH_CFG_STD
+from .urlmethod import fbtokenFix, if_token
+from .utils import Utils, safe_close
 
-Config = Cfg()
+sys_args_dict = sys_args_to_dict(sys.argv)
+VERSION = get_tool_delta_version()
 
+if TYPE_CHECKING:
+    from .plugin_load.PluginGroup import PluginGroup
 
-class SysStatus:
-    """系统状态码
-
-    LOADING: 启动器正在加载
-    LAUNCHING: 启动器正在启动
-    RUNNING: 启动器正在运行
-    NORMAL_EXIT: 正常退出
-    FB_LAUNCH_EXC: FastBuilder 启动异常
-    CRASHED_EXIT: 启动器崩溃退出
-    NEED_RESTART: 需要重启
-    """
-
-    LOADING = 100
-    LAUNCHING = 101
-    RUNNING = 102
-    NORMAL_EXIT = 103
-    FB_LAUNCH_EXC = 104
-    CRASHED_EXIT = 105
-    NEED_RESTART = 106
-    launch_type = "None"
+LAUNCHERS: list[tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]] = [
+    ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmg),
+    (
+        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
+        FrameNeOmgRemote,
+    ),
+]
 
 
-class StandardFrame:
-    """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""
+class ToolDelta:
+    """ToolDelta 主框架"""
 
-    launch_type = "Original"
+    class FrameBasic:
+        """系统基本信息"""
+
+        system_version = VERSION
+        data_path = "插件数据文件/"
+
+    class SystemVersionException(SystemError):
+        """系统版本异常"""
+
+        msg: str
 
     def __init__(self) -> None:
-        """实例化启动器框架
-
-        Args:
-            serverNumber (int): 服务器号
-            password (str): 服务器密码
-            fbToken (str): 验证服务器 Token
-            auth_server_url (str): 验证服务器地址
-        """
-        self.system_type = platform.uname().system
-        self.inject_events: list = []
-        self.packet_handler: Optional[Callable] = lambda pckType, pck: None
-        self.need_listen_packets: set[int] = {9, 63, 79}
-        self._launcher_listener: Callable
-        self.exit_event = threading.Event()
-        self.status: int = SysStatus.LOADING
-
-    def init(self):
-        """初始化启动器框架"""
-
-    def add_listen_packets(self, *pcks: int) -> None:
-        """添加需要监听的数据包"""
-        for i in pcks:
-            self.need_listen_packets.add(i)
-
-    def launch(self) -> None:
-        """启动器启动
-
-        Raises:
-            SystemError: 无法启动此启动器
-        """
-        raise NotImplementedError
-
-    def listen_launched(self, cb: Callable) -> None:
-        """设置监听启动器启动事件"""
-        self._launcher_listener = cb
-
-    def get_players_and_uuids(self) -> None:
-        """获取玩家名和 UUID"""
-        raise NotImplementedError
-
-    def get_bot_name(self) -> str:
-        """获取机器人名字"""
-        raise NotImplementedError
-
-    def update_status(self, new_status: int) -> None:
-        """更新启动器状态
-
-        Args:
-            new_status (int): 新的状态码
-        """
-        self.status = new_status
-        if new_status == SysStatus.NORMAL_EXIT:
-            tooldelta.safe_jump(out_task=True)
-            self.exit_event.set()  # 设置事件，触发等待结束
-        if new_status == SysStatus.CRASHED_EXIT:
-            tooldelta.safe_jump(out_task=False)
-            self.exit_event.set()
-
-    def sendcmd(
-        self, cmd: str, waitForResp: bool = False, timeout: int | float = 30
-    ) -> Optional[Packet_CommandOutput]:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
-        raise NotImplementedError
-
-    def sendwscmd(
-        self, cmd: str, waitForResp: bool = False, timeout: int | float = 30
-    ) -> Optional[Packet_CommandOutput]:
-        """以 ws 身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
-        raise NotImplementedError
-
-    def sendwocmd(self, cmd: str) -> None:
-        """以 wo 身份发送命令
-
-        Args:
-            cmd (str): 命令
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
-        raise NotImplementedError
-
-    def sendPacket(self, pckID: int, pck: str) -> None:
-        """发送数据包
-
-        Args:
-            pckID (int): 数据包 ID
-            pck (str): 数据包内容
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
-        raise NotImplementedError
-
-    sendPacketJson = sendPacket
-
-    def is_op(self, player: str) -> bool:
-        """检查玩家是否为 OP
-
-        Args:
-            player (str): 玩家名
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            bool: 是否为 OP
-        """
-        raise NotImplementedError
-
-    def place_command_block_with_nbt_data(
-        self,
-        block_name: str,
-        block_states: str,
-        position: tuple[int, int, int],
-        nbt_data: neo_conn.CommandBlockNBTData,
-    ):
-        """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
-        同时向该方块写入 nbt_data 所指代的 NBT 数据
-
-        Args:
-            block_name (str): 命令块的方块名，如 chain_command_block
-            block_states (str): 命令块的方块状态，如 朝向南方 的命令方块表示为 ["facing_direction":3]
-            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
-            nbt_data (neo_conn.CommandBlockNBTData): 该命令块的原始 NBT 数据
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
-        raise NotImplementedError
-
-
-class FrameNeOmg(StandardFrame):
-    """使用 NeOmega 框架连接到游戏"""
-
-    launch_type = "NeOmega"
-
-    def __init__(self) -> None:
-        """初始化 NeOmega 框架
-
-        Args:
-            serverNumber (int): 服务器号
-            password (str): 服务器密码
-            fbToken (str): 验证服务器 Token
-            auth_server (str): 验证服务器地址
-        """
-        super().__init__()
-        self.status = SysStatus.LOADING
-        self.launch_event = threading.Event()
-        self.neomg_proc = None
-        self.serverNumber = None
-        self.neomega_account_opt = None
-        self.bot_name = ""
-        self.omega = neo_conn.ThreadOmega(
-            connect_type=neo_conn.ConnectType.Remote,
-            address="tcp://localhost:24013",
-            accountOption=None,
+        """初始化"""
+        self.createThread = Utils.createThread
+        self.sys_data = self.FrameBasic()
+        self.launchMode: int = 0
+        self.consoleMenu = []
+        self.is_docker: bool = os.path.exists("/.dockerenv")
+        self.on_plugin_err = staticmethod(
+            lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.serverNumber: Optional[int] = None
-        self.serverPassword: Optional[str] = None
-        self.fbToken: Optional[str] = None
-        self.auth_server: Optional[str] = None
+        self.launcher: FrameNeOmg | FrameNeOmgRemote
+        self.is_mir: bool
+        self.plugin_market_url: str
+        self.link_game_ctrl: "GameCtrl"
+        self.link_plugin_group: "PluginGroup"
 
-    def init(self):
-        Print.print_inf("检测接入点和依赖库的最新版本..", end="\r")
-        res = neo_fd.download_libs()
-        if not res:
-            raise SystemExit("ToolDelta 因下载库异常而退出")
-        Print.print_inf("检测接入点和依赖库的最新版本..完成")
-        neo_conn.load_lib()
-        self.status = SysStatus.LAUNCHING
-
-    def set_launch_data(
-        self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
-    ):
-        self.serverNumber = serverNumber
-        self.serverPassword = password
-        self.fbToken = fbToken
-        self.auth_server = auth_server_url
-        if self.serverNumber is None:
-            self.neomega_account_opt = None
-        else:
-            self.neomega_account_opt = neo_conn.AccountOptions(
-                AuthServer=self.auth_server,
-                UserToken=self.fbToken,
-                ServerCode=str(self.serverNumber),
-                ServerPassword=self.serverPassword,
-            )
-        self.omega = neo_conn.ThreadOmega(
-            connect_type=neo_conn.ConnectType.Remote,
-            address="tcp://localhost:24013",
-            accountOption=self.neomega_account_opt,
-        )
-
-    def set_omega(self, openat_port: int) -> None:
-        """设置 Omega 连接
-
-        Args:
-            openat_port (int): 端口号
-
-        Raises:
-            SystemExit: 系统退出
-        """
-        retries = 1
-        self.omega.address = f"tcp://localhost:{openat_port}"
-        while retries <= 10:
-            try:
-                self.omega.connect()
-                retries = 1
-                break
-            except Exception as err:
-                Print.print_war(f"OMEGA 连接失败第 {err} (第{retries}次)")
-                time.sleep(5)
-                retries += 1
-                if retries > 5:
-                    Print.print_err("最大重试次数已超过")
-                    self.update_status(SysStatus.CRASHED_EXIT)
-
-    def start_neomega_proc(self) -> int:
-        """启动 NeOmega 进程
-
-        Returns:
-            int: 端口号
-        """
-        free_port = get_free_port(24013)
-        sys_machine = platform.uname().machine
-        if sys_machine == "x86_64":
-            sys_machine = "amd64"
-        elif sys_machine == "aarch64":
-            sys_machine = "arm64"
-        access_point_file = (
-            f"neomega_{platform.uname().system.lower()}_access_point_{sys_machine}"
-        )
-        if "TERMUX_VERSION" in os.environ:
-            access_point_file = f"neomega_android_access_point_{sys_machine}"
-        if platform.system() == "Windows":
-            access_point_file += ".exe"
-        exe_file_path = os.path.join(
-            os.getcwd(), "tooldelta", "neo_libs", access_point_file
-        )
-        if platform.uname().system.lower() == "linux":
-            os.system(f"chmod +x {shlex.quote(exe_file_path)}")
-        # 只需要+x 即可
-        if (
-            isinstance(self.serverNumber, type(None))
-            or isinstance(self.serverPassword, type(None))
-            or isinstance(self.fbToken, type(None))
-            or isinstance(self.auth_server, type(None))
-        ):
-            raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
-        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
-        self.neomg_proc = subprocess.Popen(
-            [
-                exe_file_path,
-                "-server",
-                str(self.serverNumber),
-                "-T",
-                self.fbToken,
-                "-access-point-addr",
-                f"tcp://localhost:{free_port}",
-                "-server-password",
-                str(self.serverPassword),
-                "-auth-server",
-                self.auth_server,
-            ],
-            encoding="utf-8",
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            text=True,
-        )
-        return free_port
-
-    def _msg_show_thread(self) -> None:
-        """显示来自 NeOmega 的信息"""
-        if self.neomg_proc is None or self.neomg_proc.stdout is None:
-            raise ValueError("接入点进程未启动")
-        while True:
-            msg_orig = self.neomg_proc.stdout.readline().strip("\n")
-            if msg_orig in ("", "SIGNAL: exit"):
-                Print.print_with_info("接入点进程已结束", "§b NOMG ")
-                if self.status == SysStatus.RUNNING:
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                break
-            if "[neOmega 接入点]: 就绪" in msg_orig:
-                self.launch_event.set()
-            Print.print_with_info(msg_orig, "§b NOMG ")
-
-    def launch(self) -> SystemExit | Exception | SystemError:
-        """启动 NeOmega 进程
-
-        returns:
-            SystemExit: 正常退出
-            Exception: 异常退出
-            SystemError: 未知的退出状态
-        """
-        self.status = SysStatus.LAUNCHING
-        openat_port = self.start_neomega_proc()
-        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
-        self.launch_event.wait()
-        self.set_omega(openat_port)
-        self.update_status(SysStatus.RUNNING)
-        self.wait_omega_disconn_thread()
-        Print.print_suc("已获取游戏网络接入点最高权限")
-        pcks = [
-            self.omega.get_packet_id_to_name_mapping(i)
-            for i in self.need_listen_packets
-        ]
-        self.omega.listen_packets(pcks, self.packet_handler_parent)
-        self._launcher_listener()
-        Print.print_suc("接入点注入已就绪")
-        self.exit_event.wait()  # 等待事件的触发
-        if self.status == SysStatus.NORMAL_EXIT:
-            return SystemExit("正常退出")
-        if self.status == SysStatus.CRASHED_EXIT:
-            return Exception("接入点进程已崩溃")
-        return SystemError("未知的退出状态")
-
-    def get_players_and_uuids(self):
-        players_uuid = {}
-        if self.status != SysStatus.RUNNING:
-            raise ValueError("未连接到接入点")
-        for i in self.omega.get_all_online_players():
-            if i is not None:
-                players_uuid[i.name] = i.uuid
-            else:
-                raise ValueError("未能获取玩家名和 UUID")
-        return players_uuid
-
-    def get_bot_name(self) -> str:
-        """获取机器人名字
-
-        Returns:
-            str: 机器人名字
-        """
-        self.check_avaliable()
-        if not self.bot_name:
-            self.bot_name = self.omega.get_bot_name()
-        return self.bot_name
-
-    def packet_handler_parent(self, pkt_type: str, pkt: dict) -> None:
-        """数据包处理器
-
-        Args:
-            pkt_type (str): 数据包类型
-            pkt (dict): 数据包内容
-
-        Raises:
-            ValueError: 未连接到接入点
-        """
-        if self.omega is None or self.packet_handler is None:
-            raise ValueError("未连接到接入点")
-        packetType = self.omega.get_packet_name_to_id_mapping(pkt_type)
-        self.packet_handler(packetType, pkt)
-
-    def check_avaliable(self):
-        if self.status != SysStatus.RUNNING:
-            raise ValueError("未连接到游戏")
-
-    def sendcmd(
-        self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Optional[Packet_CommandOutput]:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
-        self.check_avaliable()
-        if waitForResp:
-            res = self.omega.send_player_command_need_response(cmd, timeout)
-            if res is None:
-                raise TimeoutError("指令超时")
-            return res
-        self.omega.send_player_command_omit_response(cmd)
-        return None
-
-    def sendwscmd(
-        self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Optional[Packet_CommandOutput]:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
-        self.check_avaliable()
-        if waitForResp:
-            res = self.omega.send_websocket_command_need_response(cmd, timeout)
-            if res is None:
-                raise TimeoutError("指令超时")
-            return res
-        self.omega.send_websocket_command_omit_response(cmd)
-        return None
-
-    def sendwocmd(self, cmd: str) -> None:
-        """以 wo 身份发送命令
-
-        Args:
-            cmd (str): 命令
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
-        self.check_avaliable()
-        self.omega.send_settings_command(cmd)
-
-    def sendPacket(self, pckID: int, pck: str) -> None:
-        """发送数据包
-
-        Args:
-            pckID (int): 数据包 ID
-            pck (str): 数据包内容
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
-        self.check_avaliable()
-        self.omega.send_game_packet_in_json_as_is(pckID, pck)
-
-    def is_op(self, player: str) -> bool:
-        """检查玩家是否为 OP
-
-        Args:
-            player (str): 玩家名
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            bool: 是否为 OP
-        """
-        self.check_avaliable()
-        player_obj = self.omega.get_player_by_name(player)
-        if isinstance(player_obj, type(None)) or isinstance(
-            player_obj.can_operator_commands, type(None)
-        ):
-            raise ValueError("未能获取玩家对象")
-        return bool(player_obj.can_operator_commands)
-
-    def place_command_block_with_nbt_data(
-        self,
-        block_name: str,
-        block_states: str,
-        position: tuple[int, int, int],
-        nbt_data: neo_conn.CommandBlockNBTData,
-    ):
-        """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
-        同时向该方块写入 nbt_data 所指代的 NBT 数据
-
-        Args:
-            block_name (str): 命令块的方块名，如 chain_command_block
-            block_states (str): 命令块的方块状态，如 朝向南方 的命令方块表示为 ["facing_direction":3]
-            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
-            nbt_data (neo_conn.CommandBlockNBTData): 该命令块的原始 NBT 数据
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
-        self.check_avaliable()
-        self.omega.place_command_block(
-            neo_conn.CommandBlockPlaceOption(
-                X=position[0],
-                Y=position[1],
-                Z=position[2],
-                BlockName=block_name,
-                BockState=block_states,
-                NeedRedStone=(not nbt_data.ConditionalMode),
-                Conditional=nbt_data.ConditionalMode,
-                Command=nbt_data.Command,
-                Name=nbt_data.CustomName,
-                TickDelay=nbt_data.TickDelay,
-                ShouldTrackOutput=nbt_data.TrackOutput,
-                ExecuteOnFirstTick=nbt_data.ExecuteOnFirstTick,
-            )
-        )
-
-    @Utils.thread_func("检测 Omega 断开连接线程")
-    def wait_omega_disconn_thread(self):
-        self.omega.wait_disconnect()
-        if self.status == SysStatus.RUNNING:
-            self.update_status(SysStatus.CRASHED_EXIT)
-
-    sendPacketJson = sendPacket
-
-
-class FrameNeOmgRemote(FrameNeOmg):
-    """远程启动器框架 (使用 NeOmega 框架的 Remote 连接)
-
-    Args:
-        FrameNeOmg (FrameNeOmg): FrameNeOmg 框架
-    """
-
-    launch_type = "NeOmega Remote"
-
-    def launch(self) -> SystemExit | Exception | SystemError:
-        """启动远程启动器框架
-
-        Raises:
-            AssertionError: 端口号错误
-
-        Returns:
-            SystemExit | Exception | SystemError: 退出状态
-        """
+    def loadConfiguration(self) -> None:
+        """加载配置文件"""
+        Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
-            openat_port = int(sys_args_to_dict().get("access-point-port") or "24020")
-            if openat_port not in range(65536):
-                raise AssertionError
-        except (ValueError, AssertionError):
-            Print.print_err("启动参数 -access-point-port 错误：不是 1~65535 的整数")
-            raise SystemExit("端口参数错误")
-        if openat_port == 0:
-            Print.print_war(
-                "未用启动参数指定链接 neOmega 接入点开放端口，尝试使用默认端口 24015"
+            # 读取配置文件
+            cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+            self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+            self.is_mir = cfgs["是否使用github镜像"]
+            self.plugin_market_url = cfgs["插件市场源"]
+            publicLogger.switch_logger(cfgs["是否记录日志"])
+            if self.launchMode != 0 and self.launchMode not in range(
+                1, len(LAUNCHERS) + 1
+            ):
+                raise Config.ConfigError(
+                    "你不该随意修改启动器模式，现在赶紧把它改回 0 吧"
+                )
+        except Config.ConfigError as err:
+            # 配置文件有误
+            r = self.upgrade_cfg()
+            if r:
+                Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+            else:
+                Print.print_err(f"ToolDelta 基本配置有误，需要更正：{err}")
+            raise SystemExit from err
+        # 每个启动器框架的单独启动配置之前
+        if self.launchMode == 0:
+            Print.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
+            for i, (launcher_name, _) in enumerate(LAUNCHERS):
+                Print.print_inf(f" {i + 1} - {launcher_name}")
+            while 1:
+                try:
+                    ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
+                    if ch not in range(1, len(LAUNCHERS) + 1):
+                        raise ValueError
+                    cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
+                    break
+                except ValueError:
+                    Print.print_err("输入不合法，或者是不在范围内，请重新输入")
+            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+        self.launcher = LAUNCHERS[
+            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+        ][1]()
+        # 每个启动器框架的单独启动配置
+        if type(self.launcher) is FrameNeOmg:
+            launch_data = cfgs.get(
+                "NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
             )
-            Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口。")
-            openat_port = 24015
-            return SystemExit("未指定端口号")
-        Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
-        self.set_omega(openat_port)
-        self.update_status(SysStatus.RUNNING)
-        self.wait_omega_disconn_thread()
-        Print.print_suc("已与接入点进程建立通信网络")
-        pcks = [
-            self.omega.get_packet_id_to_name_mapping(i)
-            for i in self.need_listen_packets
-        ]
-        self.omega.listen_packets(pcks, self.packet_handler_parent)
-        self._launcher_listener()
-        Print.print_suc("ToolDelta 待命中")
-        self.exit_event.wait()
-        if self.status == SysStatus.NORMAL_EXIT:
-            return SystemExit("正常退出。")
-        if self.status == SysStatus.CRASHED_EXIT:
-            return Exception("接入点已崩溃")
-        return SystemError("未知的退出状态")
-
-class FrameJavaPluginConnect(StandardFrame):
-    """使用 Java 服务端插件连接到Java服务端"""
-
-    CoreVersion: str = "0.0.1"
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.status = SysStatus.LOADING
-        self.ClientConnect = threading.Event()
-        self.Config = Cfg().get_cfg("ToolDelta基本配置.json", LAUNCH_CFG_STD)
-        self.ClientStatus: bool = None
-        self.ClientObj: any = None
-        self.response_queue = asyncio.Queue()
-        self.ServerConfig: dict = {"host": None, "port": None, "token": self.get_connect_token()}
-        self.sign_client: dict = {self.ServerConfig["token"]: {"client": [], "version": self.CoreVersion}}
-
-    def launch(self) -> SystemExit | Exception | SystemError:
-        """启动 NeOmega 进程
-
-        returns:
-            SystemExit: 正常退出
-            Exception: 异常退出
-            SystemError: 未知的退出状态
-        """ 
-        self.status = SysStatus.LAUNCHING
-        if self.ServerConfig["host"] is None or self.ServerConfig["port"] is None:
-            Print.print_err("未设置Java版服务端插件连接启动模式的主机地址或端口")
-            self.status = SysStatus.CRASHED_EXIT
-            raise SystemExit("启动参数错误")
-        self.WsServer = WebsocketServer(host = self.ServerConfig["host"], port = self.ServerConfig["port"], loglevel = logging.ERROR)
-        self.WsServer.set_fn_new_client(self.new_client)
-        self.WsServer.set_fn_client_left(self.client_left)
-        self.WsServer.set_fn_message_received(self.handle_message)
-        threading.Thread(target=self.WsServer.serve_forever, daemon=True, name="WebsocketServer").start()
-        self.update_status(SysStatus.RUNNING)
-        Print.print_suc(f"WebSocket服务端正在监听地址 -> ws://{self.ServerConfig['host']}:{str(self.ServerConfig['port'])}")
-        Print.print_suc(f"ToolDelta将为ToolDelta在Java服务端插件开放Token -> {self.ServerConfig['token']}")
-        Print.print_war("因代码结构限制，该启动方式无法保证完全正常运行，如发现报错请前往Github提交issue，我们会尽快解决！")
-        self._launcher_listener()
-        self.exit_event.wait()
-        if self.status == SysStatus.NORMAL_EXIT:
-            return SystemExit("正常退出")
-        return SystemError("未知的退出状态")
-
-    def set_launch_data(self, host: str, port: int) -> None:
-        self.ServerConfig["host"] = host
-        self.ServerConfig["port"] = port
+            try:
+                Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
+            except Config.ConfigError as err:
+                Print.print_err(
+                    f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
+                )
+                raise SystemExit from err
+            serverNumber = launch_data["服务器号"]
+            serverPasswd = launch_data["密码"]
+            auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
+            if serverNumber == 0:
+                while 1:
+                    try:
+                        serverNumber = int(
+                            input(Print.fmt_info("请输入租赁服号：", "§b 输入 "))
+                        )
+                        serverPasswd = (
+                            getpass.getpass(
+                                Print.fmt_info(
+                                    "请输入租赁服密码 (不会回显，没有请直接回车): ",
+                                    "§b 输入 ",
+                                )
+                            )
+                            or "0"
+                        )
+                        launch_data["服务器号"] = int(serverNumber)
+                        launch_data["密码"] = int(serverPasswd)
+                        cfgs["NeOmega启动模式"] = launch_data
+                        Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                        Print.print_suc("登录配置设置成功")
+                        break
+                    except Exception:
+                        Print.print_err("输入有误，租赁服号和密码应当是纯数字")
+            auth_servers = constants.AUTH_SERVERS
+            if auth_server == "":
+                Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
+                for i, (auth_server_name, _) in enumerate(auth_servers):
+                    Print.print_inf(f" {i + 1} - {auth_server_name}")
+                Print.print_inf(
+                    "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
+                )
+                while 1:
+                    try:
+                        ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
+                        if ch not in range(1, len(auth_servers) + 1):
+                            raise ValueError
+                        auth_server = auth_servers[ch - 1][1]
+                        cfgs["NeOmega启动模式"][
+                            "验证服务器地址(更换时记得更改fbtoken)"
+                        ] = auth_server
+                        break
+                    except ValueError:
+                        Print.print_err("输入不合法，或者是不在范围内，请重新输入")
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                # 读取启动配置等
+            if not os.path.isfile("fbtoken"):
+                Print.print_inf(
+                    "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
+                )
+                Login_method: str = input(
+                    Print.fmt_info("请输入你的选择：", "§6 输入 ")
+                )
+                while True:
+                    if Login_method.isdigit() is False:
+                        Login_method = input(
+                            Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                        )
+                    elif int(Login_method) > 2 or int(Login_method) < 1:
+                        Login_method = input(
+                            Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                        )
+                    else:
+                        break
+                if Login_method == "1":
+                    try:
+                        match cfgs["NeOmega启动模式"][
+                            "验证服务器地址(更换时记得更改fbtoken)"
+                        ]:
+                            case "https://liliya233.uk":
+                                token = auths.sign_login(constants.GUGU_APIS)
+                            case "https://api.fastbuilder.pro":
+                                token = auths.sign_login(constants.FB_APIS)
+                            case _:
+                                Print.print_err("暂无法登录该验证服务器")
+                                raise SystemExit
+                        with open("fbtoken", "w", encoding="utf-8") as f:
+                            f.write(token)
+                    except requests.exceptions.RequestException as e:
+                        Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+            if_token()
+            fbtokenFix()
+            with open("fbtoken", encoding="utf-8") as f:
+                fbtoken = f.read()
+            self.launcher.set_launch_data(
+                serverNumber, serverPasswd, fbtoken, auth_server
+            )
+        elif type(self.launcher) is FrameNeOmgRemote:
+            ...
+        elif type(self.launcher) is FrameBEConnect:
+            launch_data = cfgs.get(
+                "基岩版WS服务器启动模式", constants.LAUNCHER_BEWS_DEFAULT
+            )
+            try:
+                Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
+            except Config.ConfigError as err:
+                Print.print_err(
+                    f"ToolDelta 基本配置-BEWS 启动配置有误，需要更正：{err}"
+                )
+                raise SystemExit from err
+            if launch_data["服务端开放地址"] == "":
+                Print.print_inf("请输入 WS 服务器开放的地址：")
+                addr = input(
+                    Print.fmt_info("请输入 (回车默认 localhost:12003): ", "§6 输入 ")
+                )
+                if not addr.startswith("ws://"):
+                    addr = "ws://" + addr
+                launch_data["服务端开放地址"] = addr
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+        else:
+            raise ValueError("LAUNCHER Error")
+        Print.print_suc("配置文件读取完成")
 
     @staticmethod
-    def get_connect_token() -> str:
-        random_uuid = uuid.uuid4().hex
-        token_parts = [random_uuid[i:i+4] for i in range(0, len(random_uuid), 4)]
-        for i in range(len(token_parts)):
-            token_parts[i] = token_parts[i].upper()
-            for j in range(len(token_parts[i])):
-                if random.random() < 0.2:
-                    token_parts[i] = token_parts[i][:j] + random.choice(string.digits) + token_parts[i][j+1:]
-        token = '-'.join(token_parts)
-        return token
-        # return "0000-0000"
+    def change_config():
+        """修改配置文件"""
+        try:
+            old_cfg = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
+        except FileNotFoundError:
+            Print.clean_print("§c未初始化配置文件, 无法进行修改")
+            return
+        except Config.ConfigError as err:
+            Print.print_err(f"配置文件损坏：{err}")
+            return
+        if (
+            old_cfg["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
+        ) not in range(0, 2):
+            Print.print_err(
+                f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1}"
+            )
+            return
+        while 1:
+            md = (
+                "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
+                "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
+            )
+            Print.clean_print("§b现有配置项如下:")
+            Print.clean_print(
+                f" 1. 启动器启动模式：{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}"
+            )
+            Print.clean_print(f" 2. 是否记录日志：{old_cfg['是否记录日志']}")
+            Print.clean_print("    §a直接回车: 保存并退出")
+            resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
+            if resp == "":
+                Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
+                Print.clean_print("§a配置已保存!")
+                return
+            match resp:
+                case "1":
+                    Print.print_inf(
+                        "选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):"
+                    )
+                    for i, (launcher_name, _) in enumerate(LAUNCHERS):
+                        Print.print_inf(f" {i + 1} - {launcher_name}")
+                    while 1:
+                        try:
+                            ch = int(input(Print.clean_fmt("请选择：")))
+                            if ch not in range(1, len(LAUNCHERS) + 1):
+                                raise ValueError
+                            old_cfg[
+                                "启动器启动模式(请不要手动更改此项, 改为0可重置)"
+                            ] = ch
+                            break
+                        except ValueError:
+                            Print.print_err("输入不合法，或者是不在范围内，请重新输入")
+                            continue
+                    input(
+                        Print.clean_fmt(
+                            f"§a已选择启动器启动模式：§f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}, 回车键继续"
+                        )
+                    )
+                case "2":
+                    old_cfg["是否记录日志"] = [True, False][old_cfg["是否记录日志"]]
+                    input(
+                        Print.clean_fmt(
+                            f"日志记录模式已改为：{['§c关闭', '§a开启'][old_cfg['是否记录日志']]}, 回车键继续"
+                        )
+                    )
 
-    def new_client(self, client, server) -> None:
-        if self.ClientStatus is True:
-            self.WsServer.close_request(client)
-        self.ClientObj = client
-        self.ClientConnect.set()
-        self.ClientStatus = True
-        self.WsServer.send_message(client, id_map.IDMap[0].OnClientConnectBuild(True).result)
+    @staticmethod
+    def upgrade_cfg() -> bool:
+        """升级配置文件
 
-    def handle_message(self, client, server, message) -> None:
-        self.response_queue.put_nowait(ujson.loads(message))
-        print(ujson.loads(message))
-        pkt_id:int = int(ujson.loads(message)["pkt_id"])
-        handle = id_map.IDMap[pkt_id].handlePacket
-        result = handle(ujson.loads(message), client, server, self.ServerConfig["token"], self.sign_client)
-        self.WsServer.send_message(client, result.result)
+        Returns:
+            bool: 是否升级了配置文件
+        """
+        old_cfg = Config.get_cfg("ToolDelta基本配置.json", {})
+        old_cfg_keys = old_cfg.keys()
+        need_upgrade_cfg = False
+        for k, v in constants.LAUNCH_CFG.items():
+            if k not in old_cfg_keys:
+                old_cfg[k] = v
+                need_upgrade_cfg = True
+        if need_upgrade_cfg:
+            Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
+        return need_upgrade_cfg
 
-    def client_left(self, client, server) -> None:
-        self.ClientStatus = False
-        self.ClientConnect.clear()
-        self.ClientObj = None
-        self.status = SysStatus.CRASHED_EXIT
+    @staticmethod
+    def welcome() -> None:
+        """欢迎提示"""
+        Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
+        Print.print_with_info(
+            "§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+        )
+        Print.print_with_info(
+            "§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
+        )
+        Print.print_with_info(
+            f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
+        )
+        Print.print_with_info("§dToolDelta Panel 已启动", Print.INFO_LOAD)
 
-    async def send_message_and_get_pkt(self, message: str) -> dict:
-        pkt_id: int = int(ujson.loads(message)["pkt_id"])
-        self.WsServer.send_message_to_all(message)
-        while True:
-            await asyncio.sleep(0.05 * 2)
-            if not self.response_queue.empty():
-                response = await self.response_queue.get()
-                if response.get("pkt_id") == pkt_id:
-                    return response
+    @staticmethod
+    def basic_operation():
+        """初始化文件夹"""
+        os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
+        os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
+        os.makedirs("插件配置文件", exist_ok=True)
+        os.makedirs("tooldelta/neo_libs", exist_ok=True)
+        os.makedirs("插件数据文件/game_texts", exist_ok=True)
 
-class FrameBEConnect(StandardFrame):
-    "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
+    def add_console_cmd_trigger(
+        self,
+        triggers: list[str],
+        arg_hint: str | None,
+        usage: str,
+        func: Callable[[list[str]], None],
+    ) -> None:
+        """注册 ToolDelta 控制台的菜单项
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.cmd_resp: dict = {}
+        Args:
+            triggers (list[str]): 触发词列表
+            arg_hint (str | None): 菜单命令参数提示句
+            usage (str): 命令说明
+            func (Callable[[list[str]], None]): 菜单回调方法
+        """
+        try:
+            if self.consoleMenu.index(triggers) != -1:
+                Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
+        except Exception:
+            self.consoleMenu.append([usage, arg_hint, func, triggers])
 
-    def init(self):
-        self.cmd_resp = {}
-
-    def prepare_apis(self):
-        raise NotImplementedError()
-
-    def handler(self, data):
-        message_purpose = data["header"]["messagePurpose"]
-        if message_purpose == "commandResponse":
-            request_id = data["header"]["requestId"]
-            if request_id in self.cmd_resp:
-                self.cmd_resp[request_id] = Packet_CommandOutput(
-                    {
-                        "CommandOrigin": [],
-                        "OutputType": 1,
-                    }
+    def init_basic_help_menu(self, _) -> None:
+        """初始化基本的帮助菜单"""
+        menu = self.get_console_menus()
+        Print.print_inf("§a以下是可选的菜单指令项: ")
+        for usage, arg_hint, _, triggers in menu:
+            if arg_hint:
+                Print.print_inf(
+                    f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}"
                 )
+            else:
+                Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
+
+    def comsole_cmd_start(self) -> None:
+        """启动控制台命令"""
+        Print.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
+
+        def _try_execute_console_cmd(func, rsp, mode, arg1) -> int | None:
+            try:
+                if mode == 0:
+                    rsp_arg = rsp.split()[1:]
+                elif mode == 1:
+                    rsp_arg = rsp[len(arg1) :].split()
+            except IndexError:
+                Print.print_err("[控制台执行命令] 指令缺少参数")
+                return None
+            try:
+                return func(rsp_arg) or 0
+            except Exception:
+                Print.print_err(f"控制台指令出错: {traceback.format_exc()}")
+                return 0
+
+        @Utils.thread_func("控制台执行指令并获取回调")
+        def _execute_mc_command_and_get_callback(cmd: str) -> None:
+            """执行 Minecraft 指令并获取回调结果。
+
+            Args:
+                cmd (str): 要执行的 Minecraft 指令。
+
+            Raises:
+                ValueError: 当指令执行失败时抛出。
+            """
+            cmd = " ".join(cmd)
+            try:
+                result = self.link_game_ctrl.sendcmd_with_resp(cmd, 10)
+                if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
+                    result.OutputMessages[0].Message == "commands.generic.unknown"
+                ):
+                    Print.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
+                else:
+                    mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(
+                        result.as_dict["OutputMessages"]
+                    )
+                    desc = json.dumps(
+                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
+                    )
+                    if result.SuccessCount:
+                        print_str = "指令执行成功: " + " ".join(mjon)
+                        Print.print_suc(print_str)
+                        Print.print_suc(desc)
+                    else:
+                        print_str = "指令执行失败: " + " ".join(mjon)
+                        Print.print_war(print_str)
+                        Print.print_war(desc)
+
+            except IndexError as exec_err:
+                if isinstance(result, type(None)):
+                    raise ValueError("指令执行失败") from exec_err
+                if result.SuccessCount:
+                    Print.print_suc(
+                        f"指令执行成功, 详细返回结果:\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
+                    )
+            except TimeoutError:
+                Print.print_err("[超时] 指令获取结果返回超时")
+
+        def _console_cmd_thread() -> None:
+            """控制台线程"""
+            self.add_console_cmd_trigger(
+                ["?", "help", "帮助", "？"],
+                None,
+                "查询可用菜单指令",
+                self.init_basic_help_menu,
+            )
+            self.add_console_cmd_trigger(
+                ["exit"], None, "退出并关闭ToolDelta", lambda _: None
+            )
+            self.add_console_cmd_trigger(
+                ["插件市场"],
+                None,
+                "进入插件市场",
+                lambda _: plugin_market.market.enter_plugin_market(
+                    self.plugin_market_url, in_game=True
+                ),
+            )
+            self.add_console_cmd_trigger(
+                ["/"], "[指令]", "执行 MC 指令", _execute_mc_command_and_get_callback
+            )
+            self.add_console_cmd_trigger(
+                ["list"],
+                None,
+                "查询在线玩家",
+                lambda _: Print.print_inf(
+                    "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
+                ),
+            )
+            while 1:
+                rsp = ""
+                while True:
+                    res = sys.stdin.read(1)
+                    if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
+                        break
+                    if res in ("", "^C", "^D"):
+                        Print.print_inf("按退出键退出中...")
+                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
+                        return
+                    rsp += res
+                for _, _, func, triggers in self.consoleMenu:
+                    if not rsp:
+                        continue
+                    if rsp == "exit":
+                        Print.print_inf("用户命令退出中...")
+                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
+                        return
+                    if rsp.split()[0] in triggers:
+                        res = _try_execute_console_cmd(func, rsp, 0, None)
+                        if res == -1:
+                            return
+                    else:
+                        for tri in triggers:
+                            if rsp.startswith(tri):
+                                res = _try_execute_console_cmd(func, rsp, 1, tri)
+                                if res == -1:
+                                    return
+                if res != 0 and rsp:
+                    self.link_game_ctrl.say_to("@a", f"[§bToolDelta控制台§r] §3{rsp}§r")
+
+        self.createThread(_console_cmd_thread, usage="控制台指令")
+
+    def system_exit(self) -> None:
+        """系统退出"""
+        asyncio.run(safe_jump())
+        self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
+        if not isinstance(self.launcher, FrameNeOmgRemote):
+            with contextlib.suppress(Exception):
+                self.link_game_ctrl.sendwscmd(
+                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
+                )
+            if not isinstance(self.launcher.neomg_proc, type(None)):
+                self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
+        if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
+            self.launcher.exit_event.set()
+
+    def get_console_menus(self) -> list:
+        """获取控制台命令列表
+
+        Returns:
+            list: 命令列表
+        """
+        return self.consoleMenu
+
+    def set_game_control(self, game_ctrl: "GameCtrl") -> None:
+        """使用外源 GameControl
+
+        Args:help
+            game_ctrl (_type_): GameControl 对象
+        """
+        self.link_game_ctrl = game_ctrl
+
+    def set_plugin_group(self, plug_grp) -> None:
+        """使用外源 PluginGroup
+
+        Args:
+            plug_grp (_type_): PluginGroup 对象
+        """
+        self.link_plugin_group: "PluginGroup" = plug_grp
+
+    def get_game_control(self) -> "GameCtrl":
+        """获取 GameControl 对象
+
+        Returns:
+            GameCtrl: GameControl 对象
+        """
+        gcl: "GameCtrl" = self.link_game_ctrl
+        return gcl
+
+    @staticmethod
+    def safelyExit() -> None:
+        """安全退出"""
+        safe_close()
+        publicLogger.exit()
+        Print.print_inf("已保存数据与日志等信息。")
+
+
+class GameCtrl:
+    """游戏连接和交互部分"""
+
+    def __init__(self, frame: "ToolDelta"):
+        """初始化
+
+        Args:
+            frame (Frame): 继承 Frame 的对象
+        """
+        frame.basic_operation()
+        self.Game_Data = GameTextsLoader().game_texts_data
+        self.Game_Data_Handle = GameTextsHandle(self.Game_Data)
+        self.linked_frame = frame
+        self.players_uuid: dict[str, str] = {}
+        self.allplayers: list[str] = []
+        self.all_players_data = {}
+        self.linked_frame: ToolDelta
+        self.pkt_unique_id: int = 0
+        self.pkt_cache: list = []
+        self.require_listen_packets = {9, 79, 63}
+        self._store_uuid_pkt: dict[str, str] | None = None
+        self.launcher = self.linked_frame.launcher
+        if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
+            self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
+                self.packet_handler, (pckType, pck), usage="数据包处理"
+            )
+        # 初始化基本函数
+        self.sendcmd = self.launcher.sendcmd
+        self.sendwscmd = self.launcher.sendwscmd
+        self.sendwocmd = self.launcher.sendwocmd
+        self.sendPacket = self.launcher.sendPacket
+        if isinstance(self.linked_frame.launcher, FrameNeOmg):
+            self.requireUUIDPacket = False
+        else:
+            self.requireUUIDPacket = True
+
+    def set_listen_packets(self) -> None:
+        """
+        向启动器初始化监听的游戏数据包
+        仅限内部调用
+        """
+        for pktID in self.require_listen_packets:
+            self.launcher.add_listen_packets(pktID)
+
+    def add_listen_pkt(self, pkt: int) -> None:
+        """
+        添加监听的数据包
+        仅限内部调用
+
+        Args:
+            pkt (int): 数据包 ID
+        """
+        self.require_listen_packets.add(pkt)
+
+    @Utils.thread_func("数据包处理方法")
+    def packet_handler(self, pkt_type: int, pkt: dict) -> None:
+        """数据包处理分发任务函数
+
+        Args:
+            pkt_type (int): 数据包类型
+            pkt (dict): 数据包内容
+        """
+        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
+        if is_skiped:
+            return
+        if pkt_type == PacketIDS.PlayerList:
+            self.process_player_list(pkt, self.linked_frame.link_plugin_group)
+        elif pkt_type == PacketIDS.Text:
+            self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
+
+    def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
+        """处理玩家列表等数据包
+
+        Args:
+            pkt (dict): 数据包内容
+            plugin_group (PluginGroup): 插件组对象
+        """
+        # 处理玩家进出事件
+        res = self.launcher.get_players_and_uuids()
+        if res:
+            self.allplayers = list(res.keys())
+            self.players_uuid.update(res)
+        for player in pkt["Entries"]:
+            isJoining = bool(player["Skin"]["SkinData"])
+            playername = player["Username"]
+            if isJoining and "§" in playername:
+                self.say_to(
+                    "@a",
+                    "§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！",
+                )
+                self.all_players_data = self.launcher.omega.get_all_online_players()
+                # 没有 VIP 名字供测试...
+            if isJoining:
+                self.tmp_tp_player(playername)
+                Print.print_inf(f"§e{playername} 加入了游戏")
+                self.all_players_data = self.launcher.omega.get_all_online_players()
+                if playername not in self.allplayers and not res:
+                    self.allplayers.append(playername)
+                    return
+                plugin_group.execute_player_join(
+                    playername, self.linked_frame.on_plugin_err
+                )
+            else:
+                playername = next(
+                    (k for k, v in self.players_uuid.items() if v == player["UUID"]),
+                    None,
+                )
+                if playername is None:
+                    Print.print_war("无法获取 PlayerList 中玩家名字")
+                    continue
+                if playername != "???" and not res:
+                    self.allplayers.remove(playername)
+                Print.print_inf(f"§e{playername} 退出了游戏")
+                self.all_players_data = self.launcher.omega.get_all_online_players()
+                plugin_group.execute_player_leave(
+                    playername, self.linked_frame.on_plugin_err
+                )
+
+    def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
+        """处理 9 号数据包的消息
+
+        Args:
+            pkt (dict): 数据包内容
+            plugin_grp (PluginGroup): 插件组对象
+        """
+        match pkt["TextType"]:
+            case 2:
+                if pkt["Message"] == "§e%multiplayer.player.joined":
+                    player = pkt["Parameters"][0]
+                    plugin_grp.execute_player_prejoin(
+                        player, self.linked_frame.on_plugin_err
+                    )
+                elif not pkt["Message"].startswith(
+                    "§e%multiplayer.player.joined"
+                ) and not pkt["Message"].startswith("§e%multiplayer.player.left"):
+                    jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
+                    Print.print_inf("§1" + " ".join(jon))
+                    if pkt["Message"].startswith("death."):
+                        if len(pkt["Parameters"]) >= 2:
+                            killer = pkt["Parameters"][1]
+                        else:
+                            killer = None
+                        plugin_grp.execute_player_death(
+                            pkt["Parameters"][0],
+                            killer,
+                            pkt["Message"],
+                            self.linked_frame.on_plugin_err,
+                        )
+            case 1 | 7:
+                player, msg = pkt["SourceName"], pkt["Message"]
+                plugin_grp.execute_player_message(
+                    player, msg, self.linked_frame.on_plugin_err
+                )
+                Print.print_inf(f"<{player}> {msg}")
+            case 8:
+                player, msg = pkt["SourceName"], pkt["Message"]
+                Print.print_inf(f"{player} 使用 say 说：{msg.strip(f'[{player}]')}")
+                plugin_grp.execute_command(player, msg, self.linked_frame.on_plugin_err)
+            case 9:
+                msg = pkt["Message"]
+                try:
+                    msg_text = json.loads(msg)["rawtext"]
+                    if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
+                        Print.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
+                        return
+                    msg_text = "".join([i["text"] for i in msg_text])
+                    Print.print_with_info(msg_text, "§f 消息 ")
+                except Exception:
+                    pass
+
+    def Inject(self) -> None:
+        """载入游戏时的初始化"""
+        if hasattr(self.launcher, "bot_name"):
+            self.tmp_tp_all_players()
+        res = self.launcher.get_players_and_uuids()
+        self.all_players_data = self.launcher.omega.get_all_online_players()
+        Utils.createThread(
+            func=self.give_bot_effect_invisibility, usage="GiveBotEffectInvisibility"
+        )
+        if res:
+            self.allplayers = list(res.keys())
+            self.players_uuid.update(res)
+        else:
+            while 1:
+                try:
+                    cmd_result = self.sendcmd_with_resp("/list")
+                    if (
+                        cmd_result.OutputMessages is None
+                        or len(cmd_result.OutputMessages) < 2
+                    ):
+                        raise ValueError
+                    if (
+                        cmd_result.OutputMessages[1].Parameters is None
+                        or len(cmd_result.OutputMessages[1].Parameters) < 1
+                    ):
+                        raise ValueError
+                    self.allplayers = (
+                        cmd_result.OutputMessages[1].Parameters[0].split(", ")
+                    )
+                    break
+                except (TimeoutError, ValueError):
+                    Print.print_war("获取全局玩家失败..重试")
+        self.linked_frame.comsole_cmd_start()
+        self.linked_frame.link_plugin_group.execute_init(
+            self.linked_frame.on_plugin_err
+        )
+        self.inject_welcome()
+
+    def inject_welcome(self) -> None:
+        """初始化欢迎信息"""
+        Print.print_suc(
+            "成功连接到游戏网络并初始化, 在线玩家: "
+            + ", ".join(self.allplayers)
+            + ", 机器人 ID: "
+            + self.bot_name
+        )
+        self.sendcmd("/tag @s add robot")
+        Print.print_inf(
+            "在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件"
+        )
+        Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
+
+    @property
+    def bot_name(self) -> str:
+        if hasattr(self.launcher, "bot_name"):
+            return self.launcher.get_bot_name()
+        raise ValueError("此启动器框架无法产生机器人名")
+
+    def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
+        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
+        return resp
+
+    def say_to(self, target: str, text: str) -> None:
+        """向玩家发送消息
+
+        Args:
+            target (str): 玩家名/目标选择器
+            msg (str): 消息
+        """
+        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        self.sendwocmd(f"tellraw {target} {text_json}")
+
+    def player_title(self, target: str, text: str) -> None:
+        """向玩家展示标题文本
+
+        Args:
+            target (str): 玩家名/目标选择器
+            text (str): 文本
+        """
+        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        self.sendwocmd(f"titleraw {target} title {text_json}")
+
+    def player_subtitle(self, target: str, text: str) -> None:
+        """向玩家展示副标题文本
+
+        Args:
+            target (str): 玩家名/目标选择器
+            text (str): 文本
+        """
+        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        self.sendwocmd(f"titleraw {target} subtitle {text_json}")
+
+    def player_actionbar(self, target: str, text: str) -> None:
+        """向玩家展示动作栏文本
+
+        Args:
+            target (str): 玩家名/目标选择器
+            text (str): 文本
+        """
+        text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
+        self.sendwocmd(f"titleraw {target} actionbar {text_json}")
+
+    def get_game_data(self) -> dict:
+        """获取游戏常见字符串数据
+
+        Returns:
+            dict: 游戏常见字符串数据
+        """
+        return self.Game_Data
+
+    def give_bot_effect_invisibility(self) -> None:
+        """给机器人添加隐身效果"""
+        start_time = time.time()
+        while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
+            if time.time() - start_time > 16384:
+                self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
+                start_time = time.time()
+            time.sleep(1)
+
+    def tmp_tp_all_players(self) -> None:
+        """
+        内部调用：在 ToolDelta 连接到 NeOmega 后先 tp 所有玩家（防止玩家 entityruntimeid 为空）
+        外部调用：临时传送至所有玩家后回到原位
+        """
+        BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
+        for player in self.allplayers:
+            if player == self.bot_name:
+                continue
+            self.sendwocmd(f"tp {self.bot_name} {player}")
+        self.sendwocmd(
+            f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
+        )
+
+    def tmp_tp_player(self, player: str) -> None:
+        """临时传送玩家 (看一眼玩家就回来，多数用于捕获数据)
+        Args:
+
+            player (str): 玩家名
+
+        """
+        BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
+        self.sendwocmd(f"tp {self.bot_name} {player}")
+        self.sendwocmd(
+            f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
+        )

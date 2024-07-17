@@ -28,7 +28,6 @@ from .injected_plugin import (
 from ..plugin_load import (
     classic_plugin,
     injected_plugin,
-    java_connect_plugin,
     NON_FUNC,
     PluginAPINotFoundError,
     PluginAPIVersionError,
@@ -77,8 +76,7 @@ class PluginGroup:
         self.plugins_api: dict[str, Plugin] = {}
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
-        self.javaconnect_plugin_loaded_num = 0
-        self.loaded_plugins_name = []
+        self.loaded_plugin_ids = []
         self.linked_frame: Union["ToolDelta", None] = None
 
     add_plugin = staticmethod(add_plugin)
@@ -241,12 +239,12 @@ class PluginGroup:
         try:
             Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin.read_plugins(self)
+            Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
-            java_connect_plugin.read_plugins(self)
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             Print.print_suc(
-                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个组合式插件，§f{self.injected_plugin_loaded_num}§a 个注入式插件，§f{self.javaconnect_plugin_loaded_num}§a 个 Java 连接插件"
+                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个组合式插件，§f{self.injected_plugin_loaded_num}§a 个注入式插件"
             )
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
@@ -262,12 +260,15 @@ class PluginGroup:
         """
         plugin = None
         if plugin_type == "classic":
-            plugin = classic_plugin.load_plugin(self, plugin_name)
+            plugin: Any = classic_plugin.load_plugin(self, plugin_name)
+            # 热加载部分
+            if plugin and hasattr(plugin, "on_def"):
+                plugin.on_def()
+            if plugin and hasattr(plugin, "on_inject"):
+                plugin.on_inject()
         elif plugin_type == "injected":
             asyncio.run(injected_plugin.load_plugin_file(plugin_name))
-        # 检查是否有 on_def 成员再执行
-        if plugin and hasattr(plugin, "on_def"):
-            plugin.on_def()  # type: ignore
+
         Print.print_suc(f"成功热加载插件：{plugin_name}")
 
     def add_listen_packet_id(self, packetType: int) -> None:

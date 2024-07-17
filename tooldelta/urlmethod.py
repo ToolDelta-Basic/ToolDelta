@@ -1,5 +1,6 @@
 """自定义常用 URL 方法"""
 
+import anyio
 from colorama import Fore, Style, init
 from tqdm.asyncio import tqdm
 import aiohttp
@@ -10,7 +11,6 @@ import shutil
 import socket
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Union, List, Tuple
 import pyspeedtest
 import requests
 
@@ -29,7 +29,7 @@ mirror_github = [
 init(autoreset=True)
 
 
-async def download_file_urls(download_url2dst: List[Tuple[str, str]]) -> None:
+async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
     """
     从给定的URL并发下载文件到指定的目标路径。
 
@@ -41,13 +41,12 @@ async def download_file_urls(download_url2dst: List[Tuple[str, str]]) -> None:
     Returns:
         None
     """
+    Http_Ok = 200
 
     async def download_file(
         session: aiohttp.ClientSession,
         url: str,
         i: int,
-        sem: asyncio.Semaphore,
-        sem2: asyncio.Semaphore,
         file_path: str,
     ) -> tqdm:
         """
@@ -75,7 +74,7 @@ async def download_file_urls(download_url2dst: List[Tuple[str, str]]) -> None:
             )
             async with sem:
                 async with session.get(url) as response:
-                    if response.status == 200:
+                    if response.status == Http_Ok:
                         filename = url.split("/")[-1]
                         total_size = int(response.headers.get("content-length", 0))
                         total_size_mb = total_size / (1024 * 1024)  # 转换为 MB
@@ -86,9 +85,9 @@ async def download_file_urls(download_url2dst: List[Tuple[str, str]]) -> None:
                         )
                         downloaded = 0
 
-                        with open(file_path, "wb") as f:
+                        async with await anyio.open_file(file_path, "wb") as f:
                             async for chunk in response.content.iter_chunked(1024):
-                                f.write(chunk)
+                                await f.write(chunk)
                                 downloaded += len(chunk)
                                 progress_bar.update(
                                     len(chunk) / (1024 * 1024)
@@ -111,13 +110,13 @@ async def download_file_urls(download_url2dst: List[Tuple[str, str]]) -> None:
     sem2: asyncio.Semaphore = asyncio.Semaphore(10)  # 只显示 10 个下载任务
 
     async with aiohttp.ClientSession() as session:
-        tasks: List[asyncio.Task] = []
-        progress_bars: List[tqdm] = []
+        tasks: list[asyncio.Task] = []
+        progress_bars: list[tqdm] = []
 
         for i, (url, dst) in enumerate(download_url2dst):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             task: asyncio.Task = asyncio.create_task(
-                download_file(session, url, i, sem, sem2, dst)
+                download_file(session, url, i, dst)
             )
             tasks.append(task)
 
@@ -159,9 +158,9 @@ def githubdownloadurl_to_rawurl(url: str) -> str:
 
 
 def progress_bar(
-    current: float | int,
-    total: float | int,
-    length: int | float = 20,
+    current: float,
+    total: float,
+    length: float = 20,
     color1: str = "§f",
     color2: str = "§b",
 ) -> str:
@@ -201,6 +200,9 @@ def download_progress_bar(
         Print.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
 
 
+KB = 1024
+MB = 1024 * KB
+
 def pretty_kb(n: float) -> str:
     """将字节数转换为可读性更好的字符串表示形式
 
@@ -210,10 +212,10 @@ def pretty_kb(n: float) -> str:
     Returns:
         str: 可读性更好的字符串表示形式
     """
-    if n >= 1048576:
-        return f"{round(n / 1048576, 2)}M"
-    if n >= 1024:
-        return f"{round(n / 1024, 2)}K"
+    if n >= MB:
+        return f"{round(n / MB, 2)}M"
+    if n >= KB:
+        return f"{round(n / KB, 2)}K"
     return f"{round(n, 1)}"
 
 
@@ -244,7 +246,7 @@ def is_common_text_file(url_path: str) -> bool:
     )
 
 
-def get_file_size(url: str) -> Union[int, None]:
+def get_file_size(url: str) -> int | None:
     """获取文件大小
 
     Args:
@@ -446,9 +448,9 @@ def if_token() -> None:
 
 def fbtokenFix():
     """修复 fbtoken 里的换行符"""
-    with open("fbtoken", "r", encoding="utf-8") as f:
-        token = f.read()
+    with open("fbtoken", encoding="utf-8") as file:
+        token = file.read()
         if "\n" in token:
             Print.print_war("fbtoken 里有换行符，会造成 fb 登陆失败，已自动修复")
-            with open("fbtoken", "w", encoding="utf-8") as f:
-                f.write(token.replace("\n", ""))
+            with open("fbtoken", "w", encoding="utf-8") as file2:
+                file2.write(token.replace("\n", ""))
