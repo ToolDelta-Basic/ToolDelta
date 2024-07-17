@@ -129,6 +129,9 @@ class Utils:
                     js = None
                 else:
                     raise err from None
+            except UnicodeDecodeError:
+                Print.print_err(path)
+                raise
             jsonPathTmp[path] = [False, js]
 
         @staticmethod

@@ -16,6 +16,7 @@ import signal
 import sys
 import time
 import traceback
+import re
 from typing import TYPE_CHECKING
 from collections.abc import Callable
 
@@ -731,6 +732,9 @@ class GameCtrl:
                         )
             case 1 | 7:
                 player, msg = pkt["SourceName"], pkt["Message"]
+                if "§" in player:
+                    player = re.compile("<([^ <>§]*)>").findall(player)[1]
+                    print("Get:", player)
                 plugin_grp.execute_player_message(
                     player, msg, self.linked_frame.on_plugin_err
                 )
