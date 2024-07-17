@@ -73,8 +73,13 @@ jobs:
         run: |
           python /home/runner/work/ToolDelta/ToolDelta/.github/release_produce.py
 
+      - name: Set CHANGELOG content
+        run: |
+          echo "CHANGELOG=$(cat /home/runner/work/ToolDelta/ToolDelta/CHANGELOG.md)" >> $GITHUB_ENV
+          echo "${{ env.CHANGELOG }}"
+
   release:
-    needs: [build]
+    needs: [build, build_changelog]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -91,7 +96,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          body_path: CHANGELOG.md
+          body: ${{ env.CHANGELOG }}
           files: |
             ToolDelta-windows.exe/ToolDelta-windows.exe
             ToolDelta-linux/ToolDelta-linux
