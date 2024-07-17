@@ -13,7 +13,7 @@ function EXIT_FAILURE(){
 function Download_termux() {
 read -p "请确保您当前termux没有必要数据(后续步骤将强制覆盖数据，停止请Ctrl+C，同意请回车):"
 echo "开始下载系统包"
-curl -o /storage/emulated/0/Download/termux.tar.gz http://222.187.254.86:5244/d/%E6%9C%AC%E5%9C%B0/root/Android_arm64-v8a.tar.gz
+curl -o /storage/emulated/0/Download/termux.tar.gz https://down.tblstudio.cn/Android_arm64-v8a.tar.gz
 echo "下载完成"
 echo "开始解压并替换"
 cd /data/data/com.termux/files
