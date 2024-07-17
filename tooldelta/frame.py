@@ -764,7 +764,7 @@ class GameCtrl:
                 except Exception:
                     pass
 
-    def Inject(self) -> None:
+    def system_inject(self) -> None:
         """载入游戏时的初始化"""
         if hasattr(self.launcher, "bot_name"):
             self.tmp_tp_all_players()
