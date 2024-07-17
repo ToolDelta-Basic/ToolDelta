@@ -7,6 +7,7 @@ import os
 import threading
 import time
 import traceback
+import re
 from io import TextIOWrapper
 from typing import Any, TypeVar
 from collections.abc import Callable, Iterable
@@ -519,6 +520,22 @@ class Utils:
         """
         return [lst[i : i + length] for i in range(0, len(lst), length)]
 
+    @staticmethod
+    def netease_vipname_repl(name: str) -> tuple[str, bool]:
+        """
+        检测网易我的世界的特殊VIP名并替换为原始名
+
+        Args:
+            name (str): 玩家名(带VIP内容)
+
+        Returns:
+            status (tuple[str, bool]): 玩家原始名以及其是否为vip名
+        """
+        if "§" in name or "<" in name:
+            # DANGEROUS!
+            return re.compile("<([^ <>§]*)>").findall(name)[1], True
+        else:
+            return name, False
 
 def safe_close() -> None:
     """安全关闭"""

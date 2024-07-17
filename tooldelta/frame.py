@@ -741,18 +741,17 @@ class GameCtrl:
                             self.linked_frame.on_plugin_err,
                         )
             case 1 | 7:
-                player, msg = pkt["SourceName"], pkt["Message"]
-                if "§" in player:
-                    player = re.compile("<([^ <>§]*)>").findall(player)[1]
-                    print("Get:", player)
+                original_playername, msg = pkt["SourceName"], pkt["Message"]
+                playername, _ = Utils.netease_vipname_repl(original_playername)
                 plugin_grp.execute_player_message(
-                    player, msg, self.linked_frame.on_plugin_err
+                    playername, msg, self.linked_frame.on_plugin_err
                 )
-                Print.print_inf(f"<{player}> {msg}")
+                Print.print_inf(f"<{playername}> {msg}")
             case 8:
-                player, msg = pkt["SourceName"], pkt["Message"]
-                Print.print_inf(f"{player} 使用 say 说：{msg.strip(f'[{player}]')}")
-                plugin_grp.execute_command(player, msg, self.linked_frame.on_plugin_err)
+                original_playername, msg = pkt["SourceName"], pkt["Message"]
+                playername, _ = Utils.netease_vipname_repl(original_playername)
+                Print.print_inf(f"{playername} 使用 say 说：{msg.strip(f'[{playername}]')}")
+                plugin_grp.execute_command(playername, msg, self.linked_frame.on_plugin_err)
             case 9:
                 msg = pkt["Message"]
                 try:
