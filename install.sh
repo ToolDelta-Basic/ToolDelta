@@ -10,12 +10,21 @@ shortcut_command="td"
 function EXIT_FAILURE(){
     exit -1
 }
-
+function Download_termux() {
+read -p "请确保您当前termux没有必要数据(后续步骤将强制覆盖数据，停止请Ctrl+C，同意请回车):"
+echo "开始下载系统包"
+curl -o /storage/emulated/0/Download/termux.tar.gz http://222.187.254.86:5244/d/%E6%9C%AC%E5%9C%B0/root/Android_arm64-v8a.tar.gz
+echo "下载完成"
+echo "开始解压并替换"
+cd /data/data/com.termux/files
+tar -zxf /storage/emulated/0/Download/termux.tar.gz --recursive-unlink --preserve-permissions
+rm /storage/emulated/0/Download/termux.tar.gz
+echo "安装完成，请退出termux并清除后台后重新运行"
+}
 function download_exec_for_termux(){
 # 权限
 mkdir -p "$install_dir"
 chown -R +x "$install_dir"
-
 
 #更换termux源
 sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && pkg update && pkg upgrade
@@ -24,12 +33,10 @@ sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/t
 echo "正在使用 pkg 安装 Python..."
 pkg install python3 -y
 
-
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
 pkg install libjpeg-turbo -y
 pkg install zlib -y
-
 
 #更换pip源
 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
@@ -140,7 +147,7 @@ elif [[ $(uname -o) == "Android" ]]; then
         red_line "拜托你很逊欸，没权限"
         EXIT_FAILURE
     fi
-    download_exec_for_termux
+    Download_termux
 
 else
     echo "不支持该系统，你的系统是"
