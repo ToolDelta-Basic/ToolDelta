@@ -49,14 +49,17 @@ class GameTextsLoader:
             or "no-update-check" in sys_args_to_dict()
         ):
             return ".".join(map(str, get_tool_delta_version()))
-        result = re.match(
-            r"(\d+\.\d+\.\d+)",
-            requests.get(
-                "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
-                timeout=5,
-                verify=True,
-            ).json()["tag_name"],
-        )
+        try:
+            result = re.match(
+                r"(\d+\.\d+\.\d+)",
+                requests.get(
+                    "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
+                    timeout=5,
+                    verify=True,
+                ).json()["tag_name"],
+            )
+        except Exception as err:
+            raise SystemExit("无法获取最新版本号") from err
         if not isinstance(result, type(None)):
             return result.group()
         raise ValueError("无法获取最新版本号")

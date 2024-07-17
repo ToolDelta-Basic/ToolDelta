@@ -16,7 +16,6 @@ import signal
 import sys
 import time
 import traceback
-import re
 from typing import TYPE_CHECKING
 from collections.abc import Callable
 
@@ -338,12 +337,14 @@ class ToolDelta:
         Returns:
             bool: 是否升级了配置文件
         """
-        old_cfg:dict = Config.get_cfg("ToolDelta基本配置.json", {})
+        old_cfg: dict = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
         if "NeOmega启动模式" in old_cfg:
             if isinstance(old_cfg["NeOmega启动模式"]["密码"], int):
-                old_cfg["NeOmega启动模式"]["密码"] = str(old_cfg["NeOmega启动模式"]["密码"])
+                old_cfg["NeOmega启动模式"]["密码"] = str(
+                    old_cfg["NeOmega启动模式"]["密码"]
+                )
                 if old_cfg["NeOmega启动模式"]["密码"] == "0":
                     old_cfg["NeOmega启动模式"]["密码"] = ""
                 need_upgrade_cfg = True
@@ -547,10 +548,11 @@ class ToolDelta:
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
                 )
             if not isinstance(self.launcher.neomg_proc, type(None)):
-                if sys.platform == "win32":
+                if os.name == "nt":
                     self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
                 else:
-                    self.launcher.neomg_proc.send_signal(signal.SIGKILL)
+                    self.launcher.neomg_proc.send_signal(signal.SIGTERM)
+
         if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
             self.launcher.exit_event.set()
 
@@ -753,8 +755,12 @@ class GameCtrl:
             case 8:
                 original_playername, msg = pkt["SourceName"], pkt["Message"]
                 playername, _ = Utils.netease_vipname_repl(original_playername)
-                Print.print_inf(f"{playername} 使用 say 说：{msg.strip(f'[{playername}]')}")
-                plugin_grp.execute_command(playername, msg, self.linked_frame.on_plugin_err)
+                Print.print_inf(
+                    f"{playername} 使用 say 说：{msg.strip(f'[{playername}]')}"
+                )
+                plugin_grp.execute_command(
+                    playername, msg, self.linked_frame.on_plugin_err
+                )
             case 9:
                 msg = pkt["Message"]
                 try:
