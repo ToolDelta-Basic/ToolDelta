@@ -35,7 +35,7 @@ print(new_real_commits_list)
 ToolDeltaVersion = open("version", "r").read().strip()
 print(ToolDeltaVersion)
 
-with open('/home/runner/work/ToolDelta/ToolDelta/.github/CHANGELOG.md', 'w') as CHANGELOG:
+with open('/home/runner/work/ToolDelta/ToolDelta/CHANGELOG.md', 'w') as CHANGELOG:
     CHANGELOG.write(f"## ToolDelta Release v{ToolDeltaVersion} ({tag_creation_date})\n")
     for commit in new_real_commits_list:
         commit_id = commit["commit"]
