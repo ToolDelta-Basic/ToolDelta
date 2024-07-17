@@ -410,7 +410,10 @@ class PluginManager:
         """
         Print.clean_print("§a☑ §f目前已安装的插件列表:")
         all_plugins = self.get_all_plugin_datas()
-        self.make_printable_list(all_plugins)
+        if all_plugins == []:
+            Print.clean_print(" §7空空如也哦...")
+        else:
+            self.make_printable_list(all_plugins)
         return all_plugins
 
 
