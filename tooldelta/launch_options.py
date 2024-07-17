@@ -54,3 +54,4 @@ def client_title() -> None:
         pass
     except Exception:
         Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
+        input(Print.fmt_info("按回车键退出..", "§c 报错 §r"))

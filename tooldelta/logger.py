@@ -27,7 +27,8 @@ class ToolDeltaLogger:
     def switch_logger(self, isopen: bool) -> None:
         "切换日志记录器状态"
         self.enable_logger = isopen
-        self.open_wrapper_io(self.path)
+        if isopen:
+            self.open_wrapper_io(self.path)
 
     def open_wrapper_io(self, log_path: str) -> None:
         "打开 IO 流"
