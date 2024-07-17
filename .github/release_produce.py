@@ -5,11 +5,11 @@ import os
 import pytz
 from packaging.version import parse
 
-# repo_path = os.path.join('/home/xingchen/WorkSpace/ToolDelta/.github', 'test')
-repo_path = "/home/runner/work/Test"
-Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
-# if not os.path.exists(repo_path):
-#     Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
+repo_path = os.path.join('/home/xingchen/WorkSpace/ToolDelta/.github', 'test')
+if not os.path.exists(repo_path):
+    Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
+# repo_path = "/home/runner/work/Test"
+# Repo.clone_from('https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git', to_path=repo_path, branch='main')
 repo = Repo(repo_path)
 tags = [tag for tag in repo.tags if tag.name != 'binaries']
 max_version = max(tags, key=lambda tag: parse(tag.name), default=None)
@@ -30,7 +30,15 @@ new_commits_log = repo.git.log('--pretty={"commit":"%h","author":"%an","summary"
 new_commits_list = new_commits_log.split("\n")
 new_real_commits_list = [eval(item) for item in new_commits_list]
 print(new_real_commits_list)
-ToolDeltaVersion = open("version", "r").read()
+# ToolDeltaVersion = open("version", "r").read()
+ToolDeltaVersion = max_version
 print(ToolDeltaVersion)
 CHANGELOG = open('CHANGELOG.md', 'w')
-CHANGELOG.write(f"## {ToolDeltaVersion} ({tag_creation_date})\n")
+CHANGELOG.write(f"## ToolDelta Release v{ToolDeltaVersion} ({tag_creation_date})\n")
+for commit in new_real_commits_list:
+    commit_id = commit["commit"]
+    author = commit["author"]
+    summary = commit["summary"]
+    date = commit["date"]
+    CHANGELOG.write(f"- [#{commit_id}](https://github.com/ToolDelta/commit/{commit_id}) {author} {summary} ({date})\n")
+CHANGELOG.close()
