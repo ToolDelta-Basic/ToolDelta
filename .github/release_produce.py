@@ -9,6 +9,7 @@ Repo.clone_from(
     to_path=repo_path,
     branch="main",
 )
+# repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
 repo = Repo(repo_path)
 tags = [tag for tag in repo.tags if tag.name != "binaries"]
 max_version = max(tags, key=lambda tag: parse(tag.name), default=None)
@@ -25,16 +26,16 @@ else:
 tag_creation_datetime = datetime.strptime(tag_creation_date, "%Y-%m-%d %H:%M")
 
 new_commits_log = repo.git.log(
-    '--pretty={"commit":"%h","author":"%an","summary":"%s","date":"%cd"}',
+    '--pretty={"commit":"%H","author":"%aN","summary":"%s","date":"%cd"}',
     since=tag_creation_datetime,
     date="format:%Y-%m-%d %H:%M",
 )
+
 new_commits_list = new_commits_log.split("\n")
 new_real_commits_list = [eval(item) for item in new_commits_list if item]
 print(new_real_commits_list)
 
 ToolDeltaVersion = open("version").read().strip()
-print(ToolDeltaVersion)
 
 with open("changelog.md", "w") as CHANGELOG:
     CHANGELOG.write(f"## ToolDelta Release v{ToolDeltaVersion} ({tag_creation_date})\n")
