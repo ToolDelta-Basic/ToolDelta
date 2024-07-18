@@ -733,7 +733,7 @@ class GameCtrl:
                     "§e%multiplayer.player.joined"
                 ) and not pkt["Message"].startswith("§e%multiplayer.player.left"):
                     jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
-                    Print.print_inf("§1" + " ".join(jon))
+                    Print.print_inf("§1" + " ".join(jon).strip('"'))
                     if pkt["Message"].startswith("death."):
                         if len(pkt["Parameters"]) >= 2:
                             killer = pkt["Parameters"][1]
