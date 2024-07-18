@@ -7,8 +7,9 @@ from packaging.version import parse
 def clone_repo(repo_url, repo_path, branch="main"):
     if not os.path.exists(repo_path):
         Repo.clone_from(repo_url, to_path=repo_path, branch=branch)
-    Repo.git.pull()
-    return Repo(repo_path)
+    repo = Repo(repo_path)
+    repo.git.pull()
+    return repo
 
 
 def get_max_version_tag(repo, n=1):
