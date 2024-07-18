@@ -46,6 +46,8 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
             author = commit["author"]
             summary = commit["summary"]
             date = commit["date"]
+            if "github-actions" in summary or "GitHub" in summary:
+                continue
             ColorCyan = "{Cyan}"
             ColorOrange = "{Orange}"
             ColorSteelBlue = "{SteelBlue}"
