@@ -7,9 +7,7 @@ from packaging.version import parse
 def clone_repo(repo_url, repo_path, branch="main"):
     if not os.path.exists(repo_path):
         Repo.clone_from(repo_url, to_path=repo_path, branch=branch)
-    repo = Repo(repo_path)
-    repo.git.pull()
-    return repo
+    return Repo(repo_path)
 
 
 def get_max_version_tag(repo, n=1):
@@ -70,6 +68,7 @@ def main():
     # repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
 
     repo = clone_repo(repo_url, repo_path)
+    repo.git.pull()
 
     max_version = get_max_version_tag(repo, 1)
     second_max_version = get_max_version_tag(repo, 2)
