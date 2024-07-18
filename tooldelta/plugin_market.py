@@ -33,21 +33,6 @@ def clear_screen() -> None:
     "清屏"
     os.system(shlex.quote(CLS_CMD))
 
-
-def path_dir(path: str) -> str | None:
-    """获取路径的上一级目录
-
-    Args:
-        path (str): 路径
-
-    Returns:
-        str|None: 上一级目录
-    """
-    if "/" not in path:
-        return None
-    return "/".join(path.split("/")[:-1])
-
-
 def url_join(*urls) -> str:
     """连接 URL
 
@@ -89,7 +74,7 @@ class PluginMarket:
         self.plugin_id_name_map: dict | None = None
         try:
             self.plugins_download_url = Cfg().get_cfg(
-                "ToolDelta基本配置.json", {"插件市场源": str}
+                "ToolDelta基本配置.json", {"插件市场源": str},
             )["插件市场源"]
         except Exception:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL

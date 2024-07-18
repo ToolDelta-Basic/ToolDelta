@@ -1,7 +1,7 @@
 """配置文件模块"""
 
 import os
-from typing import Any
+from typing import Any, Union
 
 import ujson
 
@@ -76,6 +76,8 @@ def _CfgShowType(typ: Any) -> str:
 class Cfg:
     """配置文件模块"""
 
+    AVALI_JSON_TYPE = Union[type, dict, tuple[type | dict], "JsonList", "AnyKeyValue"]
+
     class ConfigError(Exception):
         """配置文件错误"""
 
@@ -88,14 +90,14 @@ class Cfg:
     class JsonList:
         """配置文件的列表类型"""
 
-        def __init__(self, patt: type | dict | tuple[type | dict, ...], len_limit=-1):
+        def __init__(self, patt: "Cfg.AVALI_JSON_TYPE", len_limit=-1):
             self.patt = patt
             self.len_limit = len_limit
 
     class AnyKeyValue:
         """配置文件的任意键名键值对类型"""
 
-        def __init__(self, val_type: type | tuple[type] | dict):
+        def __init__(self, val_type: "Cfg.AVALI_JSON_TYPE"):
             self.type = val_type
 
     class KeyGroup:
@@ -213,7 +215,7 @@ class Cfg:
 
     def check_auto(
         self,
-        standard: type | dict | JsonList | tuple[type | dict, ...],
+        standard: "Cfg.AVALI_JSON_TYPE",
         val: Any,
         fromkey: str = "?",
     ):
