@@ -1,25 +1,12 @@
-name: Auto assign issues and pull requests
-
+name: 'Auto Assign'
 on:
-  issues:
-    types:
-      - opened
   pull_request:
-    types:
-      - opened
+    types: [opened, ready_for_review]
 
 jobs:
-  run:
+  add-reviews:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
     steps:
-      - name: Assign issues and pull requests
-        uses: gustavofreze/auto-assign@1.0.0
+      - uses: kentaro-m/auto-assign-action@v2.0.0
         with:
-          assignees: 'SuperScript-PRC,wling-art,xingchentye'
-          github_token: '${{ secrets.TOKENXINGCHEN }}'
-          allow_self_assign: 'true'
-          allow_no_assignees: 'true'
-          assignment_options: 'ISSUE,PULL_REQUEST'
+          configuration-path: '.github/auto_assign_configs.yml' # Only needed if you use something other than .github/auto_assign.yml
