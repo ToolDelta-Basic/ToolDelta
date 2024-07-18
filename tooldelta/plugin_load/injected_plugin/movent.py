@@ -1,7 +1,7 @@
 "注入式执行函数"
 
 import time
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 from ...color_print import Print
 from ...packets import Packet_CommandOutput
 from ...game_utils import getTarget, getPos
@@ -139,7 +139,7 @@ def is_op(playername: str) -> bool | None:
     return None
 
 
-def find_key_from_value(dic: dict, val: Any) -> Optional[Any]:
+def find_key_from_value(dic: dict, val: Any) -> Any | None:
     """
     从字典中根据值查找对应的键
 
@@ -159,7 +159,7 @@ def get_robotname() -> str:
     return game_control.bot_name
 
 
-def countdown(delay: int | float, msg: str | None = None) -> None:
+def countdown(delay: float, msg: str | None = None) -> None:
     """
     倒计时函数
 
