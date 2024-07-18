@@ -1,20 +1,25 @@
-# .github/workflows/auto-author-assign.yml
-name: Auto Author Assign
+name: Auto assign issues and pull requests
 
 on:
   issues:
-    types: [ opened, reopened ]
-  pull_request_target:
-    types: [ opened, reopened ]
-
-permissions:
-  issues: write
-  pull-requests: write
+    types:
+      - opened
+  pull_request:
+    types:
+      - opened
 
 jobs:
-  assign-author:
+  run:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
-      - uses: toshimaru/auto-author-assign@v2.1.1
-      with:
-        repo-token: ${{ secrets.ToolDeltaToken }}
+      - name: Assign issues and pull requests
+        uses: gustavofreze/auto-assign@1.0.0
+        with:
+          assignees: 'SuperScript-PRC,wling-art,xingchentye'
+          github_token: '${{ secrets.TOOLDELTATOKEN }}'
+          allow_self_assign: 'true'
+          allow_no_assignees: 'true'
+          assignment_options: 'ISSUE,PULL_REQUEST'
