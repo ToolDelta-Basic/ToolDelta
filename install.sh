@@ -19,7 +19,12 @@ echo "开始解压并替换"
 cd /data/data/com.termux/files
 tar -zxf /storage/emulated/0/Download/termux.tar.gz --recursive-unlink --preserve-permissions
 rm /storage/emulated/0/Download/termux.tar.gz
+echo "开始更新启动文件"
+cat > "/data/data/com.termux/files/usr/bin/$shortcut_command" << EOF
+python -c "import tooldelta; tooldelta.client_title()"
+EOF
 echo "安装完成，请退出termux并清除后台后重新运行"
+
 }
 function download_exec_for_termux(){
 # 权限
@@ -147,7 +152,18 @@ elif [[ $(uname -o) == "Android" ]]; then
         red_line "拜托你很逊欸，没权限"
         EXIT_FAILURE
     fi
-    Download_termux
+    dialog --menu "请选择安装方法" 15 40 4 1 "脚本安装(推荐)" 2 "覆盖安装(当方法1无法使用时使用)" 2> 1
+      case "$(cat 1)" in
+        1)
+        download_exec_for_termux
+        ;;
+        2)
+        Download_termux
+        ;;
+        *)
+        EXIT_FAILURE
+    esac
+    
 
 else
     echo "不支持该系统，你的系统是"
@@ -156,5 +172,3 @@ fi
 
 
 popd
-
-
