@@ -56,16 +56,16 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
             ColorSteelBlue = "{SteelBlue}"
             ColorRed = "{Red}"
             CHANGELOG.write(
-                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/commit/{commit_id})] $\color{ColorSteelBlue}{summary}$ $\color{ColorRed}By$ $\color{ColorCyan}{author}$ ($\color{ColorOrange}{date}$)\n"
+                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/ToolDelta/commit/{commit_id})] $\color{ColorSteelBlue}{summary}$ $\color{ColorRed}By$ $\color{ColorCyan}{author}$ ($\color{ColorOrange}{date}$)\n"
             )
 
 
 def main():
-    repo_path = "/home/runner/work/Test"
-    repo_url = "https://github.com/ToolDelta/ToolDelta.git"
+    # repo_path = "/home/runner/work/Test"
+    # repo_url = "https://github.com/ToolDelta/ToolDelta.git"
 
-    # repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
-    # repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
+    repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
+    repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
 
     repo = clone_repo(repo_url, repo_path)
     repo.git.pull()
