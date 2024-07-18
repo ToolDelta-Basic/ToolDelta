@@ -45,14 +45,19 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
             commit_id = commit["commit"]
             author = commit["author"]
             summary = commit["summary"]
+            summary = summary.replace('#', '"')
+            summary = summary.replace(" https://", "")
+            summary = summary.replace("`", "''")
+            
             date = commit["date"]
             if "github-actions" in summary or "GitHub" in summary:
                 continue
             ColorCyan = "{Cyan}"
             ColorOrange = "{Orange}"
             ColorSteelBlue = "{SteelBlue}"
+            ColorRed = "{Red}"
             CHANGELOG.write(
-                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/commit/{commit_id})] $\color{ColorSteelBlue}{summary}$ By $\color{ColorCyan}{author}$ ($\color{ColorOrange}{date}$)\n"
+                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/commit/{commit_id})] $\color{ColorSteelBlue}{summary}$ $\color{ColorRed}By$ $\color{ColorCyan}{author}$ ($\color{ColorOrange}{date}$)\n"
             )
 
 
