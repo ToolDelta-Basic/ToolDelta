@@ -1,9 +1,5 @@
 "数据包类构建器"
 
-from dataclasses import dataclass
-
-
-@dataclass
 class PacketIDS:
     "数据包 ID 常量表"
 
@@ -185,7 +181,6 @@ class PacketIDS:
     IDPyRpc = 183  # Python 远程过程调用
 
 
-@dataclass
 class ActorEventType:
     "演员事件常量表"
 
@@ -249,7 +244,6 @@ class ActorEventType:
     ActorEventVibrationDetected = 77  # 检测到振动
 
 
-@dataclass
 class EventType:
     "事件类型常量表"
 
@@ -285,7 +279,6 @@ class EventType:
     EventTypeSneakCloseToSculkSensor = 29  # 靠近鸾石感应器潜行
 
 
-@dataclass
 class PlayerActionType:
     PlayerActionStartBreak = 0  # 玩家开始破坏
     PlayerActionAbortBreak = 1  # 取消破坏
