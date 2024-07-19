@@ -614,10 +614,7 @@ class GameCtrl:
         self.allplayers: list[str] = []
         self.all_players_data = {}
         self.linked_frame: ToolDelta
-        self.pkt_unique_id: int = 0
-        self.pkt_cache: list = []
         self.require_listen_packets = {9, 79, 63}
-        self._store_uuid_pkt: dict[str, str] | None = None
         self.launcher = self.linked_frame.launcher
         if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
