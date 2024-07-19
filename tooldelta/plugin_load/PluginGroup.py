@@ -239,7 +239,6 @@ class PluginGroup:
         try:
             Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin.read_plugins(self)
-            Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             asyncio.run(injected_plugin.load_plugin(self))
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
