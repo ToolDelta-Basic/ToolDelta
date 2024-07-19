@@ -5,7 +5,8 @@ reviewers:
   - wling-art
   - xingchentye
 assignees:
-  - SuperScript-PRC
-  - wling-art
   - xingchentye
-numberOfAssignees: 2
+  - wling-art
+  - SuperScript-PRC
+numberOfAssignees: 1
+numberOfReviewers: 1
