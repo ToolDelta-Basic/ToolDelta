@@ -659,9 +659,9 @@ class GameCtrl:
         is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
         if is_skiped:
             return
-        if pkt_type == PacketIDS.PlayerList:
+        if pkt_type == PacketIDS.IDPlayerList:
             self.process_player_list(pkt, self.linked_frame.link_plugin_group)
-        elif pkt_type == PacketIDS.Text:
+        elif pkt_type == PacketIDS.IDText:
             self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
 
     def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
