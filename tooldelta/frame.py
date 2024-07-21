@@ -744,14 +744,14 @@ class GameCtrl:
                         )
             case 1 | 7:
                 original_playername, msg = pkt["SourceName"], pkt["Message"]
-                playername, _ = Utils.netease_vipname_repl(original_playername)
+                playername = Utils.to_plain_name(original_playername)
                 plugin_grp.execute_player_message(
                     playername, msg, self.linked_frame.on_plugin_err
                 )
                 Print.print_inf(f"<{playername}> {msg}")
             case 8:
                 original_playername, msg = pkt["SourceName"], pkt["Message"]
-                playername, _ = Utils.netease_vipname_repl(original_playername)
+                playername = Utils.to_plain_name(original_playername)
                 Print.print_inf(
                     f"{playername} 使用 say 说：{msg.strip(f'[{playername}]')}"
                 )

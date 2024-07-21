@@ -521,21 +521,38 @@ class Utils:
         return [lst[i : i + length] for i in range(0, len(lst), length)]
 
     @staticmethod
-    def netease_vipname_repl(name: str) -> tuple[str, bool]:
-        """
-        检测网易我的世界的特殊VIP名并替换为原始名
+    def to_plain_name(name: str) -> str:
+        """去除 网易版 Minecraft 的名字中的颜色代码
 
         Args:
-            name (str): 玩家名(带VIP内容)
+            name (str): 玩家名
 
         Returns:
-            status (tuple[str, bool]): 玩家原始名以及其是否为vip名
+            str: 去除颜色代码后的名字
         """
-        if "§" in name or "<" in name:
-            # DANGEROUS!
-            return re.compile("<([^ <>§]*)>").findall(name)[1], True
-        else:
-            return name, False
+        if name.startswith("§"):
+            cleaned_name = "".join(
+                char
+                for i, char in enumerate(name)
+                if char != "§" and (i == 0 or name[i - 1] != "§")
+            )
+
+            last_word, temp_word = [], []
+            in_brackets = False
+
+            for char in cleaned_name:
+                if char == "<":
+                    in_brackets = True
+                    temp_word = []
+                elif char == ">":
+                    in_brackets = False
+                    last_word = temp_word[:]
+                elif in_brackets:
+                    temp_word.append(char)
+
+            return "".join(last_word)
+        return name
+
 
 def safe_close() -> None:
     """安全关闭"""
