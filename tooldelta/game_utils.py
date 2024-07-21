@@ -33,7 +33,7 @@ def get_game_ctrl():
 
 def _set_frame(frame: "ToolDelta"):
     """载入系统框架"""
-    global game_ctrl  # noqa: PLW0603
+    global game_ctrl
     game_ctrl = frame.get_game_control()
 
 
