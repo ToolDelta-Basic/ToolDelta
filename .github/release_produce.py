@@ -61,11 +61,11 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
 
 
 def main():
-    # repo_path = "/home/runner/work/Test"
-    # repo_url = "https://github.com/ToolDelta/ToolDelta.git"
+    repo_path = "/home/runner/work/Test"
+    repo_url = "https://github.com/ToolDelta/ToolDelta.git"
 
-    repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
-    repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
+    # repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
+    # repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
 
     repo = clone_repo(repo_url, repo_path)
     repo.git.pull()
