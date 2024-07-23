@@ -503,10 +503,7 @@ class FrameNeOmg(StandardFrame):
 
         Args:
             pckID (int): 数据包 ID
-            pck (str): 数据包内容
-
-        Raises:
-            NotImplementedError: 未实现此方法
+            pck (dict): 数据包内容dict
         """
         self.check_avaliable()
         self.omega.send_game_packet_in_json_as_is(pckID, pck)

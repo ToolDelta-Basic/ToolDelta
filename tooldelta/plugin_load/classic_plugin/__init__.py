@@ -13,7 +13,7 @@ from ...constants import TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_PLUGIN_DATA_DIR
 
 if TYPE_CHECKING:
     # 类型注释
-    from ...frame import ToolDelta
+    from ... import ToolDelta
     from ...plugin_load.PluginGroup import PluginGroup
 
 __caches__ = {"plugin": None, "api_name": "", "frame": None}
