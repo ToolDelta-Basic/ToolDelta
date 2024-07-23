@@ -11,7 +11,7 @@ from .classic_plugin import (
     add_plugin,
     add_plugin_as_api,
     _init_frame,
-    _PLUGIN_CLS_TYPE,
+    _PLUGIN_CLS_TYPE
 )
 from ..utils import Utils
 from .injected_plugin import (
@@ -79,9 +79,31 @@ class PluginGroup:
         self.loaded_plugin_ids = []
         self.linked_frame: Union["ToolDelta", None] = None
 
-    add_plugin = staticmethod(add_plugin)
+    @staticmethod
+    def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
+        """
+        添加ToolDelta类式插件的插件主类
 
-    add_plugin_as_api = staticmethod(add_plugin_as_api)
+        Args:
+            plugin (type[Plugin]): 插件主类
+
+        Raises:
+            NotValidPluginError: 插件主类必须继承 Plugin 类
+
+        Returns:
+            type[Plugin]: 插件主类
+        """
+        return add_plugin(plugin)
+
+    @staticmethod
+    def add_plugin_as_api(apiName: str):
+        """
+        添加 ToolDelta 类式插件主类，同时作为 API 插件提供接口供其他插件进行使用
+
+        Args:
+            apiName (str): API 名
+        """
+        return add_plugin_as_api(apiName)
 
     def add_packet_listener(self, pktID: int | list[int]):
         """

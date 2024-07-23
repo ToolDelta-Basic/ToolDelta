@@ -20,7 +20,7 @@ __caches__ = {"plugin": None, "api_name": "", "frame": None}
 
 
 class Plugin:
-    "插件信息主类"
+    "插件主类"
 
     name: str = ""
     "插件名"
@@ -54,17 +54,6 @@ _PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
 
 
 def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
-    """添加ToolDelta类式插件的插件主类
-
-    Args:
-        plugin (type[Plugin]): 插件主类
-
-    Raises:
-        NotValidPluginError: 插件主类必须继承 Plugin 类
-
-    Returns:
-        type[Plugin]: 插件主类
-    """
     try:
         if not Plugin.__subclasscheck__(plugin):
             raise NotValidPluginError(f"插件主类必须继承 Plugin 类 而不是 {plugin}")
@@ -81,14 +70,7 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
     __caches__["plugin"] = plugin_ins
     return plugin
 
-
 def add_plugin_as_api(apiName: str):
-    """添加 ToolDelta 类式插件主类，同时作为 API 插件提供接口供其他插件进行使用
-
-    Args:
-        apiName (str): API 名
-    """
-
     def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         if not Plugin.__subclasscheck__(api_plugin):
             raise NotValidPluginError("API 插件主类必须继承 Plugin 类")
