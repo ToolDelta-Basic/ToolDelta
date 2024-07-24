@@ -79,7 +79,7 @@ def sendwocmd(cmd: str) -> None:
     game_control.sendwocmd(cmd)
 
 
-def sendPacket(pktID: int, pkt: str) -> None:
+def sendPacket(pktID: int, pkt: dict) -> None:
     """
     发送数据包给游戏控制器
 
