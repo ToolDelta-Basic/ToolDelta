@@ -88,7 +88,12 @@ class Cfg:
             self.args = (errStr,)
 
     class JsonList:
-        """配置文件的列表类型"""
+        """配置文件的列表类型
+
+        Args:
+            patt: 判定规则
+            len_limit (int): 限制列表的特定长度, 不限制则为-1
+        """
 
         def __init__(self, patt: "Cfg.AVALI_JSON_TYPE", len_limit=-1):
             self.patt = patt

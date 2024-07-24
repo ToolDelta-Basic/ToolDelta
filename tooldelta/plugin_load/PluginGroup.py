@@ -24,6 +24,7 @@ from .injected_plugin import (
     execute_frame_exit,
     execute_command_say,
     execute_repeat,
+    execute_packet_funcs
 )
 from ..plugin_load import (
     classic_plugin,
@@ -69,7 +70,6 @@ class PluginGroup:
 
     def __init__(self):
         "初始化"
-        self.listen_packet_ids = set()
         self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
@@ -262,6 +262,8 @@ class PluginGroup:
             Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin.read_plugins(self)
             asyncio.run(injected_plugin.load_plugin(self))
+            for i in injected_plugin.listen_packets:
+                self.add_listen_packet_id(i)
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             Print.print_suc(
@@ -303,7 +305,6 @@ class PluginGroup:
         """
         if self.linked_frame is None:
             raise ValueError("无法添加数据包监听，请确保已经加载了系统组件")
-        self.listen_packet_ids.add(packetType)
         self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
 
     def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
@@ -546,6 +547,7 @@ class PluginGroup:
         Returns:
             bool: 是否处理成功
         """
+        # Classic Plugin
         d = self._packet_funcs.get(str(pktID))
         if d:
             for func in d:
@@ -556,6 +558,8 @@ class PluginGroup:
                 except Exception:
                     Print.print_err(f"插件方法 {func.__name__} 出错：")
                     Print.print_err(traceback.format_exc())
+        # Injected Plugin
+        asyncio.run(execute_packet_funcs(pktID, pkt))
         return False
 
 

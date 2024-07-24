@@ -29,6 +29,8 @@ commmand_message_funcs: dict[Callable, int | None] = {}
 repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
+packet_funcs: dict[int, dict[Callable, int | None]] = {}
+listen_packets: set[int] = set()
 
 
 def player_message(priority: int | None = None) -> Callable:
@@ -167,7 +169,29 @@ def repeat(retime: int | float = 5) -> Callable:
     return decorator
 
 
+def listen_packet(packet_id: list[int] | int, priority: int | None = None):
+    """监听数据包
+
+    Args:
+        packet_id (list[int] | int): 数据包ID或数据包ID列表
+        priority (int | None, optional): 插件优先级
+    """
+    if isinstance(packet_id, int):
+        packet_id = [packet_id]
+
+    def decorator(func):
+        for i in packet_id:
+            listen_packets.add(i)
+            if i not in packet_funcs.keys():
+                packet_funcs[i] = {}
+            packet_funcs[i][func] = priority
+        return func
+
+    return decorator
+
+
 async def command_say(priority: int | None = None) -> Callable:
+    # TODO: name 是未传入和使用的变量
     """载入处理命令消息
 
     Args:
@@ -343,6 +367,17 @@ async def execute_player_left(playername: str) -> None:
         playername (str): 玩家名字
     """
     await execute_asyncio_task(player_left_funcs, player_name(playername=playername))
+
+
+async def execute_packet_funcs(pkt_id: int, pkt: dict):
+    """执行数据包处理函数
+
+    Args:
+        pkt_id (int): 数据包ID
+        pkt (dict): 数据包内容
+    """
+    if packet_funcs_spec := packet_funcs.get(pkt_id):
+        await execute_asyncio_task(packet_funcs_spec, pkt)
 
 
 async def execute_command_say(name: str, message: str) -> None:
