@@ -498,7 +498,7 @@ class FrameNeOmg(StandardFrame):
         self.check_avaliable()
         self.omega.send_settings_command(cmd)
 
-    def sendPacket(self, pckID: int, pck: str) -> None:
+    def sendPacket(self, pckID: int, pck: dict) -> None:
         """发送数据包
 
         Args:
