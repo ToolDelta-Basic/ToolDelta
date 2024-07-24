@@ -1,40 +1,45 @@
 """
 游戏交互实用方法
-
-Methods:
-    getTarget (sth, timeout): 获取符合目标选择器实体的列表
-    getPos (targetNameToGet, timeout): 获取目标玩家的详细位置信息
-    getItem (targetName, itemName, itemSpecialID): 获取玩家背包内指定的物品的数量
-    getPosXYZ (player, timeout=30): 获取玩家的简略坐标值，并以坐标三元元组返回
-    getScore (scoreboardNameToGet, targetNameToGet): 获取计分板分数
-    isCmdSuccess (cmd: str, timeout=30): 获取命令执行成功与否的状态
 """
 
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Optional
+import time
 import ujson as json
 
+from tooldelta.color_print import Print
 from .packets import Packet_CommandOutput, PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
 
-game_ctrl: "GameCtrl" = None  # type: ignore
+game_ctrl: Optional["GameCtrl"] = None
+movent_frame: Optional["ToolDelta"] = None
 
-# set_frame
+
+def _set_frame(my_Frame: "ToolDelta") -> None:
+    """
+    全局初始化框架
+
+    参数:
+        my_Frame: 要设置的框架对象
+    """
+    global movent_frame, game_ctrl  # pylint: disable=global-statement
+    movent_frame = my_Frame
+    game_ctrl = my_Frame.get_game_control()
 
 
-def get_game_ctrl():
+def get_game_ctrl() -> "GameCtrl":
     """检查 GameCtrl 是否可用"""
     if isinstance(game_ctrl, type(None)):
         raise ValueError("GameControl 不可用")
     return game_ctrl
 
 
-def _set_frame(frame: "ToolDelta"):
-    """载入系统框架"""
-    global game_ctrl
-    game_ctrl = frame.get_game_control()
+def get_frame() -> "ToolDelta":
+    """检查 GameCtrl 是否可用"""
+    if isinstance(movent_frame, type(None)):
+        raise ValueError("Frame 不可用")
+    return movent_frame
 
 
 def getTarget(sth: str, timeout: int = 5) -> list:
@@ -218,7 +223,9 @@ def getScore(scb_name: str, target: str, timeout=30) -> int:
     if resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     if len(resp.Parameters) < 1:
-        raise ValueError(f"计分板分数获取的Parameters获取异常: {resp.Message}: {resp.Parameters}")
+        raise ValueError(
+            f"计分板分数获取的Parameters获取异常: {resp.Message}: {resp.Parameters}"
+        )
     return int(resp.Parameters[0])
 
 
@@ -234,7 +241,8 @@ def isCmdSuccess(cmd: str, timeout=30):
     game_ctrl = get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)
-        
+
+
 def take_item_out_item_frame(pos: tuple[int, int, int]) -> None:
     """
     从物品展示框取出物品
@@ -244,4 +252,180 @@ def take_item_out_item_frame(pos: tuple[int, int, int]) -> None:
         None
     """
     game_ctrl = get_game_ctrl()
-    result = game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
+    game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
+
+
+def sendcmd(
+    cmd: str, waitForResp: bool = False, timeout: int = 30
+) -> None | Packet_CommandOutput:
+    r"""发送命令到游戏控制器，并可选择是否等待响应
+
+    如果 waitForResp 为 False，则返回 None，否则返回 Packet_CommandOutput 对象
+
+    参数:
+        cmd: 要发送的命令
+        waitForResp: 是否等待响应，默认为 False
+        timeout: 等待响应的超时时间（秒）,默认为 30
+    """
+    game_ctrl = get_game_ctrl()
+    return game_ctrl.sendcmd(cmd, waitForResp, timeout)
+
+
+def sendwscmd(
+    cmd: str, waitForResp: bool = False, timeout: float = 30
+) -> Packet_CommandOutput | None:
+    """
+    发送 WSCMD 命令到游戏控制器
+
+    参数:
+        cmd: 要发送的 WSCMD 命令
+        waitForResp: 是否等待响应 默认为 False
+        timeout: 超时时间（秒）默认为 30
+    """
+    game_ctrl = get_game_ctrl()
+    return game_ctrl.sendwscmd(cmd, waitForResp, timeout)
+
+
+def sendwocmd(cmd: str) -> None:
+    """
+    发送 WO 命令到游戏控制器
+
+    参数:
+        cmd: 要发送的 WO 命令
+    """
+    game_ctrl = get_game_ctrl()
+    game_ctrl.sendwocmd(cmd)
+
+
+def sendPacket(pktID: int, pkt: dict) -> None:
+    """
+    发送数据包给游戏控制器
+
+    参数:
+        pktID: 数据包 ID
+        pkt: 数据包内容
+    """
+    game_ctrl = get_game_ctrl()
+    game_ctrl.sendPacket(pktID, pkt)
+
+
+def rawText(playername: str, text: str) -> None:
+    """
+    向指定玩家发送原始文本消息
+
+    参数:
+        playername: 玩家名称
+        text: 要发送的文本
+    """
+    game_ctrl = get_game_ctrl()
+    game_ctrl.say_to(playername, text)
+
+
+def tellrawText(playername: str, title: str | None = None, text: str = "") -> None:
+    """
+    向指定玩家发送 tellraw 消息
+
+    参数:
+        playername: 玩家名称
+        title: 标题文本（可选）
+        text: 消息文本
+    """
+    game_ctrl = get_game_ctrl()
+    if title is None:
+        game_ctrl.say_to(playername, text)
+    else:
+        game_ctrl.say_to(playername, f"<{title}§r> {text}")
+
+
+def get_all_player() -> list:
+    """获取所有玩家列表"""
+    game_ctrl = get_game_ctrl()
+    return game_ctrl.allplayers
+
+
+def is_op(playername: str) -> bool:
+    """
+    判断玩家是否为 OP
+
+    参数:
+        playername: 玩家名称
+    """
+    frame = get_frame()
+    return frame.launcher.is_op(playername)
+
+def get_robotname() -> str:
+    """获取机器人名称。"""
+    game_ctrl = get_game_ctrl()
+    return game_ctrl.bot_name
+
+
+def countdown(delay: float, msg: str | None = None) -> None:
+    """
+    倒计时函数
+
+    参数:
+        delay: 延迟时间，可以是整数或浮点数
+        msg: 倒计时消息，可选参数，默认为"Countdown"
+    """
+    if msg is None:
+        msg = "Countdown"
+    delayStart = time.time()
+    delayStop = delayStart + delay
+    while delay >= 0:
+        if delay >= 0:
+            delay = delayStop - time.time()
+        else:
+            delay = 0
+        Print.print_inf(f"{msg}: {delay:.2f}s", end="\r")
+        time.sleep(0.01)
+    print("", end="\n")
+
+
+def getBlockTile(x: int, y: int, z: int) -> str:
+    """
+    获取指定坐标的方块的 ID
+
+    参数:
+        x: X 坐标
+        y: Y 坐标
+        z: Z 坐标
+    """
+    game_ctrl = get_game_ctrl()
+    res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
+    if res.SuccessCount:
+        return "air"
+    return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
+
+
+def getTickingAreaList() -> dict:
+    """
+    获取 tickingarea 列表
+
+    异常:
+        AttributeError: 获取 tickingarea 列表失败
+    """
+    result = {}
+    cmd = sendwscmd("/tickingarea list all-dimensions", True)
+    if cmd is not None:
+        resultList = cmd.OutputMessages
+    else:
+        raise AttributeError("Failed to get the tickingarea list.")
+
+    if resultList[0].Success is False:
+        return result
+    for tickareaData in resultList[1].Message.split("%dimension.dimensionName")[1:]:
+        tickareaDimension = tickareaData.split(": \n")[0]
+        tickareaList = tickareaData.split(": \n")[1].split("\n")
+        for tickarea in tickareaList:
+            if not tickarea:
+                continue
+            tickareaName = tickarea.split("- ", 1)[1].split(": ", 1)[0]
+            tickareaPos = {
+                "start": tickarea.split(" ")[2:5],
+                "end": tickarea.split(" ")[6:9],
+            }
+            tickareaPos["start"].pop(1)
+            tickareaPos["end"].pop(1)
+            result[tickareaName] = {"dimension": tickareaDimension}
+            result[tickareaName].update(tickareaPos)
+    return result
