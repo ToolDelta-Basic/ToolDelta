@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import ujson as json
 
-from .packets import Packet_CommandOutput
+from .packets import Packet_CommandOutput, PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
@@ -234,3 +234,14 @@ def isCmdSuccess(cmd: str, timeout=30):
     game_ctrl = get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)
+        
+def take_item_out_item_frame(pos: tuple[int, int, int]) -> None:
+    """
+    从物品展示框取出物品
+    参数:
+        position: 物品展示框的坐标 (x, y, z)
+    返回:
+        None
+    """
+    game_ctrl = get_game_ctrl()
+    result = game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
