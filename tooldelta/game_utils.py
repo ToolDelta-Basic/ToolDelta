@@ -30,14 +30,14 @@ def _set_frame(my_Frame: "ToolDelta") -> None:
     game_ctrl = my_Frame.get_game_control()
 
 
-def get_game_ctrl() -> "GameCtrl":
+def _get_game_ctrl() -> "GameCtrl":
     """检查 GameCtrl 是否可用"""
     if isinstance(game_ctrl, type(None)):
         raise ValueError("GameControl 不可用")
     return game_ctrl
 
 
-def get_frame() -> "ToolDelta":
+def _get_frame() -> "ToolDelta":
     """检查 GameCtrl 是否可用"""
     if isinstance(movent_frame, type(None)):
         raise ValueError("Frame 不可用")
@@ -54,7 +54,7 @@ def getTarget(sth: str, timeout: int = 5) -> list:
     异常:
         ValueError: 指令返回超时，或者无法获取目标
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     if not sth.startswith("@"):
         raise ValueError("我的世界目标选择器格式错误 (getTarget 必须使用目标选择器)")
     result = game_ctrl.sendcmd_with_resp(f"/testfor {sth}", timeout)
@@ -78,7 +78,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
         ValueError: 当获取位置信息失败时抛出该异常
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     if (
         target not in game_ctrl.allplayers
         and not target.startswith("@")
@@ -135,7 +135,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         itemName (str): 物品 ID
         itemSpecialID (int): 物品特殊值，默认值 -1
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     if (
         (target not in game_ctrl.allplayers)
         and (target != game_ctrl.bot_name)
@@ -176,7 +176,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     异常:
         ValueError: 无法获取分数
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     resultList = game_ctrl.sendcmd_with_resp(
         f"/scoreboard players list {targetNameToGet}"
     ).OutputMessages
@@ -211,8 +211,20 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
         raise Exception(f"获取计分板分数失败：{err}")
 
 
-def getScore(scb_name: str, target: str, timeout=30) -> int:
-    game_ctrl = get_game_ctrl()
+def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
+    """获取计分板对应分数
+    参数:
+        scb_name: 计分板名
+        target: 目标选择器
+        timeout: 超时时间
+
+    异常:
+        ValueError: 计分板错误
+
+    返回:
+        int: 计分板分数
+    """
+    game_ctrl = _get_game_ctrl()
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
     resp = game_ctrl.sendcmd_with_resp(
@@ -231,7 +243,7 @@ def getScore(scb_name: str, target: str, timeout=30) -> int:
     return int(resp.Parameters[0])
 
 
-def isCmdSuccess(cmd: str, timeout=30):
+def isCmdSuccess(cmd: str, timeout: float = 30):
     """
     获取命令执行成功与否的状态
     参数:
@@ -240,7 +252,7 @@ def isCmdSuccess(cmd: str, timeout=30):
     返回:
         命令执行是否成功：bool
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)
 
@@ -256,7 +268,7 @@ def sendcmd(
         waitForResp: 是否等待响应，默认为 False
         timeout: 等待响应的超时时间（秒）,默认为 30
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     return game_ctrl.sendcmd(cmd, waitForResp, timeout)
 
 
@@ -271,7 +283,7 @@ def sendwscmd(
         waitForResp: 是否等待响应 默认为 False
         timeout: 超时时间（秒）默认为 30
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     return game_ctrl.sendwscmd(cmd, waitForResp, timeout)
 
 
@@ -282,7 +294,7 @@ def sendwocmd(cmd: str) -> None:
     参数:
         cmd: 要发送的 WO 命令
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     game_ctrl.sendwocmd(cmd)
 
 
@@ -294,7 +306,7 @@ def sendPacket(pktID: int, pkt: dict) -> None:
         pktID: 数据包 ID
         pkt: 数据包内容
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     game_ctrl.sendPacket(pktID, pkt)
 
 
@@ -306,7 +318,7 @@ def rawText(playername: str, text: str) -> None:
         playername: 玩家名称
         text: 要发送的文本
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     game_ctrl.say_to(playername, text)
 
 
@@ -319,7 +331,7 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
         title: 标题文本（可选）
         text: 消息文本
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     if title is None:
         game_ctrl.say_to(playername, text)
     else:
@@ -328,7 +340,7 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
 
 def get_all_player() -> list:
     """获取所有玩家列表"""
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     return game_ctrl.allplayers
 
 
@@ -339,12 +351,13 @@ def is_op(playername: str) -> bool:
     参数:
         playername: 玩家名称
     """
-    frame = get_frame()
+    frame = _get_frame()
     return frame.launcher.is_op(playername)
+
 
 def get_robotname() -> str:
     """获取机器人名称。"""
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     return game_ctrl.bot_name
 
 
@@ -381,7 +394,7 @@ def getBlockTile(x: int, y: int, z: int) -> str:
         y: Y 坐标
         z: Z 坐标
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
     if res.SuccessCount:
         return "air"
@@ -443,7 +456,7 @@ def __set_effect_while__(player_name: str, effect: str, level: int, particle: bo
     """
     内部方法: 设置玩家状态效果
     参数:
-        player_name: 玩家名称 (String)  
+        player_name: 玩家名称 (String)
         effect: 效果 ID (String) 参考 EffectIDS 中内容
         level: 效果等级 (int) Max: 255
         particle: 是否显示粒子 (Boolean)
@@ -455,7 +468,7 @@ def __set_effect_while__(player_name: str, effect: str, level: int, particle: bo
     command_prefix = f"/effect {player_name} {effect} "
     duration = "2" if icon_flicker else "1000000"
     command = f"{command_prefix}{duration} {level} {str(particle)}"
-    
+
     while True:
         result = game_ctrl.sendcmd_with_resp(command)
         if result.OutputMessages[0].Message == 'commands.effect.success':
