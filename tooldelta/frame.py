@@ -197,45 +197,46 @@ class ToolDelta:
                     except ValueError:
                         Print.print_err("输入不合法，或者是不在范围内，请重新输入")
                 Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-                # 读取启动配置等
-            if not os.path.isfile("fbtoken"):
-                Print.print_inf(
-                    "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
-                )
-                Login_method: str = input(
-                    Print.fmt_info("请输入你的选择：", "§6 输入 ")
-                )
-                while True:
-                    if Login_method.isdigit() is False:
-                        Login_method = input(
-                            Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
-                        )
-                    elif int(Login_method) > 2 or int(Login_method) < 1:
-                        Login_method = input(
-                            Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
-                        )
-                    else:
-                        break
-                if Login_method == "1":
-                    try:
-                        match cfgs["NeOmega启动模式"][
-                            "验证服务器地址(更换时记得更改fbtoken)"
-                        ]:
-                            case "https://liliya233.uk":
-                                token = auths.sign_login(constants.GUGU_APIS)
-                            case "https://api.fastbuilder.pro":
-                                token = auths.sign_login(constants.FB_APIS)
-                            case _:
-                                Print.print_err("暂无法登录该验证服务器")
-                                raise SystemExit
-                        with open("fbtoken", "w", encoding="utf-8") as f:
-                            f.write(token)
-                    except requests.exceptions.RequestException as e:
-                        Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
-            if_token()
-            fbtokenFix()
-            with open("fbtoken", encoding="utf-8") as f:
-                fbtoken = f.read()
+            # 读取 token
+            if not (fbtoken := sys_args_to_dict().get("user-token")):
+                if not os.path.isfile("fbtoken"):
+                    Print.print_inf(
+                        "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
+                    )
+                    Login_method: str = input(
+                        Print.fmt_info("请输入你的选择：", "§6 输入 ")
+                    )
+                    while True:
+                        if Login_method.isdigit() is False:
+                            Login_method = input(
+                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                            )
+                        elif int(Login_method) > 2 or int(Login_method) < 1:
+                            Login_method = input(
+                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                            )
+                        else:
+                            break
+                    if Login_method == "1":
+                        try:
+                            match cfgs["NeOmega启动模式"][
+                                "验证服务器地址(更换时记得更改fbtoken)"
+                            ]:
+                                case "https://liliya233.uk":
+                                    token = auths.sign_login(constants.GUGU_APIS)
+                                case "https://api.fastbuilder.pro":
+                                    token = auths.sign_login(constants.FB_APIS)
+                                case _:
+                                    Print.print_err("暂无法登录该验证服务器")
+                                    raise SystemExit
+                            with open("fbtoken", "w", encoding="utf-8") as f:
+                                f.write(token)
+                        except requests.exceptions.RequestException as e:
+                            Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+                if_token()
+                fbtokenFix()
+                with open("fbtoken", encoding="utf-8") as f:
+                    fbtoken = f.read()
             self.launcher.set_launch_data(
                 serverNumber, serverPasswd, fbtoken, auth_server
             )

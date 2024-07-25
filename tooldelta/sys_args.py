@@ -38,3 +38,4 @@ def print_help():
     print("    -no-update-check  禁用自动更新")
     print("    -no-download-libs  禁用自动更新依赖库")
     print("    -l <启动模式>  按照特定的启动模式，跳过启动页面")
+    print("    -user-token <token>  使用传入的而非本地的token来登录验证服务器")
