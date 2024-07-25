@@ -359,6 +359,8 @@ def get_robotname() -> str:
     return game_ctrl.bot_name
 
 
+
+
 def countdown(delay: float, msg: str | None = None) -> None:
     """
     倒计时函数
@@ -429,3 +431,22 @@ def getTickingAreaList() -> dict:
             result[tickareaName] = {"dimension": tickareaDimension}
             result[tickareaName].update(tickareaPos)
     return result
+
+def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
+    """
+    从物品展示框取出物品
+    参数:
+        position: 物品展示框的坐标 (x, y, z)
+    返回:
+        None
+    """
+    game_ctrl = get_game_ctrl()
+    BotPos: tuple[float, float, float] = getPosXYZ(game_ctrl.bot_name)
+    game_ctrl.sendwocmd(
+        f"tp {game_ctrl.bot_name} {str(int(pos[0])) + ' ' + str(int(pos[1])) + ' ' + str(int(pos[2]))}"
+    )
+    game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
+    game_ctrl.sendwocmd(
+        f"tp {game_ctrl.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
+    )
+    return
