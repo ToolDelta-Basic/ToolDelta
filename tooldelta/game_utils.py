@@ -256,6 +256,7 @@ def isCmdSuccess(cmd: str, timeout: float = 30):
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)
 
+
 def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> None | Packet_CommandOutput:
@@ -361,8 +362,6 @@ def get_robotname() -> str:
     return game_ctrl.bot_name
 
 
-
-
 def countdown(delay: float, msg: str | None = None) -> None:
     """
     倒计时函数
@@ -434,6 +433,7 @@ def getTickingAreaList() -> dict:
             result[tickareaName].update(tickareaPos)
     return result
 
+
 def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
     """
     从物品展示框取出物品
@@ -442,7 +442,7 @@ def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
     返回:
         None
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     BotPos: tuple[float, float, float] = getPosXYZ(game_ctrl.bot_name)
     game_ctrl.sendwocmd(
         f"tp {game_ctrl.bot_name} {str(int(pos[0])) + ' ' + str(int(pos[1])) + ' ' + str(int(pos[2]))}"
@@ -452,7 +452,10 @@ def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
         f"tp {game_ctrl.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
     )
 
-def __set_effect_while__(player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True) -> None:
+
+def __set_effect_while__(
+    player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True
+) -> None:
     """
     内部方法: 设置玩家状态效果
     参数:
@@ -464,19 +467,28 @@ def __set_effect_while__(player_name: str, effect: str, level: int, particle: bo
     返回:
         None
     """
-    game_ctrl = get_game_ctrl()
+    game_ctrl = _get_game_ctrl()
     command_prefix = f"/effect {player_name} {effect} "
     duration = "2" if icon_flicker else "1000000"
-    command = f"{command_prefix}{duration} {level} {str(particle)}"
+    command = f"{command_prefix}{duration} {level} {particle!s}"
 
     while True:
         result = game_ctrl.sendcmd_with_resp(command)
-        if result.OutputMessages[0].Message == 'commands.effect.success':
+        if result.OutputMessages[0].Message == "commands.effect.success":
             time.sleep(1)
         else:
             break
 
-def set_player_effect(player_name: str, effect: str, duration: int, level: int, particle: bool, icon_flicker: bool = True, timeout: float = 1.5) -> bool | ValueError:
+
+def set_player_effect(
+    player_name: str,
+    effect: str,
+    duration: int,
+    level: int,
+    particle: bool,
+    icon_flicker: bool = True,
+    timeout: float = 1.5,
+) -> bool | ValueError:
     """
     设置玩家的状态效果
 
@@ -493,22 +505,30 @@ def set_player_effect(player_name: str, effect: str, duration: int, level: int, 
         Bool | ValueError: 是否设置成功
     """
     if level > 255:
-        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。") # type: ignore
+        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。")  # type: ignore
     if duration > 1000000:
-        return ValueError(f"你提供的持续时间 ({duration}) 太大了，它最高只能是 1000000。") # type: ignore
+        return ValueError(
+            f"你提供的持续时间 ({duration}) 太大了，它最高只能是 1000000。"
+        )  # type: ignore
 
-    game_ctrl = get_game_ctrl()
-    command = f"/effect {player_name} {effect} {duration} {level} {str(particle)}"
+    game_ctrl = _get_game_ctrl()
+    command = f"/effect {player_name} {effect} {duration} {level} {particle!s}"
 
     if duration == 0:
-        Utils.createThread(func=__set_effect_while__, args=(player_name, effect, level, particle, icon_flicker), usage=f"Set_Effect_Thread_{player_name}")
+        Utils.createThread(
+            func=__set_effect_while__,
+            args=(player_name, effect, level, particle, icon_flicker),
+            usage=f"Set_Effect_Thread_{player_name}",
+        )
         return True
 
     result = game_ctrl.sendcmd_with_resp(command, timeout=timeout)
     match result.OutputMessages[0].Message:
-        case 'commands.generic.noTargetMatch':
-            return ValueError(f"没有与选择器匹配的目标! 玩家 {player_name} 可能并不存在。") # type: ignore
-        case 'commands.effect.success':
+        case "commands.generic.noTargetMatch":
+            return ValueError(
+                f"没有与选择器匹配的目标! 玩家 {player_name} 可能并不存在。"
+            )  # type: ignore
+        case "commands.effect.success":
             return True
         case _:
-            return ValueError(f"未知错误: {result.OutputMessages[0].Message}") # type: ignore
+            return ValueError(f"未知错误: {result.OutputMessages[0].Message}")  # type: ignore
