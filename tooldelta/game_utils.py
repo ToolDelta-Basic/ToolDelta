@@ -242,19 +242,6 @@ def isCmdSuccess(cmd: str, timeout=30):
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
     return bool(res)
 
-
-def take_item_out_item_frame(pos: tuple[int, int, int]) -> None:
-    """
-    从物品展示框取出物品
-    参数:
-        position: 物品展示框的坐标 (x, y, z)
-    返回:
-        None
-    """
-    game_ctrl = get_game_ctrl()
-    game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
-
-
 def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> None | Packet_CommandOutput:
