@@ -915,3 +915,35 @@ class GameCtrl:
         self.sendwocmd(
             f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
         )
+
+    def get_player_name_from_entity_runtime(self, runtimeid: int) -> str | None:
+        """根据实体 runtimeid 获取玩家名
+
+        Args:
+            runtimeid (int): 实体 RuntimeID
+
+        Returns:
+            str | None: 玩家名
+        """
+        if not self.all_players_data:
+            return None
+        for player in self.all_players_data:
+            if player.entity_runtime_id == runtimeid:
+                return player.name
+        return None
+    
+    def get_player_entity_runtime_id_from_name(self, player_name: str) -> int | None:
+        """
+        根据玩家名获取实体 runtimeid
+        
+        Args:   
+            player_name (str): 玩家名
+
+        Returns:
+            int | None: 实体 runtimeid
+        """
+        if not self.all_players_data:
+            return None
+        for player in self.all_players_data:
+            if player.name == player_name:
+                return player.entity_runtime_id
