@@ -40,7 +40,6 @@ from ..constants import (
     TOOLDELTA_INJECTED_PLUGIN,
 )
 from ..game_utils import _set_frame
-from .injected_plugin.movent import set_frame as _set_frame_inj
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -244,7 +243,6 @@ class PluginGroup:
         """设置关联的系统框架"""
         self.linked_frame = frame
         _set_frame(frame)
-        _set_frame_inj(frame)
         _init_frame(frame)
 
     def read_all_plugins(self) -> None:
