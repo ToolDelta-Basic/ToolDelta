@@ -4,10 +4,11 @@
 
 from typing import TYPE_CHECKING, Optional
 import time
+import threading
 import ujson as json
 
 from tooldelta.color_print import Print
-from tooldelta.constants import PacketIDS
+from tooldelta.constants import PacketIDS, EffectIDS
 from .packets import Packet_CommandOutput
 
 if TYPE_CHECKING:
@@ -438,20 +439,63 @@ def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
         f"tp {game_ctrl.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
     )
 
+def __set_effect_while__(player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True) -> None:
+    """
+    内部方法: 设置玩家状态效果
+    参数:
+        player_name: 玩家名称 (String)  
+        effect: 效果 ID (String) 参考 EffectIDS 中内容
+        level: 效果等级 (int) Max: 255
+        particle: 是否显示粒子 (Boolean)
+        icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
+    返回:
+        None
+    """
+    game_ctrl = get_game_ctrl()
+    command_prefix = f"/effect {player_name} {effect} "
+    duration = "2" if icon_flicker else "1000000"
+    command = f"{command_prefix}{duration} {level} {str(particle)}"
+    
+    while True:
+        result = game_ctrl.sendcmd_with_resp(command)
+        if result.OutputMessages[0].Message == 'commands.effect.success':
+            time.sleep(1)
+        else:
+            break
 
-def Set_Player_Effect(player_name: str, effect: str, duration: int, level: int, particle: bool) -> None:
+def set_player_effect(player_name: str, effect: str, duration: int, level: int, particle: bool, icon_flicker: bool = True, timeout: float = 1.5) -> bool | ValueError:
     """
     设置玩家的状态效果
 
     参数:
         player_name: 玩家名称 (String)
-        effect: 效果 ID (String)
-        duration: 持续时间 (int)
-        level: 效果等级 (int)
-        particle: 是否显示粒子 (Boolearn)
+        effect: 效果 ID (String) 参考 EffectIDS 中内容
+        duration: 持续时间 (int) [为0代表永久(仅限ToolDelta运行时)] Max: 1000000
+        level: 效果等级 (int) Max: 255
+        particle: 是否显示粒子 (Boolean)
+        icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
+        timeout: 超时时间 (float) [可选]
 
     返回:
-        Bool: 是否设置成功
+        Bool | ValueError: 是否设置成功
     """
+    if level > 255:
+        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。") # type: ignore
+    if duration > 1000000:
+        return ValueError(f"你提供的持续时间 ({duration}) 太大了，它最高只能是 1000000。") # type: ignore
+
     game_ctrl = get_game_ctrl()
-    
+    command = f"/effect {player_name} {effect} {duration} {level} {str(particle)}"
+
+    if duration == 0:
+        threading.Thread(target=__set_effect_while__, args=(player_name, effect, level, particle, icon_flicker), name=f"Set_Effect_Thread_{player_name}").start()
+        return True
+
+    result = game_ctrl.sendcmd_with_resp(command, timeout=timeout)
+    match result.OutputMessages[0].Message:
+        case 'commands.generic.noTargetMatch':
+            return ValueError(f"没有与选择器匹配的目标! 玩家 {player_name} 可能并不存在。") # type: ignore
+        case 'commands.effect.success':
+            return True
+        case _:
+            return ValueError(f"未知错误: {result.OutputMessages[0].Message}") # type: ignore
