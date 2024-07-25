@@ -437,4 +437,21 @@ def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
     game_ctrl.sendwocmd(
         f"tp {game_ctrl.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
     )
-    return
+
+
+def Set_Player_Effect(player_name: str, effect: str, duration: int, level: int, particle: bool) -> None:
+    """
+    设置玩家的状态效果
+
+    参数:
+        player_name: 玩家名称 (String)
+        effect: 效果 ID (String)
+        duration: 持续时间 (int)
+        level: 效果等级 (int)
+        particle: 是否显示粒子 (Boolearn)
+
+    返回:
+        Bool: 是否设置成功
+    """
+    game_ctrl = get_game_ctrl()
+    

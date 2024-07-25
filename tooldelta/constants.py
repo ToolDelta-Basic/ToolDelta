@@ -388,3 +388,35 @@ class PlayerActionType:
 	PlayerActionMissedSwing = 31
 	PlayerActionStartCrawling = 32
 	PlayerActionStopCrawling = 33
+	
+class EffectIDS:
+	EffectSpeed = "speed"
+	EffectSlowNess = "slowness"
+	EffectHaste = "haste"
+	EffectMiningFatigue = "mining_fatigue"
+	EffectStrength = "strength"
+	EffectInstantHealth = "instant_health"
+	EffectInstantDamage = "instant_damage" # 瞬间伤害
+	EffectJumpBoost = "jump_boost" # 跳跃提升
+	EffectNausea = "nausea" # 反胃
+	EffectRegenerAtion = "regeneration" # 生命恢复
+	EffectResistance = "resistance" # 耐力
+	EffectFireResistance = "fire_resistance" # 火焰抗性
+	EffectWaterBreathing = "water_breathing" # 水下呼吸
+	EffectInvisibility = "invisibility" # 隐身
+	EffectBlindness = "blindness" # 致盲
+	EffectNightVision = "night_vision" # 夜视
+	EffectHunger = "hunger" # 饥饿
+	EffectWeakness = "weakness" # 虚弱
+	EffectPoison = "poison" # 中毒
+	EffectWither = "wither" # 凋零
+	EffectHealthBoost = "health_boost" # 生命提升
+	EffectAbsorption = "absorption" # 吸收
+	EffectSaturation = "saturation" # 饱和
+	EffectLevitation = "levitation" # 漂浮
+	EffectFatalPoison = "fatal_poison" # 中毒(致命)
+	EffectConduitPower = "conduit_power" # 潮涌能量
+	EffectSlowFalling = "slow_falling" # 缓慢落下
+	EffectBadOmen = "bad_omen" # 不详之兆
+	EffectVillageHero = "village_hero" # 村庄英雄
+	EffectDarkNess = "darkness" # 黑暗
