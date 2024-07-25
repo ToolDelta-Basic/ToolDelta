@@ -4,12 +4,12 @@
 
 from typing import TYPE_CHECKING, Optional
 import time
-import threading
 import ujson as json
 
 from tooldelta.color_print import Print
 from tooldelta.constants import PacketIDS, EffectIDS
 from .packets import Packet_CommandOutput
+from .utils import Utils
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
@@ -488,7 +488,7 @@ def set_player_effect(player_name: str, effect: str, duration: int, level: int, 
     command = f"/effect {player_name} {effect} {duration} {level} {str(particle)}"
 
     if duration == 0:
-        threading.Thread(target=__set_effect_while__, args=(player_name, effect, level, particle, icon_flicker), name=f"Set_Effect_Thread_{player_name}").start()
+        Utils.createThread(func=__set_effect_while__, args=(player_name, effect, level, particle, icon_flicker), usage=f"Set_Effect_Thread_{player_name}")
         return True
 
     result = game_ctrl.sendcmd_with_resp(command, timeout=timeout)

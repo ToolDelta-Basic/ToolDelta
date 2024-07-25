@@ -886,7 +886,7 @@ class GameCtrl:
         start_time = time.time()
         while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
             if time.time() - start_time > 16384:
-                self.sendwocmd(f"effect {self.bot_name} invisibility 99999 255 true")
+                self.sendwocmd(f"/effect {self.bot_name} invisibility 99999 255 true")
                 start_time = time.time()
             time.sleep(1)
 
