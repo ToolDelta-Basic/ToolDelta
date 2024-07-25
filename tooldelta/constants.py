@@ -390,12 +390,12 @@ class PlayerActionType:
 	PlayerActionStopCrawling = 33
 	
 class EffectIDS:
-	EffectSpeed = "speed"
-	EffectSlowNess = "slowness"
-	EffectHaste = "haste"
-	EffectMiningFatigue = "mining_fatigue"
-	EffectStrength = "strength"
-	EffectInstantHealth = "instant_health"
+	EffectSpeed = "speed" # 速度
+	EffectSlowNess = "slowness" # 缓慢
+	EffectHaste = "haste" # 急迫
+	EffectMiningFatigue = "mining_fatigue" # 挖掘疲劳
+	EffectStrength = "strength" # 力量
+	EffectInstantHealth = "instant_health" # 瞬间治疗
 	EffectInstantDamage = "instant_damage" # 瞬间伤害
 	EffectJumpBoost = "jump_boost" # 跳跃提升
 	EffectNausea = "nausea" # 反胃
