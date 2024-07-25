@@ -40,7 +40,8 @@ from .launch_cli import (
     SysStatus,
 )
 from .logger import publicLogger
-from .packets import Packet_CommandOutput, PacketIDS
+from .packets import Packet_CommandOutput
+from .constants import PacketIDS
 from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
 from .urlmethod import fbtokenFix, if_token

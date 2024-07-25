@@ -7,7 +7,8 @@ import time
 import ujson as json
 
 from tooldelta.color_print import Print
-from .packets import Packet_CommandOutput, PacketIDS
+from tooldelta.constants import PacketIDS
+from .packets import Packet_CommandOutput
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
