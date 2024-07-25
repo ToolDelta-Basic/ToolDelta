@@ -420,3 +420,17 @@ class EffectIDS:
 	EffectBadOmen = "bad_omen" # 不详之兆
 	EffectVillageHero = "village_hero" # 村庄英雄
 	EffectDarkNess = "darkness" # 黑暗
+	
+class BuildStructureIDS:
+	StructureBuriedTreasure = "buried_treasure" # 埋藏宝藏
+	StructureEndcity = "endcity" # 末地城
+	StructureFortress = "fortress" # 下界要塞
+	StructureMansion = "mansion" # 林地府邸
+	StructureMineShaft = "mineshaft" # 废弃矿井
+	StructureMonuMent = "monument" # 海底遗迹
+	StructurePillagerOutpost = "pillager_outpost" # 掠夺者前哨站
+	StructureRuins = "ruins" # 水下遗迹
+	StructureShipWreck = "shipwreck" # 沉船
+	StructureStrongHold = "stronghold" # 要塞
+	StructureTemple = "temple" # 沙漠神殿/丛林神殿/沼泽小屋/雪屋
+	StructureVillage = "village" # 村庄
