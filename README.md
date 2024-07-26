@@ -9,6 +9,7 @@
   <a href="https://github.com/ToolDelta/ToolDelta/issues?q=is%3Aissue+is%3Aclosed"><img src="https://img.shields.io/github/issues-closed/ToolDelta/ToolDelta.svg?style=flat&color=success" alt="clissues"></a>
   <a href="https://github.com/ToolDelta/ToolDelta/pulls"><img src="https://img.shields.io/github/issues-pr/ToolDelta/ToolDelta.svg?style=falt" alt="oppr"></a>
   <a href="https://github.com/ToolDelta/ToolDelta/pulls?q=is%3Apr+is%3Aclosed"><img src="https://img.shields.io/github/issues-pr-closed/ToolDelta/ToolDelta.svg?style=flat&color=success" alt="clpr"></a>
+  <a><img src="https://sonarcloud.io/api/project_badges/measure?project=ToolDelta_ToolDelta&metric=alert_status" alt="clpr"></a>
 </p>
 
 <p align="center">
