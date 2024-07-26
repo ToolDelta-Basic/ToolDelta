@@ -11,25 +11,21 @@ def clone_repo(repo_url, repo_path, branch="main"):
     Repo.clone_from(repo_url, to_path=repo_path, branch=branch)
     return Repo(repo_path)
 
-
-def get_max_version_tag(repo, n=1):
+def get_max_version_tag(repo):
     tags = [tag for tag in repo.tags if tag.name != "binaries"]
     sorted_tags = sorted(tags, key=lambda tag: parse(tag.name), reverse=True)
-    return sorted_tags[n-1] if len(sorted_tags) >= n else None
+    return sorted_tags[0] if sorted_tags else None
 
 def get_local_time(utc_time, timezone="Asia/Shanghai"):
     local_tz = pytz.timezone(timezone)
     return utc_time.replace(tzinfo=pytz.utc).astimezone(local_tz)
 
-
-def generate_changelog(repo, max_version, second_max_version, version_file="version"):
+def generate_changelog(repo, max_version, version_file="version"):
     max_tag_creation_datetime = max_version.commit.committed_datetime
-    second_max_tag_creation_datetime = second_max_version.commit.committed_datetime
 
     new_commits_log = repo.git.log(
         '--pretty={"commit":"%H","author":"%cN","summary":"%s","date":"%cd"}',
-        since=second_max_tag_creation_datetime,
-        until=max_tag_creation_datetime,
+        since=max_tag_creation_datetime,
         date="format:%Y-%m-%d %H:%M",
     )
 
@@ -46,10 +42,6 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
             commit_id = commit["commit"]
             author = commit["author"]
             summary = commit["summary"]
-            summary = summary.replace('#', '"')
-            summary = summary.replace(" https://", "")
-            summary = summary.replace("`", "''")
-            
             date = commit["date"]
             if "github-actions" in summary or "GitHub" in summary:
                 continue
@@ -57,39 +49,30 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
                 f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/ToolDelta/commit/{commit_id})] {summary} By {author} ({date})\n"
             )
 
-
 def main():
-    repo_path = "/home/runner/work/Test"
-    repo_url = "https://github.com/ToolDelta/ToolDelta.git"
+    # repo_path = "/home/runner/work/Test"
+    # repo_url = "https://github.com/ToolDelta/ToolDelta.git"
 
-    # repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
-    # repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
-
+    repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
+    repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
+    
     repo = clone_repo(repo_url, repo_path)
     repo.git.pull()
 
-    max_version = get_max_version_tag(repo, 1)
-    second_max_version = get_max_version_tag(repo, 2)
+    max_version = get_max_version_tag(repo)
 
-    if max_version and second_max_version:
+    if max_version:
         utc_time = max_version.commit.committed_datetime
         local_time = get_local_time(utc_time)
         max_tag_creation_date = local_time.strftime("%Y-%m-%d %H:%M")
 
-        utc_time = second_max_version.commit.committed_datetime
-        local_time = get_local_time(utc_time)
-        second_max_tag_creation_date = local_time.strftime("%Y-%m-%d %H:%M")
-
         print(f"最大版本号: {max_version.name}")
-        print(f"第二大版本号: {second_max_version.name}")
         print(f"Tag {max_version.name} 的创建日期是: {max_tag_creation_date}")
-        print(f"Tag {second_max_version.name} 的创建日期是: {second_max_tag_creation_date}")
 
-        generate_changelog(repo, max_version, second_max_version)
+        generate_changelog(repo, max_version)
     else:
         print("No valid tags found.")
         exit()
-
 
 if __name__ == "__main__":
     main()
