@@ -71,7 +71,6 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          body_path: changelog/changelog.md
           files: |
             ToolDelta-windows.exe/ToolDelta-windows.exe
             ToolDelta-linux/ToolDelta-linux

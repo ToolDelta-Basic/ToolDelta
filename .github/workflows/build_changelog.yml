@@ -1,6 +1,10 @@
 name: Build ChangeLog
 
 on:
+  workflow_run:
+    workflows: ["Sync Version"]
+    types:
+      - completed
   workflow_dispatch: {}
 
 jobs:
@@ -24,8 +28,9 @@ jobs:
         run: |
           python .github/release_produce.py
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: changelog
-          path: changelog.md
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body_path: changelog/changelog.md
