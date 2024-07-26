@@ -1,7 +1,7 @@
 name: Build binaries and Upload to Release
 on:
   workflow_run:
-    workflows: ["Sync Version", ]
+    workflows: ["Sync Version"]
     types:
       - completed
   workflow_dispatch: {}
@@ -52,9 +52,34 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}
+  build_changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install GitPython packaging pytz
+
+      - name: Build Changelog
+        run: |
+          python .github/release_produce.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog
+          path: changelog.md
 
   release:
-    needs: [build]
+    needs: [build, build_changelog]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -71,6 +96,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
+          body_path: changelog/changelog.md
           files: |
             ToolDelta-windows.exe/ToolDelta-windows.exe
             ToolDelta-linux/ToolDelta-linux
