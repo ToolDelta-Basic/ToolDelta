@@ -2,11 +2,13 @@ from git import Repo
 from datetime import datetime
 import pytz
 import os
+import shutil
 from packaging.version import parse
 
 def clone_repo(repo_url, repo_path, branch="main"):
-    if not os.path.exists(repo_path):
-        Repo.clone_from(repo_url, to_path=repo_path, branch=branch)
+    if os.path.exists(repo_path):
+        shutil.rmtree(repo_path)
+    Repo.clone_from(repo_url, to_path=repo_path, branch=branch)
     return Repo(repo_path)
 
 
@@ -51,21 +53,17 @@ def generate_changelog(repo, max_version, second_max_version, version_file="vers
             date = commit["date"]
             if "github-actions" in summary or "GitHub" in summary:
                 continue
-            ColorCyan = "{Cyan}"
-            ColorOrange = "{Orange}"
-            ColorSteelBlue = "{SteelBlue}"
-            ColorRed = "{Red}"
             CHANGELOG.write(
-                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/ToolDelta/commit/{commit_id})] $\color{ColorSteelBlue}{summary}$ $\color{ColorRed}By$ $\color{ColorCyan}{author}$ ($\color{ColorOrange}{date}$)\n"
+                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/ToolDelta/commit/{commit_id})] {summary} By {author} ({date})\n"
             )
 
 
 def main():
-    repo_path = "/home/runner/work/Test"
-    repo_url = "https://github.com/ToolDelta/ToolDelta.git"
+    # repo_path = "/home/runner/work/Test"
+    # repo_url = "https://github.com/ToolDelta/ToolDelta.git"
 
-    # repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
-    # repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
+    repo_path = "/home/xingchen/WorkSpace/ToolDelta/.github/test"
+    repo_url = "https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta.git"
 
     repo = clone_repo(repo_url, repo_path)
     repo.git.pull()
