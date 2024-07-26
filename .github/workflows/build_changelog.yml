@@ -27,7 +27,10 @@ jobs:
       - name: Build Changelog
         run: |
           python .github/release_produce.py
-
+  
+      - name: Get Version
+        run: echo "VERSION=$(<version)" >> $GITHUB_ENV
+        
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
