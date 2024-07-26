@@ -205,7 +205,7 @@ class StandardFrame:
         raise NotImplementedError
 
 
-class FrameNeOmg(StandardFrame):
+class FrameNeOmgAccessPoint(StandardFrame):
     """使用 NeOmega 框架连接到游戏"""
 
     launch_type = "NeOmega"
@@ -574,11 +574,11 @@ class FrameNeOmg(StandardFrame):
     sendPacketJson = sendPacket
 
 
-class FrameNeOmgRemote(FrameNeOmg):
-    """远程启动器框架 (使用 NeOmega 框架的 Remote 连接)
+class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
+    """远程启动器框架 (使用 NeOmega接入点 框架的 Remote 连接)
 
     Args:
-        FrameNeOmg (FrameNeOmg): FrameNeOmg 框架
+        FrameNeOmgAccessPoint (FrameNeOmgAccessPoint): FrameNeOmgAccessPoint 框架
     """
 
     launch_type = "NeOmega Remote"

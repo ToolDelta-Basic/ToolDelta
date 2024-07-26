@@ -35,8 +35,8 @@ from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
 from .launch_cli import (
     FrameBEConnect,
-    FrameNeOmg,
-    FrameNeOmgRemote,
+    FrameNeOmgAccessPoint,
+    FrameNeOmgAccessPointRemote,
     SysStatus,
 )
 from .logger import publicLogger
@@ -53,11 +53,11 @@ VERSION = get_tool_delta_version()
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
-LAUNCHERS: list[tuple[str, type[FrameNeOmg | FrameNeOmgRemote]]] = [
-    ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmg),
+LAUNCHERS: list[tuple[str, type[FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote]]] = [
+    ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
     (
         "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
-        FrameNeOmgRemote,
+        FrameNeOmgAccessPointRemote,
     ),
 ]
 
@@ -86,7 +86,7 @@ class ToolDelta:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.launcher: FrameNeOmg | FrameNeOmgRemote
+        self.launcher: FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
@@ -135,7 +135,7 @@ class ToolDelta:
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]()
         # 每个启动器框架的单独启动配置
-        if type(self.launcher) is FrameNeOmg:
+        if type(self.launcher) is FrameNeOmgAccessPoint:
             launch_data = cfgs.get(
                 "NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
             )
@@ -240,7 +240,7 @@ class ToolDelta:
             self.launcher.set_launch_data(
                 serverNumber, serverPasswd, fbtoken, auth_server
             )
-        elif type(self.launcher) is FrameNeOmgRemote:
+        elif type(self.launcher) is FrameNeOmgAccessPointRemote:
             ...
         elif type(self.launcher) is FrameBEConnect:
             launch_data = cfgs.get(
@@ -544,7 +544,7 @@ class ToolDelta:
         """系统退出"""
         asyncio.run(safe_jump())
         self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
-        if not isinstance(self.launcher, FrameNeOmgRemote):
+        if not isinstance(self.launcher, FrameNeOmgAccessPointRemote):
             with contextlib.suppress(Exception):
                 self.link_game_ctrl.sendwscmd(
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
@@ -555,7 +555,7 @@ class ToolDelta:
                 else:
                     self.launcher.neomg_proc.send_signal(signal.SIGTERM)
 
-        if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
+        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -618,7 +618,7 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.require_listen_packets = {9, 79, 63}
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, FrameNeOmgRemote | FrameNeOmg):
+        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理"
             )
@@ -627,7 +627,7 @@ class GameCtrl:
         self.sendwscmd = self.launcher.sendwscmd
         self.sendwocmd = self.launcher.sendwocmd
         self.sendPacket = self.launcher.sendPacket
-        if isinstance(self.linked_frame.launcher, FrameNeOmg):
+        if isinstance(self.linked_frame.launcher, FrameNeOmgAccessPoint):
             self.requireUUIDPacket = False
         else:
             self.requireUUIDPacket = True
