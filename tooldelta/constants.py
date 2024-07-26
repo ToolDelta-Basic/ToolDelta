@@ -434,3 +434,20 @@ class BuildStructureIDS:
 	StructureStrongHold = "stronghold" # 要塞
 	StructureTemple = "temple" # 沙漠神殿/丛林神殿/沼泽小屋/雪屋
 	StructureVillage = "village" # 村庄
+
+class ParticleIDS:
+    ParticleArrowSpellEmitter = "arrow_spell_emitter" # 从药箭上飘散的药水粒子
+    ParticleBasicBubbleParticle = "basic_bubble_particle" # 实体在水下产生的飞溅粒子，投射物在水下产生的轨迹粒子。该粒子只能在水中生成和存在。
+    ParticleBasicBubbleParticleManual = "basic_bubble_particle_manual" # 漂浮在水面上的实体产生的粒子，水下TNT被点燃时的气泡粒子。该粒子只能在水中生成和存在。
+    ParticleBasicCritParticle = "basic_crit_particle" # 用蓄力完成的弓或装填完成的弩射出的箭产生的轨迹粒子，尖牙进行攻击产生的粒子
+    ParticleBasicFlameParticle = "basic_flame_particle" # 火把；烧制物品的熔炉、高炉和烟熏炉；岩浆怪着地；刷怪笼工作
+    ParticleBasicPortalParticle = "basic_portal_particle" # 末影之眼的轨迹粒子
+    ParticleBasicSmokeParticle = "basic_smoke_particle" # 雨中的熔岩、岩浆块产生的粒子；伴随着lava_particle粒子产生的粒子；火、火把、灵魂火把的烟雾粒子；投掷器投掷物品；发射器发射物品；烈焰人；末地传送门；酿造台；正在工作的刷怪笼；烧制物品的熔炉、高炉、烟熏炉；点燃的蜡烛；凋灵；营火；凋零玫瑰；驯服生物失败；给棕色哞菇喂食小型花；使用末影之眼；试炼刷怪笼、宝库、实验台产出废物、制作加热块[仅教育版]；凋灵之首、火球的飞行轨迹粒子
+    ParticleBlockDestruct = "block_destruct" # 方块被摧毁；生物摔伤；玩家疾跑；羊吃草；兔子跳跃；嗅探兽刨挖；盔甲架被玩家破坏；使用刷子；实验台制作超级肥料[仅教育版]时的粒子；旋风人时的方块碎片粒子
+    ParticleBlockSlide = "block_slide" # 从蜂蜜块的侧面滑下的粒子
+    ParticleBlueFlameParticle = "blue_flame_particle" # 灵魂火把火苗粒子
+    ParticleBreakingItemIcon = "breaking_item_icon" # 玩家进食；狐狸进食；鸡蛋、喷溅药水、滞留药水、附魔之瓶、雪球和冰弹[仅教育版]破碎；史莱姆跳跃；海龟蛋孵化时的物品碎片粒子
+    ParticleBreezeGroundParticle = "breeze_ground_particle" # 旋风人产生的方块碎片粒子
+    ParticleBreezeWindExplosionEmitter = "breeze_wind_explosion_emitter" # 风弹爆炸粒子
+    ParticleBubbleColumnBubble = "bubble_column_bubble" # 气泡柱顶部的实体产生的气泡粒子。该粒子只能在水中生成和存在。
+    # ------------------------------------> 待完成 <------------------------------------
