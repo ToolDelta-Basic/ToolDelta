@@ -54,7 +54,7 @@ jobs:
           path: ${{ matrix.artifact_name }}
 
   release:
-    needs: [build, build_changelog]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
