@@ -1,7 +1,7 @@
 name: Build binaries and Upload to Release
 on:
   workflow_run:
-    workflows: ["Sync Version"]
+    workflows: ["Sync Version", ]
     types:
       - completed
   workflow_dispatch: {}
@@ -52,7 +52,7 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}
-          
+
   release:
     needs: [build, build_changelog]
     runs-on: ubuntu-latest

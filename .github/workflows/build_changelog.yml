@@ -1,9 +1,6 @@
 name: Build ChangeLog
+
 on:
-  workflow_run:
-    workflows: ["Build binaries and Upload to Release"]
-    types:
-      - completed
   workflow_dispatch: {}
 
 jobs:
