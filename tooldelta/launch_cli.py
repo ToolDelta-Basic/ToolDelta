@@ -1,6 +1,8 @@
 """客户端启动器框架"""
 
 import os
+import sys
+import re
 import platform
 import shlex
 import subprocess
@@ -206,9 +208,9 @@ class StandardFrame:
 
 
 class FrameNeOmgAccessPoint(StandardFrame):
-    """使用 NeOmega 框架连接到游戏"""
+    """使用 NeOmega接入点 框架连接到游戏"""
 
-    launch_type = "NeOmega"
+    launch_type = "NeOmegaAccessPoint"
 
     def __init__(self) -> None:
         """初始化 NeOmega 框架
@@ -581,7 +583,7 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
         FrameNeOmgAccessPoint (FrameNeOmgAccessPoint): FrameNeOmgAccessPoint 框架
     """
 
-    launch_type = "NeOmega Remote"
+    launch_type = "NeOmegaAccessPoint Remote"
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动远程启动器框架
@@ -651,6 +653,394 @@ class FrameBEConnect(StandardFrame):
                     }
                 )
 
-# 向下兼容
+class FrameNeOmgParalleltToolDelta(StandardFrame):
+    """使用 NeOmega接入点 框架连接到游戏 但同时兼容NeOmegaCli的运行"""
+
+    launch_type = "NeOmgParalleltToolDelta"
+
+    def __init__(self) -> None:
+        """初始化 NeOmega 框架
+
+        Args:
+            serverNumber (int): 服务器号
+            password (str): 服务器密码
+            fbToken (str): 验证服务器 Token
+            auth_server (str): 验证服务器地址
+        """
+        super().__init__()
+        self.status = SysStatus.LOADING
+        self.launch_event = threading.Event()
+        self.neomg_proc = None
+        self.serverNumber = None
+        self.neomega_account_opt = None
+        self.bot_name = ""
+        self.omega = neo_conn.ThreadOmega(
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=None,
+        )
+        self.serverNumber: int | None = None
+        self.serverPassword: str | None = None
+        self.fbToken: str | None = None
+        self.auth_server: str | None = None
+
+    def init(self):
+        if "no-download-neomega" not in sys_args_to_dict().keys():
+            Print.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
+            try:
+                neo_fd.download_neomg()
+            except Exception as err:
+                raise SystemExit(f"ToolDelta 因下载库异常而退出: {err}") from err
+            Print.print_inf("检测依赖库和NeOmega的最新版本..完成")
+        else:
+            Print.print_war("将不会自动检测依赖库和NeOmega的最新版本")
+        neo_conn.load_lib()
+        self.status = SysStatus.LAUNCHING
+
+    def set_launch_data(
+        self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
+    ):
+        self.serverNumber = serverNumber
+        self.serverPassword = password
+        self.fbToken = fbToken
+        self.auth_server = auth_server_url
+        if self.serverNumber is None:
+            self.neomega_account_opt = None
+        else:
+            self.neomega_account_opt = neo_conn.AccountOptions(
+                AuthServer=self.auth_server,
+                UserToken=self.fbToken,
+                ServerCode=str(self.serverNumber) ,
+                ServerPassword=self.serverPassword,
+            )
+        self.omega = neo_conn.ThreadOmega(
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=self.neomega_account_opt,
+        )
+
+    def set_omega(self, openat_port: int) -> None:
+        """设置 Omega 连接
+
+        Args:
+            openat_port (int): 端口号
+
+        Raises:
+            SystemExit: 系统退出
+        """
+        retries = 1
+        self.omega.address = f"tcp://localhost:{openat_port}"
+        MAX_RETRIES = 5  # 最大重试次数
+
+        while retries <= MAX_RETRIES:
+            try:
+                self.omega.connect()
+                retries = 1
+                return
+            except Exception as err:
+                Print.print_war(f"OMEGA 连接失败第 {err} (第{retries}次)")
+                time.sleep(5)
+                retries += 1
+        Print.print_err("最大重试次数已超过")
+        self.update_status(SysStatus.CRASHED_EXIT)
+
+    def start_neomega_proc(self) -> int:
+        """启动 NeOmega 进程
+
+        Returns:
+            int: 端口号
+        """
+        free_port = get_free_port(24013)
+        sys_machine = platform.uname().machine
+        if sys_machine == "x86_64":
+            sys_machine = "amd64"
+        elif sys_machine == "aarch64":
+            sys_machine = "arm64"
+        access_point_file = (
+            f"omega_launcher_{platform.uname().system.lower()}_{sys_machine}"
+        )
+        if "TERMUX_VERSION" in os.environ:
+            access_point_file = f"omega_launcher_android_{sys_machine}"
+        if platform.system() == "Windows":
+            access_point_file += ".exe"
+        exe_file_path = os.path.join(
+            os.getcwd(), "tooldelta", "neo_libs", access_point_file
+        )
+        if platform.uname().system.lower() == "linux":
+            os.system(f"chmod +x {shlex.quote(exe_file_path)}")
+        # 只需要+x 即可
+        if (
+            isinstance(self.serverNumber, type(None))
+            or isinstance(self.serverPassword, type(None))
+            or isinstance(self.fbToken, type(None))
+            or isinstance(self.auth_server, type(None))
+        ):
+            raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
+        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
+        self.neomg_proc = subprocess.Popen(
+            [
+                exe_file_path,
+                "-server",
+                str(self.serverNumber),
+                "-T",
+                self.fbToken,
+                "-access-point-addr",
+                f"tcp://localhost:{free_port}",
+                "-server-password",
+                str(self.serverPassword),
+                "-auth-server",
+                self.auth_server,
+                "-storage-root",
+                os.path.join(os.getcwd(), "tooldelta", "NeOmega数据"),
+            ],
+            encoding="utf-8",
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        return free_port
+
+    def _msg_show_thread(self) -> None:
+        """显示来自 NeOmega 的信息"""
+        if self.neomg_proc is None or self.neomg_proc.stdout is None:
+            raise ValueError("接入点进程未启动")
+        buffer = ""
+        while True:
+            char = self.neomg_proc.stdout.read(1)
+            if not char:
+                Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                if self.status == SysStatus.LAUNCHING:
+                    self.update_status(SysStatus.CRASHED_EXIT)
+                break
+            if char == "\n":
+                if "[neOmega 接入点]: 就绪" in buffer:
+                    self.launch_event.set()
+                Print.print_with_info(buffer, "§b NOMG ")
+                buffer = ""
+            else:
+                buffer += char
+                size = os.get_terminal_size().columns
+                text: str = (Print.fmt_info(buffer, "§b NOMG ") + "\r")
+                ansi_escape = re.compile(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?')
+                buffer_len = len(ansi_escape.sub('', text))
+                if buffer_len > size:
+                    text: str = Print.fmt_info(buffer[:size], "§b NOMG ")
+                    sys.stdout.write(text + "\n")
+                    sys.stdout.flush()
+                    buffer = buffer[size-buffer_len:]
+                else:
+                    sys.stdout.write(text)
+                    # if "oldelta/NeOmeg" in text:
+                    #     pass
+                    sys.stdout.flush()
+
+    def launch(self) -> SystemExit | Exception | SystemError:
+        """启动 NeOmega 进程
+
+        returns:
+            SystemExit: 正常退出
+            Exception: 异常退出
+            SystemError: 未知的退出状态
+        """
+        self.status = SysStatus.LAUNCHING
+        openat_port = self.start_neomega_proc()
+        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
+        self.launch_event.wait()
+        self.set_omega(openat_port)
+        self.update_status(SysStatus.RUNNING)
+        self.wait_omega_disconn_thread()
+        Print.print_suc("已获取游戏网络接入点最高权限")
+        pcks = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        self.omega.listen_packets(pcks, self.packet_handler_parent)
+        self._launcher_listener()
+        Print.print_suc("接入点注入已就绪")
+        self.exit_event.wait()  # 等待事件的触发
+        if self.status == SysStatus.NORMAL_EXIT:
+            return SystemExit("正常退出")
+        if self.status == SysStatus.CRASHED_EXIT:
+            return Exception("接入点进程已崩溃")
+        return SystemError("未知的退出状态")
+
+    def get_players_and_uuids(self):
+        players_uuid = {}
+        if self.status != SysStatus.RUNNING:
+            raise ValueError("未连接到接入点")
+        for i in self.omega.get_all_online_players():
+            if i is not None:
+                players_uuid[i.name] = i.uuid
+            else:
+                raise ValueError("未能获取玩家名和 UUID")
+        return players_uuid
+
+    def get_bot_name(self) -> str:
+        """获取机器人名字
+
+        Returns:
+            str: 机器人名字
+        """
+        self.check_avaliable()
+        if not self.bot_name:
+            self.bot_name = self.omega.get_bot_name()
+        return self.bot_name
+
+    def packet_handler_parent(self, pkt_type: str, pkt: dict) -> None:
+        """数据包处理器
+
+        Args:
+            pkt_type (str): 数据包类型
+            pkt (dict): 数据包内容
+
+        Raises:
+            ValueError: 未连接到接入点
+        """
+        if self.omega is None or self.packet_handler is None:
+            raise ValueError("未连接到接入点")
+        packetType = self.omega.get_packet_name_to_id_mapping(pkt_type)
+        self.packet_handler(packetType, pkt)
+
+    def check_avaliable(self):
+        if self.status != SysStatus.RUNNING:
+            raise ValueError("未连接到游戏")
+
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """以玩家身份发送命令
+
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
+
+        Raises:
+            NotImplementedError: 未实现此方法
+
+        Returns:
+            Optional[Packet_CommandOutput]: 返回命令结果
+        """
+        self.check_avaliable()
+        if waitForResp:
+            res = self.omega.send_player_command_need_response(cmd, timeout)
+            if res is None:
+                raise TimeoutError("指令超时")
+            return res
+        self.omega.send_player_command_omit_response(cmd)
+        return None
+
+    def sendwscmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """以玩家身份发送命令
+
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
+
+        Raises:
+            NotImplementedError: 未实现此方法
+
+        Returns:
+            Optional[Packet_CommandOutput]: 返回命令结果
+        """
+        self.check_avaliable()
+        if waitForResp:
+            res = self.omega.send_websocket_command_need_response(cmd, timeout)
+            if res is None:
+                raise TimeoutError("指令超时")
+            return res
+        self.omega.send_websocket_command_omit_response(cmd)
+        return None
+
+    def sendwocmd(self, cmd: str) -> None:
+        """以 wo 身份发送命令
+
+        Args:
+            cmd (str): 命令
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        self.check_avaliable()
+        self.omega.send_settings_command(cmd)
+
+    def sendPacket(self, pckID: int, pck: dict) -> None:
+        """发送数据包
+
+        Args:
+            pckID (int): 数据包 ID
+            pck (dict): 数据包内容dict
+        """
+        self.check_avaliable()
+        self.omega.send_game_packet_in_json_as_is(pckID, pck)
+
+    def is_op(self, player: str) -> bool:
+        """检查玩家是否为 OP
+
+        Args:
+            player (str): 玩家名
+
+        Raises:
+            NotImplementedError: 未实现此方法
+
+        Returns:
+            bool: 是否为 OP
+        """
+        self.check_avaliable()
+        if player not in [i.name for i in self.omega.get_all_online_players()]:
+            raise ValueError(f"玩家 '{player}' 不处于全局玩家中")
+        player_obj = self.omega.get_player_by_name(player)
+        if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
+            raise ValueError("未能获取玩家对象")
+        return player_obj.op
+
+    def place_command_block_with_nbt_data(
+        self,
+        block_name: str,
+        block_states: str,
+        position: tuple[int, int, int],
+        nbt_data: neo_conn.CommandBlockNBTData,
+    ):
+        """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
+        同时向该方块写入 nbt_data 所指代的 NBT 数据
+
+        Args:
+            block_name (str): 命令块的方块名，如 chain_command_block
+            block_states (str): 命令块的方块状态，如 朝向南方 的命令方块表示为 ["facing_direction":3]
+            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
+            nbt_data (neo_conn.CommandBlockNBTData): 该命令块的原始 NBT 数据
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        self.check_avaliable()
+        self.omega.place_command_block(
+            neo_conn.CommandBlockPlaceOption(
+                X=position[0],
+                Y=position[1],
+                Z=position[2],
+                BlockName=block_name,
+                BockState=block_states,
+                NeedRedStone=(not nbt_data.ConditionalMode),
+                Conditional=nbt_data.ConditionalMode,
+                Command=nbt_data.Command,
+                Name=nbt_data.CustomName,
+                TickDelay=nbt_data.TickDelay,
+                ShouldTrackOutput=nbt_data.TrackOutput,
+                ExecuteOnFirstTick=nbt_data.ExecuteOnFirstTick,
+            )
+        )
+
+    @Utils.thread_func("检测 Omega 断开连接线程")
+    def wait_omega_disconn_thread(self):
+        self.omega.wait_disconnect()
+        if self.status == SysStatus.RUNNING:
+            self.update_status(SysStatus.CRASHED_EXIT)
+
+    sendPacketJson = sendPacket
+
 FrameNeOmg = FrameNeOmgAccessPoint
 FrameNeOmgRemote = FrameNeOmgAccessPointRemote

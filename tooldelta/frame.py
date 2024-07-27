@@ -37,6 +37,7 @@ from .launch_cli import (
     FrameBEConnect,
     FrameNeOmgAccessPoint,
     FrameNeOmgAccessPointRemote,
+    FrameNeOmgParalleltToolDelta,
     SysStatus,
 )
 from .logger import publicLogger
@@ -53,12 +54,10 @@ VERSION = get_tool_delta_version()
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
-LAUNCHERS: list[tuple[str, type[FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote]]] = [
+LAUNCHERS: list[tuple[str, type[FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote | FrameNeOmgParalleltToolDelta]]] = [
     ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
-    (
-        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
-        FrameNeOmgAccessPointRemote,
-    ),
+    ("NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",FrameNeOmgAccessPointRemote),
+    ("NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)", FrameNeOmgParalleltToolDelta),
 ]
 
 
@@ -86,7 +85,7 @@ class ToolDelta:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.launcher: FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote
+        self.launcher: FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote | FrameNeOmgParalleltToolDelta
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
@@ -137,7 +136,7 @@ class ToolDelta:
         # 每个启动器框架的单独启动配置
         if type(self.launcher) is FrameNeOmgAccessPoint:
             launch_data = cfgs.get(
-                "NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
+                "NeOmega接入点启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
             )
             try:
                 Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
@@ -170,7 +169,7 @@ class ToolDelta:
                         )
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
-                        cfgs["NeOmega启动模式"] = launch_data
+                        cfgs["NeOmega接入点启动模式"] = launch_data
                         Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
                         Print.print_suc("登录配置设置成功")
                         break
@@ -190,7 +189,7 @@ class ToolDelta:
                         if ch not in range(1, len(auth_servers) + 1):
                             raise ValueError
                         auth_server = auth_servers[ch - 1][1]
-                        cfgs["NeOmega启动模式"][
+                        cfgs["NeOmega接入点启动模式"][
                             "验证服务器地址(更换时记得更改fbtoken)"
                         ] = auth_server
                         break
@@ -219,7 +218,112 @@ class ToolDelta:
                             break
                     if Login_method == "1":
                         try:
-                            match cfgs["NeOmega启动模式"][
+                            match cfgs["NeOmega接入点启动模式"][
+                                "验证服务器地址(更换时记得更改fbtoken)"
+                            ]:
+                                case "https://liliya233.uk":
+                                    token = auths.sign_login(constants.GUGU_APIS)
+                                case "https://api.fastbuilder.pro":
+                                    token = auths.sign_login(constants.FB_APIS)
+                                case _:
+                                    Print.print_err("暂无法登录该验证服务器")
+                                    raise SystemExit
+                            with open("fbtoken", "w", encoding="utf-8") as f:
+                                f.write(token)
+                        except requests.exceptions.RequestException as e:
+                            Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+                if_token()
+                fbtokenFix()
+                with open("fbtoken", encoding="utf-8") as f:
+                    fbtoken = f.read()
+            self.launcher.set_launch_data(
+                serverNumber, serverPasswd, fbtoken, auth_server
+            )
+        elif type(self.launcher) is FrameNeOmgParalleltToolDelta:
+            launch_data = cfgs.get(
+                "NeOmega并行ToolDelta启动模式", constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_DEFAULT
+            )
+            try:
+                Config.check_auto(constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_STD, launch_data)
+            except Config.ConfigError as err:
+                r = self.upgrade_cfg()
+                if r:
+                    Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    Print.print_err(
+                        f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
+                    )
+                raise SystemExit from err
+            serverNumber = launch_data["服务器号"]
+            serverPasswd: str = launch_data["密码"]
+            auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
+            if serverNumber == 0:
+                while 1:
+                    try:
+                        serverNumber = int(
+                            input(Print.fmt_info("请输入租赁服号：", "§b 输入 "))
+                        )
+                        serverPasswd = (
+                            getpass.getpass(
+                                Print.fmt_info(
+                                    "请输入租赁服密码 (不会回显，没有请直接回车): ",
+                                    "§b 输入 ",
+                                )
+                            )
+                            or ""
+                        )
+                        launch_data["服务器号"] = int(serverNumber)
+                        launch_data["密码"] = serverPasswd
+                        cfgs["NeOmega并行ToolDelta启动模式"] = launch_data
+                        Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                        Print.print_suc("登录配置设置成功")
+                        break
+                    except Exception:
+                        Print.print_err("输入有误，租赁服号和密码应当是纯数字")
+            auth_servers = constants.AUTH_SERVERS
+            if auth_server == "":
+                Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
+                for i, (auth_server_name, _) in enumerate(auth_servers):
+                    Print.print_inf(f" {i + 1} - {auth_server_name}")
+                Print.print_inf(
+                    "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
+                )
+                while 1:
+                    try:
+                        ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
+                        if ch not in range(1, len(auth_servers) + 1):
+                            raise ValueError
+                        auth_server = auth_servers[ch - 1][1]
+                        cfgs["NeOmega并行ToolDelta启动模式"][
+                            "验证服务器地址(更换时记得更改fbtoken)"
+                        ] = auth_server
+                        break
+                    except ValueError:
+                        Print.print_err("输入不合法，或者是不在范围内，请重新输入")
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+            # 读取 token
+            if not (fbtoken := sys_args_to_dict().get("user-token")):
+                if not os.path.isfile("fbtoken"):
+                    Print.print_inf(
+                        "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
+                    )
+                    Login_method: str = input(
+                        Print.fmt_info("请输入你的选择：", "§6 输入 ")
+                    )
+                    while True:
+                        if Login_method.isdigit() is False:
+                            Login_method = input(
+                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                            )
+                        elif int(Login_method) > 2 or int(Login_method) < 1:
+                            Login_method = input(
+                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                            )
+                        else:
+                            break
+                    if Login_method == "1":
+                        try:
+                            match cfgs["NeOmega并行ToolDelta启动模式"][
                                 "验证服务器地址(更换时记得更改fbtoken)"
                             ]:
                                 case "https://liliya233.uk":
@@ -342,13 +446,13 @@ class ToolDelta:
         old_cfg: dict = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
-        if "NeOmega启动模式" in old_cfg:
-            if isinstance(old_cfg["NeOmega启动模式"]["密码"], int):
-                old_cfg["NeOmega启动模式"]["密码"] = str(
-                    old_cfg["NeOmega启动模式"]["密码"]
+        if "NeOmega接入点启动模式" in old_cfg:
+            if isinstance(old_cfg["NeOmega接入点启动模式"]["密码"], int):
+                old_cfg["NeOmega接入点启动模式"]["密码"] = str(
+                    old_cfg["NeOmega接入点启动模式"]["密码"]
                 )
-                if old_cfg["NeOmega启动模式"]["密码"] == "0":
-                    old_cfg["NeOmega启动模式"]["密码"] = ""
+                if old_cfg["NeOmega接入点启动模式"]["密码"] == "0":
+                    old_cfg["NeOmega接入点启动模式"]["密码"] = ""
                 need_upgrade_cfg = True
         for k, v in constants.LAUNCH_CFG.items():
             if k not in old_cfg_keys:
@@ -379,6 +483,7 @@ class ToolDelta:
         os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
+        os.makedirs("NeOmega数据", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
         os.makedirs("插件数据文件/game_texts", exist_ok=True)
 
@@ -555,7 +660,7 @@ class ToolDelta:
                 else:
                     self.launcher.neomg_proc.send_signal(signal.SIGTERM)
 
-        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint):
+        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint | FrameNeOmgParalleltToolDelta):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -618,7 +723,7 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.require_listen_packets = {9, 79, 63}
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint):
+        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint | FrameNeOmgParalleltToolDelta):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理"
             )
