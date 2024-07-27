@@ -650,3 +650,7 @@ class FrameBEConnect(StandardFrame):
                         "OutputType": 1,
                     }
                 )
+
+# 向下兼容
+FrameNeOmg = FrameNeOmgAccessPoint
+FrameNeOmgRemote = FrameNeOmgAccessPointRemote
