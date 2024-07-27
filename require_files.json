@@ -12,5 +12,47 @@
   "Windows:arm64": [
     "neomega_windows_arm64.dll",
     "neomega_windows_access_point_arm64.exe"
-  ]
+  ],
+  "arch_providers": {
+    "android-arm64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-android.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-android.brotli",
+            "compress": "brotli"
+        }
+    ],
+    "darwin-amd64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-macos.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-macos.brotli",
+            "compress": "brotli"
+        }
+    ],
+    "darwin-arm64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-macos-arm64.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-macos-arm64.brotli",
+            "compress": "brotli"
+        }
+    ],
+    "linux-amd64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-linux.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-linux.brotli",
+            "compress": "brotli"
+        }
+    ],
+    "windows-amd64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-windows.exe.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-windows.exe.brotli",
+            "compress": "brotli"
+        }
+    ]
+  }
 }
