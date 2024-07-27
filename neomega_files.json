@@ -1,0 +1,26 @@
+{
+    "Android:arm64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-android.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-android.brotli",
+            "compress": "brotli"
+        }
+    ],
+    "Linux:amd64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-linux.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-linux.brotli",
+            "compress": "brotli"
+        }
+    ],
+    "Windows:amd64": [
+        {
+            "version_url": "",
+            "hash_url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-windows.exe.hash",
+            "url": "https://omega-1259160345.cos.accelerate.myqcloud.com/neomega_1_20_10/omega_launcher-windows.exe.brotli",
+            "compress": "brotli"
+        }
+    ]
+  }
