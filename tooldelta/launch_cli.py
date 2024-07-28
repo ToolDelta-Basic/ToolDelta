@@ -653,7 +653,7 @@ class FrameBEConnect(StandardFrame):
                     }
                 )
 
-class FrameNeOmgParalleltToolDelta(StandardFrame):
+class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
     """使用 NeOmega接入点 框架连接到游戏 但同时兼容NeOmegaCli的运行"""
 
     launch_type = "NeOmgParalleltToolDelta"
@@ -807,32 +807,50 @@ class FrameNeOmgParalleltToolDelta(StandardFrame):
         buffer = ""
         while True:
             char = self.neomg_proc.stdout.read(1)
-            if not char:
+            assert self.neomg_proc.stdin
+            if char == '':  # 如果读取到EOF
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
-            if char == "\n":
-                if "[neOmega 接入点]: 就绪" in buffer:
+            if char == '\n':  # 如果读取到换行符
+                msg_orig = buffer.strip()  # 去掉首尾空白字符
+                buffer = ""  # 清空缓冲区
+                if msg_orig == "SIGNAL: exit":
+                    Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                    if self.status == SysStatus.LAUNCHING:
+                        self.update_status(SysStatus.CRASHED_EXIT)
+                    break
+                if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
-                Print.print_with_info(buffer, "§b NOMG ")
-                buffer = ""
-            else:
-                buffer += char
-                size = os.get_terminal_size().columns
-                text: str = (Print.fmt_info(buffer, "§b NOMG ") + "\r")
-                ansi_escape = re.compile(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?')
-                buffer_len = len(ansi_escape.sub('', text))
-                if buffer_len > size:
-                    text: str = Print.fmt_info(buffer[:size], "§b NOMG ")
-                    sys.stdout.write(text + "\n")
-                    sys.stdout.flush()
-                    buffer = buffer[size-buffer_len:]
+                if any(info_type in msg_orig for info_type in ["INFO", "WARNING", "ERROR"]):
+                    Print.print_with_info("\b" + msg_orig, "")
                 else:
-                    sys.stdout.write(text)
-                    # if "oldelta/NeOmeg" in text:
-                    #     pass
-                    sys.stdout.flush()
+                    Print.print_with_info(msg_orig, "§b NOMG ")
+
+            else:
+                buffer += char  # 将字符添加到缓冲区
+                # 检查 buffer 中是否包含特定信息且没有换行符
+                if '\x1b[30;46m\x1b[30;46m INFO \x1b[0m\x1b[0m \x1b[96m\x1b[96m需要使用CQHTTP吗? 要请输入 y 不要请输入 n: \x1b[0m\x1b[0m' in buffer and char != '\n':
+                    val = input(Print.fmt_info("\b"+buffer, ""))
+                    self.neomg_proc.stdin.write(f'{val.lower()}\n')
+                    self.neomg_proc.stdin.flush()
+                    buffer = ""
+                elif '\x1b[30;46m\x1b[30;46m INFO \x1b[0m\x1b[0m \x1b[96m\x1b[96m要使用上次的 FastBuilder 账号登录吗? 继续使用请输入 y, 需要修改请输入 n: \x1b[0m\x1b[0m' in buffer and char != '\n':
+                    val = input(Print.fmt_info("\b"+buffer, ""))
+                    self.neomg_proc.stdin.write(f'{val.lower()}\n')
+                    self.neomg_proc.stdin.flush()
+                    buffer = ""
+                elif '\x1b[30;46m\x1b[30;46m INFO \x1b[0m\x1b[0m \x1b[96m\x1b[96m要使用低预算模式请输入 y, 要使用通常模式请输入 n: \x1b[0m\x1b[0m' in buffer and char != '\n':
+                    val = input(Print.fmt_info("\b"+buffer, ""))
+                    self.neomg_proc.stdin.write(f'{val.lower()}\n')
+                    self.neomg_proc.stdin.flush()
+                    buffer = ""
+                elif '\x1b[30;46m\x1b[30;46m INFO \x1b[0m\x1b[0m \x1b[96m\x1b[96m接受这个登录配置请输入 y, 需要修改请输入 n: \x1b[0m\x1b[0m' in buffer and char != '\n':
+                    val = input(Print.fmt_info("\b"+buffer, ""))
+                    self.neomg_proc.stdin.write(f'{val.lower()}\n')
+                    self.neomg_proc.stdin.flush()
+                    buffer = ""
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
