@@ -749,7 +749,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                 "-auth-server",
                 self.auth_server,
                 "-storage-root",
-                os.path.join(os.getcwd(), "tooldelta", "NeOmega数据"),
+                os.path.join(os.getcwd(), "NeOmega数据"),
             ],
             encoding="utf-8",
             stdin=subprocess.PIPE,
