@@ -785,7 +785,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
     def _msg_handle_thread(self) -> None:
         """处理来自 NeOmega 的信息"""
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
-            raise ValueError("接入点进程未启动")
+            raise ValueError("NeOmega进程未启动")
         assert self.neomg_proc.stdin
         Print.print_load(f"NeOmega 进程输出速度限制: {str(int(1.0 / self.out_speed))} 条/秒")
         buffer = ""
