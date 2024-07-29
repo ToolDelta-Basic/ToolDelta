@@ -787,6 +787,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
             raise ValueError("接入点进程未启动")
         assert self.neomg_proc.stdin
+        Print.print_load(f"NeOmega 进程输出速度限制: {1.0 / self.out_speed} 条/秒")
         buffer = ""
         while True:
             char = self.neomg_proc.stdout.read(1)
@@ -856,6 +857,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
+        Print.print_load(f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}')
         Utils.createThread(self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息")
         Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
         Utils.createThread(self._handle_input_thread, usage="处理将要写入到 NeOmega 进程中的信息")
