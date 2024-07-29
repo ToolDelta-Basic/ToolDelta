@@ -56,11 +56,9 @@ LAUNCHER_BEWS_DEFAULT: dict = {"服务端开放地址": ""}
 "启动器：BEWSServer 默认启动配置"
 
 FB_APIS = [
-    "https://api.fastbuilder.pro/api/phoenix/login",
-    "https://api.fastbuilder.pro/api/new",
-    "https://api.fastbuilder.pro/api/api",
-    "https://api.fastbuilder.pro/api/login",
-    "https://api.fastbuilder.pro",
+    "https://user.fastbuilder.pro/api/phoenix/login",
+    "https://user.fastbuilder.pro/api/new",
+    "https://user.fastbuilder.pro",
 ]
 "验证服务器：FastBuilder API 列表"
 
@@ -73,7 +71,7 @@ GUGU_APIS = [
 "验证服务器：Liliya API 列表"
 
 AUTH_SERVERS = [
-    ("FastBuilder 官方验证服务器", "https://api.fastbuilder.pro"),
+    ("FastBuilder 官方验证服务器", "https://user.fastbuilder.pro"),
     ("咕咕酱 FB验证服务器", "https://liliya233.uk"),
 ]
 "验证服务器列表"

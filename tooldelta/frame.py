@@ -223,7 +223,7 @@ class ToolDelta:
                             ]:
                                 case "https://liliya233.uk":
                                     token = auths.sign_login(constants.GUGU_APIS)
-                                case "https://api.fastbuilder.pro":
+                                case "https://user.fastbuilder.pro":
                                     token = auths.sign_login(constants.FB_APIS)
                                 case _:
                                     Print.print_err("暂无法登录该验证服务器")
@@ -328,7 +328,7 @@ class ToolDelta:
                             ]:
                                 case "https://liliya233.uk":
                                     token = auths.sign_login(constants.GUGU_APIS)
-                                case "https://api.fastbuilder.pro":
+                                case "https://user.fastbuilder.pro":
                                     token = auths.sign_login(constants.FB_APIS)
                                 case _:
                                     Print.print_err("暂无法登录该验证服务器")
@@ -1038,12 +1038,12 @@ class GameCtrl:
             if player.entity_runtime_id == runtimeid:
                 return player.name
         return None
-    
+
     def get_player_entity_runtime_id_from_name(self, player_name: str) -> int | None:
         """
         根据玩家名获取实体 runtimeid
-        
-        Args:   
+
+        Args:
             player_name (str): 玩家名
 
         Returns:
