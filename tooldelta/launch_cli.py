@@ -687,7 +687,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         self.neomega_msg_queue = queue.Queue()
         self.neomega_input_queue = queue.Queue()
         self.input_msg: list = []
-        self.out_speed: float = 0.1
+        self.out_speed: float = 0.05
 
     def init(self):
         if "no-download-neomega" not in sys_args_to_dict().keys():
@@ -831,8 +831,9 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                 time.sleep(self.out_speed)
                 Message: tuple = self.neomega_msg_queue.get_nowait()
                 if Message[0] == "out":
-                    sys.stdout.write(Message[-1]+"\n")
-                    sys.stdout.flush()
+                    with Print.lock:
+                        sys.stdout.write(Message[-1]+"\n")
+                        sys.stdout.flush()
                 elif Message[0] == "in":
                     val: str = input(Message[-1])
                     self.neomega_input_queue.put_nowait((Message[1], val))
