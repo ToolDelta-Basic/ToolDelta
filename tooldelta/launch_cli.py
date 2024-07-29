@@ -687,7 +687,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         self.neomega_msg_queue = queue.Queue()
         self.neomega_input_queue = queue.Queue()
         self.input_msg: list = []
-        self.out_speed: float = 0.05
+        self.out_speed: float = 0.08
 
     def init(self):
         if "no-download-neomega" not in sys_args_to_dict().keys():
@@ -787,7 +787,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
             raise ValueError("接入点进程未启动")
         assert self.neomg_proc.stdin
-        Print.print_load(f"NeOmega 进程输出速度限制: {1.0 / self.out_speed} 条/秒")
+        Print.print_load(f"NeOmega 进程输出速度限制: {str(int(1.0 / self.out_speed))} 条/秒")
         buffer = ""
         while True:
             char = self.neomg_proc.stdout.read(1)

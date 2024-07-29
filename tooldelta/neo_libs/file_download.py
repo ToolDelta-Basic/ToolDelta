@@ -40,6 +40,7 @@ def download_neomg() -> bool:
     if "no-download-neomega" in sys_args_to_dict():
         Print.print_war("将不会进行NeOmega的下载和检测更新。")
         return True
+    download_libs()
     cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
     is_mir: bool = cfgs["是否使用github镜像"]
     mirror_src, _ = get_mirror_urls(is_mir)
