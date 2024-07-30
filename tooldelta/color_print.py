@@ -2,11 +2,11 @@
 
 import datetime
 import threading
+from typing import ClassVar
 
 import colorama
 
 from .logger import publicLogger
-from typing import ClassVar
 
 colorama.init(autoreset=True)
 

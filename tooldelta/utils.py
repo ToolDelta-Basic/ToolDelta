@@ -7,10 +7,9 @@ import os
 import threading
 import time
 import traceback
-import re
+from collections.abc import Callable, Iterable
 from io import TextIOWrapper
 from typing import Any, TypeVar
-from collections.abc import Callable, Iterable
 
 import ujson as json
 

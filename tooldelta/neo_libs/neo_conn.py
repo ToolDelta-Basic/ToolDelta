@@ -3,10 +3,10 @@ import enum
 import os.path
 import platform
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Thread
-from typing import Any, Optional, ClassVar
-from collections.abc import Callable
+from typing import Any, ClassVar, Optional
 
 import ujson as json
 

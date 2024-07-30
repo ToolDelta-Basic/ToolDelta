@@ -5,10 +5,10 @@ import os
 import re
 import tarfile
 import threading
-from typing import Any
 import warnings
 from glob import glob
 from importlib import util
+from typing import Any
 
 import requests
 import ujson as json

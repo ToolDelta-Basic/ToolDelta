@@ -3,43 +3,44 @@
 import asyncio
 import os
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 from ..color_print import Print
-from .classic_plugin import (
-    Plugin,
-    add_plugin,
-    add_plugin_as_api,
-    _init_frame,
-    _PLUGIN_CLS_TYPE
+from ..constants import (
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_INJECTED_PLUGIN,
+    TOOLDELTA_PLUGIN_DIR,
 )
-from ..utils import Utils
-from .injected_plugin import (
-    execute_init,
-    execute_player_prejoin,
-    execute_player_join,
-    execute_player_message,
-    execute_death_message,
-    execute_player_left,
-    execute_frame_exit,
-    execute_command_say,
-    execute_repeat,
-    execute_packet_funcs
-)
+from ..game_utils import _set_frame
 from ..plugin_load import (
-    classic_plugin,
-    injected_plugin,
     NON_FUNC,
     PluginAPINotFoundError,
     PluginAPIVersionError,
     auto_move_plugin_dir,
+    classic_plugin,
+    injected_plugin,
 )
-from ..constants import (
-    TOOLDELTA_PLUGIN_DIR,
-    TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN,
+from ..utils import Utils
+from .classic_plugin import (
+    _PLUGIN_CLS_TYPE,
+    Plugin,
+    _init_frame,
+    add_plugin,
+    add_plugin_as_api,
 )
-from ..game_utils import _set_frame
+from .injected_plugin import (
+    execute_command_say,
+    execute_death_message,
+    execute_frame_exit,
+    execute_init,
+    execute_packet_funcs,
+    execute_player_join,
+    execute_player_left,
+    execute_player_message,
+    execute_player_prejoin,
+    execute_repeat,
+)
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -51,8 +52,8 @@ _SUPER_CLS = TypeVar("_SUPER_CLS")
 class PluginGroup:
     "插件组"
 
-    plugins: list[Plugin] = []
-    plugins_funcs: dict[str, list] = {
+    plugins: ClassVar[list[Plugin]] = []
+    plugins_funcs: ClassVar[dict[str, list]] = {
         "on_def": [],
         "on_inject": [],
         "on_player_prejoin": [],
@@ -63,9 +64,9 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    plugin_added_cache = {"packets": []}
-    Agree_bot_patrol: list[bool] = []
-    broadcast_evts_cache = {}
+    plugin_added_cache: ClassVar[str,] = {"packets": []}
+    Agree_bot_patrol: ClassVar[list[bool]] = []
+    broadcast_evts_cache: ClassVar[dict] = {}
 
     def __init__(self):
         "初始化"
@@ -76,7 +77,7 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugin_ids = []
-        self.linked_frame: Union["ToolDelta", None] = None
+        self.linked_frame: "ToolDelta" | None = None
 
     @staticmethod
     def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:

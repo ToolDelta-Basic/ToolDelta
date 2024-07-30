@@ -1,9 +1,5 @@
 """自定义常用 URL 方法"""
 
-import anyio
-from colorama import Fore, Style, init
-from tqdm.asyncio import tqdm
-import aiohttp
 import asyncio
 import os
 import re
@@ -11,8 +7,13 @@ import shutil
 import socket
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import aiohttp
+import anyio
 import pyspeedtest
 import requests
+from colorama import Fore, Style, init
+from tqdm.asyncio import tqdm
 
 from .color_print import Print
 from .get_tool_delta_version import get_tool_delta_version

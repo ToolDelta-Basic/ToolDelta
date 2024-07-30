@@ -1,12 +1,12 @@
 """客户端启动器框架"""
 
-import os
-import sys
 import hashlib
+import os
 import platform
 import queue
 import shlex
 import subprocess
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -265,7 +265,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             self.neomega_account_opt = neo_conn.AccountOptions(
                 AuthServer=self.auth_server,
                 UserToken=self.fbToken,
-                ServerCode=str(self.serverNumber) ,
+                ServerCode=str(self.serverNumber),
                 ServerPassword=self.serverPassword,
             )
         self.omega = neo_conn.ThreadOmega(
@@ -654,6 +654,7 @@ class FrameBEConnect(StandardFrame):
                     }
                 )
 
+
 class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
     """使用 NeOmega接入点 框架连接到游戏 但同时兼容NeOmegaCli的运行"""
 
@@ -761,20 +762,18 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
     def get_text_md5(self, text: str) -> str:
         """计算字符串的MD5值"""
         md5 = hashlib.md5()
-        md5.update(text.encode('utf-8'))
+        md5.update(text.encode("utf-8"))
         unique_md5 = md5.hexdigest()
         return unique_md5
-    
+
     def put_msg_to_queue(self, msg: str, out_type: bool = True) -> str:
         """将元组放入消息队列"""
-        self.neomega_msg_queue.put_nowait((
-            "out" if out_type else "in",
-            self.get_text_md5(msg),
-            msg
-        ))
+        self.neomega_msg_queue.put_nowait(
+            ("out" if out_type else "in", self.get_text_md5(msg), msg)
+        )
         return self.get_text_md5(msg)
 
-    def get_input(self, md5: str) -> str: # type: ignore
+    def get_input(self, md5: str) -> str:  # type: ignore
         while True:
             if not self.input_msg:
                 continue
@@ -787,19 +786,21 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
             raise ValueError("NeOmega进程未启动")
         assert self.neomg_proc.stdin
-        Print.print_load(f"NeOmega 进程输出速度限制: {str(int(1.0 / self.out_speed))} 条/秒")
+        Print.print_load(
+            f"NeOmega 进程输出速度限制: {int(1.0 / self.out_speed)!s} 条/秒"
+        )
         buffer = ""
         while True:
             char = self.neomg_proc.stdout.read(1)
-            if not self.neomg_proc.stderr is None:
+            if self.neomg_proc.stderr is not None:
                 err = self.neomg_proc.stderr.readlines()
                 print(err)
-            if char == '':
+            if char == "":
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
-            if char == '\n':
+            if char == "\n":
                 msg_orig = buffer.strip()
                 buffer = ""
                 if msg_orig == "SIGNAL: exit":
@@ -809,7 +810,16 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                     break
                 if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
-                if any(info_type in msg_orig for info_type in ["INFO", "WARNING", "ERROR", "SUCCESS", "\x1b[30;46m\x1b[30;46m      \x1b[0m\x1b[0m"]):
+                if any(
+                    info_type in msg_orig
+                    for info_type in [
+                        "INFO",
+                        "WARNING",
+                        "ERROR",
+                        "SUCCESS",
+                        "\x1b[30;46m\x1b[30;46m      \x1b[0m\x1b[0m",
+                    ]
+                ):
                     msg_orig = msg_orig.replace("SUCCESS", "成功").strip(" ")
                     msg_orig = msg_orig.replace(" ERROR ", "错误").strip(" ")
                     msg_orig = msg_orig.replace("WARNING", "警告").strip(" ")
@@ -818,10 +828,17 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                     self.put_msg_to_queue(Print.fmt_info(msg_orig, "§b NOMG "))
             else:
                 buffer += char
-                if "请输入 y" in buffer and "请输入 n:" in buffer and char != '\n' or ("请输入" in buffer and ":" in buffer and char != '\n'):
+                if (
+                    "请输入 y" in buffer
+                    and "请输入 n:" in buffer
+                    and char != "\n"
+                    or ("请输入" in buffer and ":" in buffer and char != "\n")
+                ):
                     msg_orig = buffer.strip()
-                    md5 = self.put_msg_to_queue(Print.fmt_info("\b"+msg_orig, ""), False)
-                    self.neomg_proc.stdin.write(f'{self.get_input(md5).lower()}\n')
+                    md5 = self.put_msg_to_queue(
+                        Print.fmt_info("\b" + msg_orig, ""), False
+                    )
+                    self.neomg_proc.stdin.write(f"{self.get_input(md5).lower()}\n")
                     self.neomg_proc.stdin.flush()
                     buffer = ""
 
@@ -833,7 +850,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                 Message: tuple = self.neomega_msg_queue.get_nowait()
                 if Message[0] == "out":
                     with Print.lock:
-                        sys.stdout.write(Message[-1]+"\n")
+                        sys.stdout.write(Message[-1] + "\n")
                         sys.stdout.flush()
                 elif Message[0] == "in":
                     val: str = input(Message[-1])
@@ -846,7 +863,6 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                 InputMessage: tuple = self.neomega_input_queue.get_nowait()
                 self.input_msg.append(InputMessage)
 
-
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
 
@@ -857,10 +873,16 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
-        Print.print_load(f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}')
-        Utils.createThread(self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息")
+        Print.print_load(
+            f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}'
+        )
+        Utils.createThread(
+            self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息"
+        )
         Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
-        Utils.createThread(self._handle_input_thread, usage="处理将要写入到 NeOmega 进程中的信息")
+        Utils.createThread(
+            self._handle_input_thread, usage="处理将要写入到 NeOmega 进程中的信息"
+        )
         self.launch_event.wait()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
@@ -879,6 +901,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点进程已崩溃")
         return SystemError("未知的退出状态")
+
 
 FrameNeOmg = FrameNeOmgAccessPoint
 FrameNeOmgRemote = FrameNeOmgAccessPointRemote

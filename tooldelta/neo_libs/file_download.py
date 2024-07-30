@@ -1,14 +1,13 @@
 import asyncio
-import ujson as json
-import os
 import hashlib
+import os
 import platform
+
 import brotli
-
 import requests
+import ujson as json
 
-from tooldelta import constants
-from tooldelta import urlmethod
+from tooldelta import constants, urlmethod
 from tooldelta.cfg import Config
 from tooldelta.color_print import Print
 from tooldelta.sys_args import sys_args_to_dict
@@ -28,12 +27,15 @@ def download_libs() -> bool:
     commit_remote = get_remote_commit(depen_url)
     commit_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "commit")
     replace_file = check_commit_file(commit_file_path, commit_remote)
-    solve_dict = get_required_dependencies_solve_dict(source_dict, depen_url, replace_file)
+    solve_dict = get_required_dependencies_solve_dict(
+        source_dict, depen_url, replace_file
+    )
     asyncio.run(urlmethod.download_file_urls(solve_dict))
     if replace_file:
         write_commit_file(commit_file_path, commit_remote)
         Print.print_suc("已完成 NeOmega框架 的依赖更新！")
     return True
+
 
 def download_neomg() -> bool:
     """根据系统架构和平台下载所需的NeOmega。"""
@@ -49,15 +51,43 @@ def download_neomg() -> bool:
     source_dict = require_depen[sys_info_fmt][0]
     neomega_file_hash: str = get_file_hash(source_dict["hash_url"])
     if platform.system().lower() == "windows":
-        neomega_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}.exe")
+        neomega_file_path = os.path.join(
+            os.getcwd(),
+            "tooldelta",
+            "neo_libs",
+            f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}.exe",
+        )
     else:
-        neomega_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}")
+        neomega_file_path = os.path.join(
+            os.getcwd(),
+            "tooldelta",
+            "neo_libs",
+            f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}",
+        )
     replace_file = check_file_hash(neomega_file_hash, neomega_file_path)
     if replace_file:
-        asyncio.run(urlmethod.download_file_urls([(source_dict['url'], os.path.join(os.getcwd(), "tooldelta", "neo_libs", "omega_launcher.brotli"))]))
-        unzip_brotli_file(os.path.join(os.getcwd(), "tooldelta", "neo_libs", "omega_launcher.brotli"), neomega_file_path)
+        asyncio.run(
+            urlmethod.download_file_urls(
+                [
+                    (
+                        source_dict["url"],
+                        os.path.join(
+                            os.getcwd(),
+                            "tooldelta",
+                            "neo_libs",
+                            "omega_launcher.brotli",
+                        ),
+                    )
+                ]
+            )
+        )
+        unzip_brotli_file(
+            os.path.join(os.getcwd(), "tooldelta", "neo_libs", "omega_launcher.brotli"),
+            neomega_file_path,
+        )
         Print.print_suc("已完成 NeOmega框架 的依赖更新！")
     return True
+
 
 def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
     if is_mir:
@@ -76,6 +106,7 @@ def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
         )
     return mirror_src, depen_url
 
+
 def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
     try:
         require_depen = json.loads(
@@ -86,8 +117,9 @@ def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
         )
     except Exception as err:
         Print.print_err(f"获取依赖库表出现问题：{err}")
-        return ({}, {}) # type: ignore
+        return ({}, {})  # type: ignore
     return require_depen, require_neomega
+
 
 def get_system_info() -> str:
     sys_machine = platform.machine().lower()
@@ -101,8 +133,10 @@ def get_system_info() -> str:
         sys_info_fmt = f"{platform.uname().system}:{sys_machine.lower()}"
     return sys_info_fmt
 
+
 def get_remote_commit(depen_url: str) -> str:
     return requests.get(f"{depen_url}commit", timeout=5).text
+
 
 def check_commit_file(commit_file_path: str, commit_remote: str) -> bool:
     replace_file = False
@@ -116,7 +150,10 @@ def check_commit_file(commit_file_path: str, commit_remote: str) -> bool:
         replace_file = True
     return replace_file
 
-def get_required_dependencies_solve_dict(source_dict: list[str], depen_url: str, replace_file: bool) -> list[tuple[str, str]]:
+
+def get_required_dependencies_solve_dict(
+    source_dict: list[str], depen_url: str, replace_file: bool
+) -> list[tuple[str, str]]:
     solve_dict = []
     for v in source_dict:
         pathdir = os.path.join(os.getcwd(), "tooldelta", "neo_libs", v)
@@ -124,21 +161,23 @@ def get_required_dependencies_solve_dict(source_dict: list[str], depen_url: str,
             solve_dict.append((depen_url + v, pathdir))
     return solve_dict
 
+
 def write_commit_file(commit_file_path: str, commit_remote: str):
     with open(commit_file_path, "w", encoding="utf-8") as f:
         f.write(commit_remote)
 
+
 def get_file_hash(hash_url: str) -> str:
     return requests.get(f"{hash_url}", timeout=5).text.replace("\n", "")
 
-import hashlib
 
-def calculate_file_hash(file_path: str, algorithm: str = 'md5') -> str:
+def calculate_file_hash(file_path: str, algorithm: str = "md5") -> str:
     hash_obj = hashlib.new(algorithm)
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_obj.update(chunk)
     return hash_obj.hexdigest()
+
 
 def check_file_hash(file_hash: str, file_path: str) -> bool:
     replace_file = False
@@ -151,13 +190,14 @@ def check_file_hash(file_hash: str, file_path: str) -> bool:
         replace_file = True
     return replace_file
 
+
 def unzip_brotli_file(file_path: str, save_path: str) -> bool:
     try:
-        with open(file_path, 'rb') as source_file, open(save_path, 'wb') as target_file:
+        with open(file_path, "rb") as source_file, open(save_path, "wb") as target_file:
             compressed_data = source_file.read()
             decompressed_data = brotli.decompress(compressed_data)
             target_file.write(decompressed_data)
         os.remove(file_path)
         return True
-    except:
+    except Exception:
         return False

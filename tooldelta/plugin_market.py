@@ -4,7 +4,6 @@ import asyncio
 import os
 import platform
 import shlex
-
 import time
 import traceback
 
@@ -79,7 +78,7 @@ class PluginMarket:
         except Exception:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
 
-    def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:  # noqa: PLR0915
+    def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
         """进入插件市场
 
         Args:

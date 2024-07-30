@@ -4,12 +4,13 @@ import importlib
 import os
 import sys
 import traceback
-from typing import TYPE_CHECKING, Union, TypeVar
-from ...color_print import Print
-from ...utils import Utils
+from typing import TYPE_CHECKING, TypeVar
+
 from ...cfg import Cfg
-from ...plugin_load import plugin_is_enabled, NotValidPluginError
+from ...color_print import Print
 from ...constants import TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_PLUGIN_DATA_DIR
+from ...plugin_load import NotValidPluginError, plugin_is_enabled
+from ...utils import Utils
 
 if TYPE_CHECKING:
     # 类型注释
@@ -111,7 +112,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
 
 def load_plugin(
     plugin_group: "PluginGroup", plugin_dirname: str
-) -> Union[None, Plugin]:
+) -> None | Plugin:
     """加载插件
 
     Args:

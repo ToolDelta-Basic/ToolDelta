@@ -11,7 +11,6 @@ from .sys_args import sys_args_to_dict
 from .urlmethod import check_update
 from .utils import timer_event_boostrap, tmpjson_save
 
-
 tooldelta = ToolDelta()
 
 

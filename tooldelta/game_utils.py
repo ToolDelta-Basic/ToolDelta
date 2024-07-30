@@ -2,12 +2,14 @@
 游戏交互实用方法
 """
 
-from typing import TYPE_CHECKING, Optional
 import time
+from typing import TYPE_CHECKING, Optional
+
 import ujson as json
 
 from tooldelta.color_print import Print
-from tooldelta.constants import PacketIDS, EffectIDS
+from tooldelta.constants import PacketIDS
+
 from .packets import Packet_CommandOutput
 from .utils import Utils
 
@@ -395,7 +397,10 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     """
     game_ctrl = _get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
-    if res.SuccessCount or res.OutputMessages[0].Message == 'commands.testforblock.outOfWorld':
+    if (
+        res.SuccessCount
+        or res.OutputMessages[0].Message == "commands.testforblock.outOfWorld"
+    ):
         return "air"
     return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 

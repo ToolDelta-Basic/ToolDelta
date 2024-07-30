@@ -16,8 +16,8 @@ import signal
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import requests
 import ujson as json
@@ -30,6 +30,7 @@ from tooldelta import (
 
 from .cfg import Config
 from .color_print import Print
+from .constants import PacketIDS
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
@@ -42,7 +43,6 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
-from .constants import PacketIDS
 from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
 from .urlmethod import fbtokenFix, if_token
@@ -54,10 +54,25 @@ VERSION = get_tool_delta_version()
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
-LAUNCHERS: list[tuple[str, type[FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote | FrameNeOmgParalleltToolDelta]]] = [
+LAUNCHERS: list[
+    tuple[
+        str,
+        type[
+            FrameNeOmgAccessPoint
+            | FrameNeOmgAccessPointRemote
+            | FrameNeOmgParalleltToolDelta
+        ],
+    ]
+] = [
     ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
-    ("NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",FrameNeOmgAccessPointRemote),
-    ("NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)", FrameNeOmgParalleltToolDelta),
+    (
+        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
+        FrameNeOmgAccessPointRemote,
+    ),
+    (
+        "NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
+        FrameNeOmgParalleltToolDelta,
+    ),
 ]
 
 
@@ -85,7 +100,11 @@ class ToolDelta:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.launcher: FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote | FrameNeOmgParalleltToolDelta
+        self.launcher: (
+            FrameNeOmgAccessPoint
+            | FrameNeOmgAccessPointRemote
+            | FrameNeOmgParalleltToolDelta
+        )
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
@@ -208,11 +227,15 @@ class ToolDelta:
                     while True:
                         if Login_method.isdigit() is False:
                             Login_method = input(
-                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
                             )
                         elif int(Login_method) > 2 or int(Login_method) < 1:
                             Login_method = input(
-                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
                             )
                         else:
                             break
@@ -231,7 +254,9 @@ class ToolDelta:
                             with open("fbtoken", "w", encoding="utf-8") as f:
                                 f.write(token)
                         except requests.exceptions.RequestException as e:
-                            Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+                            Print.print_err(
+                                f"登录失败，原因：{e}\n正在切换至 Token 登录"
+                            )
                 if_token()
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
@@ -241,10 +266,13 @@ class ToolDelta:
             )
         elif type(self.launcher) is FrameNeOmgParalleltToolDelta:
             launch_data = cfgs.get(
-                "NeOmega并行ToolDelta启动模式", constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_DEFAULT
+                "NeOmega并行ToolDelta启动模式",
+                constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_DEFAULT,
             )
             try:
-                Config.check_auto(constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_STD, launch_data)
+                Config.check_auto(
+                    constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_STD, launch_data
+                )
             except Config.ConfigError as err:
                 r = self.upgrade_cfg()
                 if r:
@@ -313,11 +341,15 @@ class ToolDelta:
                     while True:
                         if Login_method.isdigit() is False:
                             Login_method = input(
-                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
                             )
                         elif int(Login_method) > 2 or int(Login_method) < 1:
                             Login_method = input(
-                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
                             )
                         else:
                             break
@@ -336,7 +368,9 @@ class ToolDelta:
                             with open("fbtoken", "w", encoding="utf-8") as f:
                                 f.write(token)
                         except requests.exceptions.RequestException as e:
-                            Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+                            Print.print_err(
+                                f"登录失败，原因：{e}\n正在切换至 Token 登录"
+                            )
                 if_token()
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
@@ -660,7 +694,12 @@ class ToolDelta:
                 else:
                     self.launcher.neomg_proc.send_signal(signal.SIGTERM)
 
-        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint | FrameNeOmgParalleltToolDelta):
+        if isinstance(
+            self.launcher,
+            FrameNeOmgAccessPointRemote
+            | FrameNeOmgAccessPoint
+            | FrameNeOmgParalleltToolDelta,
+        ):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -723,7 +762,12 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.require_listen_packets = {9, 79, 63}
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint | FrameNeOmgParalleltToolDelta):
+        if isinstance(
+            self.launcher,
+            FrameNeOmgAccessPointRemote
+            | FrameNeOmgAccessPoint
+            | FrameNeOmgParalleltToolDelta,
+        ):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler, (pckType, pck), usage="数据包处理"
             )
