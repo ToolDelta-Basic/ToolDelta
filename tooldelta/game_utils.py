@@ -395,7 +395,7 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     """
     game_ctrl = _get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
-    if res.SuccessCount:
+    if res.SuccessCount or res.OutputMessages[0].Message == 'commands.testforblock.outOfWorld':
         return "air"
     return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
@@ -493,7 +493,7 @@ def set_player_effect(
     设置玩家的状态效果
 
     参数:
-        player_name: 玩家名称 (String)
+        player_name: 玩家名称 (String) 或是选择器 (String)
         effect: 效果 ID (String) 参考 EffectIDS 中内容
         duration: 持续时间 (int) [为0代表永久(仅限ToolDelta运行时)] Max: 1000000
         level: 效果等级 (int) Max: 255
