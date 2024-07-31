@@ -680,6 +680,7 @@ class Utils:
                 self.__DataBase__[Tag]["Conn"].close()
                 del self.__DataBase__[Tag]
 
+    DataBase = DataBaseSqlit()
     # 例:
         # DataBase = DataBaseSqlit()
         # DataBase.OpenDataBase("Test-DataBase", "123456", False)
