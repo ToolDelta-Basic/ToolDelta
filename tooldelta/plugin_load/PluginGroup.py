@@ -64,7 +64,7 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    plugin_added_cache: ClassVar[str,] = {"packets": []}
+    plugin_added_cache: ClassVar[str] = {"packets": []} # type: ignore
     Agree_bot_patrol: ClassVar[list[bool]] = []
     broadcast_evts_cache: ClassVar[dict] = {}
 
@@ -77,7 +77,7 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugin_ids = []
-        self.linked_frame: "ToolDelta" | None = None
+        self.linked_frame: "ToolDelta" | None = None # type: ignore
 
     @staticmethod
     def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
@@ -120,10 +120,10 @@ class PluginGroup:
 
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if isinstance(pktID, int):
-                self.plugin_added_cache["packets"].append((pktID, func))
+                self.plugin_added_cache["packets"].append((pktID, func)) # type: ignore
             else:
                 for i in pktID:
-                    self.plugin_added_cache["packets"].append((i, func))
+                    self.plugin_added_cache["packets"].append((i, func)) # type: ignore
             return func
 
         return deco
