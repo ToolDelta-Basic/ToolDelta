@@ -232,6 +232,10 @@ class Print:
         return Print.colormode_replace(text)
 
     @staticmethod
+    def print(*args):
+        Print.print_inf(" ".join(str(i) for i in args))
+
+    @staticmethod
     def print_err(text: str, **print_kwargs) -> None:
         """输出错误信息
 
