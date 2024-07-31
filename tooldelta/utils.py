@@ -494,8 +494,6 @@ class Utils:
                 self.cursor.execute(sql, list(processed_update_values.values()) + list(processed_condition.values()))
                 self.cursor.connection.commit()
 
-
-
             def remove_data(self, condition: dict) -> None:
                 """
                 从表中删除数据
@@ -623,9 +621,9 @@ class Utils:
             if not Temp:
                 if not os.path.exists(f"数据库文件/{Tag}"):
                     os.makedirs(f"数据库文件/{Tag}")
-                self.__DataBase__[Tag] = {"Conn": sqlite3.connect(f"数据库文件/{Tag}/DataBase-{Tag}.db"),"Key": Key, "IsTemp": False}
+                self.__DataBase__[Tag] = {"Conn": sqlite3.connect(f"数据库文件/{Tag}/DataBase-{Tag}.db", check_same_thread=False),"Key": Key, "IsTemp": False}
             elif Temp: # type: ignore
-                self.__DataBase__[Tag] = {"Conn": sqlite3.connect(":memory:"), "Key": Key, "IsTemp": True}
+                self.__DataBase__[Tag] = {"Conn": sqlite3.connect(":memory:", check_same_thread=False), "Key": Key, "IsTemp": True}
             
             if self.__DataBase__.get(Tag) is None:
                 raise self.DataBaseOpenError("数据库打开失败!")

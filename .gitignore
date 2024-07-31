@@ -158,6 +158,7 @@ ToolDelta基本配置.json
 *.dylib
 *.cmd
 neomega_*_access_point_*
+omega_launcher_*_*
 tooldelta/neo_libs/*.exe
 NeOmega数据
 tooldelta/neo_libs/commit
