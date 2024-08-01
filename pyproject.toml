@@ -34,7 +34,7 @@ sqlite-easy-ctrl = "0.1.1"
 
 [[tool.poetry.source]]
 name = "mirrors"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+url = "http://mirrors.aliyun.com/pypi/simple/"
 priority = "primary"
 
 
