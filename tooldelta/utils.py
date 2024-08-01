@@ -391,36 +391,6 @@ class Utils:
 
         def __exit__(self, e, e2, e3):
             chatbar_lock_list.remove(self.player)
-
-    class DataBaseSqlit:
-        """数据库操作类, 用于简化数据库操作, 并提供一些常用的数据库操作方法"""
-
-        def __init__(self) -> None:
-            self.__DataBase__: dict = {}
-            self.__DataBaseTableStruct__: dict[str, tuple] = {}
-
-        class DataBaseTagIsNull(Exception):...
-        class DataBaseOpenError(Exception):...
-        class DataBaseNeedStruct(Exception):...
-        class DataBaseTableNameIsNull(Exception):...
-
-        class DataBaseTableStruct:
-            """
-            数据库表结构类, 用于简化数据库表结构的创建
-            只需要提供字段名和他的python类型即可，因为ToolDelta会将数据转成统一类型
-
-            Args:
-                *args: tuple[str, type], 字段名和他的Python类型
-                例: |
-                    DataBaseTableStruct(("id", int), ("name", str))
-            """
-            def __init__(self, *args: tuple[str, type]) -> None:
-                self.TypeTable: dict = {}
-                for tup in args:
-                    self.__add_value__(*tup)
-
-            def __add_value__(self, name: str, type: type) -> None:
-                self.TypeTable[name] = type
                 
     @staticmethod
     def get_threads_list() -> list["Utils.createThread"]:
