@@ -325,10 +325,10 @@ class FrameNeOmgAccessPoint(StandardFrame):
             os.system(f"chmod +x {shlex.quote(exe_file_path)}")
         # 只需要+x 即可
         if (
-            isinstance(self.serverNumber, type(None))
-            or isinstance(self.serverPassword, type(None))
-            or isinstance(self.fbToken, type(None))
-            or isinstance(self.auth_server, type(None))
+            self.serverNumber is None
+            or self.serverPassword is None
+            or self.fbToken is None
+            or self.auth_server is None
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
         Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")

@@ -34,7 +34,14 @@ def start_tool_delta() -> None:
         tmpjson_save()
         tooldelta.launcher.listen_launched(game_control.system_inject)
         game_control.set_listen_packets()
-        raise tooldelta.launcher.launch()
+        while 1:
+            err = tooldelta.launcher.launch()
+            if isinstance(err, SystemExit):
+                raise
+            else:
+                Print.print_err(f"启动器框架崩溃, 原因: {err}")
+                Print.print_war("将在 10s 后进行重启")
+                time.sleep(10)
     except (KeyboardInterrupt, SystemExit, EOFError) as err:
         Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
         pass

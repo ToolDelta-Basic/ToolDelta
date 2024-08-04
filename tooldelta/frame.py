@@ -20,7 +20,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import requests
-import ujson as json
+import json
 
 from tooldelta import (
     auths,
