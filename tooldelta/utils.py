@@ -12,9 +12,8 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterable
-# from sqlite_easy_ctrl import DataBaseSqlit
 from io import TextIOWrapper
-from typing import Any, TypeVar, List, Tuple, Dict
+from typing import Any, TypeVar
 
 import ujson as json
 
