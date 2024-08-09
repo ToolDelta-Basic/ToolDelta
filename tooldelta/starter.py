@@ -37,7 +37,7 @@ def start_tool_delta() -> None:
         while 1:
             err = tooldelta.launcher.launch()
             if isinstance(err, SystemExit):
-                raise
+                break
             else:
                 Print.print_err(f"启动器框架崩溃, 原因: {err}")
                 Print.print_war("将在 10s 后进行重启")

@@ -17,6 +17,7 @@ from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
+    LAUNCH_CFG
 )
 from .plugin_load import PluginRegData
 from .plugin_load.PluginGroup import plugin_group
@@ -73,7 +74,7 @@ class PluginMarket:
         self.plugin_id_name_map: dict | None = None
         try:
             self.plugins_download_url = Cfg().get_cfg(
-                "ToolDelta基本配置.json", {"插件市场源": str},
+                "ToolDelta基本配置.json", {"插件市场源": str}
             )["插件市场源"]
         except Exception:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
