@@ -592,19 +592,22 @@ class ToolDelta:
                 ):
                     Print.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
                 else:
-                    mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(
-                        result.as_dict["OutputMessages"]
-                    )
+                    if game_text_handler := self.link_game_ctrl.game_data_handler:
+                        mjon = self.link_game_ctrl.game_data_handler.Handle_Text_Class1(
+                            result.as_dict["OutputMessages"]
+                        )
                     desc = json.dumps(
                         result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
                     )
                     if result.SuccessCount:
-                        print_str = "指令执行成功: " + " ".join(mjon)
-                        Print.print_suc(print_str)
+                        if game_text_handler:
+                            print_str = "指令执行成功: " + " ".join(mjon)
+                            Print.print_suc(print_str)
                         Print.print_suc(desc)
                     else:
-                        print_str = "指令执行失败: " + " ".join(mjon)
-                        Print.print_war(print_str)
+                        if game_text_handler:
+                            print_str = "指令执行失败: " + " ".join(mjon)
+                            Print.print_war(print_str)
                         Print.print_war(desc)
 
             except IndexError as exec_err:
@@ -754,8 +757,13 @@ class GameCtrl:
             frame (Frame): 继承 Frame 的对象
         """
         frame.basic_operation()
-        self.Game_Data = GameTextsLoader().game_texts_data
-        self.Game_Data_Handle = GameTextsHandle(self.Game_Data)
+        try:
+            self.game_texts_data = GameTextsLoader().game_texts_data
+            self.game_data_handler = GameTextsHandle(self.game_texts_data)
+        except Exception as err:
+            Print.print_war("游戏文本翻译器不可用")
+            self.game_texts_data = None
+            self.game_data_handler = None
         self.linked_frame = frame
         self.players_uuid: dict[str, str] = {}
         self.allplayers: list[str] = []
@@ -881,8 +889,11 @@ class GameCtrl:
                 elif not pkt["Message"].startswith(
                     "§e%multiplayer.player.joined"
                 ) and not pkt["Message"].startswith("§e%multiplayer.player.left"):
-                    jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
-                    Print.print_inf("§1" + " ".join(jon).strip('"'))
+                    if self.game_data_handler is not None:
+                        jon = self.game_data_handler.Handle_Text_Class1(pkt)
+                        Print.print_inf("§1" + " ".join(jon).strip('"'))
+                    else:
+                        Print.print_inf(pkt["Message"])
                     if pkt["Message"].startswith("death."):
                         if len(pkt["Parameters"]) >= 2:
                             killer = pkt["Parameters"][1]
@@ -1030,7 +1041,9 @@ class GameCtrl:
         Returns:
             dict: 游戏常见字符串数据
         """
-        return self.Game_Data
+        if self.game_texts_data is None:
+            raise ValueError("游戏翻译器字符串数据不可用")
+        return self.game_texts_data
 
     def give_bot_effect_invisibility(self) -> None:
         """给机器人添加隐身效果"""

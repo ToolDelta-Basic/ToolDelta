@@ -14,6 +14,7 @@ import requests
 import ujson as json
 import urllib3
 
+from .utils import Utils
 from .color_print import Print
 from .constants import TDSPECIFIC_MIRROR
 from .get_tool_delta_version import get_tool_delta_version
@@ -33,7 +34,7 @@ class GameTextsLoader:
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
         if "no-download-libs" not in sys_args_to_dict():
-            self.start_auto_update_thread()
+            # 暂时不用开自动更新线程
             self.auto_update()
         self.game_texts_data: dict[str, str] = self.load_data()
 
@@ -53,40 +54,44 @@ class GameTextsLoader:
             result = re.match(
                 r"(\d+\.\d+\.\d+)",
                 requests.get(
-                    "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
+                    f"{TDSPECIFIC_MIRROR}e/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
                     timeout=5,
                     verify=True,
                 ).json()["tag_name"],
             )
         except Exception as err:
-            raise SystemExit("无法获取最新版本号") from err
+            raise ValueError("游戏文本翻译器: 无法获取最新版本号")
         if not isinstance(result, type(None)):
             return result.group()
-        raise ValueError("无法获取最新版本号")
+        raise ValueError("游戏文本翻译器: 无法获取最新版本号")
 
     def check_initial_run(self) -> None:
         "检查初始运行"
-        version_file_path: str = os.path.join(self.base_path, "version")
+        version_file_path = os.path.join(self.base_path, "version")
         if not os.path.exists(version_file_path):
-            latest_version: str = self.get_latest_version()
+            latest_version = self.get_latest_version()
             with open(version_file_path, "w", encoding="utf-8") as f:
                 f.write(latest_version)
             self.download_and_extract(latest_version)
 
-    def start_auto_update_thread(self) -> None:
-        "启用自动更新线程"
-        threading.Timer(24 * 60 * 60, self.auto_update).start()
+    # def start_auto_update_thread(self) -> None:
+    #     "启用自动更新线程"
+    #     threading.Timer(24 * 60 * 60, self.auto_update).start()
 
+    @Utils.thread_func("自动更新游戏文本翻译器内容")
     def auto_update(self) -> None:
         "自动更新"
         version_file_path: str = os.path.join(self.base_path, "version")
         with open(version_file_path, encoding="utf-8") as f:
             version: str = f.read()
-        latest_version: str = self.get_latest_version()
-        if version != latest_version:
-            self.download_and_extract(latest_version)
-            with open(version_file_path, "w", encoding="utf-8") as f:
-                f.write(latest_version)
+        try:
+            latest_version = self.get_latest_version()
+            if version != latest_version:
+                self.download_and_extract(latest_version)
+                with open(version_file_path, "w", encoding="utf-8") as f:
+                    f.write(latest_version)
+        except ValueError:
+            return
 
     def download_and_extract(self, version) -> None:
         "下载并解压"

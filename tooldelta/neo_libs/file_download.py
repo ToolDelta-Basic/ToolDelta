@@ -23,7 +23,9 @@ def download_libs() -> bool:
     mirror_src, depen_url = get_mirror_urls(is_mir)
     require_depen = get_required_dependencies(mirror_src)[0]
     sys_info_fmt = get_system_info()
-    source_dict = require_depen[sys_info_fmt]
+    source_dict = require_depen.get(sys_info_fmt)
+    if source_dict is None:
+        raise ValueError(f"未知的系统架构版本: {sys_info_fmt} (目前支持: {', '.join(require_depen.keys())})")
     commit_remote = get_remote_commit(depen_url)
     commit_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "commit")
     replace_file = check_commit_file(commit_file_path, commit_remote)
@@ -93,16 +95,16 @@ def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
     if is_mir:
         mirror_src = (
             constants.TDSPECIFIC_MIRROR
-            + "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
+            + "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main"
         )
         depen_url = (
             constants.TDSPECIFIC_MIRROR
-            + "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+            + "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main"
         )
     else:
-        mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main/"
+        mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main"
         depen_url = (
-            "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main/"
+            "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main"
         )
     return mirror_src, depen_url
 
@@ -110,14 +112,14 @@ def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
 def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
     try:
         require_depen = json.loads(
-            requests.get(f"{mirror_src}require_files.json", timeout=5).text
+            requests.get(f"{mirror_src}/require_files.json", timeout=5).text
         )
         require_neomega = json.loads(
-            requests.get(f"{mirror_src}neomega_files.json", timeout=5).text
+            requests.get(f"{mirror_src}/neomega_files.json", timeout=5).text
         )
     except Exception as err:
-        Print.print_err(f"获取依赖库表出现问题：{err}")
-        return ({}, {})  # type: ignore
+        Print.print_err(f"获取依赖库表出现问题：{err} (链接:{mirror_src})")
+        return ({}, {})
     return require_depen, require_neomega
 
 

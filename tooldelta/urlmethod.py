@@ -15,6 +15,7 @@ import requests
 from colorama import Fore, Style, init
 from tqdm.asyncio import tqdm
 
+from .constants import TDSPECIFIC_MIRROR
 from .color_print import Print
 from .get_tool_delta_version import get_tool_delta_version
 
@@ -412,7 +413,7 @@ def check_update() -> None:
     """检查更新"""
     try:
         latest_version: str = requests.get(
-            "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest",
+            f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest",
             timeout=5,
         ).json()["tag_name"]
         current_version = ".".join(map(str, get_tool_delta_version()[:3]))
