@@ -137,7 +137,7 @@ def get_system_info() -> str:
 
 
 def get_remote_commit(depen_url: str) -> str:
-    return requests.get(f"{depen_url}commit", timeout=5).text
+    return requests.get(f"{depen_url}/commit", timeout=5).text
 
 
 def check_commit_file(commit_file_path: str, commit_remote: str) -> bool:
@@ -160,7 +160,7 @@ def get_required_dependencies_solve_dict(
     for v in source_dict:
         pathdir = os.path.join(os.getcwd(), "tooldelta", "neo_libs", v)
         if not os.path.isfile(pathdir) or replace_file:
-            solve_dict.append((depen_url + v, pathdir))
+            solve_dict.append((depen_url + "/" + v, pathdir))
     return solve_dict
 
 
