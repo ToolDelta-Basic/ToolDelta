@@ -1,7 +1,7 @@
 "ToolDelta 常量定义"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "https://tdload.tblstudio.cn/"
+    "https://tdload.whiteleaf.cn"
     "https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
 )
 "插件市场源"
@@ -94,7 +94,7 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "https://tdload.tblstudio.cn"
+TDSPECIFIC_MIRROR = "https://tdload.whiteleaf.cn"
 "ToolDelta专用镜像"
 
 
