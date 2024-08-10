@@ -54,7 +54,7 @@ class GameTextsLoader:
             result = re.match(
                 r"(\d+\.\d+\.\d+)",
                 requests.get(
-                    f"{TDSPECIFIC_MIRROR}e/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
+                    f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
                     timeout=5,
                     verify=True,
                 ).json()["tag_name"],
