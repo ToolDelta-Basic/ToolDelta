@@ -501,7 +501,7 @@ class ToolDelta:
         """欢迎提示"""
         Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
         Print.print_with_info(
-            "§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+            "§dToolDelta Wiki: https://td-wiki.whiteleaf.cn/", Print.INFO_LOAD
         )
         Print.print_with_info(
             "§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
