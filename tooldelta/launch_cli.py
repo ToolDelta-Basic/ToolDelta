@@ -484,7 +484,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if waitForResp:
             res = self.omega.send_websocket_command_need_response(cmd, timeout)
             if res is None:
-                raise TimeoutError("指令超时")
+                raise TimeoutError(f"指令超时: {cmd}")
             return res
         self.omega.send_websocket_command_omit_response(cmd)
         return None
@@ -688,7 +688,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         self.neomega_msg_queue = queue.Queue()
         self.neomega_input_queue = queue.Queue()
         self.input_msg: list = []
-        self.out_speed: float = 0.08
+        self.out_speed: float = 0.002
 
     def init(self):
         if "no-download-neomega" not in sys_args_to_dict().keys():
@@ -773,7 +773,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         )
         return self.get_text_md5(msg)
 
-    def get_input(self, md5: str) -> str:  # type: ignore
+    def get_input(self, md5: str) -> str:
         while True:
             if not self.input_msg:
                 continue
@@ -820,9 +820,14 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                         "\x1b[30;46m\x1b[30;46m      \x1b[0m\x1b[0m",
                     ]
                 ):
-                    msg_orig = msg_orig.replace("SUCCESS", "成功").strip(" ")
-                    msg_orig = msg_orig.replace(" ERROR ", "错误").strip(" ")
-                    msg_orig = msg_orig.replace("WARNING", "警告").strip(" ")
+                    msg_orig = (
+                        msg_orig
+                        .replace("SUCCESS", "成功")
+                        .replace("  ERROR  ", "错误")
+                        .replace("WARNING", "警告")
+                        .replace("  INFO  ", "消息")
+                        .strip(" ")
+                    )
                     self.put_msg_to_queue(Print.fmt_info("\b" + msg_orig, ""))
                 else:
                     self.put_msg_to_queue(Print.fmt_info(msg_orig, "§b NOMG "))

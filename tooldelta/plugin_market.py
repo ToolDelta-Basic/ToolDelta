@@ -301,11 +301,15 @@ class PluginMarket:
         Returns:
             dict: 插件 ID 与插件名的映射
         """
-        res = requests.get(
-            self.plugins_download_url + "/plugin_ids_map.json", timeout=5
-        )
-        res.raise_for_status()
-        res1: dict = json.loads(res.text)
+        try:
+            res = requests.get(
+                self.plugins_download_url + "/plugin_ids_map.json", timeout=5
+            )
+            res.raise_for_status()
+            res1: dict = json.loads(res.text)
+        except Exception as err:
+            Print.print_err(f"从 {self.plugins_download_url} 获取插件信息遇到问题: {err}")
+            raise SystemExit
         self.plugin_id_name_map = res1
         return res1
 

@@ -575,7 +575,7 @@ class ToolDelta:
                 return 0
 
         @Utils.thread_func("控制台执行指令并获取回调")
-        def _execute_mc_command_and_get_callback(cmd: str) -> None:
+        def _execute_mc_command_and_get_callback(cmds: list[str]) -> None:
             """执行 Minecraft 指令并获取回调结果。
 
             Args:
@@ -584,7 +584,7 @@ class ToolDelta:
             Raises:
                 ValueError: 当指令执行失败时抛出。
             """
-            cmd = " ".join(cmd)
+            cmd = " ".join(cmds)
             try:
                 result = self.link_game_ctrl.sendcmd_with_resp(cmd, 10)
                 if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
@@ -620,6 +620,12 @@ class ToolDelta:
             except TimeoutError:
                 Print.print_err("[超时] 指令获取结果返回超时")
 
+        def _send_to_neomega(cmds: list[str]):
+            assert self.launcher.neomg_proc
+            assert self.launcher.neomg_proc.stdin
+            self.launcher.neomg_proc.stdin.write(" ".join(cmds) + "\n")
+            self.launcher.neomg_proc.stdin.flush()
+
         def _console_cmd_thread() -> None:
             """控制台线程"""
             self.add_console_cmd_trigger(
@@ -650,6 +656,13 @@ class ToolDelta:
                     "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
                 ),
             )
+            if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+                self.add_console_cmd_trigger(
+                    ["o"],
+                    "neomega命令",
+                    "执行neomega控制台命令",
+                    _send_to_neomega
+                )
             while 1:
                 rsp = ""
                 while True:
@@ -984,6 +997,8 @@ class GameCtrl:
             "在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件"
         )
         Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
+        if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+            Print.print_suc("在控制台输入 o <neomega指令> 可执行NeOmega的控制台指令")
 
     @property
     def bot_name(self) -> str:
