@@ -235,7 +235,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
     if resp.Message == "commands.scoreboard.objectiveNotFound":
         raise ValueError(f"计分板 {scb_name} 未找到")
     if resp.Message == "commands.scoreboard.players.list.player.empty":
-        raise ValueError(f"计分板项或玩家 {target} 未找到")
+        raise ValueError(f"计分板项或玩家 {scb_name}:{target} 未找到")
     if resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     if len(resp.Parameters) < 1:

@@ -253,6 +253,16 @@ class Utils:
             jsonPathTmp[path][0] = False
 
         @staticmethod
+        def flush(fp: str | None = None):
+            """
+            刷新单个/全部JSON缓存区的缓存文件, 存入磁盘
+
+            Args:
+                fp (str | None, optional): 文件虚拟路径
+            """
+            _tmpjson_save(fp)
+
+        @staticmethod
         def get_tmps() -> dict:
             """不要调用!"""
             return jsonPathTmp.copy()
@@ -562,16 +572,21 @@ def safe_close() -> None:
     _tmpjson_save()
 
 
-def _tmpjson_save():
+def _tmpjson_save(fp: str | None = None):
     "请不要在系统调用以外调用"
-    for k, (isChanged, dat) in jsonPathTmp.copy().items():
-        if isChanged:
-            Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
-            jsonPathTmp[k][0] = False
-    for k, v in jsonUnloadPathTmp.copy().items():
-        if time.time() - v > 0:
-            Utils.TMPJson.unloadPathJson(k)
-            del jsonUnloadPathTmp[k]
+    if not fp:
+        for k, (isChanged, dat) in jsonPathTmp.copy().items():
+            if isChanged:
+                Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
+                jsonPathTmp[k][0] = False
+        for k, v in jsonUnloadPathTmp.copy().items():
+            if time.time() - v > 0:
+                Utils.TMPJson.unloadPathJson(k)
+                del jsonUnloadPathTmp[k]
+    else:
+        _, dat = jsonPathTmp[fp]
+        Utils.SimpleJsonDataReader.SafeJsonDump(dat, fp)
+        jsonPathTmp[fp][0] = False
 
 
 @Utils.timer_event(1, "缓存JSON数据定时保存")
