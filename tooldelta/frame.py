@@ -675,7 +675,7 @@ class ToolDelta:
                         return
                     rsp += res
                 for _, _, func, triggers in self.consoleMenu:
-                    if not rsp:
+                    if not rsp.strip():
                         continue
                     if rsp == "exit":
                         Print.print_inf("用户命令退出中...")
