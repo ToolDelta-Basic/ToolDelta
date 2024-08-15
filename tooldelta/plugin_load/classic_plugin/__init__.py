@@ -4,7 +4,7 @@ import importlib
 import os
 import sys
 import traceback
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, Callable
 
 from ...cfg import Cfg
 from ...color_print import Print
@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 __caches__ = {"plugin": None, "api_name": "", "frame": None}
 
+packet_funcs: dict[int, list[Callable]] = {}
+broadcast_evts_listener: dict[str, list[Callable]] = {}
 
 class Plugin:
     "插件主类"
@@ -92,13 +94,17 @@ def add_plugin_as_api(apiName: str):
 
 
 def read_plugins(plugin_grp: "PluginGroup") -> None:
-    """读取插件
+    """
+    读取插件
 
     Args:
         plugin_grp (PluginGroup): 插件组
     """
     PLUGIN_PATH = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
-    sys.path.append(os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN))
+    if PLUGIN_PATH not in sys.path:
+        sys.path.append(PLUGIN_PATH)
+    broadcast_evts_listener.clear()
+    packet_funcs.clear()
     for plugin_dir in os.listdir(PLUGIN_PATH):
         if not plugin_is_enabled(plugin_dir):
             continue
@@ -159,6 +165,8 @@ def load_plugin(
             raise ValueError(f"插件主类 {plugin.__class__.__name__} 需要作者名")
         plugin_group.plugins.append(plugin)
         _v0, _v1, _v2 = plugin.version
+
+        # 收集事件监听函数
         for evt_name in (
             "on_def",
             "on_inject",
@@ -174,26 +182,36 @@ def load_plugin(
                 plugin_group.plugins_funcs[evt_name].append(
                     [plugin.name, getattr(plugin, evt_name)]
                 )
-        Print.print_suc(
-            f"成功载入插件 {plugin.name} 版本：{_v0}.{_v1}.{_v2} 作者：{plugin.author}"
-        )
-        plugin_group.normal_plugin_loaded_num += 1
-        if plugin_group.plugin_added_cache["packets"] != []:
-            for pktType, func in plugin_group.plugin_added_cache["packets"]:
+
+        # 收集到了需要监听的数据包
+        if plugin_group._cached_packet_cbs != []:
+            for pktType, func in plugin_group._cached_packet_cbs:
                 ins_func = getattr(plugin, func.__name__)
                 if ins_func is None:
                     raise NotValidPluginError("数据包监听不能在主插件类以外定义")
-                plugin_group.add_listen_packet_id(pktType)
-                plugin_group.add_listen_packet_func(pktType, ins_func)
+                if pktType not in packet_funcs.keys():
+                    packet_funcs[pktType] = []
+                packet_funcs[pktType].append(func)
+
+        # 收集到了作为API的插件
         if __caches__["api_name"] != "":
             plugin_group.plugins_api[__caches__["api_name"]] = plugin
-        if plugin_group.broadcast_evts_cache != {}:
-            for evt, funcs in plugin_group.broadcast_evts_cache.items():
+
+        # 收集到了广播监听器
+        if plugin_group._cached_broadcast_evts != {}:
+            for evt, funcs in plugin_group._cached_broadcast_evts.items():
                 for func in funcs:
                     ins_func = getattr(plugin, func.__name__)
                     if ins_func is None:
                         raise NotValidPluginError("广播事件监听不能在主插件类以外定义")
-                    plugin_group.add_broadcast_evt(evt, ins_func)
+                    if broadcast_evts_listener.get(evt) is None:
+                        broadcast_evts_listener[evt] = []
+                    broadcast_evts_listener[evt].append(func)
+
+        Print.print_suc(
+            f"成功载入插件 {plugin.name} 版本：{_v0}.{_v1}.{_v2} 作者：{plugin.author}"
+        )
+        plugin_group.normal_plugin_loaded_num += 1
         return plugin
     except NotValidPluginError as err:
         Print.print_err(f"插件 {plugin_dirname} 不合法：{err.args[0]}")
@@ -214,8 +232,8 @@ def load_plugin(
         Print.print_err("§c" + traceback.format_exc())
         raise SystemExit from err
     finally:
-        plugin_group.plugin_added_cache["packets"].clear()
-        plugin_group.broadcast_evts_cache.clear()
+        plugin_group._cached_broadcast_evts.clear()
+        plugin_group._cached_packet_cbs.clear()
     return None
 
 

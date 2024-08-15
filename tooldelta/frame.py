@@ -26,6 +26,7 @@ from tooldelta import (
     auths,
     constants,
     plugin_market,
+    utils
 )
 
 from .cfg import Config
@@ -46,7 +47,7 @@ from .packets import Packet_CommandOutput
 from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
 from .urlmethod import fbtokenFix, if_token
-from .utils import Utils, safe_close
+from .utils import Utils
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
@@ -755,10 +756,17 @@ class ToolDelta:
     @staticmethod
     def safelyExit() -> None:
         """安全退出"""
-        safe_close()
+        utils.safe_close()
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息。")
 
+    def reload(self):
+        """重载所有插件"""
+        Print.print_inf("重载插件: 正在保存数据缓存文件..")
+        utils.safe_close()
+        self.launcher.reset_listen_packets()
+        
+        self.link_plugin_group.read_all_plugins()
 
 class GameCtrl:
     """游戏连接和交互部分"""
@@ -791,7 +799,10 @@ class GameCtrl:
             | FrameNeOmgParalleltToolDelta,
         ):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
-                self.packet_handler, (pckType, pck), usage="数据包处理"
+                self.packet_handler,
+                (pckType, pck),
+                usage="数据包处理",
+                thread_level=Utils.ToolDeltaThread.SYSTEM
             )
         # 初始化基本函数
         self.sendcmd = self.launcher.sendcmd
@@ -803,18 +814,18 @@ class GameCtrl:
         else:
             self.requireUUIDPacket = True
 
-    def set_listen_packets(self) -> None:
+    def set_listen_packets_to_launcher(self) -> None:
         """
         向启动器初始化监听的游戏数据包
-        仅限内部调用
+        仅限启动模块调用
         """
         for pktID in self.require_listen_packets:
             self.launcher.add_listen_packets(pktID)
 
-    def add_listen_pkt(self, pkt: int) -> None:
+    def add_listen_packet(self, pkt: int) -> None:
         """
         添加监听的数据包
-        仅限内部调用
+        仅限内部与插件加载器调用
 
         Args:
             pkt (int): 数据包 ID
@@ -952,9 +963,7 @@ class GameCtrl:
             self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
-        Utils.createThread(
-            func=self.give_bot_effect_invisibility, usage="GiveBotEffectInvisibility"
-        )
+        self.give_bot_effect_invisibility()
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
@@ -1060,14 +1069,10 @@ class GameCtrl:
             raise ValueError("游戏翻译器字符串数据不可用")
         return self.game_texts_data
 
+    @Utils.timer_event(6400, "给予机器人隐身效果", Utils.ToolDeltaThread.SYSTEM)
     def give_bot_effect_invisibility(self) -> None:
         """给机器人添加隐身效果"""
-        start_time = time.time()
-        while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
-            if time.time() - start_time > 16384:
-                self.sendwocmd(f"/effect {self.bot_name} invisibility 99999 255 true")
-                start_time = time.time()
-            time.sleep(1)
+        self.sendwocmd(f"/effect {self.bot_name} invisibility 99999 255 true")
 
     def tmp_tp_all_players(self) -> None:
         """

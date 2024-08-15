@@ -77,6 +77,10 @@ class StandardFrame:
         for i in pcks:
             self.need_listen_packets.add(i)
 
+    def reset_listen_packets(self) -> None:
+        """重置所有需要监听的数据包"""
+        self.need_listen_packets = {9, 79, 63}
+
     def launch(self) -> None:
         """启动器启动
 
@@ -378,7 +382,11 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
-        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
+        Utils.createThread(
+            self._msg_show_thread,
+            usage="显示来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
         self.launch_event.wait()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
@@ -882,11 +890,18 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
             f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}'
         )
         Utils.createThread(
-            self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息"
+            self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
         )
-        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
         Utils.createThread(
-            self._handle_input_thread, usage="处理将要写入到 NeOmega 进程中的信息"
+            self._msg_show_thread,
+            usage="显示来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
+        Utils.createThread(
+            self._handle_input_thread,
+            usage="处理将要写入到 NeOmega 进程中的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
         )
         self.launch_event.wait()
         self.set_omega(openat_port)

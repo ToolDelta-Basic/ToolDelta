@@ -33,7 +33,7 @@ def start_tool_delta() -> None:
         timer_event_boostrap()
         tmpjson_save()
         tooldelta.launcher.listen_launched(game_control.system_inject)
-        game_control.set_listen_packets()
+        game_control.set_listen_packets_to_launcher()
         while 1:
             err = tooldelta.launcher.launch()
             if isinstance(err, SystemExit):

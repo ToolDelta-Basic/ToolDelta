@@ -95,16 +95,16 @@ def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
     if is_mir:
         mirror_src = (
             constants.TDSPECIFIC_MIRROR
-            + "/https://raw.githubusercontent.com/ToolDelta/ToolDelta/main"
+            + "/https://raw.githubusercontent.com/ToolDelta-Basic/ToolDelta/main"
         )
         depen_url = (
             constants.TDSPECIFIC_MIRROR
-            + "/https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main"
+            + "/https://raw.githubusercontent.com/ToolDelta-Basic/DependencyLibrary/main"
         )
     else:
-        mirror_src = "https://raw.githubusercontent.com/ToolDelta/ToolDelta/main"
+        mirror_src = "https://raw.githubusercontent.com/ToolDelta-Basic/ToolDelta/main"
         depen_url = (
-            "https://raw.githubusercontent.com/ToolDelta/DependencyLibrary/main"
+            "https://raw.githubusercontent.com/ToolDelta-Basic/DependencyLibrary/main"
         )
     return mirror_src, depen_url
 

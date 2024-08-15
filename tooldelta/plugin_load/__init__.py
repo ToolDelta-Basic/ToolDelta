@@ -130,10 +130,11 @@ class PluginRegData:
 
 
 def plugin_is_enabled(pname: str) -> bool:
-    """插件是否启用
+    """
+    插件是否被启用
 
     Args:
-        pname (str): 插件名
+        pname (str): 插件文件夹名
 
     Returns:
         bool: 是否启用

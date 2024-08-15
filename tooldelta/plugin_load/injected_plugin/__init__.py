@@ -31,7 +31,6 @@ repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
 packet_funcs: dict[int, dict[Callable, int | None]] = {}
-listen_packets: set[int] = set()
 
 
 def player_message(priority: int | None = None) -> Callable:
@@ -182,7 +181,6 @@ def listen_packet(packet_id: list[int] | int, priority: int | None = None):
 
     def decorator(func):
         for i in packet_id:
-            listen_packets.add(i)
             if i not in packet_funcs.keys():
                 packet_funcs[i] = {}
             packet_funcs[i][func] = priority
