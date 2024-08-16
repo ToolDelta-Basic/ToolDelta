@@ -780,14 +780,17 @@ class ToolDelta:
             self.consoleMenu.clear()
             Print.print_inf("重载插件: 正在重新载入插件..")
             self.link_plugin_group.reload()
-            self.init_console_menu()
             self.launcher.reload_listen_packets(self.link_game_ctrl.require_listen_packets)
-            Print.print_suc("重载插件: 重载成功..")
+            Print.print_suc("重载插件: 全部插件重载成功！")
+        except Config.ConfigError as err:
+            Print.print_err(f"重载插件时发现插件配置文件有误: {err}")
         except SystemExit as err:
             Print.print_err(f"重载插件遇到问题: {err}")
         except BaseException:
             Print.print_err("重载插件遇到问题 (报错如下):")
             Print.print_err(traceback.format_exc())
+        finally:
+            self.init_console_menu()
 
 class GameCtrl:
     """游戏连接和交互部分"""
