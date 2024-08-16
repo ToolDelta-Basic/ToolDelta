@@ -528,7 +528,7 @@ class ToolDelta:
         triggers: list[str],
         arg_hint: str | None,
         usage: str,
-        func: Callable[[list[str]], None],
+        func: Callable[[list[str]], None | int],
     ) -> None:
         """注册 ToolDelta 控制台的菜单项
 
@@ -544,38 +544,11 @@ class ToolDelta:
         except Exception:
             self.consoleMenu.append([usage, arg_hint, func, triggers])
 
-    def init_basic_help_menu(self, _) -> None:
-        """初始化基本的帮助菜单"""
-        menu = self.get_console_menus()
-        Print.print_inf("§a以下是可选的菜单指令项: ")
-        for usage, arg_hint, _, triggers in menu:
-            if arg_hint:
-                Print.print_inf(
-                    f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}"
-                )
-            else:
-                Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
-    def comsole_cmd_start(self) -> None:
-        """启动控制台命令"""
-        Print.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
+    def init_console_menu(self):
+        "初始化控制台菜单"
 
-        def _try_execute_console_cmd(func, rsp, mode, arg1) -> int | None:
-            try:
-                if mode == 0:
-                    rsp_arg = rsp.split()[1:]
-                elif mode == 1:
-                    rsp_arg = rsp[len(arg1) :].split()
-            except IndexError:
-                Print.print_err("[控制台执行命令] 指令缺少参数")
-                return None
-            try:
-                return func(rsp_arg) or 0
-            except Exception:
-                Print.print_err(f"控制台指令出错: {traceback.format_exc()}")
-                return 0
-
-        @Utils.thread_func("控制台执行指令并获取回调")
+        @Utils.thread_func("控制台执行指令并获取回调", Utils.ToolDeltaThread.SYSTEM)
         def _execute_mc_command_and_get_callback(cmds: list[str]) -> None:
             """执行 Minecraft 指令并获取回调结果。
 
@@ -627,43 +600,78 @@ class ToolDelta:
             self.launcher.neomg_proc.stdin.write(" ".join(cmds) + "\n")
             self.launcher.neomg_proc.stdin.flush()
 
+        def _basic_help(_):
+            menu = self.get_console_menus()
+            Print.print_inf("§a以下是可选的菜单指令项: ")
+            for usage, arg_hint, _, triggers in menu:
+                if arg_hint:
+                    Print.print_inf(
+                        f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}"
+                    )
+                else:
+                    Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
+
+        self.add_console_cmd_trigger(
+            ["?", "help", "帮助", "？"],
+            None,
+            "查询可用菜单指令",
+            _basic_help,
+        )
+        self.add_console_cmd_trigger(
+            ["exit"], None, "退出并关闭ToolDelta", lambda _: self.system_exit()
+        )
+        self.add_console_cmd_trigger(
+            ["插件市场"],
+            None,
+            "进入插件市场",
+            lambda _: plugin_market.market.enter_plugin_market(
+                self.plugin_market_url, in_game=True
+            ),
+        )
+        self.add_console_cmd_trigger(
+            ["/"], "[指令]", "执行 MC 指令", _execute_mc_command_and_get_callback
+        )
+        self.add_console_cmd_trigger(
+            ["list"],
+            None,
+            "查询在线玩家",
+            lambda _: Print.print_inf(
+                "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
+            ),
+        )
+        self.add_console_cmd_trigger(
+            ["reload"], None, "重载插件 (可能有部分特殊插件无法重载)", lambda _: self.reload() or 1
+        )
+        if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+            self.add_console_cmd_trigger(
+                ["o"],
+                "neomega命令",
+                "执行neomega控制台命令",
+                _send_to_neomega
+            )
+
+    def comsole_cmd_active(self) -> None:
+        """激活控制台命令输入"""
+        self.init_console_menu()
+        Print.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
+
+        def _try_execute_console_cmd(func, rsp, mode, arg1) -> int | None:
+            try:
+                if mode == 0:
+                    rsp_arg = rsp.split()[1:]
+                elif mode == 1:
+                    rsp_arg = rsp[len(arg1) :].split()
+            except IndexError:
+                Print.print_err("[控制台执行命令] 指令缺少参数")
+                return None
+            try:
+                return func(rsp_arg) or 0
+            except Exception:
+                Print.print_err(f"控制台指令出错: {traceback.format_exc()}")
+                return 0
+
         def _console_cmd_thread() -> None:
             """控制台线程"""
-            self.add_console_cmd_trigger(
-                ["?", "help", "帮助", "？"],
-                None,
-                "查询可用菜单指令",
-                self.init_basic_help_menu,
-            )
-            self.add_console_cmd_trigger(
-                ["exit"], None, "退出并关闭ToolDelta", lambda _: None
-            )
-            self.add_console_cmd_trigger(
-                ["插件市场"],
-                None,
-                "进入插件市场",
-                lambda _: plugin_market.market.enter_plugin_market(
-                    self.plugin_market_url, in_game=True
-                ),
-            )
-            self.add_console_cmd_trigger(
-                ["/"], "[指令]", "执行 MC 指令", _execute_mc_command_and_get_callback
-            )
-            self.add_console_cmd_trigger(
-                ["list"],
-                None,
-                "查询在线玩家",
-                lambda _: Print.print_inf(
-                    "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
-                ),
-            )
-            if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
-                self.add_console_cmd_trigger(
-                    ["o"],
-                    "neomega命令",
-                    "执行neomega控制台命令",
-                    _send_to_neomega
-                )
             while 1:
                 rsp = ""
                 while True:
@@ -684,18 +692,22 @@ class ToolDelta:
                         return
                     if rsp.split()[0] in triggers:
                         res = _try_execute_console_cmd(func, rsp, 0, None)
-                        if res == -1:
+                        if res == 1:
+                            break
+                        elif res == -1:
                             return
                     else:
                         for tri in triggers:
                             if rsp.startswith(tri):
                                 res = _try_execute_console_cmd(func, rsp, 1, tri)
-                                if res == -1:
+                                if res == 1:
+                                    break
+                                elif res == -1:
                                     return
-                if res != 0 and rsp:
+                if res != 0 and res != 1 and rsp:
                     self.link_game_ctrl.say_to("@a", f"[§bToolDelta控制台§r] §3{rsp}§r")
 
-        self.createThread(_console_cmd_thread, usage="控制台指令")
+        self.createThread(_console_cmd_thread, usage="控制台指令", thread_level=Utils.ToolDeltaThread.SYSTEM)
 
     def system_exit(self) -> None:
         """系统退出"""
@@ -762,11 +774,20 @@ class ToolDelta:
 
     def reload(self):
         """重载所有插件"""
-        Print.print_inf("重载插件: 正在保存数据缓存文件..")
-        utils.safe_close()
-        self.launcher.reset_listen_packets()
-        
-        self.link_plugin_group.read_all_plugins()
+        try:
+            Print.print_inf("重载插件: 正在保存数据缓存文件..")
+            utils.safe_close()
+            self.consoleMenu.clear()
+            Print.print_inf("重载插件: 正在重新载入插件..")
+            self.link_plugin_group.reload()
+            self.init_console_menu()
+            self.launcher.reload_listen_packets(self.link_game_ctrl.require_listen_packets)
+            Print.print_suc("重载插件: 重载成功..")
+        except SystemExit as err:
+            Print.print_err(f"重载插件遇到问题: {err}")
+        except BaseException:
+            Print.print_err("重载插件遇到问题 (报错如下):")
+            Print.print_err(traceback.format_exc())
 
 class GameCtrl:
     """游戏连接和交互部分"""
@@ -819,8 +840,7 @@ class GameCtrl:
         向启动器初始化监听的游戏数据包
         仅限启动模块调用
         """
-        for pktID in self.require_listen_packets:
-            self.launcher.add_listen_packets(pktID)
+        self.launcher.add_listen_packets(*self.require_listen_packets)
 
     def add_listen_packet(self, pkt: int) -> None:
         """
@@ -832,7 +852,7 @@ class GameCtrl:
         """
         self.require_listen_packets.add(pkt)
 
-    @Utils.thread_func("数据包处理方法")
+    @Utils.thread_func("数据包处理方法", Utils.ToolDeltaThread.SYSTEM)
     def packet_handler(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理分发任务函数
 
@@ -869,7 +889,6 @@ class GameCtrl:
                     "§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！",
                 )
                 self.all_players_data = self.launcher.omega.get_all_online_players()
-                # 没有 VIP 名字供测试...
             if isJoining:
                 self.tmp_tp_player(playername)
                 Print.print_inf(f"§e{playername} 加入了游戏")
@@ -987,7 +1006,7 @@ class GameCtrl:
                     break
                 except (TimeoutError, ValueError):
                     Print.print_war("获取全局玩家失败..重试")
-        self.linked_frame.comsole_cmd_start()
+        self.linked_frame.comsole_cmd_active()
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )

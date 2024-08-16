@@ -521,7 +521,7 @@ class ThreadOmega:
         )
 
         # start routine
-        Utils.createThread(self._react, usage="Omega React Thread")
+        Utils.createThread(self._react, usage="Omega React Thread", thread_level=Utils.ToolDeltaThread.SYSTEM)
 
     def _react(self):
         while True:

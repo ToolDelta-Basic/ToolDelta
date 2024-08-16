@@ -76,7 +76,7 @@ def _CfgShowType(typ: Any) -> str:
 class Cfg:
     """配置文件模块"""
 
-    AVALI_JSON_TYPE = Union[type, dict, tuple[type | dict], "JsonList", "AnyKeyValue"]
+    AVALI_JSON_TYPE = Union[type, dict, tuple[type | dict, ...], "JsonList", "AnyKeyValue"]
 
     class ConfigError(Exception):
         """配置文件错误"""

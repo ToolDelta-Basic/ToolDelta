@@ -2,7 +2,7 @@
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
     "https://tdload.whiteleaf.cn"
-    "/https://raw.githubusercontent.com/ToolDelta/ToolDelta-PluginMarket/main"
+    "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 )
 "插件市场源"
 

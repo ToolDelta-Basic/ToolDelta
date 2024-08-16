@@ -21,6 +21,7 @@ __caches__ = {"plugin": None, "api_name": "", "frame": None}
 
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
+loaded_plugin_modules = []
 
 class Plugin:
     "插件主类"
@@ -151,7 +152,13 @@ def load_plugin(
                 "插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dirname, "__init__.py"
             )
         ):
-            importlib.import_module(plugin_dirname)
+            plugin_module = importlib.import_module(plugin_dirname)
+            if plugin_module in loaded_plugin_modules:
+                importlib.reload(plugin_module)
+                mode_str = "重载"
+            else:
+                loaded_plugin_modules.append(plugin_module)
+                mode_str = "载入"
         else:
             Print.print_war(f"{plugin_dirname} 文件夹 未发现插件文件，跳过加载")
             return None
@@ -191,7 +198,7 @@ def load_plugin(
                     raise NotValidPluginError("数据包监听不能在主插件类以外定义")
                 if pktType not in packet_funcs.keys():
                     packet_funcs[pktType] = []
-                packet_funcs[pktType].append(func)
+                packet_funcs[pktType].append(ins_func)
 
         # 收集到了作为API的插件
         if __caches__["api_name"] != "":
@@ -206,10 +213,10 @@ def load_plugin(
                         raise NotValidPluginError("广播事件监听不能在主插件类以外定义")
                     if broadcast_evts_listener.get(evt) is None:
                         broadcast_evts_listener[evt] = []
-                    broadcast_evts_listener[evt].append(func)
+                    broadcast_evts_listener[evt].append(ins_func)
 
         Print.print_suc(
-            f"成功载入插件 {plugin.name} 版本：{_v0}.{_v1}.{_v2} 作者：{plugin.author}"
+            f"成功{mode_str}插件 {plugin.name} 版本：{_v0}.{_v1}.{_v2} 作者：{plugin.author}"
         )
         plugin_group.normal_plugin_loaded_num += 1
         return plugin

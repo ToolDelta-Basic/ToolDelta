@@ -4,7 +4,7 @@ import asyncio
 import os
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ..color_print import Print
 from ..constants import (
@@ -52,8 +52,8 @@ _SUPER_CLS = TypeVar("_SUPER_CLS")
 class PluginGroup:
     "插件组"
 
-    plugins: ClassVar[list[Plugin]] = []
-    plugins_funcs: ClassVar[dict[str, list]] = {
+    plugins: list[Plugin] = []
+    plugins_funcs: dict[str, list] = {
         "on_def": [],
         "on_inject": [],
         "on_player_prejoin": [],
@@ -78,6 +78,20 @@ class PluginGroup:
         self.injected_plugin_loaded_num = 0
         self.loaded_plugin_ids = []
         self.linked_frame: "ToolDelta | None" = None
+
+    def reload(self):
+        """重载插件框架"""
+        self.plugins_api = {}
+        self._packet_funcs = {}
+        self._update_player_attributes_funcs = []
+        self._broadcast_listeners = {}
+        for v in self.plugins_funcs.values():
+            v.clear()
+        Print.print_inf("正在重新读取所有插件")
+        self.read_all_plugins()
+        Print.print_inf("开始执行插件游戏初始化方法")
+        self.execute_init()
+        Print.print_suc("重载插件完成！")
 
     @staticmethod
     def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
@@ -269,11 +283,14 @@ class PluginGroup:
             # 主动读取类式插件监听的数据包
             for i in classic_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
+            for k, v in classic_plugin.packet_funcs.items():
+                self._packet_funcs[str(k)] = v
             # 主动读取类式插件监听的广播事件器
             self._broadcast_listeners.update(classic_plugin.broadcast_evts_listener)
             # 主动读取注入式插件监听的数据包
             for i in injected_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
+            # 因为注入式插件自带一个handler, 所以不用再注入方法
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             Print.print_suc(
@@ -393,7 +410,7 @@ class PluginGroup:
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
         asyncio.run(execute_init())
-        Utils.createThread(asyncio.run, (execute_repeat(),))
+        Utils.createThread(asyncio.run, (execute_repeat(),), "注入式插件定时任务")
 
     def execute_player_prejoin(
         self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC

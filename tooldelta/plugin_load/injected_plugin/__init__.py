@@ -31,6 +31,7 @@ repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
 packet_funcs: dict[int, dict[Callable, int | None]] = {}
+loaded_plugin_modules = []
 
 
 def player_message(priority: int | None = None) -> Callable:
@@ -447,6 +448,10 @@ async def load_plugin_file(file: str) -> PluginMetadata:
         # 导入插件模块
         sys.path.append(os.path.join("插件文件", "ToolDelta注入式插件"))
         plugin_module = importlib.import_module(file)
+        if plugin_module in loaded_plugin_modules:
+            importlib.reload(plugin_module)
+        else:
+            loaded_plugin_modules.append(plugin_module)
         meta_data = create_plugin_metadata(
             getattr(plugin_module, "__plugin_meta__", {"name": file})
         )

@@ -17,7 +17,7 @@ import ujson as json
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
-event_pool = {"timer_events": threading.Event()}
+event_pool: dict[str, threading.Event] = {}
 threads_list: list["Utils.createThread"] = []
 timer_events_table: dict[int, tuple[str, Callable, tuple, dict, int]] = {}
 _timer_event_lock = threading.Lock()
@@ -453,7 +453,7 @@ class Utils:
     simpleAssert = simple_assert
 
     @staticmethod
-    def thread_func(func_or_name: Callable | str) -> Any:
+    def thread_func(func_or_name: Callable | str, thread_level = ToolDeltaThread.PLUGIN) -> Any:
         """
         在事件方法可能执行较久会造成堵塞时使用，方便快捷地创建一个新线程，例如:
 
@@ -473,7 +473,7 @@ class Utils:
 
             def _recv_func(func: Callable):
                 def thread_fun(*args: tuple, **kwargs: Any) -> None:
-                    Utils.createThread(func, usage=func_or_name, args=args, **kwargs)
+                    Utils.createThread(func, usage=func_or_name, thread_level=thread_level, args=args, **kwargs)
 
                 return thread_fun
 
@@ -585,11 +585,17 @@ class Utils:
 def safe_close():
     """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
     event_pool["timer_events"].set()
+    force_stop_common_threads()
     _tmpjson_save()
 
 def force_stop_common_threads():
     for i in threads_list:
-        i.stop()
+        if i._thread_level != i.SYSTEM:
+            res = i.stop()
+            if res:
+                Print.print_suc(f"已终止线程 {i.usage}")
+            else:
+                Print.print_suc(f"无法终止线程 {i.usage}")
 
 def _tmpjson_save(fp: str | None = None):
     "请不要在系统调用以外调用"
@@ -608,8 +614,8 @@ def _tmpjson_save(fp: str | None = None):
         jsonPathTmp[fp][0] = False
 
 
-@Utils.timer_event(120, "缓存JSON数据定时保存")
-@Utils.thread_func("JSON 缓存文件定时保存")
+@Utils.timer_event(120, "缓存JSON数据定时保存", Utils.ToolDeltaThread.SYSTEM)
+@Utils.thread_func("JSON 缓存文件定时保存", Utils.ToolDeltaThread.SYSTEM)
 def tmpjson_save():
     "请不要在系统调用以外调用"
     _tmpjson_save()
@@ -622,11 +628,11 @@ def timer_event_clear():
             del timer_events_table[k]
     _timer_event_lock.release()
 
-@Utils.thread_func("ToolDelta 定时任务")
+@Utils.thread_func("ToolDelta 定时任务", Utils.ToolDeltaThread.SYSTEM)
 def timer_event_boostrap():
     "请不要在系统调用以外调用"
     timer = 0
-    evt = event_pool["timer_events"]
+    evt = event_pool["timer_events"] = threading.Event()
     while not evt.is_set():
         _timer_event_lock.acquire()
         for k, (_, caller, args, kwargs, _) in timer_events_table.items():

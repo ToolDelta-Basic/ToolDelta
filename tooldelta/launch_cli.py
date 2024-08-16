@@ -77,9 +77,9 @@ class StandardFrame:
         for i in pcks:
             self.need_listen_packets.add(i)
 
-    def reset_listen_packets(self) -> None:
-        """重置所有需要监听的数据包"""
-        self.need_listen_packets = {9, 79, 63}
+    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+        """重载"""
+        self.need_listen_packets = {9, 79, 63} | listen_packets
 
     def launch(self) -> None:
         """启动器启动
@@ -576,11 +576,19 @@ class FrameNeOmgAccessPoint(StandardFrame):
             )
         )
 
-    @Utils.thread_func("检测 Omega 断开连接线程")
+    @Utils.thread_func("检测 Omega 断开连接线程", Utils.ToolDeltaThread.SYSTEM)
     def wait_omega_disconn_thread(self):
         self.omega.wait_disconnect()
         if self.status == SysStatus.RUNNING:
             self.update_status(SysStatus.CRASHED_EXIT)
+
+    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+        super().reload_listen_packets(listen_packets)
+        pcks = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        self.omega.listen_packets(pcks, self.packet_handler_parent)
 
     sendPacketJson = sendPacket
 
