@@ -110,7 +110,7 @@ class Utils:
             if not self.is_alive():
                 return True
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                thread_id, ctypes.py_object(Utils.ThreadExit)
+                thread_id, ctypes.py_object(SystemExit)
             )
             if res == 0:
                 Print.print_err(f"§c线程ID {thread_id} 不存在")
