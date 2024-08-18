@@ -53,7 +53,7 @@ until git clone "$gitclone";do
   ((N++))
   case "$N" in
     1)gitclone="https://github.moeyy.xyz/https://github.com/ToolDelta-Basic/ToolDelta";;
-    1)echo "你的网络似乎有什么问题呢？请稍后重新尝试吧";EXIT_FAILURE;;
+    2)echo "你的网络似乎有什么问题呢？请稍后重新尝试吧";EXIT_FAILURE;;
     *)gitclone="https://github.com/ToolDelta-Basic/ToolDelta";N=0
   esac
 done
