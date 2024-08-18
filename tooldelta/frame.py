@@ -14,7 +14,6 @@ import getpass
 import os
 import signal
 import sys
-import time
 import traceback
 from collections.abc import Callable
 from typing import TYPE_CHECKING
@@ -22,13 +21,7 @@ from typing import TYPE_CHECKING
 import requests
 import json
 
-from tooldelta import (
-    auths,
-    constants,
-    plugin_market,
-    game_utils,
-    utils
-)
+from tooldelta import auths, constants, plugin_market, game_utils, utils
 
 from .cfg import Config
 from .color_print import Print
@@ -37,35 +30,31 @@ from .game_texts import GameTextsHandle, GameTextsLoader
 from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
 from .launch_cli import (
-    FrameBEConnect,
     FrameNeOmgAccessPoint,
     FrameNeOmgAccessPointRemote,
-    FrameNeOmgParalleltToolDelta,
+    FrameNeOmegaLauncher,
     SysStatus,
 )
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
 from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
-from .urlmethod import fbtokenFix, if_token
-from .utils import Utils
-
-sys_args_dict = sys_args_to_dict(sys.argv)
-VERSION = get_tool_delta_version()
+from .utils import Utils, fbtokenFix, if_token
 
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
-LAUNCHERS: list[
-    tuple[
-        str,
-        type[
-            FrameNeOmgAccessPoint
-            | FrameNeOmgAccessPointRemote
-            | FrameNeOmgParalleltToolDelta
-        ],
-    ]
-] = [
+###### CONSTANT DEFINE
+
+sys_args_dict = sys_args_to_dict(sys.argv)
+VERSION = get_tool_delta_version()
+FB_LIKE_LAUNCHERS = (
+    FrameNeOmegaLauncher | FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote
+)
+"类FastBuilder启动器框架"
+LAUNCHERS = FB_LIKE_LAUNCHERS
+"所有启动器框架类型"
+LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
     ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
     (
         "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
@@ -73,9 +62,11 @@ LAUNCHERS: list[
     ),
     (
         "NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
-        FrameNeOmgParalleltToolDelta,
+        FrameNeOmegaLauncher,
     ),
 ]
+
+###### FRAME DEFINE
 
 
 class ToolDelta:
@@ -102,11 +93,7 @@ class ToolDelta:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.launcher: (
-            FrameNeOmgAccessPoint
-            | FrameNeOmgAccessPointRemote
-            | FrameNeOmgParalleltToolDelta
-        )
+        self.launcher: LAUNCHERS
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
@@ -123,7 +110,7 @@ class ToolDelta:
             self.plugin_market_url = cfgs["插件市场源"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
-                1, len(LAUNCHERS) + 1
+                1, len(LAUNCHERS_SHOWN) + 1
             ):
                 raise Config.ConfigError(
                     "你不该随意修改启动器模式，现在赶紧把它改回 0 吧"
@@ -139,19 +126,19 @@ class ToolDelta:
         # 每个启动器框架的单独启动配置之前
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
-            for i, (launcher_name, _) in enumerate(LAUNCHERS):
+            for i, (launcher_name, _) in enumerate(LAUNCHERS_SHOWN):
                 Print.print_inf(f" {i + 1} - {launcher_name}")
             while 1:
                 try:
                     ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
-                    if ch not in range(1, len(LAUNCHERS) + 1):
+                    if ch not in range(1, len(LAUNCHERS_SHOWN) + 1):
                         raise ValueError
                     cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
                     break
                 except ValueError:
                     Print.print_err("输入不合法，或者是不在范围内，请重新输入")
             Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
-        self.launcher = LAUNCHERS[
+        self.launcher = LAUNCHERS_SHOWN[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]()
         # 每个启动器框架的单独启动配置
@@ -266,7 +253,7 @@ class ToolDelta:
             self.launcher.set_launch_data(
                 serverNumber, serverPasswd, fbtoken, auth_server
             )
-        elif type(self.launcher) is FrameNeOmgParalleltToolDelta:
+        elif type(self.launcher) is FrameNeOmegaLauncher:
             launch_data = cfgs.get(
                 "NeOmega并行ToolDelta启动模式",
                 constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_DEFAULT,
@@ -382,26 +369,6 @@ class ToolDelta:
             )
         elif type(self.launcher) is FrameNeOmgAccessPointRemote:
             ...
-        elif type(self.launcher) is FrameBEConnect:
-            launch_data = cfgs.get(
-                "基岩版WS服务器启动模式", constants.LAUNCHER_BEWS_DEFAULT
-            )
-            try:
-                Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
-            except Config.ConfigError as err:
-                Print.print_err(
-                    f"ToolDelta 基本配置-BEWS 启动配置有误，需要更正：{err}"
-                )
-                raise SystemExit from err
-            if launch_data["服务端开放地址"] == "":
-                Print.print_inf("请输入 WS 服务器开放的地址：")
-                addr = input(
-                    Print.fmt_info("请输入 (回车默认 localhost:12003): ", "§6 输入 ")
-                )
-                if not addr.startswith("ws://"):
-                    addr = "ws://" + addr
-                launch_data["服务端开放地址"] = addr
-                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
         else:
             raise ValueError("LAUNCHER Error")
         Print.print_suc("配置文件读取完成")
@@ -445,12 +412,12 @@ class ToolDelta:
                     Print.print_inf(
                         "选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):"
                     )
-                    for i, (launcher_name, _) in enumerate(LAUNCHERS):
+                    for i, (launcher_name, _) in enumerate(LAUNCHERS_SHOWN):
                         Print.print_inf(f" {i + 1} - {launcher_name}")
                     while 1:
                         try:
                             ch = int(input(Print.clean_fmt("请选择：")))
-                            if ch not in range(1, len(LAUNCHERS) + 1):
+                            if ch not in range(1, len(LAUNCHERS_SHOWN) + 1):
                                 raise ValueError
                             old_cfg[
                                 "启动器启动模式(请不要手动更改此项, 改为0可重置)"
@@ -503,10 +470,10 @@ class ToolDelta:
         """欢迎提示"""
         Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
         Print.print_with_info(
-            "§dToolDelta Wiki: https://td-wiki.whiteleaf.cn/", Print.INFO_LOAD
+            "§dToolDelta Wiki: https://td-wiki.dqyt.online/", Print.INFO_LOAD
         )
         Print.print_with_info(
-            "§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
+            "§dToolDelta 项目地址：https://github.com/ToolDelta-Basic", Print.INFO_LOAD
         )
         Print.print_with_info(
             f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
@@ -544,7 +511,6 @@ class ToolDelta:
                 Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
         except Exception:
             self.consoleMenu.append([usage, arg_hint, func, triggers])
-
 
     def init_console_menu(self):
         "初始化控制台菜单"
@@ -641,14 +607,14 @@ class ToolDelta:
             ),
         )
         self.add_console_cmd_trigger(
-            ["reload"], None, "重载插件 (可能有部分特殊插件无法重载)", lambda _: self.reload() or 1
+            ["reload"],
+            None,
+            "重载插件 (可能有部分特殊插件无法重载)",
+            lambda _: self.reload() or 1,
         )
-        if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+        if isinstance(self.launcher, FrameNeOmegaLauncher):
             self.add_console_cmd_trigger(
-                ["o"],
-                "neomega命令",
-                "执行neomega控制台命令",
-                _send_to_neomega
+                ["o"], "neomega命令", "执行neomega控制台命令", _send_to_neomega
             )
 
     def comsole_cmd_active(self) -> None:
@@ -708,7 +674,11 @@ class ToolDelta:
                 if res != 0 and res != 1 and rsp:
                     self.link_game_ctrl.say_to("@a", f"[§bToolDelta控制台§r] §3{rsp}§r")
 
-        self.createThread(_console_cmd_thread, usage="控制台指令", thread_level=Utils.ToolDeltaThread.SYSTEM)
+        self.createThread(
+            _console_cmd_thread,
+            usage="控制台指令",
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
+        )
 
     def system_exit(self) -> None:
         """系统退出"""
@@ -725,12 +695,7 @@ class ToolDelta:
                 else:
                     self.launcher.neomg_proc.send_signal(signal.SIGTERM)
 
-        if isinstance(
-            self.launcher,
-            FrameNeOmgAccessPointRemote
-            | FrameNeOmgAccessPoint
-            | FrameNeOmgParalleltToolDelta,
-        ):
+        if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -781,7 +746,9 @@ class ToolDelta:
             self.consoleMenu.clear()
             Print.print_inf("重载插件: 正在重新载入插件..")
             self.link_plugin_group.reload()
-            self.launcher.reload_listen_packets(self.link_game_ctrl.require_listen_packets)
+            self.launcher.reload_listen_packets(
+                self.link_game_ctrl.require_listen_packets
+            )
             Print.print_suc("重载插件: 全部插件重载成功！")
         except Config.ConfigError as err:
             Print.print_err(f"重载插件时发现插件配置文件有误: {err}")
@@ -792,6 +759,7 @@ class ToolDelta:
             Print.print_err(traceback.format_exc())
         finally:
             self.init_console_menu()
+
 
 class GameCtrl:
     """游戏连接和交互部分"""
@@ -807,7 +775,7 @@ class GameCtrl:
             self.game_texts_data = GameTextsLoader().game_texts_data
             self.game_data_handler = GameTextsHandle(self.game_texts_data)
         except Exception as err:
-            Print.print_war("游戏文本翻译器不可用")
+            Print.print_war(f"游戏文本翻译器不可用: {err}")
             self.game_texts_data = None
             self.game_data_handler = None
         self.linked_frame = frame
@@ -817,17 +785,12 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.require_listen_packets = {9, 79, 63}
         self.launcher = self.linked_frame.launcher
-        if isinstance(
-            self.launcher,
-            FrameNeOmgAccessPointRemote
-            | FrameNeOmgAccessPoint
-            | FrameNeOmgParalleltToolDelta,
-        ):
+        if isinstance(self.launcher, LAUNCHERS):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
                 self.packet_handler,
                 (pckType, pck),
                 usage="数据包处理",
-                thread_level=Utils.ToolDeltaThread.SYSTEM
+                thread_level=Utils.ToolDeltaThread.SYSTEM,
             )
         # 初始化基本函数
         self.sendcmd = self.launcher.sendcmd
@@ -1033,7 +996,7 @@ class GameCtrl:
             "在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件"
         )
         Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
-        if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+        if isinstance(self.launcher, FrameNeOmegaLauncher):
             Print.print_suc("在控制台输入 o <neomega指令> 可执行NeOmega的控制台指令")
 
     @property

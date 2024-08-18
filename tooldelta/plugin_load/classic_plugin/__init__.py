@@ -4,7 +4,8 @@ import importlib
 import os
 import sys
 import traceback
-from typing import TYPE_CHECKING, TypeVar, Callable
+from typing import TYPE_CHECKING, TypeVar
+from collections.abc import Callable
 
 from ...cfg import Cfg
 from ...color_print import Print
@@ -22,6 +23,7 @@ __caches__ = {"plugin": None, "api_name": "", "frame": None}
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
 loaded_plugin_modules = []
+
 
 class Plugin:
     "插件主类"
@@ -74,6 +76,7 @@ def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
     __caches__["plugin"] = plugin_ins
     return plugin
 
+
 def add_plugin_as_api(apiName: str):
     def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
         if not Plugin.__subclasscheck__(api_plugin):
@@ -112,14 +115,16 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
         if os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir)):
             sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
             load_plugin(plugin_grp, plugin_dir)
-            if os.path.isfile(data_path := os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "datas.json")):
+            if os.path.isfile(
+                data_path := os.path.join(
+                    "插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "datas.json"
+                )
+            ):
                 plugin_data = Utils.JsonIO.SafeJsonLoad(data_path)
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
 
-def load_plugin(
-    plugin_group: "PluginGroup", plugin_dirname: str
-) -> None | Plugin:
+def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plugin:
     """加载插件
 
     Args:

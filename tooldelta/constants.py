@@ -1,7 +1,6 @@
 "ToolDelta 常量定义"
 
-TOOLDELTA_LOGO = \
-"""╔═════════════════════════════════════════════════════════════════════════╗
+TOOLDELTA_LOGO = """╔═════════════════════════════════════════════════════════════════════════╗
 ║§9████████╗ ██████╗  ██████╗ ██╗     §b██████╗ ███████╗██╗  ████████╗ █████╗ §r║
 ║§9╚══██╔══╝██╔═══██╗██╔═══██╗██║     §b██╔══██╗██╔════╝██║  ╚══██╔══╝██╔══██╗§r║
 ║§9   ██║   ██║   ██║██║   ██║██║     §b██║  ██║█████╗  ██║     ██║   ███████║§r║
@@ -13,7 +12,7 @@ TOOLDELTA_LOGO = \
 "ToolDelta标志"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "https://tdload.whiteleaf.cn"
+    "https://mirror.ghproxy.com"
     "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 )
 "插件市场源"
@@ -106,8 +105,12 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "https://tdload.whiteleaf.cn"
-"ToolDelta专用镜像"
+TDSPECIFIC_MIRROR = "https://mirror.ghproxy.com"
+"ToolDelta镜像"
+
+TDREPO_URL = (
+    f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta-Basic/ToolDelta"
+)
 
 
 class PacketIDS:

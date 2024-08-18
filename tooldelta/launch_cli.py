@@ -385,7 +385,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         Utils.createThread(
             self._msg_show_thread,
             usage="显示来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         self.launch_event.wait()
         self.set_omega(openat_port)
@@ -399,7 +399,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
         Print.print_suc("接入点注入已就绪")
-        self.exit_event.wait()  # 等待事件的触发
+        self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
         if self.status == SysStatus.CRASHED_EXIT:
@@ -645,36 +645,10 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
         return SystemError("未知的退出状态")
 
 
-class FrameBEConnect(StandardFrame):
-    "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
+class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
+    """混合使用ToolDelta和NeOmega启动器启动"""
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.cmd_resp: dict = {}
-
-    def init(self):
-        self.cmd_resp = {}
-
-    def prepare_apis(self):
-        raise NotImplementedError()
-
-    def handler(self, data):
-        message_purpose = data["header"]["messagePurpose"]
-        if message_purpose == "commandResponse":
-            request_id = data["header"]["requestId"]
-            if request_id in self.cmd_resp:
-                self.cmd_resp[request_id] = Packet_CommandOutput(
-                    {
-                        "CommandOrigin": [],
-                        "OutputType": 1,
-                    }
-                )
-
-
-class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
-    """使用 NeOmega接入点 框架连接到游戏 但同时兼容NeOmegaCli的运行"""
-
-    launch_type = "NeOmgParalleltToolDelta"
+    launch_type = "NeOmegaLauncher"
 
     def __init__(self) -> None:
         """初始化 NeOmega 框架
@@ -837,8 +811,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                     ]
                 ):
                     msg_orig = (
-                        msg_orig
-                        .replace("SUCCESS", "成功")
+                        msg_orig.replace("SUCCESS", "成功")
                         .replace("  ERROR  ", "错误")
                         .replace("WARNING", "警告")
                         .replace("  INFO  ", "消息")
@@ -898,18 +871,19 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
             f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}'
         )
         Utils.createThread(
-            self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            self._msg_handle_thread,
+            usage="处理来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         Utils.createThread(
             self._msg_show_thread,
             usage="显示来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         Utils.createThread(
             self._handle_input_thread,
             usage="处理将要写入到 NeOmega 进程中的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         self.launch_event.wait()
         self.set_omega(openat_port)

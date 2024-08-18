@@ -4,7 +4,6 @@ import gzip
 import os
 import re
 import tarfile
-import threading
 import warnings
 from glob import glob
 from importlib import util
@@ -59,7 +58,7 @@ class GameTextsLoader:
                     verify=True,
                 ).json()["tag_name"],
             )
-        except Exception as err:
+        except Exception:
             raise ValueError("游戏文本翻译器: 无法获取最新版本号")
         if not isinstance(result, type(None)):
             return result.group()
@@ -73,10 +72,6 @@ class GameTextsLoader:
             with open(version_file_path, "w", encoding="utf-8") as f:
                 f.write(latest_version)
             self.download_and_extract(latest_version)
-
-    # def start_auto_update_thread(self) -> None:
-    #     "启用自动更新线程"
-    #     threading.Timer(24 * 60 * 60, self.auto_update).start()
 
     @Utils.thread_func("自动更新游戏文本翻译器内容")
     def auto_update(self) -> None:
@@ -147,7 +142,7 @@ class GameTextsLoader:
                 gzip.open(zip_path, "rb") as f_in,
                 tarfile.open(
                     fileobj=f_in,
-                    mode="r:gz", # type: ignore
+                    mode="r:gz",  # type: ignore
                 ) as tar,
             ):
                 tar.extractall(self.base_path)

@@ -4,7 +4,7 @@ import asyncio
 import os
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 from ..color_print import Print
 from ..constants import (
@@ -48,12 +48,16 @@ if TYPE_CHECKING:
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
 
+# add_plugin(): 类式插件调用, 插件框架会将其缓存到自身缓存区, 等待类式插件将插件类实例化
+# add_broadcast_listener(), add_packet_listener() 同理
+# 对于使用了 add_plugin_as_api() 的插件, 可以使用 get_plugin_api() 跨插件获取接口
+
 
 class PluginGroup:
     "插件组"
 
-    plugins: list[Plugin] = []
-    plugins_funcs: dict[str, list] = {
+    plugins: ClassVar[list[Plugin]] = []
+    plugins_funcs: ClassVar[dict[str, list]] = {
         "on_def": [],
         "on_inject": [],
         "on_player_prejoin": [],
@@ -64,7 +68,7 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    Agree_bot_patrol: list[bool] = []
+    Agree_bot_patrol: ClassVar["list[bool]"] = []
 
     def __init__(self):
         "初始化"
@@ -80,7 +84,7 @@ class PluginGroup:
         self.linked_frame: "ToolDelta | None" = None
 
     def reload(self):
-        """重载插件框架"""
+        """重载插件框架 (这是一个不安全的操作)"""
         self.plugins_api = {}
         self._packet_funcs = {}
         self._update_player_attributes_funcs = []
@@ -133,6 +137,7 @@ class PluginGroup:
         """
 
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
+            # 存在缓存区, 等待 class_plugin 实例化
             if isinstance(pktID, int):
                 self._cached_packet_cbs.append((pktID, func))
             else:
@@ -256,14 +261,14 @@ class PluginGroup:
         return None
 
     def set_frame(self, frame: "ToolDelta") -> None:
-        """设置关联的系统框架"""
+        """为各个框架分发关联的系统框架"""
         self.linked_frame = frame
         _set_frame(frame)
         _init_frame(frame)
 
     def read_all_plugins(self) -> None:
         """
-        读取所有插件
+        读取所有插件/重载所有插件
 
         Raises:
             SystemExit: 读取插件出现问题

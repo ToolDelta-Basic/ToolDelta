@@ -15,7 +15,7 @@ import requests
 from colorama import Fore, Style, init
 from tqdm.asyncio import tqdm
 
-from .constants import TDSPECIFIC_MIRROR
+from .constants import TDREPO_URL
 from .color_print import Print
 from .get_tool_delta_version import get_tool_delta_version
 
@@ -204,6 +204,7 @@ def download_progress_bar(
 
 KB = 1024
 MB = 1024 * KB
+
 
 def pretty_kb(n: float) -> str:
     """将字节数转换为可读性更好的字符串表示形式
@@ -412,47 +413,19 @@ def get_free_port(start: int = 2000, end: int = 65535) -> int:
 def check_update() -> None:
     """检查更新"""
     try:
-        latest_version: str = requests.get(
-            f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest",
+        resp = requests.get(
+            f"{TDREPO_URL}/releases/latest",
             timeout=5,
-        ).json()["tag_name"]
+        )
+        resp.raise_for_status()
+        latest_version = resp.json()["tag_name"]
         current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
         if not latest_version.replace(".", "") <= current_version.replace(".", ""):
-            # Print.print_suc(f"当前为最新版本 -> v{current_version}，无需更新")
             Print.print_load(
                 f"检测到最新版本 {current_version} -> {latest_version}，请及时更新！"
             )
     except KeyError:
         Print.print_war("获取最新版本失败，请检查网络连接")
     except Exception as err:
-        Print.print_war(f"无法获取最新版本: {str(err)[:30]}.., 已忽略")
-
-
-def if_token() -> None:
-    """检查路径下是否有 fbtoken，没有就提示输入
-
-    Raises:
-        SystemExit: 未输入 fbtoken
-    """
-    if not os.path.isfile("fbtoken"):
-        Print.print_inf(
-            "请到对应的验证服务器官网下载 FBToken，并放在本目录中，或者在下面输入 fbtoken"
-        )
-        fbtoken = input(Print.fmt_info("请输入 fbtoken: ", "§b 输入 "))
-        if fbtoken:
-            with open("fbtoken", "w", encoding="utf-8") as f:
-                f.write(fbtoken)
-        else:
-            Print.print_err("未输入 fbtoken, 无法继续")
-            raise SystemExit
-
-
-def fbtokenFix():
-    """修复 fbtoken 里的换行符"""
-    with open("fbtoken", encoding="utf-8") as file:
-        token = file.read()
-        if "\n" in token:
-            Print.print_war("fbtoken 里有换行符，会造成 fb 登陆失败，已自动修复")
-            with open("fbtoken", "w", encoding="utf-8") as file2:
-                file2.write(token.replace("\n", ""))
+        Print.print_war(f"无法获取最新版本: {err}, 已忽略")

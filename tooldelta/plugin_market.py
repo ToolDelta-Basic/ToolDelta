@@ -17,7 +17,6 @@ from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
-    LAUNCH_CFG
 )
 from .plugin_load import PluginRegData
 from .plugin_load.PluginGroup import plugin_group
@@ -32,6 +31,7 @@ else:
 def clear_screen() -> None:
     "清屏"
     os.system(shlex.quote(CLS_CMD))
+
 
 def url_join(*urls) -> str:
     """连接 URL
@@ -132,7 +132,10 @@ class PluginMarket:
             """
             ok, pres = self.choice_plugin(plugin_data)
             if ok:
-                if in_game and plugin_data.plugin_id not in plugin_group.loaded_plugin_ids:
+                if (
+                    in_game
+                    and plugin_data.plugin_id not in plugin_group.loaded_plugin_ids
+                ):
                     resp = (
                         input(
                             Print.fmt_info(
@@ -148,7 +151,11 @@ class PluginMarket:
                                 try:
                                     plugin_group.load_plugin_hot(i.name, i.plugin_type)
                                 except Exception as err:
-                                    input(Print.fmt_info(f"插件热加载出现问题：{err}", "§c 报错 §r"))
+                                    input(
+                                        Print.fmt_info(
+                                            f"插件热加载出现问题：{err}", "§c 报错 §r"
+                                        )
+                                    )
                 else:
                     Print.print_inf(
                         "插件已存在，若要更新版本，请重启 ToolDelta", need_log=False
@@ -308,7 +315,9 @@ class PluginMarket:
             res.raise_for_status()
             res1: dict = json.loads(res.text)
         except Exception as err:
-            Print.print_err(f"从 {self.plugins_download_url} 获取插件信息遇到问题: {err}")
+            Print.print_err(
+                f"从 {self.plugins_download_url} 获取插件信息遇到问题: {err}"
+            )
             raise SystemExit
         self.plugin_id_name_map = res1
         return res1

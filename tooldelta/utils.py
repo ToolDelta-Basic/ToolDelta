@@ -3,14 +3,13 @@
 import copy
 import ctypes
 import json as rjson
-import base64
-import hashlib
 import os
 import threading
 import time
 import traceback
 from io import TextIOWrapper
-from typing import Any, TypeVar, Callable
+from typing import Any, TypeVar
+from collections.abc import Callable
 
 import ujson as json
 
@@ -42,9 +41,9 @@ class Utils:
             self,
             func: Callable,
             args: tuple = (),
-            usage = "",
-            thread_level = PLUGIN,
-            **kwargs
+            usage="",
+            thread_level=PLUGIN,
+            **kwargs,
         ):
             """新建一个 ToolDelta 子线程
 
@@ -84,31 +83,13 @@ class Utils:
             finally:
                 threads_list.remove(self)
 
-        def get_id(self) -> int:
-            """获取线程的 ID
-
-            Raises:
-                RuntimeError: 线程 ID 未知
-
-            Returns:
-                int: 线程 ID
-            """
-            if self._thread_id is None:
-                for thread in threading.enumerate():
-                    if thread is self:
-                        self._thread_id = thread.ident
-                        break
-            if self._thread_id is None:
-                raise RuntimeError("Could not determine the thread's ID")
-            return self._thread_id
-
         def stop(self) -> bool:
             """终止线程"""
             self.stopping = True
-            self._thread_id = self.ident
-            thread_id = self.get_id()
+            thread_id = threading.get_ident()
             if not self.is_alive():
                 return True
+            # 不知为何, 此CAPI调用在Linux上会出现问题
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
                 thread_id, ctypes.py_object(SystemExit)
             )
@@ -116,6 +97,8 @@ class Utils:
                 Print.print_err(f"§c线程ID {thread_id} 不存在")
                 return False
             elif res > 1:
+                # 线程修改出问题了? 终止了奇怪的线程?
+                # 回退修改
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
                 Print.print_err(f"§c终止线程 {self.name} 失败")
                 return False
@@ -453,7 +436,9 @@ class Utils:
     simpleAssert = simple_assert
 
     @staticmethod
-    def thread_func(func_or_name: Callable | str, thread_level = ToolDeltaThread.PLUGIN) -> Any:
+    def thread_func(
+        func_or_name: Callable | str, thread_level=ToolDeltaThread.PLUGIN
+    ) -> Any:
         """
         在事件方法可能执行较久会造成堵塞时使用，方便快捷地创建一个新线程，例如:
 
@@ -473,7 +458,13 @@ class Utils:
 
             def _recv_func(func: Callable):
                 def thread_fun(*args: tuple, **kwargs: Any) -> None:
-                    Utils.createThread(func, usage=func_or_name, thread_level=thread_level, args=args, **kwargs)
+                    Utils.createThread(
+                        func,
+                        usage=func_or_name,
+                        thread_level=thread_level,
+                        args=args,
+                        **kwargs,
+                    )
 
                 return thread_fun
 
@@ -490,7 +481,9 @@ class Utils:
         return thread_fun
 
     @staticmethod
-    def timer_event(t: int, name: str | None = None, thread_priority = ToolDeltaThread.PLUGIN):
+    def timer_event(
+        t: int, name: str | None = None, thread_priority=ToolDeltaThread.PLUGIN
+    ):
         """
         将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
         注意: 请不要在函数内放可能造成堵塞的内容
@@ -582,11 +575,13 @@ class Utils:
             return "".join(last_word)
         return name
 
+
 def safe_close():
     """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
     event_pool["timer_events"].set()
     force_stop_common_threads()
     _tmpjson_save()
+
 
 def force_stop_common_threads():
     for i in threads_list:
@@ -596,6 +591,7 @@ def force_stop_common_threads():
                 Print.print_suc(f"已终止线程 {i.usage}")
             else:
                 Print.print_suc(f"无法终止线程 {i.usage}")
+
 
 def _tmpjson_save(fp: str | None = None):
     "请不要在系统调用以外调用"
@@ -614,11 +610,41 @@ def _tmpjson_save(fp: str | None = None):
         jsonPathTmp[fp][0] = False
 
 
+def if_token() -> None:
+    """检查路径下是否有 fbtoken，没有就提示输入
+
+    Raises:
+        SystemExit: 未输入 fbtoken
+    """
+    if not os.path.isfile("fbtoken"):
+        Print.print_inf(
+            "请到对应的验证服务器官网下载 FBToken，并放在本目录中，或者在下面输入 fbtoken"
+        )
+        fbtoken = input(Print.fmt_info("请输入 fbtoken: ", "§b 输入 "))
+        if fbtoken:
+            with open("fbtoken", "w", encoding="utf-8") as f:
+                f.write(fbtoken)
+        else:
+            Print.print_err("未输入 fbtoken, 无法继续")
+            raise SystemExit
+
+
+def fbtokenFix():
+    """修复 fbtoken 里的换行符"""
+    with open("fbtoken", encoding="utf-8") as file:
+        token = file.read()
+        if "\n" in token:
+            Print.print_war("fbtoken 里有换行符，会造成 fb 登录失败，已自动修复")
+            with open("fbtoken", "w", encoding="utf-8") as file2:
+                file2.write(token.replace("\n", ""))
+
+
 @Utils.timer_event(120, "缓存JSON数据定时保存", Utils.ToolDeltaThread.SYSTEM)
 @Utils.thread_func("JSON 缓存文件定时保存", Utils.ToolDeltaThread.SYSTEM)
 def tmpjson_save():
     "请不要在系统调用以外调用"
     _tmpjson_save()
+
 
 def timer_event_clear():
     "使用reload清理所有非系统线程"
@@ -627,6 +653,7 @@ def timer_event_clear():
         if priority != Utils.ToolDeltaThread.SYSTEM:
             del timer_events_table[k]
     _timer_event_lock.release()
+
 
 @Utils.thread_func("ToolDelta 定时任务", Utils.ToolDeltaThread.SYSTEM)
 def timer_event_boostrap():

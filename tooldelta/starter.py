@@ -8,7 +8,7 @@ from .color_print import Print
 from .frame import GameCtrl, ToolDelta
 from .plugin_load.PluginGroup import plugin_group
 from .sys_args import sys_args_to_dict
-from .urlmethod import check_update
+from .urlmethod import check_update  # noqa: F401
 from .utils import timer_event_boostrap, tmpjson_save
 
 tooldelta = ToolDelta()
@@ -19,7 +19,9 @@ def start_tool_delta() -> None:
     try:
         tooldelta.welcome()
         if "no-update-check" not in sys_args_to_dict():
-            check_update()
+            pass
+        # 先暂时禁用更新
+        # check_update()
         else:
             Print.print_war("将不会进行自动更新。")
         tooldelta.basic_operation()
@@ -39,6 +41,7 @@ def start_tool_delta() -> None:
             if isinstance(err, SystemExit):
                 break
             else:
+                # not achieved?
                 Print.print_err(f"启动器框架崩溃, 原因: {err}")
                 Print.print_war("将在 10s 后进行重启")
                 time.sleep(10)
@@ -61,8 +64,8 @@ def safe_jump(out_task: bool = True, exit_directly: bool = True) -> None:
         tooldelta.system_exit()
     tooldelta.safelyExit()
     if exit_directly:
-        for _ in range(3, -1, -1):
-            Print.print_war(f"{_}秒后强制退出...", end="\r")
+        for counter in range(3, -1, -1):
+            Print.print_war(f"{counter}秒后强制退出...", end="\r")
             time.sleep(1)
         Print.print_suc("ToolDelta 已退出。")
         os._exit(0)
