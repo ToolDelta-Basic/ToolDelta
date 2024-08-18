@@ -21,7 +21,6 @@ from .get_tool_delta_version import get_tool_delta_version
 
 # 使用方法 mirror_github[value: int].format(url: str)
 mirror_github = [
-    "https://tdload.tblstudio.cn/{}",
     "https://hub.gitmirror.com/{}",
     "https://gh.con.sh/{}",
     "https://mirror.ghproxy.com/{}",
