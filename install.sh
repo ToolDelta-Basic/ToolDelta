@@ -47,7 +47,7 @@ pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 # 安装tooldelta库
 echo "安装tooldelta..."
 gitclone = "https://github.dqyt.online/https://github.com/ToolDelta-Basic/ToolDelta"
-git clone "$gitclone";do
+until git clone "$gitclone";do
   echo "下载失败，5秒后切换镜像源"
   sleep 5
   ((N++))
