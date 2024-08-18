@@ -30,7 +30,7 @@ tqdm = "^4.66.4"
 anyio = "^4.4.0"
 requests = "^2.32.3"
 sqlite-easy-ctrl = "0.1.2"
-numpy = "1.26.4"
+numpy = "1.26.5"
 
 [[tool.poetry.source]]
 name = "mirrors"
