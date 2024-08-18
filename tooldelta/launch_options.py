@@ -2,6 +2,7 @@
 
 import signal
 import os
+import time
 import traceback
 
 from .color_print import Print
@@ -34,6 +35,9 @@ def client_title() -> None:
                 raise ValueError("启动模式参数不合法")
             r = launch_mode["l"]
         elif is_faststart:
+            Print.clean_print("§a快速启动功能已打开, 将跳过选择界面")
+            Print.clean_print("删除本地的 §f快速启动.sig§r 文件即可取消快速启动功能")
+            time.sleep(3)
             start_tool_delta()
             return
         else:
@@ -45,7 +49,7 @@ def client_title() -> None:
             Print.clean_print("2 - §d打开 ToolDelta 插件管理器")
             Print.clean_print("3 - §d打开 ToolDelta 插件市场")
             Print.clean_print("4 - §a修改 ToolDelta 启动配置")
-            Print.clean_print(f"5 - §f快速启动: {['§cOff', '§aOn'][os.path.isfile('快速启动.sig')]}")
+            Print.clean_print("5 - §c开启 ToolDelta 直接启动模式")
             r = input("请选择：").strip()
         match r:
             case "1":
@@ -57,12 +61,9 @@ def client_title() -> None:
             case "4":
                 ToolDelta.change_config()
             case "5":
-                if is_faststart:
-                    os.remove("快速启动.sig")
-                    Print.clean_print("§c快速启动模式已关闭")
-                else:
-                    open("快速启动.sig", "wb").close()
-                    Print.clean_print("§a快速启动模式已开启")
+                open("快速启动.sig", "wb").close()
+                Print.clean_print("§a快速启动模式已开启")
+                Print.clean_print("§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能")
             case _:
                 Print.clean_print("§c不合法的启动模式: " + r)
     except (EOFError, SystemExit):
