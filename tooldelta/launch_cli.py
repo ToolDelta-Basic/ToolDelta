@@ -1,9 +1,12 @@
 """客户端启动器框架"""
 
+import hashlib
 import os
 import platform
+import queue
 import shlex
 import subprocess
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -73,6 +76,10 @@ class StandardFrame:
         """添加需要监听的数据包"""
         for i in pcks:
             self.need_listen_packets.add(i)
+
+    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+        """重载"""
+        self.need_listen_packets = {9, 79, 63} | listen_packets
 
     def launch(self) -> None:
         """启动器启动
@@ -206,9 +213,9 @@ class StandardFrame:
 
 
 class FrameNeOmgAccessPoint(StandardFrame):
-    """使用 NeOmega 框架连接到游戏"""
+    """使用 NeOmega接入点 框架连接到游戏"""
 
-    launch_type = "NeOmega"
+    launch_type = "NeOmegaAccessPoint"
 
     def __init__(self) -> None:
         """初始化 NeOmega 框架
@@ -262,7 +269,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             self.neomega_account_opt = neo_conn.AccountOptions(
                 AuthServer=self.auth_server,
                 UserToken=self.fbToken,
-                ServerCode=str(self.serverNumber) ,
+                ServerCode=str(self.serverNumber),
                 ServerPassword=self.serverPassword,
             )
         self.omega = neo_conn.ThreadOmega(
@@ -322,10 +329,10 @@ class FrameNeOmgAccessPoint(StandardFrame):
             os.system(f"chmod +x {shlex.quote(exe_file_path)}")
         # 只需要+x 即可
         if (
-            isinstance(self.serverNumber, type(None))
-            or isinstance(self.serverPassword, type(None))
-            or isinstance(self.fbToken, type(None))
-            or isinstance(self.auth_server, type(None))
+            self.serverNumber is None
+            or self.serverPassword is None
+            or self.fbToken is None
+            or self.auth_server is None
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
         Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
@@ -375,7 +382,11 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
-        Utils.createThread(self._msg_show_thread, usage="显示来自 NeOmega接入点 的信息")
+        Utils.createThread(
+            self._msg_show_thread,
+            usage="显示来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
         self.launch_event.wait()
         self.set_omega(openat_port)
         self.update_status(SysStatus.RUNNING)
@@ -481,7 +492,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if waitForResp:
             res = self.omega.send_websocket_command_need_response(cmd, timeout)
             if res is None:
-                raise TimeoutError("指令超时")
+                raise TimeoutError(f"指令超时: {cmd}")
             return res
         self.omega.send_websocket_command_omit_response(cmd)
         return None
@@ -565,11 +576,19 @@ class FrameNeOmgAccessPoint(StandardFrame):
             )
         )
 
-    @Utils.thread_func("检测 Omega 断开连接线程")
+    @Utils.thread_func("检测 Omega 断开连接线程", Utils.ToolDeltaThread.SYSTEM)
     def wait_omega_disconn_thread(self):
         self.omega.wait_disconnect()
         if self.status == SysStatus.RUNNING:
             self.update_status(SysStatus.CRASHED_EXIT)
+
+    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+        super().reload_listen_packets(listen_packets)
+        pcks = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        self.omega.listen_packets(pcks, self.packet_handler_parent)
 
     sendPacketJson = sendPacket
 
@@ -581,7 +600,7 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
         FrameNeOmgAccessPoint (FrameNeOmgAccessPoint): FrameNeOmgAccessPoint 框架
     """
 
-    launch_type = "NeOmega Remote"
+    launch_type = "NeOmegaAccessPoint Remote"
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动远程启动器框架
@@ -650,3 +669,267 @@ class FrameBEConnect(StandardFrame):
                         "OutputType": 1,
                     }
                 )
+
+
+class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
+    """使用 NeOmega接入点 框架连接到游戏 但同时兼容NeOmegaCli的运行"""
+
+    launch_type = "NeOmgParalleltToolDelta"
+
+    def __init__(self) -> None:
+        """初始化 NeOmega 框架
+
+        Args:
+            serverNumber (int): 服务器号
+            password (str): 服务器密码
+            fbToken (str): 验证服务器 Token
+            auth_server (str): 验证服务器地址
+        """
+        super().__init__()
+        self.status = SysStatus.LOADING
+        self.launch_event = threading.Event()
+        self.neomg_proc = None
+        self.serverNumber = None
+        self.neomega_account_opt = None
+        self.bot_name = ""
+        self.omega = neo_conn.ThreadOmega(
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=None,
+        )
+        self.serverNumber: int | None = None
+        self.serverPassword: str | None = None
+        self.fbToken: str | None = None
+        self.auth_server: str | None = None
+        self.neomega_msg_queue = queue.Queue()
+        self.neomega_input_queue = queue.Queue()
+        self.input_msg: list = []
+        self.out_speed: float = 0.002
+
+    def init(self):
+        if "no-download-neomega" not in sys_args_to_dict().keys():
+            Print.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
+            try:
+                neo_fd.download_neomg()
+            except Exception as err:
+                raise SystemExit(f"ToolDelta 因下载库异常而退出: {err}") from err
+            Print.print_inf("检测依赖库和NeOmega的最新版本..完成")
+        else:
+            Print.print_war("将不会自动检测依赖库和NeOmega的最新版本")
+        neo_conn.load_lib()
+        self.status = SysStatus.LAUNCHING
+
+    def start_neomega_proc(self) -> int:
+        """启动 NeOmega 进程
+
+        Returns:
+            int: 端口号
+        """
+        free_port = get_free_port(24013)
+        sys_machine = platform.uname().machine
+        if sys_machine == "x86_64":
+            sys_machine = "amd64"
+        elif sys_machine == "aarch64":
+            sys_machine = "arm64"
+        access_point_file = (
+            f"omega_launcher_{platform.uname().system.lower()}_{sys_machine}"
+        )
+        if "TERMUX_VERSION" in os.environ:
+            access_point_file = f"omega_launcher_android_{sys_machine}"
+        if platform.system() == "Windows":
+            access_point_file += ".exe"
+        exe_file_path = os.path.join(
+            os.getcwd(), "tooldelta", "neo_libs", access_point_file
+        )
+        if platform.uname().system.lower() == "linux":
+            os.system(f"chmod +x {shlex.quote(exe_file_path)}")
+        # 只需要+x 即可
+        if (
+            isinstance(self.serverNumber, type(None))
+            or isinstance(self.serverPassword, type(None))
+            or isinstance(self.fbToken, type(None))
+            or isinstance(self.auth_server, type(None))
+        ):
+            raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
+        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
+        self.neomg_proc = subprocess.Popen(
+            [
+                exe_file_path,
+                "-server",
+                str(self.serverNumber),
+                "-T",
+                self.fbToken,
+                "-access-point-addr",
+                f"tcp://localhost:{free_port}",
+                "-server-password",
+                str(self.serverPassword),
+                "-auth-server",
+                self.auth_server,
+                "-storage-root",
+                os.path.join(os.getcwd(), "NeOmega数据"),
+            ],
+            encoding="utf-8",
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        return free_port
+
+    def get_text_md5(self, text: str) -> str:
+        """计算字符串的MD5值"""
+        md5 = hashlib.md5()
+        md5.update(text.encode("utf-8"))
+        unique_md5 = md5.hexdigest()
+        return unique_md5
+
+    def put_msg_to_queue(self, msg: str, out_type: bool = True) -> str:
+        """将元组放入消息队列"""
+        self.neomega_msg_queue.put_nowait(
+            ("out" if out_type else "in", self.get_text_md5(msg), msg)
+        )
+        return self.get_text_md5(msg)
+
+    def get_input(self, md5: str) -> str:
+        while True:
+            if not self.input_msg:
+                continue
+            for in_tuple in self.input_msg:
+                if in_tuple[0] == md5:
+                    return in_tuple[1]
+
+    def _msg_handle_thread(self) -> None:
+        """处理来自 NeOmega 的信息"""
+        if self.neomg_proc is None or self.neomg_proc.stdout is None:
+            raise ValueError("NeOmega进程未启动")
+        assert self.neomg_proc.stdin
+        Print.print_load(
+            f"NeOmega 进程输出速度限制: {int(1.0 / self.out_speed)!s} 条/秒"
+        )
+        buffer = ""
+        while True:
+            char = self.neomg_proc.stdout.read(1)
+            if self.neomg_proc.stderr is not None:
+                err = self.neomg_proc.stderr.readlines()
+                print(err)
+            if char == "":
+                Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                if self.status == SysStatus.LAUNCHING:
+                    self.update_status(SysStatus.CRASHED_EXIT)
+                break
+            if char == "\n":
+                msg_orig = buffer.strip()
+                buffer = ""
+                if msg_orig == "SIGNAL: exit":
+                    Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                    if self.status == SysStatus.LAUNCHING:
+                        self.update_status(SysStatus.CRASHED_EXIT)
+                    break
+                if "[neOmega 接入点]: 就绪" in msg_orig:
+                    self.launch_event.set()
+                if any(
+                    info_type in msg_orig
+                    for info_type in [
+                        "INFO",
+                        "WARNING",
+                        "ERROR",
+                        "SUCCESS",
+                        "\x1b[30;46m\x1b[30;46m      \x1b[0m\x1b[0m",
+                    ]
+                ):
+                    msg_orig = (
+                        msg_orig
+                        .replace("SUCCESS", "成功")
+                        .replace("  ERROR  ", "错误")
+                        .replace("WARNING", "警告")
+                        .replace("  INFO  ", "消息")
+                        .strip(" ")
+                    )
+                    self.put_msg_to_queue(Print.fmt_info("\b" + msg_orig, ""))
+                else:
+                    self.put_msg_to_queue(Print.fmt_info(msg_orig, "§b NOMG "))
+            else:
+                buffer += char
+                if (
+                    "请输入 y" in buffer
+                    and "请输入 n:" in buffer
+                    and char != "\n"
+                    or ("请输入" in buffer and ":" in buffer and char != "\n")
+                ):
+                    msg_orig = buffer.strip()
+                    md5 = self.put_msg_to_queue(
+                        Print.fmt_info("\b" + msg_orig, ""), False
+                    )
+                    self.neomg_proc.stdin.write(f"{self.get_input(md5).lower()}\n")
+                    self.neomg_proc.stdin.flush()
+                    buffer = ""
+
+    def _msg_show_thread(self) -> None:
+        """显示来自 NeOmega 的信息"""
+        while True:
+            if not self.neomega_msg_queue.empty():
+                time.sleep(self.out_speed)
+                Message: tuple = self.neomega_msg_queue.get_nowait()
+                if Message[0] == "out":
+                    with Print.lock:
+                        sys.stdout.write(Message[-1] + "\n")
+                        sys.stdout.flush()
+                elif Message[0] == "in":
+                    val: str = input(Message[-1])
+                    self.neomega_input_queue.put_nowait((Message[1], val))
+
+    def _handle_input_thread(self) -> None:
+        """处理将要写入到 NeOmega 进程中的信息"""
+        while True:
+            if not self.neomega_input_queue.empty():
+                InputMessage: tuple = self.neomega_input_queue.get_nowait()
+                self.input_msg.append(InputMessage)
+
+    def launch(self) -> SystemExit | Exception | SystemError:
+        """启动 NeOmega 进程
+
+        returns:
+            SystemExit: 正常退出
+            Exception: 异常退出
+            SystemError: 未知的退出状态
+        """
+        self.status = SysStatus.LAUNCHING
+        openat_port = self.start_neomega_proc()
+        Print.print_load(
+            f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}'
+        )
+        Utils.createThread(
+            self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
+        Utils.createThread(
+            self._msg_show_thread,
+            usage="显示来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
+        Utils.createThread(
+            self._handle_input_thread,
+            usage="处理将要写入到 NeOmega 进程中的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
+        self.launch_event.wait()
+        self.set_omega(openat_port)
+        self.update_status(SysStatus.RUNNING)
+        self.wait_omega_disconn_thread()
+        Print.print_suc("已获取游戏网络接入点最高权限")
+        pcks = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        self.omega.listen_packets(pcks, self.packet_handler_parent)
+        self._launcher_listener()
+        Print.print_suc("接入点注入已就绪")
+        self.exit_event.wait()  # 等待事件的触发
+        if self.status == SysStatus.NORMAL_EXIT:
+            return SystemExit("正常退出")
+        if self.status == SysStatus.CRASHED_EXIT:
+            return Exception("接入点进程已崩溃")
+        return SystemError("未知的退出状态")
+
+
+FrameNeOmg = FrameNeOmgAccessPoint
+FrameNeOmgRemote = FrameNeOmgAccessPointRemote

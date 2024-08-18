@@ -16,20 +16,23 @@ import signal
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import requests
-import ujson as json
+import json
 
 from tooldelta import (
     auths,
     constants,
     plugin_market,
+    game_utils,
+    utils
 )
 
 from .cfg import Config
 from .color_print import Print
+from .constants import PacketIDS
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
@@ -37,15 +40,15 @@ from .launch_cli import (
     FrameBEConnect,
     FrameNeOmgAccessPoint,
     FrameNeOmgAccessPointRemote,
+    FrameNeOmgParalleltToolDelta,
     SysStatus,
 )
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
-from .constants import PacketIDS
 from .plugin_load.injected_plugin import safe_jump
 from .sys_args import sys_args_to_dict
 from .urlmethod import fbtokenFix, if_token
-from .utils import Utils, safe_close
+from .utils import Utils
 
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
@@ -53,11 +56,24 @@ VERSION = get_tool_delta_version()
 if TYPE_CHECKING:
     from .plugin_load.PluginGroup import PluginGroup
 
-LAUNCHERS: list[tuple[str, type[FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote]]] = [
+LAUNCHERS: list[
+    tuple[
+        str,
+        type[
+            FrameNeOmgAccessPoint
+            | FrameNeOmgAccessPointRemote
+            | FrameNeOmgParalleltToolDelta
+        ],
+    ]
+] = [
     ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
     (
         "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
         FrameNeOmgAccessPointRemote,
+    ),
+    (
+        "NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
+        FrameNeOmgParalleltToolDelta,
     ),
 ]
 
@@ -86,7 +102,11 @@ class ToolDelta:
         self.on_plugin_err = staticmethod(
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        self.launcher: FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote
+        self.launcher: (
+            FrameNeOmgAccessPoint
+            | FrameNeOmgAccessPointRemote
+            | FrameNeOmgParalleltToolDelta
+        )
         self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
@@ -137,7 +157,7 @@ class ToolDelta:
         # 每个启动器框架的单独启动配置
         if type(self.launcher) is FrameNeOmgAccessPoint:
             launch_data = cfgs.get(
-                "NeOmega启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
+                "NeOmega接入点启动模式", constants.LAUNCHER_NEOMEGA_DEFAULT
             )
             try:
                 Config.check_auto(constants.LAUNCHER_NEOMEGA_STD, launch_data)
@@ -170,7 +190,7 @@ class ToolDelta:
                         )
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
-                        cfgs["NeOmega启动模式"] = launch_data
+                        cfgs["NeOmega接入点启动模式"] = launch_data
                         Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
                         Print.print_suc("登录配置设置成功")
                         break
@@ -190,7 +210,7 @@ class ToolDelta:
                         if ch not in range(1, len(auth_servers) + 1):
                             raise ValueError
                         auth_server = auth_servers[ch - 1][1]
-                        cfgs["NeOmega启动模式"][
+                        cfgs["NeOmega接入点启动模式"][
                             "验证服务器地址(更换时记得更改fbtoken)"
                         ] = auth_server
                         break
@@ -209,22 +229,26 @@ class ToolDelta:
                     while True:
                         if Login_method.isdigit() is False:
                             Login_method = input(
-                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
                             )
                         elif int(Login_method) > 2 or int(Login_method) < 1:
                             Login_method = input(
-                                Print.fmt_info("输入有误，请输入正确的序号：", "§6 警告 ")
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
                             )
                         else:
                             break
                     if Login_method == "1":
                         try:
-                            match cfgs["NeOmega启动模式"][
+                            match cfgs["NeOmega接入点启动模式"][
                                 "验证服务器地址(更换时记得更改fbtoken)"
                             ]:
                                 case "https://liliya233.uk":
                                     token = auths.sign_login(constants.GUGU_APIS)
-                                case "https://api.fastbuilder.pro":
+                                case "https://user.fastbuilder.pro":
                                     token = auths.sign_login(constants.FB_APIS)
                                 case _:
                                     Print.print_err("暂无法登录该验证服务器")
@@ -232,7 +256,123 @@ class ToolDelta:
                             with open("fbtoken", "w", encoding="utf-8") as f:
                                 f.write(token)
                         except requests.exceptions.RequestException as e:
-                            Print.print_err(f"登录失败，原因：{e}\n正在切换至 Token 登录")
+                            Print.print_err(
+                                f"登录失败，原因：{e}\n正在切换至 Token 登录"
+                            )
+                if_token()
+                fbtokenFix()
+                with open("fbtoken", encoding="utf-8") as f:
+                    fbtoken = f.read()
+            self.launcher.set_launch_data(
+                serverNumber, serverPasswd, fbtoken, auth_server
+            )
+        elif type(self.launcher) is FrameNeOmgParalleltToolDelta:
+            launch_data = cfgs.get(
+                "NeOmega并行ToolDelta启动模式",
+                constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_DEFAULT,
+            )
+            try:
+                Config.check_auto(
+                    constants.LAUNCHER_NEOMGPARALLELTTOOLDELTA_STD, launch_data
+                )
+            except Config.ConfigError as err:
+                r = self.upgrade_cfg()
+                if r:
+                    Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    Print.print_err(
+                        f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
+                    )
+                raise SystemExit from err
+            serverNumber = launch_data["服务器号"]
+            serverPasswd: str = launch_data["密码"]
+            auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
+            if serverNumber == 0:
+                while 1:
+                    try:
+                        serverNumber = int(
+                            input(Print.fmt_info("请输入租赁服号：", "§b 输入 "))
+                        )
+                        serverPasswd = (
+                            getpass.getpass(
+                                Print.fmt_info(
+                                    "请输入租赁服密码 (不会回显，没有请直接回车): ",
+                                    "§b 输入 ",
+                                )
+                            )
+                            or ""
+                        )
+                        launch_data["服务器号"] = int(serverNumber)
+                        launch_data["密码"] = serverPasswd
+                        cfgs["NeOmega并行ToolDelta启动模式"] = launch_data
+                        Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                        Print.print_suc("登录配置设置成功")
+                        break
+                    except Exception:
+                        Print.print_err("输入有误，租赁服号和密码应当是纯数字")
+            auth_servers = constants.AUTH_SERVERS
+            if auth_server == "":
+                Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
+                for i, (auth_server_name, _) in enumerate(auth_servers):
+                    Print.print_inf(f" {i + 1} - {auth_server_name}")
+                Print.print_inf(
+                    "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
+                )
+                while 1:
+                    try:
+                        ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
+                        if ch not in range(1, len(auth_servers) + 1):
+                            raise ValueError
+                        auth_server = auth_servers[ch - 1][1]
+                        cfgs["NeOmega并行ToolDelta启动模式"][
+                            "验证服务器地址(更换时记得更改fbtoken)"
+                        ] = auth_server
+                        break
+                    except ValueError:
+                        Print.print_err("输入不合法，或者是不在范围内，请重新输入")
+                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+            # 读取 token
+            if not (fbtoken := sys_args_to_dict().get("user-token")):
+                if not os.path.isfile("fbtoken"):
+                    Print.print_inf(
+                        "请选择登录方法:\n 1 - 使用账号密码 (登录成功后将自动获取 Token 到工作目录)\n 2 - 使用 Token(如果 Token 文件不存在则需要输入或将文件放入工作目录)\r"
+                    )
+                    Login_method: str = input(
+                        Print.fmt_info("请输入你的选择：", "§6 输入 ")
+                    )
+                    while True:
+                        if Login_method.isdigit() is False:
+                            Login_method = input(
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
+                            )
+                        elif int(Login_method) > 2 or int(Login_method) < 1:
+                            Login_method = input(
+                                Print.fmt_info(
+                                    "输入有误，请输入正确的序号：", "§6 警告 "
+                                )
+                            )
+                        else:
+                            break
+                    if Login_method == "1":
+                        try:
+                            match cfgs["NeOmega并行ToolDelta启动模式"][
+                                "验证服务器地址(更换时记得更改fbtoken)"
+                            ]:
+                                case "https://liliya233.uk":
+                                    token = auths.sign_login(constants.GUGU_APIS)
+                                case "https://user.fastbuilder.pro":
+                                    token = auths.sign_login(constants.FB_APIS)
+                                case _:
+                                    Print.print_err("暂无法登录该验证服务器")
+                                    raise SystemExit
+                            with open("fbtoken", "w", encoding="utf-8") as f:
+                                f.write(token)
+                        except requests.exceptions.RequestException as e:
+                            Print.print_err(
+                                f"登录失败，原因：{e}\n正在切换至 Token 登录"
+                            )
                 if_token()
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
@@ -342,13 +482,13 @@ class ToolDelta:
         old_cfg: dict = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
-        if "NeOmega启动模式" in old_cfg:
-            if isinstance(old_cfg["NeOmega启动模式"]["密码"], int):
-                old_cfg["NeOmega启动模式"]["密码"] = str(
-                    old_cfg["NeOmega启动模式"]["密码"]
+        if "NeOmega接入点启动模式" in old_cfg:
+            if isinstance(old_cfg["NeOmega接入点启动模式"]["密码"], int):
+                old_cfg["NeOmega接入点启动模式"]["密码"] = str(
+                    old_cfg["NeOmega接入点启动模式"]["密码"]
                 )
-                if old_cfg["NeOmega启动模式"]["密码"] == "0":
-                    old_cfg["NeOmega启动模式"]["密码"] = ""
+                if old_cfg["NeOmega接入点启动模式"]["密码"] == "0":
+                    old_cfg["NeOmega接入点启动模式"]["密码"] = ""
                 need_upgrade_cfg = True
         for k, v in constants.LAUNCH_CFG.items():
             if k not in old_cfg_keys:
@@ -363,7 +503,7 @@ class ToolDelta:
         """欢迎提示"""
         Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
         Print.print_with_info(
-            "§dToolDelta Wiki: https://tooldelta-wiki.tblstudio.cn/", Print.INFO_LOAD
+            "§dToolDelta Wiki: https://td-wiki.whiteleaf.cn/", Print.INFO_LOAD
         )
         Print.print_with_info(
             "§dToolDelta 项目地址：https://github.com/ToolDelta", Print.INFO_LOAD
@@ -379,6 +519,8 @@ class ToolDelta:
         os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
+        os.makedirs("NeOmega数据", exist_ok=True)
+        os.makedirs("数据库文件", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
         os.makedirs("插件数据文件/game_texts", exist_ok=True)
 
@@ -387,7 +529,7 @@ class ToolDelta:
         triggers: list[str],
         arg_hint: str | None,
         usage: str,
-        func: Callable[[list[str]], None],
+        func: Callable[[list[str]], None | int],
     ) -> None:
         """注册 ToolDelta 控制台的菜单项
 
@@ -403,20 +545,115 @@ class ToolDelta:
         except Exception:
             self.consoleMenu.append([usage, arg_hint, func, triggers])
 
-    def init_basic_help_menu(self, _) -> None:
-        """初始化基本的帮助菜单"""
-        menu = self.get_console_menus()
-        Print.print_inf("§a以下是可选的菜单指令项: ")
-        for usage, arg_hint, _, triggers in menu:
-            if arg_hint:
-                Print.print_inf(
-                    f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}"
-                )
-            else:
-                Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
 
-    def comsole_cmd_start(self) -> None:
-        """启动控制台命令"""
+    def init_console_menu(self):
+        "初始化控制台菜单"
+
+        @Utils.thread_func("控制台执行指令并获取回调", Utils.ToolDeltaThread.SYSTEM)
+        def _execute_mc_command_and_get_callback(cmds: list[str]) -> None:
+            """执行 Minecraft 指令并获取回调结果。
+
+            Args:
+                cmd (str): 要执行的 Minecraft 指令。
+
+            Raises:
+                ValueError: 当指令执行失败时抛出。
+            """
+            cmd = " ".join(cmds)
+            try:
+                result = self.link_game_ctrl.sendcmd_with_resp(cmd, 10)
+                if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
+                    result.OutputMessages[0].Message == "commands.generic.unknown"
+                ):
+                    Print.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
+                else:
+                    if game_text_handler := self.link_game_ctrl.game_data_handler:
+                        mjon = self.link_game_ctrl.game_data_handler.Handle_Text_Class1(
+                            result.as_dict["OutputMessages"]
+                        )
+                    desc = json.dumps(
+                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
+                    )
+                    if result.SuccessCount:
+                        if game_text_handler:
+                            print_str = "指令执行成功: " + " ".join(mjon)
+                            Print.print_suc(print_str)
+                        Print.print_suc(desc)
+                    else:
+                        if game_text_handler:
+                            print_str = "指令执行失败: " + " ".join(mjon)
+                            Print.print_war(print_str)
+                        Print.print_war(desc)
+
+            except IndexError as exec_err:
+                if isinstance(result, type(None)):
+                    raise ValueError("指令执行失败") from exec_err
+                if result.SuccessCount:
+                    Print.print_suc(
+                        f"指令执行成功, 详细返回结果:\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
+                    )
+            except TimeoutError:
+                Print.print_err("[超时] 指令获取结果返回超时")
+
+        def _send_to_neomega(cmds: list[str]):
+            assert self.launcher.neomg_proc
+            assert self.launcher.neomg_proc.stdin
+            self.launcher.neomg_proc.stdin.write(" ".join(cmds) + "\n")
+            self.launcher.neomg_proc.stdin.flush()
+
+        def _basic_help(_):
+            menu = self.get_console_menus()
+            Print.print_inf("§a以下是可选的菜单指令项: ")
+            for usage, arg_hint, _, triggers in menu:
+                if arg_hint:
+                    Print.print_inf(
+                        f" §e{' 或 '.join(triggers)} §b{arg_hint} §f->  {usage}"
+                    )
+                else:
+                    Print.print_inf(f" §e{' 或 '.join(triggers)}  §f->  {usage}")
+
+        self.add_console_cmd_trigger(
+            ["?", "help", "帮助", "？"],
+            None,
+            "查询可用菜单指令",
+            _basic_help,
+        )
+        self.add_console_cmd_trigger(
+            ["exit"], None, "退出并关闭ToolDelta", lambda _: self.system_exit()
+        )
+        self.add_console_cmd_trigger(
+            ["插件市场"],
+            None,
+            "进入插件市场",
+            lambda _: plugin_market.market.enter_plugin_market(
+                self.plugin_market_url, in_game=True
+            ),
+        )
+        self.add_console_cmd_trigger(
+            ["/"], "[指令]", "执行 MC 指令", _execute_mc_command_and_get_callback
+        )
+        self.add_console_cmd_trigger(
+            ["list"],
+            None,
+            "查询在线玩家",
+            lambda _: Print.print_inf(
+                "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
+            ),
+        )
+        self.add_console_cmd_trigger(
+            ["reload"], None, "重载插件 (可能有部分特殊插件无法重载)", lambda _: self.reload() or 1
+        )
+        if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+            self.add_console_cmd_trigger(
+                ["o"],
+                "neomega命令",
+                "执行neomega控制台命令",
+                _send_to_neomega
+            )
+
+    def comsole_cmd_active(self) -> None:
+        """激活控制台命令输入"""
+        self.init_console_menu()
         Print.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
 
         def _try_execute_console_cmd(func, rsp, mode, arg1) -> int | None:
@@ -434,79 +671,8 @@ class ToolDelta:
                 Print.print_err(f"控制台指令出错: {traceback.format_exc()}")
                 return 0
 
-        @Utils.thread_func("控制台执行指令并获取回调")
-        def _execute_mc_command_and_get_callback(cmd: str) -> None:
-            """执行 Minecraft 指令并获取回调结果。
-
-            Args:
-                cmd (str): 要执行的 Minecraft 指令。
-
-            Raises:
-                ValueError: 当指令执行失败时抛出。
-            """
-            cmd = " ".join(cmd)
-            try:
-                result = self.link_game_ctrl.sendcmd_with_resp(cmd, 10)
-                if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
-                    result.OutputMessages[0].Message == "commands.generic.unknown"
-                ):
-                    Print.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
-                else:
-                    mjon = self.link_game_ctrl.Game_Data_Handle.Handle_Text_Class1(
-                        result.as_dict["OutputMessages"]
-                    )
-                    desc = json.dumps(
-                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
-                    )
-                    if result.SuccessCount:
-                        print_str = "指令执行成功: " + " ".join(mjon)
-                        Print.print_suc(print_str)
-                        Print.print_suc(desc)
-                    else:
-                        print_str = "指令执行失败: " + " ".join(mjon)
-                        Print.print_war(print_str)
-                        Print.print_war(desc)
-
-            except IndexError as exec_err:
-                if isinstance(result, type(None)):
-                    raise ValueError("指令执行失败") from exec_err
-                if result.SuccessCount:
-                    Print.print_suc(
-                        f"指令执行成功, 详细返回结果:\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
-                    )
-            except TimeoutError:
-                Print.print_err("[超时] 指令获取结果返回超时")
-
         def _console_cmd_thread() -> None:
             """控制台线程"""
-            self.add_console_cmd_trigger(
-                ["?", "help", "帮助", "？"],
-                None,
-                "查询可用菜单指令",
-                self.init_basic_help_menu,
-            )
-            self.add_console_cmd_trigger(
-                ["exit"], None, "退出并关闭ToolDelta", lambda _: None
-            )
-            self.add_console_cmd_trigger(
-                ["插件市场"],
-                None,
-                "进入插件市场",
-                lambda _: plugin_market.market.enter_plugin_market(
-                    self.plugin_market_url, in_game=True
-                ),
-            )
-            self.add_console_cmd_trigger(
-                ["/"], "[指令]", "执行 MC 指令", _execute_mc_command_and_get_callback
-            )
-            self.add_console_cmd_trigger(
-                ["list"],
-                None,
-                "查询在线玩家",
-                lambda _: Print.print_inf(
-                    "在线玩家：" + ", ".join(self.link_game_ctrl.allplayers)
-                ),
-            )
             while 1:
                 rsp = ""
                 while True:
@@ -519,7 +685,7 @@ class ToolDelta:
                         return
                     rsp += res
                 for _, _, func, triggers in self.consoleMenu:
-                    if not rsp:
+                    if not rsp.strip():
                         continue
                     if rsp == "exit":
                         Print.print_inf("用户命令退出中...")
@@ -527,18 +693,22 @@ class ToolDelta:
                         return
                     if rsp.split()[0] in triggers:
                         res = _try_execute_console_cmd(func, rsp, 0, None)
-                        if res == -1:
+                        if res == 1:
+                            break
+                        elif res == -1:
                             return
                     else:
                         for tri in triggers:
                             if rsp.startswith(tri):
                                 res = _try_execute_console_cmd(func, rsp, 1, tri)
-                                if res == -1:
+                                if res == 1:
+                                    break
+                                elif res == -1:
                                     return
-                if res != 0 and rsp:
+                if res != 0 and res != 1 and rsp:
                     self.link_game_ctrl.say_to("@a", f"[§bToolDelta控制台§r] §3{rsp}§r")
 
-        self.createThread(_console_cmd_thread, usage="控制台指令")
+        self.createThread(_console_cmd_thread, usage="控制台指令", thread_level=Utils.ToolDeltaThread.SYSTEM)
 
     def system_exit(self) -> None:
         """系统退出"""
@@ -555,7 +725,12 @@ class ToolDelta:
                 else:
                     self.launcher.neomg_proc.send_signal(signal.SIGTERM)
 
-        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint):
+        if isinstance(
+            self.launcher,
+            FrameNeOmgAccessPointRemote
+            | FrameNeOmgAccessPoint
+            | FrameNeOmgParalleltToolDelta,
+        ):
             self.launcher.exit_event.set()
 
     def get_console_menus(self) -> list:
@@ -594,10 +769,29 @@ class ToolDelta:
     @staticmethod
     def safelyExit() -> None:
         """安全退出"""
-        safe_close()
+        utils.safe_close()
         publicLogger.exit()
         Print.print_inf("已保存数据与日志等信息。")
 
+    def reload(self):
+        """重载所有插件"""
+        try:
+            Print.print_inf("重载插件: 正在保存数据缓存文件..")
+            utils.safe_close()
+            self.consoleMenu.clear()
+            Print.print_inf("重载插件: 正在重新载入插件..")
+            self.link_plugin_group.reload()
+            self.launcher.reload_listen_packets(self.link_game_ctrl.require_listen_packets)
+            Print.print_suc("重载插件: 全部插件重载成功！")
+        except Config.ConfigError as err:
+            Print.print_err(f"重载插件时发现插件配置文件有误: {err}")
+        except SystemExit as err:
+            Print.print_err(f"重载插件遇到问题: {err}")
+        except BaseException:
+            Print.print_err("重载插件遇到问题 (报错如下):")
+            Print.print_err(traceback.format_exc())
+        finally:
+            self.init_console_menu()
 
 class GameCtrl:
     """游戏连接和交互部分"""
@@ -609,8 +803,13 @@ class GameCtrl:
             frame (Frame): 继承 Frame 的对象
         """
         frame.basic_operation()
-        self.Game_Data = GameTextsLoader().game_texts_data
-        self.Game_Data_Handle = GameTextsHandle(self.Game_Data)
+        try:
+            self.game_texts_data = GameTextsLoader().game_texts_data
+            self.game_data_handler = GameTextsHandle(self.game_texts_data)
+        except Exception as err:
+            Print.print_war("游戏文本翻译器不可用")
+            self.game_texts_data = None
+            self.game_data_handler = None
         self.linked_frame = frame
         self.players_uuid: dict[str, str] = {}
         self.allplayers: list[str] = []
@@ -618,9 +817,17 @@ class GameCtrl:
         self.linked_frame: ToolDelta
         self.require_listen_packets = {9, 79, 63}
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, FrameNeOmgAccessPointRemote | FrameNeOmgAccessPoint):
+        if isinstance(
+            self.launcher,
+            FrameNeOmgAccessPointRemote
+            | FrameNeOmgAccessPoint
+            | FrameNeOmgParalleltToolDelta,
+        ):
             self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
-                self.packet_handler, (pckType, pck), usage="数据包处理"
+                self.packet_handler,
+                (pckType, pck),
+                usage="数据包处理",
+                thread_level=Utils.ToolDeltaThread.SYSTEM
             )
         # 初始化基本函数
         self.sendcmd = self.launcher.sendcmd
@@ -632,25 +839,24 @@ class GameCtrl:
         else:
             self.requireUUIDPacket = True
 
-    def set_listen_packets(self) -> None:
+    def set_listen_packets_to_launcher(self) -> None:
         """
         向启动器初始化监听的游戏数据包
-        仅限内部调用
+        仅限启动模块调用
         """
-        for pktID in self.require_listen_packets:
-            self.launcher.add_listen_packets(pktID)
+        self.launcher.add_listen_packets(*self.require_listen_packets)
 
-    def add_listen_pkt(self, pkt: int) -> None:
+    def add_listen_packet(self, pkt: int) -> None:
         """
         添加监听的数据包
-        仅限内部调用
+        仅限内部与插件加载器调用
 
         Args:
             pkt (int): 数据包 ID
         """
         self.require_listen_packets.add(pkt)
 
-    @Utils.thread_func("数据包处理方法")
+    @Utils.thread_func("数据包处理方法", Utils.ToolDeltaThread.SYSTEM)
     def packet_handler(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理分发任务函数
 
@@ -687,7 +893,6 @@ class GameCtrl:
                     "§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！",
                 )
                 self.all_players_data = self.launcher.omega.get_all_online_players()
-                # 没有 VIP 名字供测试...
             if isJoining:
                 self.tmp_tp_player(playername)
                 Print.print_inf(f"§e{playername} 加入了游戏")
@@ -731,8 +936,11 @@ class GameCtrl:
                 elif not pkt["Message"].startswith(
                     "§e%multiplayer.player.joined"
                 ) and not pkt["Message"].startswith("§e%multiplayer.player.left"):
-                    jon = self.Game_Data_Handle.Handle_Text_Class1(pkt)
-                    Print.print_inf("§1" + " ".join(jon).strip('"'))
+                    if self.game_data_handler is not None:
+                        jon = self.game_data_handler.Handle_Text_Class1(pkt)
+                        Print.print_inf("§1" + " ".join(jon).strip('"'))
+                    else:
+                        Print.print_inf(pkt["Message"])
                     if pkt["Message"].startswith("death."):
                         if len(pkt["Parameters"]) >= 2:
                             killer = pkt["Parameters"][1]
@@ -747,6 +955,10 @@ class GameCtrl:
             case 1 | 7:
                 original_playername, msg = pkt["SourceName"], pkt["Message"]
                 playername = Utils.to_plain_name(original_playername)
+                # game_utils.waitMsg 需要监听玩家信息
+                # 监听后, 消息仍被处理
+                if playername in game_utils.player_waitmsg_cb.keys():
+                    game_utils.player_waitmsg_cb[playername](msg)
                 plugin_grp.execute_player_message(
                     playername, msg, self.linked_frame.on_plugin_err
                 )
@@ -778,9 +990,7 @@ class GameCtrl:
             self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
-        Utils.createThread(
-            func=self.give_bot_effect_invisibility, usage="GiveBotEffectInvisibility"
-        )
+        self.give_bot_effect_invisibility()
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
@@ -804,7 +1014,7 @@ class GameCtrl:
                     break
                 except (TimeoutError, ValueError):
                     Print.print_war("获取全局玩家失败..重试")
-        self.linked_frame.comsole_cmd_start()
+        self.linked_frame.comsole_cmd_active()
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
@@ -823,6 +1033,8 @@ class GameCtrl:
             "在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件"
         )
         Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
+        if isinstance(self.launcher, FrameNeOmgParalleltToolDelta):
+            Print.print_suc("在控制台输入 o <neomega指令> 可执行NeOmega的控制台指令")
 
     @property
     def bot_name(self) -> str:
@@ -880,16 +1092,14 @@ class GameCtrl:
         Returns:
             dict: 游戏常见字符串数据
         """
-        return self.Game_Data
+        if self.game_texts_data is None:
+            raise ValueError("游戏翻译器字符串数据不可用")
+        return self.game_texts_data
 
+    @Utils.timer_event(6400, "给予机器人隐身效果", Utils.ToolDeltaThread.SYSTEM)
     def give_bot_effect_invisibility(self) -> None:
         """给机器人添加隐身效果"""
-        start_time = time.time()
-        while self.linked_frame.link_game_ctrl.launcher.status == SysStatus.RUNNING:
-            if time.time() - start_time > 16384:
-                self.sendwocmd(f"/effect {self.bot_name} invisibility 99999 255 true")
-                start_time = time.time()
-            time.sleep(1)
+        self.sendwocmd(f"/effect {self.bot_name} invisibility 99999 255 true")
 
     def tmp_tp_all_players(self) -> None:
         """
@@ -933,12 +1143,12 @@ class GameCtrl:
             if player.entity_runtime_id == runtimeid:
                 return player.name
         return None
-    
+
     def get_player_entity_runtime_id_from_name(self, player_name: str) -> int | None:
         """
         根据玩家名获取实体 runtimeid
-        
-        Args:   
+
+        Args:
             player_name (str): 玩家名
 
         Returns:

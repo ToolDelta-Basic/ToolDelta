@@ -3,43 +3,44 @@
 import asyncio
 import os
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Union, TypeVar
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ..color_print import Print
-from .classic_plugin import (
-    Plugin,
-    add_plugin,
-    add_plugin_as_api,
-    _init_frame,
-    _PLUGIN_CLS_TYPE
+from ..constants import (
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_INJECTED_PLUGIN,
+    TOOLDELTA_PLUGIN_DIR,
 )
-from ..utils import Utils
-from .injected_plugin import (
-    execute_init,
-    execute_player_prejoin,
-    execute_player_join,
-    execute_player_message,
-    execute_death_message,
-    execute_player_left,
-    execute_frame_exit,
-    execute_command_say,
-    execute_repeat,
-    execute_packet_funcs
-)
+from ..game_utils import _set_frame
 from ..plugin_load import (
-    classic_plugin,
-    injected_plugin,
     NON_FUNC,
     PluginAPINotFoundError,
     PluginAPIVersionError,
     auto_move_plugin_dir,
+    classic_plugin,
+    injected_plugin,
 )
-from ..constants import (
-    TOOLDELTA_PLUGIN_DIR,
-    TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN,
+from ..utils import Utils
+from .classic_plugin import (
+    _PLUGIN_CLS_TYPE,
+    Plugin,
+    _init_frame,
+    add_plugin,
+    add_plugin_as_api,
 )
-from ..game_utils import _set_frame
+from .injected_plugin import (
+    execute_command_say,
+    execute_death_message,
+    execute_frame_exit,
+    execute_init,
+    execute_packet_funcs,
+    execute_player_join,
+    execute_player_left,
+    execute_player_message,
+    execute_player_prejoin,
+    execute_repeat,
+)
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -63,12 +64,12 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    plugin_added_cache = {"packets": []}
     Agree_bot_patrol: list[bool] = []
-    broadcast_evts_cache = {}
 
     def __init__(self):
         "初始化"
+        self._cached_broadcast_evts: dict[str, list[Callable]] = {}
+        self._cached_packet_cbs: list[tuple[int, Callable]] = []
         self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
@@ -76,7 +77,21 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugin_ids = []
-        self.linked_frame: Union["ToolDelta", None] = None
+        self.linked_frame: "ToolDelta | None" = None
+
+    def reload(self):
+        """重载插件框架"""
+        self.plugins_api = {}
+        self._packet_funcs = {}
+        self._update_player_attributes_funcs = []
+        self._broadcast_listeners = {}
+        for v in self.plugins_funcs.values():
+            v.clear()
+        Print.print_inf("正在重新读取所有插件")
+        self.read_all_plugins()
+        Print.print_inf("开始执行插件游戏初始化方法")
+        self.execute_init()
+        Print.print_suc("重载插件完成！")
 
     @staticmethod
     def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
@@ -119,10 +134,10 @@ class PluginGroup:
 
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             if isinstance(pktID, int):
-                self.plugin_added_cache["packets"].append((pktID, func))
+                self._cached_packet_cbs.append((pktID, func))
             else:
                 for i in pktID:
-                    self.plugin_added_cache["packets"].append((i, func))
+                    self._cached_packet_cbs.append((i, func))
             return func
 
         return deco
@@ -149,10 +164,11 @@ class PluginGroup:
         def deco(
             func: Callable[[_SUPER_CLS, _TV], bool],
         ) -> Callable[[_SUPER_CLS, _TV], bool]:
-            if self.broadcast_evts_cache.get(evt_name):
-                self.broadcast_evts_cache[evt_name].append(func)
+            # 存在缓存区, 等待 class_plugin 实例化
+            if self._cached_broadcast_evts.get(evt_name):
+                self._cached_broadcast_evts[evt_name].append(func)
             else:
-                self.broadcast_evts_cache[evt_name] = [func]
+                self._cached_broadcast_evts[evt_name] = [func]
             return func
 
         return deco
@@ -206,7 +222,7 @@ class PluginGroup:
             and need_vers > self.linked_frame.sys_data.system_version
         ):
             raise self.linked_frame.SystemVersionException(
-                f"该组件需要ToolDelta为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
+                f"该插件需要ToolDelta为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
             )
         if self.linked_frame is None:
             raise ValueError(
@@ -246,7 +262,8 @@ class PluginGroup:
         _init_frame(frame)
 
     def read_all_plugins(self) -> None:
-        """读取所有插件
+        """
+        读取所有插件
 
         Raises:
             SystemExit: 读取插件出现问题
@@ -256,12 +273,24 @@ class PluginGroup:
         for fdir in os.listdir(TOOLDELTA_PLUGIN_DIR):
             if fdir not in (TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN):
                 auto_move_plugin_dir(fdir)
+        self.loaded_plugin_ids = []
+        self.normal_plugin_loaded_num = 0
+        self.injected_plugin_loaded_num = 0
         try:
             Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin.read_plugins(self)
             asyncio.run(injected_plugin.load_plugin(self))
-            for i in injected_plugin.listen_packets:
-                self.add_listen_packet_id(i)
+            # 主动读取类式插件监听的数据包
+            for i in classic_plugin.packet_funcs.keys():
+                self.__add_listen_packet_id(i)
+            for k, v in classic_plugin.packet_funcs.items():
+                self._packet_funcs[str(k)] = v
+            # 主动读取类式插件监听的广播事件器
+            self._broadcast_listeners.update(classic_plugin.broadcast_evts_listener)
+            # 主动读取注入式插件监听的数据包
+            for i in injected_plugin.packet_funcs.keys():
+                self.__add_listen_packet_id(i)
+            # 因为注入式插件自带一个handler, 所以不用再注入方法
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             Print.print_suc(
@@ -292,7 +321,7 @@ class PluginGroup:
 
         Print.print_suc(f"成功热加载插件：{plugin_name}")
 
-    def add_listen_packet_id(self, packetType: int) -> None:
+    def __add_listen_packet_id(self, packetType: int) -> None:
         """添加数据包监听，仅在系统内部使用
 
         Args:
@@ -303,7 +332,7 @@ class PluginGroup:
         """
         if self.linked_frame is None:
             raise ValueError("无法添加数据包监听，请确保已经加载了系统组件")
-        self.linked_frame.link_game_ctrl.add_listen_pkt(packetType)
+        self.linked_frame.link_game_ctrl.add_listen_packet(packetType)
 
     def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
         """
@@ -330,30 +359,6 @@ class PluginGroup:
             if isinstance(v, api_cls):
                 return v
         raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
-
-    def add_listen_packet_func(self, packetType: int, func: Callable) -> None:
-        """添加数据包监听器，仅在系统内部使用
-
-        Args:
-            packetType (int): 数据包 ID
-            func (Callable): 数据包监听器
-        """
-        if self._packet_funcs.get(str(packetType)):
-            self._packet_funcs[str(packetType)].append(func)
-        else:
-            self._packet_funcs[str(packetType)] = [func]
-
-    def add_broadcast_evt(self, evt: str, func: Callable) -> None:
-        """添加广播事件监听器，仅在系统内部使用
-
-        Args:
-            evt (str): 事件名
-            func (Callable): 事件监听器
-        """
-        if self._broadcast_listeners.get(evt):
-            self._broadcast_listeners[evt].append(func)
-        else:
-            self._broadcast_listeners[evt] = [func]
 
     def _add_listen_update_player_attributes_func(self, func: Callable) -> None:
         """添加玩家属性更新监听器，仅在系统内部使用
@@ -405,7 +410,7 @@ class PluginGroup:
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
         asyncio.run(execute_init())
-        Utils.createThread(asyncio.run, (execute_repeat(),))
+        Utils.createThread(asyncio.run, (execute_repeat(),), "注入式插件定时任务")
 
     def execute_player_prejoin(
         self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC

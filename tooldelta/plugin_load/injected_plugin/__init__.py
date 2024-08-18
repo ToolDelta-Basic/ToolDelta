@@ -1,20 +1,21 @@
 "ToolDelta 注入式插件"
 
 import asyncio
-from dataclasses import dataclass
+import importlib
 import os
 import sys
-import importlib
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from typing import TYPE_CHECKING, Callable, List, Tuple
 from ...color_print import Print
-from ...utils import Utils
 from ...constants import TOOLDELTA_INJECTED_PLUGIN, TOOLDELTA_PLUGIN_DIR
 from ...plugin_load import (
-    plugin_is_enabled,
     PluginAPINotFoundError,
     PluginAPIVersionError,
+    plugin_is_enabled,
 )
+from ...utils import Utils
 
 if TYPE_CHECKING:
     from tooldelta.plugin_load.PluginGroup import PluginGroup
@@ -30,7 +31,7 @@ repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
 packet_funcs: dict[int, dict[Callable, int | None]] = {}
-listen_packets: set[int] = set()
+loaded_plugin_modules = []
 
 
 def player_message(priority: int | None = None) -> Callable:
@@ -152,7 +153,7 @@ def frame_exit(priority: int | None = None) -> Callable:
     return decorator
 
 
-def repeat(retime: int | float = 5) -> Callable:
+def repeat(retime: float = 5) -> Callable:
     """载入重复任务
 
     Args:
@@ -181,7 +182,6 @@ def listen_packet(packet_id: list[int] | int, priority: int | None = None):
 
     def decorator(func):
         for i in packet_id:
-            listen_packets.add(i)
             if i not in packet_funcs.keys():
                 packet_funcs[i] = {}
             packet_funcs[i][func] = priority
@@ -206,7 +206,7 @@ async def command_say(priority: int | None = None) -> Callable:
     return decorator
 
 
-async def repeat_task(func: Callable, time: int | float) -> None:
+async def repeat_task(func: Callable, time: float) -> None:
     """执行重复任务（执行完等待一段时间再执行）
 
     Args:
@@ -228,8 +228,8 @@ async def execute_asyncio_task(func_dict: dict, *args, **kwargs) -> None:
     Args:
         func_dict (dict): 函数字典
     """
-    tasks: List[Tuple[int, asyncio.Task]] = []
-    none_tasks: List[Tuple[None, asyncio.Task]] = []
+    tasks: list[tuple[int, asyncio.Task]] = []
+    none_tasks: list[tuple[None, asyncio.Task]] = []
     # 将任务添加到 tasks 列表或 none_tasks 列表中
     for func, priority in func_dict.items():
         if priority is not None:
@@ -448,6 +448,10 @@ async def load_plugin_file(file: str) -> PluginMetadata:
         # 导入插件模块
         sys.path.append(os.path.join("插件文件", "ToolDelta注入式插件"))
         plugin_module = importlib.import_module(file)
+        if plugin_module in loaded_plugin_modules:
+            importlib.reload(plugin_module)
+        else:
+            loaded_plugin_modules.append(plugin_module)
         meta_data = create_plugin_metadata(
             getattr(plugin_module, "__plugin_meta__", {"name": file})
         )
@@ -472,7 +476,9 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
     tasks = []
 
     # 读取本目录下的文件夹名字
-    PLUGIN_PATH = os.path.join(os.getcwd(), TOOLDELTA_PLUGIN_DIR, TOOLDELTA_INJECTED_PLUGIN)
+    PLUGIN_PATH = os.path.join(
+        os.getcwd(), TOOLDELTA_PLUGIN_DIR, TOOLDELTA_INJECTED_PLUGIN
+    )
     for file in os.listdir(PLUGIN_PATH):
         if not plugin_is_enabled(file):
             continue
@@ -480,10 +486,11 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
             plugin_grp.injected_plugin_loaded_num += 1
             task = asyncio.create_task(load_plugin_file(file))
             tasks.append(task)
-            if os.path.isfile(data_path := os.path.join(PLUGIN_PATH, file, "datas.json")):
+            if os.path.isfile(
+                data_path := os.path.join(PLUGIN_PATH, file, "datas.json")
+            ):
                 plugin_data = Utils.JsonIO.SafeJsonLoad(data_path)
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
-
 
     # 顺序加载插件并收集插件元数据
     all_plugin_metadata = []

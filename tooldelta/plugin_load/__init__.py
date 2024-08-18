@@ -1,16 +1,18 @@
 "插件加载主模块"
 
 import os
-import ujson as json
 import shutil
 from typing import Any
+
+import ujson as json
+
+from tooldelta.color_print import Print
 from tooldelta.constants import (
+    PLUGIN_TYPE_MAPPING,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
-    PLUGIN_TYPE_MAPPING,
 )
-from tooldelta.color_print import Print
 
 
 def NON_FUNC(*_) -> None:
@@ -128,10 +130,11 @@ class PluginRegData:
 
 
 def plugin_is_enabled(pname: str) -> bool:
-    """插件是否启用
+    """
+    插件是否被启用
 
     Args:
-        pname (str): 插件名
+        pname (str): 插件文件夹名
 
     Returns:
         bool: 是否启用
@@ -150,8 +153,8 @@ def auto_move_plugin_dir(fdname: str):
     data_path = os.path.join(TOOLDELTA_PLUGIN_DIR, fdname, "datas.json")
     if os.path.isfile(data_path):
         try:
-            with open(data_path, "r", encoding="utf-8") as f:
-                plugin_data_json = json.load((f))
+            with open(data_path, encoding="utf-8") as f:
+                plugin_data_json = json.load(f)
                 p_type = plugin_data_json["plugin-type"]
                 if p_type not in PLUGIN_TYPE_MAPPING:
                     Print.print_war(f"无法识别插件 {fdname} 的类型，跳过")

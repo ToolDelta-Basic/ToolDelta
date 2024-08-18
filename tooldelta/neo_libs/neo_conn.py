@@ -3,10 +3,10 @@ import enum
 import os.path
 import platform
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Thread
-from typing import Any, Optional, ClassVar
-from collections.abc import Callable
+from typing import Any, ClassVar, Optional
 
 import ujson as json
 
@@ -477,7 +477,7 @@ class ThreadOmega:
         self._omega_disconnected_reason: str
         self._cmd_callback_retriever_counter: Counter
         self._omega_cmd_callback_events: dict[str, Callable]
-        self._packet_listeners: dict[str, list[Callable[[str, Any], None]]]
+        self._packet_listeners: dict[str, set[Callable[[str, Any], None]]]
         self._player_change_listeners: list[Callable[[PlayerKit, str], None]]
         self._bot_basic_info: ClientMaintainedBotBasicInfo
         self._packet_name_to_id_mapping: dict[str, int]
@@ -500,7 +500,7 @@ class ThreadOmega:
         self._omega_cmd_callback_events: dict[str, Callable] = {}
 
         # packet listeners
-        self._packet_listeners: dict[str, list[Callable[[str, Any], None]]] = {}
+        self._packet_listeners: dict[str, set[Callable[[str, Any], None]]] = {}
 
         # setup actions
         # make LIB listen to all packets and new packets will have eventType="MCPacket"
@@ -510,7 +510,7 @@ class ThreadOmega:
         self._packet_id_to_name_mapping = {}
         for packet_name, packet_id in self._packet_name_to_id_mapping.items():
             self._packet_id_to_name_mapping[packet_id] = packet_name
-            self._packet_listeners[packet_name] = []
+            self._packet_listeners[packet_name] = set()
 
         LIB.ListenPlayerChange()
         self._player_change_listeners: list[Callable[[PlayerKit, str], None]] = []
@@ -521,7 +521,7 @@ class ThreadOmega:
         )
 
         # start routine
-        Utils.createThread(self._react, usage="Omega React Thread")
+        Utils.createThread(self._react, usage="Omega React Thread", thread_level=Utils.ToolDeltaThread.SYSTEM)
 
     def _react(self):
         while True:
@@ -688,7 +688,7 @@ class ThreadOmega:
                 continue
             res.append(t)
         for t in res:
-            self._packet_listeners[t].append(callback)
+            self._packet_listeners[t].add(callback)
 
     def construct_game_packet_bytes_in_json_as_is(
         self, packet_type: int | str, content: Any

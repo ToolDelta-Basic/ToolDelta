@@ -2,11 +2,11 @@
 
 import datetime
 import threading
+from typing import ClassVar
 
 import colorama
 
 from .logger import publicLogger
-from typing import ClassVar
 
 colorama.init(autoreset=True)
 
@@ -230,6 +230,10 @@ class Print:
             str: 格式化后的文本
         """
         return Print.colormode_replace(text)
+
+    @staticmethod
+    def print(*args):
+        Print.print_inf(" ".join(str(i) for i in args))
 
     @staticmethod
     def print_err(text: str, **print_kwargs) -> None:

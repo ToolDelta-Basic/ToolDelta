@@ -4,7 +4,6 @@ import asyncio
 import os
 import platform
 import shlex
-
 import time
 import traceback
 
@@ -18,6 +17,7 @@ from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
+    LAUNCH_CFG
 )
 from .plugin_load import PluginRegData
 from .plugin_load.PluginGroup import plugin_group
@@ -74,12 +74,12 @@ class PluginMarket:
         self.plugin_id_name_map: dict | None = None
         try:
             self.plugins_download_url = Cfg().get_cfg(
-                "ToolDelta基本配置.json", {"插件市场源": str},
+                "ToolDelta基本配置.json", {"插件市场源": str}
             )["插件市场源"]
         except Exception:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
 
-    def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:  # noqa: PLR0915
+    def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
         """进入插件市场
 
         Args:
@@ -301,11 +301,15 @@ class PluginMarket:
         Returns:
             dict: 插件 ID 与插件名的映射
         """
-        res = requests.get(
-            self.plugins_download_url + "/plugin_ids_map.json", timeout=5
-        )
-        res.raise_for_status()
-        res1: dict = json.loads(res.text)
+        try:
+            res = requests.get(
+                self.plugins_download_url + "/plugin_ids_map.json", timeout=5
+            )
+            res.raise_for_status()
+            res1: dict = json.loads(res.text)
+        except Exception as err:
+            Print.print_err(f"从 {self.plugins_download_url} 获取插件信息遇到问题: {err}")
+            raise SystemExit
         self.plugin_id_name_map = res1
         return res1
 

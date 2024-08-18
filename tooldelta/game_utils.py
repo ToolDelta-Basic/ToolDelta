@@ -2,12 +2,14 @@
 游戏交互实用方法
 """
 
-from typing import TYPE_CHECKING, Optional
 import time
-import ujson as json
+from typing import TYPE_CHECKING, Optional, Callable
+import json
+import threading
 
 from tooldelta.color_print import Print
-from tooldelta.constants import PacketIDS, EffectIDS
+from tooldelta.constants import PacketIDS
+
 from .packets import Packet_CommandOutput
 from .utils import Utils
 
@@ -16,6 +18,25 @@ if TYPE_CHECKING:
 
 game_ctrl: Optional["GameCtrl"] = None
 movent_frame: Optional["ToolDelta"] = None
+player_waitmsg_cb: dict[str, Callable[[str], None]] = {}
+
+def _create_lock_and_result_setter():
+    """
+    创建回调监听器与返回器
+    """
+    lock = threading.Lock()
+    lock.acquire()
+    ret = [None]
+
+    def result_setter(result):
+        ret[0] = result
+        lock.release()
+
+    def result_getter(timeout: float = -1):
+        lock.acquire(timeout=timeout)
+        return ret[0]
+
+    return result_setter, result_getter
 
 
 def _set_frame(my_Frame: "ToolDelta") -> None:
@@ -32,15 +53,15 @@ def _set_frame(my_Frame: "ToolDelta") -> None:
 
 def _get_game_ctrl() -> "GameCtrl":
     """检查 GameCtrl 是否可用"""
-    if isinstance(game_ctrl, type(None)):
-        raise ValueError("GameControl 不可用")
+    if game_ctrl is None:
+        raise ValueError("游戏控制框架 不可用")
     return game_ctrl
 
 
 def _get_frame() -> "ToolDelta":
     """检查 GameCtrl 是否可用"""
-    if isinstance(movent_frame, type(None)):
-        raise ValueError("Frame 不可用")
+    if movent_frame is None:
+        raise ValueError("ToolDelta主框架 不可用")
     return movent_frame
 
 
@@ -149,7 +170,8 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         raise ValueError("物品 ID 错误")
     if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
         return 0
-    return int(result.OutputMessages[0].Parameters[1])
+    # TODO!!! 租赁服的/clear指令返回会乘以2
+    return int(result.OutputMessages[0].Parameters[1]) // 2
 
 
 def getPosXYZ(player, timeout: float = 30) -> tuple[float, float, float]:
@@ -233,7 +255,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
     if resp.Message == "commands.scoreboard.objectiveNotFound":
         raise ValueError(f"计分板 {scb_name} 未找到")
     if resp.Message == "commands.scoreboard.players.list.player.empty":
-        raise ValueError(f"计分板项或玩家 {target} 未找到")
+        raise ValueError(f"计分板项或玩家 {scb_name}:{target} 未找到")
     if resp.Message == "commands.scoreboard.players.score.notFound":
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     if len(resp.Parameters) < 1:
@@ -395,7 +417,10 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     """
     game_ctrl = _get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
-    if res.SuccessCount:
+    if (
+        res.SuccessCount
+        or res.OutputMessages[0].Message == "commands.testforblock.outOfWorld"
+    ):
         return "air"
     return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
 
@@ -479,7 +504,6 @@ def __set_effect_while__(
         else:
             break
 
-
 def set_player_effect(
     player_name: str,
     effect: str,
@@ -493,7 +517,7 @@ def set_player_effect(
     设置玩家的状态效果
 
     参数:
-        player_name: 玩家名称 (String)
+        player_name: 玩家名称 (String) 或是选择器 (String)
         effect: 效果 ID (String) 参考 EffectIDS 中内容
         duration: 持续时间 (int) [为0代表永久(仅限ToolDelta运行时)] Max: 1000000
         level: 效果等级 (int) Max: 255
@@ -505,7 +529,7 @@ def set_player_effect(
         Bool | ValueError: 是否设置成功
     """
     if level > 255:
-        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。")  # type: ignore
+        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。")
     if duration > 1000000:
         return ValueError(
             f"你提供的持续时间 ({duration}) 太大了，它最高只能是 1000000。"
@@ -527,8 +551,27 @@ def set_player_effect(
         case "commands.generic.noTargetMatch":
             return ValueError(
                 f"没有与选择器匹配的目标! 玩家 {player_name} 可能并不存在。"
-            )  # type: ignore
+            )
         case "commands.effect.success":
             return True
         case _:
-            return ValueError(f"未知错误: {result.OutputMessages[0].Message}")  # type: ignore
+            return ValueError(f"未知错误: {result.OutputMessages[0].Message}")
+
+def waitMsg(player: str, timeout: int = 30) -> str | None:
+    """
+    等待玩家在聊天栏发送消息, 并获取返回内容
+
+    Args:
+        player (str): 玩家名
+        timeout (int): 超时等待时间
+
+    Returns:
+        result (str | None): 返回, 如果超时或玩家中途退出则返回None
+    """
+    s, g = _create_lock_and_result_setter()
+    player_waitmsg_cb[player] = s
+    try:
+        res = g(timeout)
+    finally:
+        del player_waitmsg_cb[player]
+    return res

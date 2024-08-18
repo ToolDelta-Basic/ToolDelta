@@ -3,23 +3,24 @@
 import copy
 import ctypes
 import json as rjson
+import base64
+import hashlib
 import os
 import threading
 import time
 import traceback
-import re
 from io import TextIOWrapper
-from typing import Any, TypeVar
-from collections.abc import Callable, Iterable
+from typing import Any, TypeVar, Callable
 
 import ujson as json
 
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
-event_pool = {"timer_events": threading.Event()}
+event_pool: dict[str, threading.Event] = {}
 threads_list: list["Utils.createThread"] = []
-timer_events_table: dict[int, tuple[str, Callable, tuple, dict]] = {}
+timer_events_table: dict[int, tuple[str, Callable, tuple, dict, int]] = {}
+_timer_event_lock = threading.Lock()
 
 VT = TypeVar("VT")
 
@@ -33,8 +34,17 @@ class Utils:
     class ToolDeltaThread(threading.Thread):
         """简化 ToolDelta 子线程创建的 threading.Thread 的子类."""
 
+        SYSTEM = 0
+        PLUGIN = 1
+        PLUGIN_LOADER = 2
+
         def __init__(
-            self, func: Callable, args: Iterable[Any] = (), usage="", **kwargs
+            self,
+            func: Callable,
+            args: tuple = (),
+            usage = "",
+            thread_level = PLUGIN,
+            **kwargs
         ):
             """新建一个 ToolDelta 子线程
 
@@ -42,6 +52,7 @@ class Utils:
                 func (Callable): 线程方法
                 args (tuple, optional): 方法的参数项
                 usage (str, optional): 线程的用途说明
+                thread_level: 线程权限等级
                 kwargs (dict, optional): 方法的关键词参数项
             """
             super().__init__(target=func)
@@ -51,6 +62,7 @@ class Utils:
             self.usage = usage
             self.start()
             self.stopping = False
+            self._thread_level = thread_level
             self._thread_id = None
 
         def run(self) -> None:
@@ -58,7 +70,7 @@ class Utils:
             threads_list.append(self)
             try:
                 self.func(*self.all_args[0], **self.all_args[1])
-            except SystemExit:
+            except (SystemExit, Utils.ThreadExit):
                 pass
             except ValueError as e:
                 if str(e) != "未连接到游戏":
@@ -90,17 +102,24 @@ class Utils:
                 raise RuntimeError("Could not determine the thread's ID")
             return self._thread_id
 
-        def stop(self) -> None:
+        def stop(self) -> bool:
             """终止线程"""
             self.stopping = True
             self._thread_id = self.ident
             thread_id = self.get_id()
+            if not self.is_alive():
+                return True
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
                 thread_id, ctypes.py_object(SystemExit)
             )
-            if res > 1:
-                ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            if res == 0:
+                Print.print_err(f"§c线程ID {thread_id} 不存在")
+                return False
+            elif res > 1:
+                ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
                 Print.print_err(f"§c终止线程 {self.name} 失败")
+                return False
+            return True
 
     createThread = ClassicThread = ToolDeltaThread
 
@@ -248,6 +267,16 @@ class Utils:
         def cancel_change(path: str) -> None:
             """取消缓存 json 所做的更改，非必要情况请勿调用，你不知道什么时候会自动保存所做更改"""
             jsonPathTmp[path][0] = False
+
+        @staticmethod
+        def flush(fp: str | None = None):
+            """
+            刷新单个/全部JSON缓存区的缓存文件, 存入磁盘
+
+            Args:
+                fp (str | None, optional): 文件虚拟路径
+            """
+            _tmpjson_save(fp)
 
         @staticmethod
         def get_tmps() -> dict:
@@ -424,7 +453,7 @@ class Utils:
     simpleAssert = simple_assert
 
     @staticmethod
-    def thread_func(func_or_name: Callable | str) -> Any:
+    def thread_func(func_or_name: Callable | str, thread_level = ToolDeltaThread.PLUGIN) -> Any:
         """
         在事件方法可能执行较久会造成堵塞时使用，方便快捷地创建一个新线程，例如:
 
@@ -444,7 +473,7 @@ class Utils:
 
             def _recv_func(func: Callable):
                 def thread_fun(*args: tuple, **kwargs: Any) -> None:
-                    Utils.createThread(func, usage=func_or_name, args=args, **kwargs)
+                    Utils.createThread(func, usage=func_or_name, thread_level=thread_level, args=args, **kwargs)
 
                 return thread_fun
 
@@ -461,7 +490,7 @@ class Utils:
         return thread_fun
 
     @staticmethod
-    def timer_event(t: int, name: str | None = None):
+    def timer_event(t: int, name: str | None = None, thread_priority = ToolDeltaThread.PLUGIN):
         """
         将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
         注意: 请不要在函数内放可能造成堵塞的内容
@@ -475,7 +504,7 @@ class Utils:
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
             def caller(*args, **kwargs):
                 func_name = name or f"简易方法:{func.__name__}"
-                timer_events_table[t] = (func_name, func, args, kwargs)
+                timer_events_table[t] = (func_name, func, args, kwargs, thread_priority)
 
             return caller
 
@@ -553,41 +582,63 @@ class Utils:
             return "".join(last_word)
         return name
 
-
-def safe_close() -> None:
-    """安全关闭"""
+def safe_close():
+    """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
     event_pool["timer_events"].set()
+    force_stop_common_threads()
     _tmpjson_save()
 
+def force_stop_common_threads():
+    for i in threads_list:
+        if i._thread_level != i.SYSTEM:
+            res = i.stop()
+            if res:
+                Print.print_suc(f"已终止线程 {i.usage}")
+            else:
+                Print.print_suc(f"无法终止线程 {i.usage}")
 
-def _tmpjson_save():
+def _tmpjson_save(fp: str | None = None):
     "请不要在系统调用以外调用"
-    for k, (isChanged, dat) in jsonPathTmp.copy().items():
-        if isChanged:
-            Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
-            jsonPathTmp[k][0] = False
-    for k, v in jsonUnloadPathTmp.copy().items():
-        if time.time() - v > 0:
-            Utils.TMPJson.unloadPathJson(k)
-            del jsonUnloadPathTmp[k]
+    if not fp:
+        for k, (isChanged, dat) in jsonPathTmp.copy().items():
+            if isChanged:
+                Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
+                jsonPathTmp[k][0] = False
+        for k, v in jsonUnloadPathTmp.copy().items():
+            if time.time() - v > 0:
+                Utils.TMPJson.unloadPathJson(k)
+                del jsonUnloadPathTmp[k]
+    else:
+        _, dat = jsonPathTmp[fp]
+        Utils.SimpleJsonDataReader.SafeJsonDump(dat, fp)
+        jsonPathTmp[fp][0] = False
 
 
-@Utils.timer_event(1, "缓存JSON数据定时保存")
-@Utils.thread_func("JSON 缓存文件定时保存")
+@Utils.timer_event(120, "缓存JSON数据定时保存", Utils.ToolDeltaThread.SYSTEM)
+@Utils.thread_func("JSON 缓存文件定时保存", Utils.ToolDeltaThread.SYSTEM)
 def tmpjson_save():
     "请不要在系统调用以外调用"
     _tmpjson_save()
 
+def timer_event_clear():
+    "使用reload清理所有非系统线程"
+    _timer_event_lock.acquire()
+    for k, (_, _, _, _, priority) in timer_events_table.copy().items():
+        if priority != Utils.ToolDeltaThread.SYSTEM:
+            del timer_events_table[k]
+    _timer_event_lock.release()
 
-@Utils.thread_func("ToolDelta 定时任务")
+@Utils.thread_func("ToolDelta 定时任务", Utils.ToolDeltaThread.SYSTEM)
 def timer_event_boostrap():
     "请不要在系统调用以外调用"
     timer = 0
-    evt = event_pool["timer_events"]
+    evt = event_pool["timer_events"] = threading.Event()
     while not evt.is_set():
-        for k, (_, v, a, kwa) in timer_events_table.items():
+        _timer_event_lock.acquire()
+        for k, (_, caller, args, kwargs, _) in timer_events_table.items():
             if timer % k == 0:
-                v(*a, **kwa)
+                caller(*args, **kwargs)
+        _timer_event_lock.release()
         evt.wait(1)
         timer += 1
 

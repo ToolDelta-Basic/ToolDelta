@@ -24,10 +24,11 @@ r"""
    ```
 """
 
+from typing import TYPE_CHECKING  # noqa: F401
+
 from .color_print import Print  # noqa: F401
 from .frame import Config, GameCtrl, ToolDelta, Utils  # noqa: F401
 from .launch_options import client_title  # noqa: F401
-from typing import TYPE_CHECKING  # noqa: F401
 from .plugin_load.PluginGroup import Plugin  # noqa: F401
 from .starter import plugin_group as plugins  # noqa: F401
 from .starter import safe_jump, start_tool_delta, tooldelta  # noqa: F401
