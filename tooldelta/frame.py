@@ -26,6 +26,7 @@ from tooldelta import (
     auths,
     constants,
     plugin_market,
+    game_utils,
     utils
 )
 
@@ -954,6 +955,10 @@ class GameCtrl:
             case 1 | 7:
                 original_playername, msg = pkt["SourceName"], pkt["Message"]
                 playername = Utils.to_plain_name(original_playername)
+                # game_utils.waitMsg 需要监听玩家信息
+                # 监听后, 消息仍被处理
+                if playername in game_utils.player_waitmsg_cb.keys():
+                    game_utils.player_waitmsg_cb[playername](msg)
                 plugin_grp.execute_player_message(
                     playername, msg, self.linked_frame.on_plugin_err
                 )

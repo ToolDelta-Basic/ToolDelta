@@ -146,8 +146,8 @@ class GameTextsLoader:
             with (
                 gzip.open(zip_path, "rb") as f_in,
                 tarfile.open(
-                    fileobj=f_in,  # type: ignore
-                    mode="r:gz",
+                    fileobj=f_in,
+                    mode="r:gz", # type: ignore
                 ) as tar,
             ):
                 tar.extractall(self.base_path)
