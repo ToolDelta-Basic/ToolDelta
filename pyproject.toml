@@ -29,8 +29,8 @@ websockets = "^12.0"
 tqdm = "^4.66.4"
 anyio = "^4.4.0"
 requests = "^2.32.3"
-numpy = "1.26.4"
 sqlite-easy-ctrl = "0.1.2"
+numpy = ">=1.26.4"
 
 [[tool.poetry.source]]
 name = "mirrors"
