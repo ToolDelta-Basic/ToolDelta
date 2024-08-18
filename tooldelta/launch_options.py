@@ -1,9 +1,11 @@
 "启动页面"
 
 import signal
+import os
 import traceback
 
 from .color_print import Print
+from .constants import TOOLDELTA_LOGO
 from .frame import ToolDelta
 from .plugin_manager import plugin_manager
 from .plugin_market import market
@@ -25,23 +27,17 @@ def client_title() -> None:
         if "h" in sys_args_to_dict() or "help" in sys_args_to_dict():
             print_help()
             raise SystemExit
+        is_faststart = os.path.isfile("快速启动.sig")
         launch_mode = sys_args_to_dict()
         if launch_mode.get("l"):
             if not isinstance(launch_mode["l"], str):
                 raise ValueError("启动模式参数不合法")
             r = launch_mode["l"]
+        elif is_faststart:
+            start_tool_delta()
+            return
         else:
-            title4 = \
-"""╔═════════════════════════════════════════════════════════════════════════╗
-║§9████████╗ ██████╗  ██████╗ ██╗     §b██████╗ ███████╗██╗  ████████╗ █████╗ §r║
-║§9╚══██╔══╝██╔═══██╗██╔═══██╗██║     §b██╔══██╗██╔════╝██║  ╚══██╔══╝██╔══██╗§r║
-║§9   ██║   ██║   ██║██║   ██║██║     §b██║  ██║█████╗  ██║     ██║   ███████║§r║
-║§9   ██║   ██║   ██║██║   ██║██║     §b██║  ██║██╔══╝  ██║     ██║   ██╔══██║§r║
-║§9   ██║   ╚██████╔╝╚██████╔╝███████╗§b██████╔╝███████╗███████╗██║   ██║  ██║§r║
-║§9   ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝§b╚═════╝ ╚══════╝╚══════╝╚═╝   ╚═╝  ╚═╝§r║
-╚═════════════════════════════════════════════════════════════════════════╝§r
-"""
-            Print.clean_print(title4)
+            Print.clean_print(TOOLDELTA_LOGO)
             Print.clean_print(
                 "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
             )
@@ -49,6 +45,7 @@ def client_title() -> None:
             Print.clean_print("2 - §d打开 ToolDelta 插件管理器")
             Print.clean_print("3 - §d打开 ToolDelta 插件市场")
             Print.clean_print("4 - §a修改 ToolDelta 启动配置")
+            Print.clean_print(f"5 - §f快速启动: {['§cOff', '§aOn'][os.path.isfile('快速启动.sig')]}")
             r = input("请选择：").strip()
         match r:
             case "1":
@@ -59,6 +56,13 @@ def client_title() -> None:
                 market.enter_plugin_market()
             case "4":
                 ToolDelta.change_config()
+            case "5":
+                if is_faststart:
+                    os.remove("快速启动.sig")
+                    Print.clean_print("§c快速启动模式已关闭")
+                else:
+                    open("快速启动.sig", "wb").close()
+                    Print.clean_print("§a快速启动模式已开启")
             case _:
                 Print.clean_print("§c不合法的启动模式: " + r)
     except (EOFError, SystemExit):
