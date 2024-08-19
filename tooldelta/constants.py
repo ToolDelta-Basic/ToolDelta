@@ -108,9 +108,7 @@ PLUGIN_TYPE_MAPPING = {
 TDSPECIFIC_MIRROR = "https://mirror.ghproxy.com"
 "ToolDelta镜像"
 
-TDREPO_URL = (
-    f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta-Basic/ToolDelta"
-)
+TDREPO_URL = f"{TDSPECIFIC_MIRROR}/https://github.dqyt.online/api.github.com/repos/ToolDelta-Basic/ToolDelta"
 
 
 class PacketIDS:

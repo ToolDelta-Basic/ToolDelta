@@ -8,7 +8,7 @@ from .color_print import Print
 from .frame import GameCtrl, ToolDelta
 from .plugin_load.PluginGroup import plugin_group
 from .sys_args import sys_args_to_dict
-from .urlmethod import check_update  # noqa: F401
+from .urlmethod import check_update
 from .utils import timer_event_boostrap, tmpjson_save
 
 tooldelta = ToolDelta()
@@ -19,9 +19,7 @@ def start_tool_delta() -> None:
     try:
         tooldelta.welcome()
         if "no-update-check" not in sys_args_to_dict():
-            pass
-        # 先暂时禁用更新
-        # check_update()
+            check_update()
         else:
             Print.print_war("将不会进行自动更新。")
         tooldelta.basic_operation()

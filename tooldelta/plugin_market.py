@@ -60,7 +60,9 @@ def get_json_from_url(url: str) -> dict:
         resp.raise_for_status()
         return resp.json()
     except requests.RequestException as exc:
-        raise requests.RequestException("URL 请求失败") from exc
+        raise requests.RequestException(
+            f"URL 请求失败: {url} \n§6(看起来您要更改配置文件中的链接)"
+        ) from exc
     except json.JSONDecodeError as exc:
         raise requests.RequestException(
             f"服务器返回了不正确的答复：{resp.text}"

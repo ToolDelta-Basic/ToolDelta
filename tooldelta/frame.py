@@ -506,11 +506,7 @@ class ToolDelta:
             usage (str): 命令说明
             func (Callable[[list[str]], None]): 菜单回调方法
         """
-        try:
-            if self.consoleMenu.index(triggers) != -1:
-                Print.print_war(f"§6后台指令关键词冲突: {func}, 不予添加至指令菜单")
-        except Exception:
-            self.consoleMenu.append([usage, arg_hint, func, triggers])
+        self.consoleMenu.append([usage, arg_hint, func, triggers])
 
     def init_console_menu(self):
         "初始化控制台菜单"
@@ -682,7 +678,7 @@ class ToolDelta:
 
         self.createThread(
             _console_cmd_thread,
-            usage="控制台指令",
+            usage="控制台指令执行",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
 
