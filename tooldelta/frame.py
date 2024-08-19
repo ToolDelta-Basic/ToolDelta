@@ -641,38 +641,46 @@ class ToolDelta:
             """控制台线程"""
             while 1:
                 rsp = ""
-                while True:
-                    res = sys.stdin.read(1)
-                    if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
-                        break
-                    if res in ("", "^C", "^D"):
-                        Print.print_inf("按退出键退出中...")
-                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
-                        return
-                    rsp += res
-                for _, _, func, triggers in self.consoleMenu:
-                    if not rsp.strip():
-                        continue
-                    if rsp == "exit":
-                        Print.print_inf("用户命令退出中...")
-                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
-                        return
-                    if rsp.split()[0] in triggers:
-                        res = _try_execute_console_cmd(func, rsp, 0, None)
-                        if res == 1:
+                try:
+                    while True:
+                        res = sys.stdin.read(1)
+                        if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
                             break
-                        elif res == -1:
+                        if res in ("", "^C", "^D"):
+                            Print.print_inf("按退出键退出中...")
+                            self.launcher.update_status(SysStatus.NORMAL_EXIT)
                             return
-                    else:
-                        for tri in triggers:
-                            if rsp.startswith(tri):
-                                res = _try_execute_console_cmd(func, rsp, 1, tri)
-                                if res == 1:
-                                    break
-                                elif res == -1:
-                                    return
-                if res != 0 and res != 1 and rsp:
-                    self.link_game_ctrl.say_to("@a", f"[§bToolDelta控制台§r] §3{rsp}§r")
+                        rsp += res
+                    for _, _, func, triggers in self.consoleMenu:
+                        if not rsp.strip():
+                            continue
+                        if rsp == "exit":
+                            Print.print_inf("用户命令退出中...")
+                            self.launcher.update_status(SysStatus.NORMAL_EXIT)
+                            return
+                        if rsp.split()[0] in triggers:
+                            res = _try_execute_console_cmd(func, rsp, 0, None)
+                            if res == 1:
+                                break
+                            elif res == -1:
+                                return
+                        else:
+                            for tri in triggers:
+                                if rsp.startswith(tri):
+                                    res = _try_execute_console_cmd(func, rsp, 1, tri)
+                                    if res == 1:
+                                        break
+                                    elif res == -1:
+                                        return
+                    if res != 0 and res != 1 and rsp:
+                        self.link_game_ctrl.say_to(
+                            "@a", f"[§bToolDelta控制台§r] §3{rsp}§r"
+                        )
+                except Exception:
+                    Print.print_err(f"控制台指令执行出现问题: {traceback.format_exc()}")
+                    Print.print_err(
+                        "§6虽然出现了问题, 但是您仍然可以继续使用控制台菜单"
+                    )
 
         self.createThread(
             _console_cmd_thread,
