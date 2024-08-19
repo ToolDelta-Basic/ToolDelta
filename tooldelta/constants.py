@@ -105,7 +105,7 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "https://mirror.ghproxy.com"
+TDSPECIFIC_MIRROR = "https://github.dqyt.online"
 "ToolDelta镜像"
 
 TDREPO_URL = f"{TDSPECIFIC_MIRROR}/https://github.dqyt.online/api.github.com/repos/ToolDelta-Basic/ToolDelta"
