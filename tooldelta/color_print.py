@@ -146,7 +146,7 @@ class Print:
             char = text[i]
             try:
                 if char == "§":
-                    if text[i + 1] == "s":
+                    if text[i + 1] == "S":
                         strike_mode = True
                         i += 2
                         continue
