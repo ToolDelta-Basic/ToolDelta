@@ -86,12 +86,14 @@ class Utils:
         def stop(self) -> bool:
             """终止线程"""
             self.stopping = True
-            thread_id = threading.get_ident()
+            thread_id = self.ident
+            if thread_id is None:
+                return True
             if not self.is_alive():
                 return True
             # 不知为何, 此CAPI调用在Linux上会出现问题
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                thread_id, ctypes.py_object(SystemExit)
+                ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
             )
             if res == 0:
                 Print.print_err(f"§c线程ID {thread_id} 不存在")
@@ -586,6 +588,7 @@ def safe_close():
 def force_stop_common_threads():
     for i in threads_list:
         if i._thread_level != i.SYSTEM:
+            Print.print_suc(f"正在终止线程 {i.usage}", end="\r")
             res = i.stop()
             if res:
                 Print.print_suc(f"已终止线程 {i.usage}")
