@@ -91,7 +91,7 @@ class Utils:
                 return True
             if not self.is_alive():
                 return True
-            # 不知为何, 此CAPI调用在Linux上会出现问题
+            # 也许不会出现问题了吧
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
                 ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
             )
