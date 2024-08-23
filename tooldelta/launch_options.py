@@ -11,6 +11,7 @@ from .frame import ToolDelta
 from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .starter import start_tool_delta
+from .get_tool_delta_version import get_tool_delta_version
 from .sys_args import print_help, sys_args_to_dict
 
 
@@ -27,7 +28,10 @@ def client_title() -> None:
     try:
         if "h" in sys_args_to_dict() or "help" in sys_args_to_dict():
             print_help()
-            raise SystemExit
+            return
+        elif "v" in sys_args_to_dict() or "version" in sys_args_to_dict():
+            print(".".join(str(i) for i in get_tool_delta_version()))
+            return
         is_faststart = os.path.isfile("快速启动.sig")
         launch_mode = sys_args_to_dict()
         if launch_mode.get("l"):
