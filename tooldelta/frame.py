@@ -755,7 +755,7 @@ class ToolDelta:
         except Config.ConfigError as err:
             Print.print_err(f"重载插件时发现插件配置文件有误: {err}")
         except SystemExit:
-            Print.print_err(f"重载插件遇到问题: {traceback.format_exc()}")
+            Print.print_err("重载插件遇到问题")
         except BaseException:
             Print.print_err("重载插件遇到问题 (报错如下):")
             Print.print_err(traceback.format_exc())
