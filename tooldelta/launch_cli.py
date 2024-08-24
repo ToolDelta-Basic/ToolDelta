@@ -681,6 +681,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         self.out_speed: float = 0.002
 
     def init(self):
+        os.makedirs("NeOmega数据", exist_ok=True)
         if "no-download-neomega" not in sys_args_to_dict().keys():
             Print.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
             try:
