@@ -91,6 +91,7 @@ class PluginGroup:
         self._broadcast_listeners = {}
         for v in self.plugins_funcs.values():
             v.clear()
+        injected_plugin.system_reset_all_funcs()
         Print.print_inf("正在重新读取所有插件")
         self.read_all_plugins()
         Print.print_inf("开始执行插件游戏初始化方法")

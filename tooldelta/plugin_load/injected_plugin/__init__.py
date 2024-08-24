@@ -34,6 +34,20 @@ packet_funcs: dict[int, dict[Callable, int | None]] = {}
 loaded_plugin_modules = []
 
 
+def system_reset_all_funcs():
+    """系统调用, 重置所有处理函数"""
+    player_death_funcs.clear()
+    player_prejoin_funcs.clear()
+    player_join_funcs.clear()
+    player_left_funcs.clear()
+    player_death_funcs.clear()
+    commmand_message_funcs.clear()
+    repeat_funcs.clear()
+    init_plugin_funcs.clear()
+    frame_exit_funcs.clear()
+    packet_funcs.clear()
+
+
 def player_message(priority: int | None = None) -> Callable:
     """载入处理玩家消息
 
