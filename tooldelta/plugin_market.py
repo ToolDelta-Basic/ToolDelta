@@ -19,7 +19,6 @@ from .constants import (
     TOOLDELTA_INJECTED_PLUGIN,
 )
 from .plugin_load import PluginRegData
-from .plugin_load.PluginGroup import plugin_group
 from .utils import Utils
 
 if platform.system().lower() == "windows":
@@ -134,34 +133,7 @@ class PluginMarket:
             """
             ok, pres = self.choice_plugin(plugin_data)
             if ok:
-                if (
-                    in_game
-                    and plugin_data.plugin_id not in plugin_group.loaded_plugin_ids
-                ):
-                    resp = (
-                        input(
-                            Print.fmt_info(
-                                f"§f可以直接热加载该插件: {plugin_data.name}, 是否加载(§aY§f/§cN§f): "
-                            )
-                        )
-                        .strip()
-                        .lower()
-                    )
-                    if resp == "y":
-                        for i in pres:
-                            if i.plugin_id not in plugin_group.loaded_plugin_ids:
-                                try:
-                                    plugin_group.load_plugin_hot(i.name, i.plugin_type)
-                                except Exception as err:
-                                    input(
-                                        Print.fmt_info(
-                                            f"插件热加载出现问题：{err}", "§c 报错 §r"
-                                        )
-                                    )
-                else:
-                    Print.print_inf(
-                        "插件已存在，若要更新版本，请重启 ToolDelta", need_log=False
-                    )
+                Print.print_inf("可以输入 reload 使这个插件生效哦")
                 return (
                     input(
                         Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场")

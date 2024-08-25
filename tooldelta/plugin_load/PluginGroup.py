@@ -307,26 +307,6 @@ class PluginGroup:
             Print.print_err(f"加载插件出现问题：\n{err_str}")
             raise SystemExit from err
 
-    def load_plugin_hot(self, plugin_name: str, plugin_type: str) -> None:
-        """热加载插件
-
-        Args:
-            plugin_name (str): 插件名
-            plugin_type (str): 插件类型
-        """
-        plugin = None
-        if plugin_type == "classic":
-            plugin: Any = classic_plugin.load_plugin(self, plugin_name)
-            # 热加载部分
-            if plugin and hasattr(plugin, "on_def"):
-                plugin.on_def()
-            if plugin and hasattr(plugin, "on_inject"):
-                plugin.on_inject()
-        elif plugin_type == "injected":
-            asyncio.run(injected_plugin.load_plugin_file(plugin_name))
-
-        Print.print_suc(f"成功热加载插件：{plugin_name}")
-
     def __add_listen_packet_id(self, packetType: int) -> None:
         """添加数据包监听，仅在系统内部使用
 

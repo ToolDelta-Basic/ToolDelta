@@ -864,7 +864,7 @@ class GameCtrl:
                 if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
                     return
-                plugin_group.execute_player_join(
+                plugin_group.execute_player_prejoin(
                     playername, self.linked_frame.on_plugin_err
                 )
             else:
@@ -894,12 +894,10 @@ class GameCtrl:
             case 2:
                 if pkt["Message"] == "§e%multiplayer.player.joined":
                     player = pkt["Parameters"][0]
-                    plugin_grp.execute_player_prejoin(
+                    plugin_grp.execute_player_join(
                         player, self.linked_frame.on_plugin_err
                     )
-                elif not pkt["Message"].startswith(
-                    "§e%multiplayer.player.joined"
-                ) and not pkt["Message"].startswith("§e%multiplayer.player.left"):
+                elif not pkt["Message"].startswith("§e%multiplayer.player.joined"):
                     if self.game_data_handler is not None:
                         jon = self.game_data_handler.Handle_Text_Class1(pkt)
                         Print.print_inf("§1" + " ".join(jon).strip('"'))
