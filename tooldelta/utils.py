@@ -397,7 +397,8 @@ class Utils:
                 self.oth_cb(self.player)
                 Print.print_war(f"玩家 {self.player} 的线程锁正在锁定状态")
                 raise SystemExit
-            chatbar_lock_list.append(self.player)
+            if self.player not in chatbar_lock_list:
+                chatbar_lock_list.append(self.player)
 
         def __exit__(self, e, e2, e3):
             chatbar_lock_list.remove(self.player)
