@@ -109,10 +109,9 @@ class StandardFrame:
         """
         self.status = new_status
         if new_status == SysStatus.NORMAL_EXIT:
-            tooldelta.safe_jump(out_task=True)
-            self.exit_event.set()  # 设置事件，触发等待结束
+            self.exit_event.set()
+            tooldelta.safe_jump()
         if new_status == SysStatus.CRASHED_EXIT:
-            tooldelta.safe_jump(out_task=False)
             self.exit_event.set()
 
     def sendcmd(
@@ -228,7 +227,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         super().__init__()
         self.status = SysStatus.LOADING
-        self.launch_event = threading.Event()
         self.neomg_proc = None
         self.serverNumber = None
         self.neomega_account_opt = None
@@ -272,11 +270,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 ServerCode=str(self.serverNumber),
                 ServerPassword=self.serverPassword,
             )
-        self.omega = neo_conn.ThreadOmega(
-            connect_type=neo_conn.ConnectType.Remote,
-            address="tcp://localhost:24013",
-            accountOption=self.neomega_account_opt,
-        )
 
     def set_omega(self, openat_port: int) -> None:
         """设置 Omega 连接
@@ -353,6 +346,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             encoding="utf-8",
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
         )
         return free_port
@@ -381,6 +375,13 @@ class FrameNeOmgAccessPoint(StandardFrame):
             SystemError: 未知的退出状态
         """
         self.status = SysStatus.LAUNCHING
+        self.launch_event = threading.Event()
+        self.exit_event = threading.Event()
+        self.omega = neo_conn.ThreadOmega(
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=self.neomega_account_opt,
+        )
         openat_port = self.start_neomega_proc()
         Utils.createThread(
             self._msg_show_thread,
@@ -785,7 +786,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             char = self.neomg_proc.stdout.read(1)
             if self.neomg_proc.stderr is not None:
                 err = self.neomg_proc.stderr.readlines()
-                print(err)
+                Print.print_err("\n".join(err))
             if char == "":
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:

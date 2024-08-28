@@ -21,7 +21,7 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
         Cfg.PNumber: lambda: isinstance(obj, int | float) and obj > 0,
         Cfg.NNNumber: lambda: isinstance(obj, int | float) and obj >= 0,
-        int: lambda: type(obj) is int,
+        int: lambda: type(obj) is int,  # noqa: E721
     }.get(typ, lambda: isinstance(obj, typ))()
 
 
@@ -76,7 +76,9 @@ def _CfgShowType(typ: Any) -> str:
 class Cfg:
     """配置文件模块"""
 
-    AVALI_JSON_TYPE = Union[type, dict, tuple[type | dict, ...], "JsonList", "AnyKeyValue"]
+    AVALI_JSON_TYPE = Union[
+        type, dict, tuple[type | dict, ...], "JsonList", "AnyKeyValue"
+    ]
 
     class ConfigError(Exception):
         """配置文件错误"""
@@ -211,7 +213,7 @@ class Cfg:
         cfg_stdtyp["配置项"] = standardType
         cfgGet = self.get_cfg(p, cfg_stdtyp)
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
-        VERSION_LENGTH = 3 # 版本长度
+        VERSION_LENGTH = 3  # 版本长度
         if len(cfgVers) != VERSION_LENGTH:
             raise ValueError("配置文件出错：版本出错")
         return cfgGet["配置项"], cfgVers

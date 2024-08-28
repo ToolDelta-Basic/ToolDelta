@@ -976,7 +976,6 @@ class GameCtrl:
                     break
                 except (TimeoutError, ValueError):
                     Print.print_war("获取全局玩家失败..重试")
-        self.linked_frame.comsole_cmd_active()
         self.linked_frame.link_plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )

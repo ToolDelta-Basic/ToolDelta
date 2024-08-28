@@ -578,6 +578,36 @@ class Utils:
             return "".join(last_word)
         return name
 
+    @staticmethod
+    def create_result_cb():
+        """
+        获取一对回调锁
+
+        ```
+        getter, setter = Utils.create_result_cb()
+
+        cbs[special_id] = getter
+        # 在这边等待回调...
+        result = getter()
+
+        # 与此同时, 在另一边...
+
+        ```
+        """
+        ret = [None]
+        lock = threading.Lock()
+        lock.acquire()
+
+        def getter(timeout=60):
+            lock.acquire(timeout=timeout)
+            return ret[0]
+
+        def setter(s):
+            ret[0] = s
+            lock.release()
+
+        return getter, setter
+
 
 def safe_close():
     """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
