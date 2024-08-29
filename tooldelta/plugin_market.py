@@ -191,9 +191,11 @@ class PluginMarket:
 
         except (KeyError, requests.RequestException) as err:
             Print.print_err(f"获取插件市场插件出现问题：{err}")
+            input(Print.fmt_info("按回车键继续.."))
         except Exception:
             Print.print_err("获取插件市场插件出现问题，报错如下：")
             Print.print_err(traceback.format_exc())
+            input(Print.fmt_info("按回车键继续.."))
         finally:
             clear_screen()
             Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
