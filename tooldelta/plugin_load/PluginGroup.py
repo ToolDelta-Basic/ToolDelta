@@ -258,7 +258,7 @@ class PluginGroup:
                 raise PluginAPIVersionError(apiName, min_version, api.version)
             return api
         if force:
-            raise PluginAPINotFoundError(f"无法找到 API 插件：{apiName}")
+            raise PluginAPINotFoundError(apiName)
         return None
 
     def set_frame(self, frame: "ToolDelta") -> None:
@@ -370,7 +370,6 @@ class PluginGroup:
             for name, func in self.plugins_funcs["on_def"]:
                 func()
         except PluginAPINotFoundError as err:
-            name = err.name
             Print.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
             raise SystemExit from err
         except PluginAPIVersionError as err:

@@ -251,7 +251,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             Print.print_inf("检测接入点和依赖库的最新版本..完成")
         else:
             Print.print_war("将不会自动检测接入点依赖库的最新版本")
-        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
     def set_launch_data(
@@ -302,6 +301,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         Returns:
             int: 端口号
         """
+        neo_conn.load_lib()
         free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":

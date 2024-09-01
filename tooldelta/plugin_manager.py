@@ -278,7 +278,7 @@ class PluginManager:
         Returns:
             list[PluginRegData]: 插件注册信息列表
         """
-        res = [plugin for plugin in plugins if all(kw in plugin.name for kw in kws)]
+        res = [plugin for plugin in plugins if all(kw.lower() in plugin.name.lower() for kw in kws)]
         return res
 
     def is_valid_registered(self, plugin_name: str) -> bool:
