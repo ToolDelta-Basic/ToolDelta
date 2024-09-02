@@ -12,7 +12,7 @@ TOOLDELTA_LOGO = """╔═══════════════════
 "ToolDelta标志"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "https://mirror.ghproxy.com"
+    "https://github.dqyt.online"
     "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 )
 "插件市场源"

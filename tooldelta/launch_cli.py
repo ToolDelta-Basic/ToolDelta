@@ -251,6 +251,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             Print.print_inf("检测接入点和依赖库的最新版本..完成")
         else:
             Print.print_war("将不会自动检测接入点依赖库的最新版本")
+        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
     def set_launch_data(
@@ -270,7 +271,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 ServerPassword=self.serverPassword,
             )
 
-    def set_omega(self, openat_port: int) -> None:
+    def set_omega_conn(self, openat_port: int) -> None:
         """设置 Omega 连接
 
         Args:
@@ -373,7 +374,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             Exception: 异常退出
             SystemError: 未知的退出状态
         """
-        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         self.launch_event = threading.Event()
         self.exit_event = threading.Event()
@@ -388,8 +388,9 @@ class FrameNeOmgAccessPoint(StandardFrame):
             usage="显示来自 NeOmega接入点 的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
+        self.omega.reset_omega_status()
         self.launch_event.wait()
-        self.set_omega(openat_port)
+        self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
         Print.print_suc("已获取游戏网络接入点最高权限")
@@ -627,7 +628,7 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             openat_port = 24015
             return SystemExit("未指定端口号")
         Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
-        self.set_omega(openat_port)
+        self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
         Print.print_suc("已与接入点进程建立通信网络")
@@ -692,6 +693,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             Print.print_inf("检测依赖库和NeOmega的最新版本..完成")
         else:
             Print.print_war("将不会自动检测依赖库和NeOmega的最新版本")
+        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
     def start_neomega_proc(self) -> int:
@@ -866,7 +868,6 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             Exception: 异常退出
             SystemError: 未知的退出状态
         """
-        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         Print.print_load(
@@ -887,8 +888,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             usage="处理将要写入到 NeOmega 进程中的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
+        self.omega.reset_omega_status()
         self.launch_event.wait()
-        self.set_omega(openat_port)
+        self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
         Print.print_suc("已获取游戏网络接入点最高权限")

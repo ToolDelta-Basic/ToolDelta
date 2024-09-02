@@ -42,7 +42,6 @@ def start_tool_delta() -> None:
             else:
                 # not achieved?
                 Print.print_err(f"启动器框架崩溃, 原因: {err}")
-                # 自动重启未实现
                 break
                 RETRY_TIME = 1
                 Print.print_war(f"将在 {RETRY_TIME}s 后进行重启")

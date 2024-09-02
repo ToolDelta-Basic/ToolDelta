@@ -36,8 +36,7 @@ class PluginManager:
 
     def __init__(self) -> None:
         self.plugin_reg_data_path = "插件注册表"
-        self.default_reg_data: dict = {"classic": {}, "injected": {}, "unknown": {}}
-        self._plugin_datas_cache: list = []
+        self._plugin_datas_cache: list[PluginRegData] = []
 
     def manage_plugins(self) -> None:
         "插件管理界面"
@@ -63,10 +62,10 @@ class PluginManager:
 
     def plugin_operation(self, plugin: PluginRegData) -> None:
         """
-        Perform operations on a given plugin.
+        对插件进行操作
 
         Args:
-            plugin (PluginRegData): The plugin data object containing information about the plugin.
+            plugin (PluginRegData): 插件注册数据信息类
         """
         description_fixed = plugin.description.replace("\n", "\n    ")
         clear_screen()
