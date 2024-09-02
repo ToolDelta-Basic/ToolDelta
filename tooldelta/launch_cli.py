@@ -301,7 +301,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         Returns:
             int: 端口号
         """
-        neo_conn.load_lib()
         free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
@@ -374,6 +373,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             Exception: 异常退出
             SystemError: 未知的退出状态
         """
+        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         self.launch_event = threading.Event()
         self.exit_event = threading.Event()
@@ -533,8 +533,8 @@ class FrameNeOmgAccessPoint(StandardFrame):
             bool: 是否为 OP
         """
         self.check_avaliable()
-        if player not in [i.name for i in self.omega.get_all_online_players()]:
-            raise ValueError(f"玩家 '{player}' 不处于全局玩家中")
+        if player not in (allplayers := [i.name for i in self.omega.get_all_online_players()]):
+            raise ValueError(f"玩家 '{player}' 不处于全局玩家中 (全局玩家: " + ", ".join(allplayers) + ")")
         player_obj = self.omega.get_player_by_name(player)
         if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
             raise ValueError("未能获取玩家对象")
@@ -692,7 +692,6 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             Print.print_inf("检测依赖库和NeOmega的最新版本..完成")
         else:
             Print.print_war("将不会自动检测依赖库和NeOmega的最新版本")
-        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
     def start_neomega_proc(self) -> int:
@@ -867,6 +866,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             Exception: 异常退出
             SystemError: 未知的退出状态
         """
+        neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         Print.print_load(

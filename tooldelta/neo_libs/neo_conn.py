@@ -509,13 +509,17 @@ class ThreadOmega:
 
         # setup actions
         # make LIB listen to all packets and new packets will have eventType="MCPacket"
-        if False:
+
+        support_reload = True
+
+        if support_reload:
             global GOMEGA_HAD_LISTENED_PACKETS
             if not GOMEGA_HAD_LISTENED_PACKETS:
                 LIB.ListenAllPackets()
                 GOMEGA_HAD_LISTENED_PACKETS = True
         else:
             LIB.ListenAllPackets()
+
         mapping = json.loads(toPyString(LIB.GetPacketNameIDMapping()))
         self._packet_name_to_id_mapping: dict[str, int] = mapping
         self._packet_id_to_name_mapping = {}
@@ -523,13 +527,14 @@ class ThreadOmega:
             self._packet_id_to_name_mapping[packet_id] = packet_name
             self._packet_listeners[packet_name] = set()
 
-        if False:
+        if support_reload:
             global GOMEGA_HAD_LISTENED_PLAYER_CHANGE
             if not GOMEGA_HAD_LISTENED_PLAYER_CHANGE:
                 LIB.ListenPlayerChange()
                 GOMEGA_HAD_LISTENED_PLAYER_CHANGE = True
         else:
             LIB.ListenPlayerChange()
+
         self._player_change_listeners: list[Callable[[PlayerKit, str], None]] = []
 
         # get bot basic info (this info will not change so we need to get it only once)
