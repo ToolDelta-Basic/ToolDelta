@@ -165,7 +165,8 @@ class GameTextsHandle:
     def Handle_Text_Class1(
         self, packet: dict[str, Any] | list[dict[str, Any]]
     ) -> list[str]:
-        """处理文本返回方法 1
+        """
+        处理文本返回方法 1
 
         Args:
             packet (Union[Dict[str, Any], List[Dict[str, Any]]]): 数据包

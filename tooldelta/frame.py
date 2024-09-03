@@ -529,23 +529,29 @@ class ToolDelta:
                     Print.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
                 else:
                     if game_text_handler := self.link_game_ctrl.game_data_handler:
-                        mjon = self.link_game_ctrl.game_data_handler.Handle_Text_Class1(
-                            result.as_dict["OutputMessages"]
+                        msgs_output = " ".join(
+                            json.dumps(i)
+                            for i in game_text_handler.Handle_Text_Class1(
+                                result.as_dict["OutputMessages"]
+                            )
+                        )
+                    else:
+                        msgs_output = json.dumps(
+                            result.as_dict["OutputMessages"],
+                            indent=2,
+                            ensure_ascii=False,
                         )
                     desc = json.dumps(
-                        result.as_dict["OutputMessages"], indent=2, ensure_ascii=False
+                        result.OutputMessages[0].Parameters,
+                        indent=2,
+                        ensure_ascii=False,
                     )
                     if result.SuccessCount:
-                        if game_text_handler:
-                            print_str = "指令执行成功: " + " ".join(mjon)
-                            Print.print_suc(print_str)
+                        Print.print_suc("指令执行成功: " + msgs_output)
                         Print.print_suc(desc)
                     else:
-                        if game_text_handler:
-                            print_str = "指令执行失败: " + " ".join(mjon)
-                            Print.print_war(print_str)
+                        Print.print_war("指令执行失败: " + msgs_output)
                         Print.print_war(desc)
-
             except IndexError as exec_err:
                 if isinstance(result, type(None)):
                     raise ValueError("指令执行失败") from exec_err
