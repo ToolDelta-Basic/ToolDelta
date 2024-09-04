@@ -7,16 +7,20 @@ import traceback
 from typing import TYPE_CHECKING, TypeVar
 from collections.abc import Callable
 
-from ...cfg import Cfg
-from ...color_print import Print
-from ...constants import TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_PLUGIN_DATA_DIR
-from ...plugin_load import NotValidPluginError, plugin_is_enabled
-from ...utils import Utils
+from tooldelta.cfg import Cfg
+from tooldelta.color_print import Print
+from tooldelta.constants import (
+    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_PLUGIN_DATA_DIR,
+    PacketIDS,
+)
+from tooldelta.plugin_load import NotValidPluginError, plugin_is_enabled
+from tooldelta.utils import Utils
 
 if TYPE_CHECKING:
     # 类型注释
-    from ... import ToolDelta
-    from ...plugin_load.PluginGroup import PluginGroup
+    from tooldelta import ToolDelta
+    from tooldelta.plugin_load.PluginGroup import PluginGroup
 
 __caches__ = {"plugin": None, "api_name": "", "frame": None}
 
@@ -205,6 +209,32 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
                     packet_funcs[pktType] = []
                 packet_funcs[pktType].append(ins_func)
 
+        # 监听全部数据包的监听器
+        # 实话实说, 这里写的乱糟糟的
+        if allpkt_func := plugin_group._cached_all_packets_listener:
+            allpkt_func = getattr(plugin, allpkt_func.__name__)
+            if allpkt_func is None:
+                raise NotValidPluginError("数据包监听不能在主插件类以外定义")
+
+            def make_cached_func(name, pktID_1):
+                def _allpkt_listener(pkt):
+                    allpkt_func(pktID_1, pkt)
+
+                _allpkt_listener.__name__ = name
+                return _allpkt_listener
+
+            for pktID in range(304):
+                if pktID in PacketIDS.__dict__.values():
+                    if pktID in (PacketIDS.IDPyRpc, 304):
+                        continue
+
+                    if pktID not in packet_funcs.keys():
+                        packet_funcs[pktID] = []
+                    packet_funcs[pktID].append(
+                        make_cached_func(allpkt_func.__name__, pktID)
+                    )
+            pktID = 999
+
         # 收集到了作为API的插件
         if __caches__["api_name"] != "":
             plugin_group.plugins_api[__caches__["api_name"]] = plugin
@@ -246,6 +276,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
     finally:
         plugin_group._cached_broadcast_evts.clear()
         plugin_group._cached_packet_cbs.clear()
+        plugin_group._cached_all_packets_listener = None
     return None
 
 

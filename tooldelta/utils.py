@@ -598,7 +598,7 @@ class Utils:
         lock = threading.Lock()
         lock.acquire()
 
-        def getter(timeout=60):
+        def getter(timeout=60) -> Any:
             lock.acquire(timeout=timeout)
             return ret[0]
 

@@ -11,6 +11,7 @@ from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
+    PacketIDS,
 )
 from ..game_utils import _set_frame
 from ..plugin_load import (
@@ -74,6 +75,7 @@ class PluginGroup:
         "初始化"
         self._cached_broadcast_evts: dict[str, list[Callable]] = {}
         self._cached_packet_cbs: list[tuple[int, Callable]] = []
+        self._cached_all_packets_listener: Callable | None = None
         self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
@@ -139,7 +141,11 @@ class PluginGroup:
 
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
             # 存在缓存区, 等待 class_plugin 实例化
-            if isinstance(pktID, int):
+            if pktID == -1:
+                for n, i in PacketIDS.__dict__.items():
+                    if n[0].isupper():
+                        self._cached_packet_cbs.append((i, func))
+            elif isinstance(pktID, int):
                 self._cached_packet_cbs.append((pktID, func))
             else:
                 for i in pktID:
@@ -147,6 +153,18 @@ class PluginGroup:
             return func
 
         return deco
+
+    def add_any_packet_listener(self, func: Callable[[_SUPER_CLS, int, dict], bool]):
+        """
+        添加数据包监听器
+        将下面的方法作为一个 MC 数据包接收器
+        Tips: 只能在插件主类里的函数使用此装饰器!
+
+        Returns:
+            Receiver ((pktID: int, pkt: dict) -> bool): 数据包监听器接收器, 传入 数据包ID, 数据包 返回 bool
+        """
+        self._cached_all_packets_listener = func
+        return func
 
     def add_broadcast_listener(self, evt_name: str):
         """

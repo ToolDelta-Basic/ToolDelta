@@ -574,7 +574,8 @@ class ThreadOmega:
         elif listeners := self._packet_listeners.get(packetTypeName, []):
             ret = LIB.ConsumeMCPacket()
             if convertError := toPyString(ret.convertError):
-                raise ValueError(convertError)
+                Print.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
+                return
             jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
             for listener in listeners:
                 Utils.createThread(

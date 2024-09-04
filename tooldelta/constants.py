@@ -127,7 +127,7 @@ class PacketIDS:
     IDText = 9  # 文本消息
     IDSetTime = 10  # 更新客户端时间（服务端 -> 客户端）
     IDStartGame = 11  # 开始游戏
-    IDAddPlayer = 112  # 添加玩家实体
+    IDAddPlayer = 12  # 添加玩家实体
     IDAddActor = 13  # 添加实体
     IDRemoveActor = 14  # 添加实体
     IDAddItemActor = 15  # 添加物品实体
