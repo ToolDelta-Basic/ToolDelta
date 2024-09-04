@@ -168,8 +168,8 @@ class PluginGroup:
         """
 
         def deco(
-            func: Callable[[_SUPER_CLS, _TV], bool],
-        ) -> Callable[[_SUPER_CLS, _TV], bool]:
+            func: Callable[[_SUPER_CLS, _TV], Any],
+        ) -> Callable[[_SUPER_CLS, _TV], Any]:
             # 存在缓存区, 等待 class_plugin 实例化
             if self._cached_broadcast_evts.get(evt_name):
                 self._cached_broadcast_evts[evt_name].append(func)
