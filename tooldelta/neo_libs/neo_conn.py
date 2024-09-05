@@ -770,6 +770,16 @@ class ThreadOmega:
     def place_command_block(place_option: CommandBlockPlaceOption):
         LIB.PlaceCommandBlock(toCString(json.dumps(place_option.__dict__)))
 
+    # hi level bot action
+
+    @staticmethod
+    def use_hotbar_item(slotID: int) -> None:
+        LIB.UseHotbarItem(slotID)
+
+    @staticmethod
+    def drop_item_from_hotbar(slotID: int) -> None:
+        LIB.DropItemFromHotBar(slotID)
+
     @staticmethod
     def reset_omega_status():
         LIB.ResetListenPlayerChangeStatus()
@@ -895,3 +905,5 @@ def load_lib():
     LIB.GetPlayerByName.restype = CString
     LIB.ConsumePlayerChange.restype = CString
     LIB.PlaceCommandBlock.argtypes = [CString]
+    LIB.UseHotbarItem.argtypes = [ctypes.c_uint8]
+    LIB.DropItemFromHotBar.argtypes = [ctypes.c_uint8]
