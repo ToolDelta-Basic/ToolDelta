@@ -12,8 +12,7 @@ TOOLDELTA_LOGO = """╔═══════════════════
 "ToolDelta标志"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "https://github.dqyt.online"
-    "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+    "http://222.187.254.86:5244/d/ToolDelta-Basic/PluginMarket/main"
 )
 "插件市场源"
 
@@ -105,7 +104,7 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "https://github.dqyt.online"
+TDSPECIFIC_MIRROR = "http://222.187.254.86:5244/d"
 "ToolDelta镜像"
 
 TDREPO_URL = (
