@@ -78,6 +78,7 @@ class PluginRegData:
         self.pre_plugins: dict[str, str] = plugin_data.get("pre-plugins", {})
         self.plugin_id = plugin_data.get("plugin-id", "???")
         self.is_registered = is_registered
+        self.is_deleted = False
         if plugin_data.get("enabled") is not None:
             self.is_enabled = plugin_data["enabled"]
         else:

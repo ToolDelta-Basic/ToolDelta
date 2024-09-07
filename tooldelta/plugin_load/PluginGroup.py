@@ -4,13 +4,14 @@ import asyncio
 import os
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 from ..color_print import Print
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
+    PacketIDS,
 )
 from ..game_utils import _set_frame
 from ..plugin_load import (
@@ -48,12 +49,16 @@ if TYPE_CHECKING:
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
 
+# add_plugin(): 类式插件调用, 插件框架会将其缓存到自身缓存区, 等待类式插件将插件类实例化
+# add_broadcast_listener(), add_packet_listener() 同理
+# 对于使用了 add_plugin_as_api() 的插件, 可以使用 get_plugin_api() 跨插件获取接口
+
 
 class PluginGroup:
     "插件组"
 
-    plugins: list[Plugin] = []
-    plugins_funcs: dict[str, list] = {
+    plugins: ClassVar[list[Plugin]] = []
+    plugins_funcs: ClassVar[dict[str, list]] = {
         "on_def": [],
         "on_inject": [],
         "on_player_prejoin": [],
@@ -64,12 +69,13 @@ class PluginGroup:
         "on_command": [],
         "on_frame_exit": [],
     }
-    Agree_bot_patrol: list[bool] = []
+    Agree_bot_patrol: ClassVar["list[bool]"] = []
 
     def __init__(self):
         "初始化"
         self._cached_broadcast_evts: dict[str, list[Callable]] = {}
         self._cached_packet_cbs: list[tuple[int, Callable]] = []
+        self._cached_all_packets_listener: Callable | None = None
         self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
@@ -80,13 +86,14 @@ class PluginGroup:
         self.linked_frame: "ToolDelta | None" = None
 
     def reload(self):
-        """重载插件框架"""
+        """重载插件框架 (这是一个不安全的操作)"""
         self.plugins_api = {}
         self._packet_funcs = {}
         self._update_player_attributes_funcs = []
         self._broadcast_listeners = {}
         for v in self.plugins_funcs.values():
             v.clear()
+        injected_plugin.system_reset_all_funcs()
         Print.print_inf("正在重新读取所有插件")
         self.read_all_plugins()
         Print.print_inf("开始执行插件游戏初始化方法")
@@ -133,7 +140,12 @@ class PluginGroup:
         """
 
         def deco(func: Callable[[_SUPER_CLS, dict], bool]):
-            if isinstance(pktID, int):
+            # 存在缓存区, 等待 class_plugin 实例化
+            if pktID == -1:
+                for n, i in PacketIDS.__dict__.items():
+                    if n[0].isupper():
+                        self._cached_packet_cbs.append((i, func))
+            elif isinstance(pktID, int):
                 self._cached_packet_cbs.append((pktID, func))
             else:
                 for i in pktID:
@@ -141,6 +153,18 @@ class PluginGroup:
             return func
 
         return deco
+
+    def add_any_packet_listener(self, func: Callable[[_SUPER_CLS, int, dict], bool]):
+        """
+        添加数据包监听器
+        将下面的方法作为一个 MC 数据包接收器
+        Tips: 只能在插件主类里的函数使用此装饰器!
+
+        Returns:
+            Receiver ((pktID: int, pkt: dict) -> bool): 数据包监听器接收器, 传入 数据包ID, 数据包 返回 bool
+        """
+        self._cached_all_packets_listener = func
+        return func
 
     def add_broadcast_listener(self, evt_name: str):
         """
@@ -162,8 +186,8 @@ class PluginGroup:
         """
 
         def deco(
-            func: Callable[[_SUPER_CLS, _TV], bool],
-        ) -> Callable[[_SUPER_CLS, _TV], bool]:
+            func: Callable[[_SUPER_CLS, _TV], Any],
+        ) -> Callable[[_SUPER_CLS, _TV], Any]:
             # 存在缓存区, 等待 class_plugin 实例化
             if self._cached_broadcast_evts.get(evt_name):
                 self._cached_broadcast_evts[evt_name].append(func)
@@ -252,18 +276,18 @@ class PluginGroup:
                 raise PluginAPIVersionError(apiName, min_version, api.version)
             return api
         if force:
-            raise PluginAPINotFoundError(f"无法找到 API 插件：{apiName}")
+            raise PluginAPINotFoundError(apiName)
         return None
 
     def set_frame(self, frame: "ToolDelta") -> None:
-        """设置关联的系统框架"""
+        """为各个框架分发关联的系统框架"""
         self.linked_frame = frame
         _set_frame(frame)
         _init_frame(frame)
 
     def read_all_plugins(self) -> None:
         """
-        读取所有插件
+        读取所有插件/重载所有插件
 
         Raises:
             SystemExit: 读取插件出现问题
@@ -300,26 +324,6 @@ class PluginGroup:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
             Print.print_err(f"加载插件出现问题：\n{err_str}")
             raise SystemExit from err
-
-    def load_plugin_hot(self, plugin_name: str, plugin_type: str) -> None:
-        """热加载插件
-
-        Args:
-            plugin_name (str): 插件名
-            plugin_type (str): 插件类型
-        """
-        plugin = None
-        if plugin_type == "classic":
-            plugin: Any = classic_plugin.load_plugin(self, plugin_name)
-            # 热加载部分
-            if plugin and hasattr(plugin, "on_def"):
-                plugin.on_def()
-            if plugin and hasattr(plugin, "on_inject"):
-                plugin.on_inject()
-        elif plugin_type == "injected":
-            asyncio.run(injected_plugin.load_plugin_file(plugin_name))
-
-        Print.print_suc(f"成功热加载插件：{plugin_name}")
 
     def __add_listen_packet_id(self, packetType: int) -> None:
         """添加数据包监听，仅在系统内部使用
@@ -384,7 +388,6 @@ class PluginGroup:
             for name, func in self.plugins_funcs["on_def"]:
                 func()
         except PluginAPINotFoundError as err:
-            name = err.name
             Print.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
             raise SystemExit from err
         except PluginAPIVersionError as err:

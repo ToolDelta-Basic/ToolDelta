@@ -17,10 +17,8 @@ from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
-    LAUNCH_CFG
 )
 from .plugin_load import PluginRegData
-from .plugin_load.PluginGroup import plugin_group
 from .utils import Utils
 
 if platform.system().lower() == "windows":
@@ -32,6 +30,7 @@ else:
 def clear_screen() -> None:
     "清屏"
     os.system(shlex.quote(CLS_CMD))
+
 
 def url_join(*urls) -> str:
     """连接 URL
@@ -60,7 +59,9 @@ def get_json_from_url(url: str) -> dict:
         resp.raise_for_status()
         return resp.json()
     except requests.RequestException as exc:
-        raise requests.RequestException("URL 请求失败") from exc
+        raise requests.RequestException(
+            f"URL 请求失败: {url} \n§6(看起来您要更改配置文件中的链接)"
+        ) from exc
     except json.JSONDecodeError as exc:
         raise requests.RequestException(
             f"服务器返回了不正确的答复：{resp.text}"
@@ -132,27 +133,7 @@ class PluginMarket:
             """
             ok, pres = self.choice_plugin(plugin_data)
             if ok:
-                if in_game and plugin_data.plugin_id not in plugin_group.loaded_plugin_ids:
-                    resp = (
-                        input(
-                            Print.fmt_info(
-                                f"§f可以直接热加载该插件: {plugin_data.name}, 是否加载(§aY§f/§cN§f): "
-                            )
-                        )
-                        .strip()
-                        .lower()
-                    )
-                    if resp == "y":
-                        for i in pres:
-                            if i.plugin_id not in plugin_group.loaded_plugin_ids:
-                                try:
-                                    plugin_group.load_plugin_hot(i.name, i.plugin_type)
-                                except Exception as err:
-                                    input(Print.fmt_info(f"插件热加载出现问题：{err}", "§c 报错 §r"))
-                else:
-                    Print.print_inf(
-                        "插件已存在，若要更新版本，请重启 ToolDelta", need_log=False
-                    )
+                Print.print_inf("可以输入 reload 使这个插件生效哦")
                 return (
                     input(
                         Print.fmt_info("§f输入 §cq §f退出, 其他则返回插件市场")
@@ -210,9 +191,11 @@ class PluginMarket:
 
         except (KeyError, requests.RequestException) as err:
             Print.print_err(f"获取插件市场插件出现问题：{err}")
+            input(Print.fmt_info("按回车键继续.."))
         except Exception:
             Print.print_err("获取插件市场插件出现问题，报错如下：")
             Print.print_err(traceback.format_exc())
+            input(Print.fmt_info("按回车键继续.."))
         finally:
             clear_screen()
             Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
@@ -308,7 +291,9 @@ class PluginMarket:
             res.raise_for_status()
             res1: dict = json.loads(res.text)
         except Exception as err:
-            Print.print_err(f"从 {self.plugins_download_url} 获取插件信息遇到问题: {err}")
+            Print.print_err(
+                f"从 {self.plugins_download_url} 获取插件信息遇到问题: {err}"
+            )
             raise SystemExit
         self.plugin_id_name_map = res1
         return res1

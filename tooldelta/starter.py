@@ -34,14 +34,19 @@ def start_tool_delta() -> None:
         tmpjson_save()
         tooldelta.launcher.listen_launched(game_control.system_inject)
         game_control.set_listen_packets_to_launcher()
+        tooldelta.comsole_cmd_active()
         while 1:
             err = tooldelta.launcher.launch()
             if isinstance(err, SystemExit):
                 break
             else:
+                # not achieved?
                 Print.print_err(f"启动器框架崩溃, 原因: {err}")
-                Print.print_war("将在 10s 后进行重启")
-                time.sleep(10)
+                break
+                RETRY_TIME = 1
+                Print.print_war(f"将在 {RETRY_TIME}s 后进行重启")
+                time.sleep(RETRY_TIME)
+                tooldelta.reload()
     except (KeyboardInterrupt, SystemExit, EOFError) as err:
         Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
         time.sleep(3)
@@ -50,7 +55,10 @@ def start_tool_delta() -> None:
         input(Print.clean_fmt("§c按回车键退出..."))
 
 
-def safe_jump(out_task: bool = True, exit_directly: bool = True) -> None:
+# /kick FSkyBlueBot
+
+
+def safe_jump(out_task: bool = True, exit_directly: bool = False) -> None:
     """安全退出
 
     Args:
@@ -61,8 +69,8 @@ def safe_jump(out_task: bool = True, exit_directly: bool = True) -> None:
         tooldelta.system_exit()
     tooldelta.safelyExit()
     if exit_directly:
-        for _ in range(3, -1, -1):
-            Print.print_war(f"{_}秒后强制退出...", end="\r")
+        for counter in range(3, -1, -1):
+            Print.print_war(f"{counter}秒后强制退出...", end="\r")
             time.sleep(1)
         Print.print_suc("ToolDelta 已退出。")
         os._exit(0)

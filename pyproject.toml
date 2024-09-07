@@ -2,16 +2,16 @@
 name = "Tooldelta"
 version = "0.0.0"                                              # This field is automatically set to the value in the version file
 description = "Plugin Loader for NeteaseRentalServer on Panel"
-authors = ["SuperScript-PRC", "ToolDelta Studio Staff"]
+authors = ["ToolDelta Studio Staff"]
 license = ""
 
 readme = "README.md"
-homepage = "https://github.com/ToolDelta/ToolDelta"
-repository = "https://github.com/ToolDelta/ToolDelta"
+homepage = "https://github.com/ToolDelta-Basic/ToolDelta"
+repository = "https://github.com/ToolDelta-Basic/ToolDelta"
 
 # Please don't change this manually, your changes may invalidate other people's package management, use poetry to make changes!
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 psutil = "5.9.8"
 ujson = "5.9.0"
 colorama = "^0.4.6"
@@ -30,7 +30,7 @@ tqdm = "^4.66.4"
 anyio = "^4.4.0"
 requests = "^2.32.3"
 sqlite-easy-ctrl = "0.1.2"
-numpy = "1.26.4"
+numpy = "^2.1.0"
 
 [[tool.poetry.source]]
 name = "mirrors"

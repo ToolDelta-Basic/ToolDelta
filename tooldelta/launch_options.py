@@ -11,6 +11,7 @@ from .frame import ToolDelta
 from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .starter import start_tool_delta
+from .get_tool_delta_version import get_tool_delta_version
 from .sys_args import print_help, sys_args_to_dict
 
 
@@ -27,7 +28,10 @@ def client_title() -> None:
     try:
         if "h" in sys_args_to_dict() or "help" in sys_args_to_dict():
             print_help()
-            raise SystemExit
+            return
+        elif "v" in sys_args_to_dict() or "version" in sys_args_to_dict():
+            print(".".join(str(i) for i in get_tool_delta_version()))
+            return
         is_faststart = os.path.isfile("快速启动.sig")
         launch_mode = sys_args_to_dict()
         if launch_mode.get("l"):
@@ -37,7 +41,7 @@ def client_title() -> None:
         elif is_faststart:
             Print.clean_print("§a快速启动功能已打开, 将跳过选择界面")
             Print.clean_print("删除本地的 §f快速启动.sig§r 文件即可取消快速启动功能")
-            time.sleep(3)
+            time.sleep(1.5)
             start_tool_delta()
             return
         else:
@@ -63,7 +67,9 @@ def client_title() -> None:
             case "5":
                 open("快速启动.sig", "wb").close()
                 Print.clean_print("§a快速启动模式已开启")
-                Print.clean_print("§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能")
+                Print.clean_print(
+                    "§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能"
+                )
             case _:
                 Print.clean_print("§c不合法的启动模式: " + r)
     except (EOFError, SystemExit):

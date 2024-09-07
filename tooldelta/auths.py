@@ -47,7 +47,7 @@ def sign_login(API_urls: list[str]) -> str:
     SUCCESS_CODE = 200
     if repo.status_code != SUCCESS_CODE:
         Print.print_war(
-            f"请求 Api 接口失败，将自动使用 Token 登陆！状态码:{repo.status_code}，返回值:{repo.text}"
+            f"请求 Api 接口失败，将自动使用 Token 登录！状态码:{repo.status_code}，返回值:{repo.text}"
         )
         raise requests.exceptions.RequestException("请求 Api 接口失败", repo)
     if not repo_success:

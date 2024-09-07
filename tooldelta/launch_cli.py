@@ -109,10 +109,9 @@ class StandardFrame:
         """
         self.status = new_status
         if new_status == SysStatus.NORMAL_EXIT:
-            tooldelta.safe_jump(out_task=True)
-            self.exit_event.set()  # 设置事件，触发等待结束
+            self.exit_event.set()
+            tooldelta.safe_jump()
         if new_status == SysStatus.CRASHED_EXIT:
-            tooldelta.safe_jump(out_task=False)
             self.exit_event.set()
 
     def sendcmd(
@@ -228,7 +227,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         super().__init__()
         self.status = SysStatus.LOADING
-        self.launch_event = threading.Event()
         self.neomg_proc = None
         self.serverNumber = None
         self.neomega_account_opt = None
@@ -272,13 +270,8 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 ServerCode=str(self.serverNumber),
                 ServerPassword=self.serverPassword,
             )
-        self.omega = neo_conn.ThreadOmega(
-            connect_type=neo_conn.ConnectType.Remote,
-            address="tcp://localhost:24013",
-            accountOption=self.neomega_account_opt,
-        )
 
-    def set_omega(self, openat_port: int) -> None:
+    def set_omega_conn(self, openat_port: int) -> None:
         """设置 Omega 连接
 
         Args:
@@ -353,6 +346,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             encoding="utf-8",
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
         )
         return free_port
@@ -381,14 +375,22 @@ class FrameNeOmgAccessPoint(StandardFrame):
             SystemError: 未知的退出状态
         """
         self.status = SysStatus.LAUNCHING
+        self.launch_event = threading.Event()
+        self.exit_event = threading.Event()
+        self.omega = neo_conn.ThreadOmega(
+            connect_type=neo_conn.ConnectType.Remote,
+            address="tcp://localhost:24013",
+            accountOption=self.neomega_account_opt,
+        )
         openat_port = self.start_neomega_proc()
         Utils.createThread(
             self._msg_show_thread,
             usage="显示来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
+        self.omega.reset_omega_status()
         self.launch_event.wait()
-        self.set_omega(openat_port)
+        self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
         Print.print_suc("已获取游戏网络接入点最高权限")
@@ -399,7 +401,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._launcher_listener()
         Print.print_suc("接入点注入已就绪")
-        self.exit_event.wait()  # 等待事件的触发
+        self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
         if self.status == SysStatus.CRASHED_EXIT:
@@ -532,8 +534,8 @@ class FrameNeOmgAccessPoint(StandardFrame):
             bool: 是否为 OP
         """
         self.check_avaliable()
-        if player not in [i.name for i in self.omega.get_all_online_players()]:
-            raise ValueError(f"玩家 '{player}' 不处于全局玩家中")
+        if player not in (allplayers := [i.name for i in self.omega.get_all_online_players()]):
+            raise ValueError(f"玩家 '{player}' 不处于全局玩家中 (全局玩家: " + ", ".join(allplayers) + ")")
         player_obj = self.omega.get_player_by_name(player)
         if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
             raise ValueError("未能获取玩家对象")
@@ -626,7 +628,7 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             openat_port = 24015
             return SystemExit("未指定端口号")
         Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
-        self.set_omega(openat_port)
+        self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
         Print.print_suc("已与接入点进程建立通信网络")
@@ -645,36 +647,10 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
         return SystemError("未知的退出状态")
 
 
-class FrameBEConnect(StandardFrame):
-    "WIP: Minecraft Bedrock '/connect' 指令所连接的服务端"
+class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
+    """混合使用ToolDelta和NeOmega启动器启动"""
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.cmd_resp: dict = {}
-
-    def init(self):
-        self.cmd_resp = {}
-
-    def prepare_apis(self):
-        raise NotImplementedError()
-
-    def handler(self, data):
-        message_purpose = data["header"]["messagePurpose"]
-        if message_purpose == "commandResponse":
-            request_id = data["header"]["requestId"]
-            if request_id in self.cmd_resp:
-                self.cmd_resp[request_id] = Packet_CommandOutput(
-                    {
-                        "CommandOrigin": [],
-                        "OutputType": 1,
-                    }
-                )
-
-
-class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
-    """使用 NeOmega接入点 框架连接到游戏 但同时兼容NeOmegaCli的运行"""
-
-    launch_type = "NeOmgParalleltToolDelta"
+    launch_type = "NeOmegaLauncher"
 
     def __init__(self) -> None:
         """初始化 NeOmega 框架
@@ -707,6 +683,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
         self.out_speed: float = 0.002
 
     def init(self):
+        os.makedirs("NeOmega数据", exist_ok=True)
         if "no-download-neomega" not in sys_args_to_dict().keys():
             Print.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
             try:
@@ -810,7 +787,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
             char = self.neomg_proc.stdout.read(1)
             if self.neomg_proc.stderr is not None:
                 err = self.neomg_proc.stderr.readlines()
-                print(err)
+                Print.print_err("\n".join(err))
             if char == "":
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
@@ -837,8 +814,7 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
                     ]
                 ):
                     msg_orig = (
-                        msg_orig
-                        .replace("SUCCESS", "成功")
+                        msg_orig.replace("SUCCESS", "成功")
                         .replace("  ERROR  ", "错误")
                         .replace("WARNING", "警告")
                         .replace("  INFO  ", "消息")
@@ -898,21 +874,23 @@ class FrameNeOmgParalleltToolDelta(FrameNeOmgAccessPoint):
             f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}'
         )
         Utils.createThread(
-            self._msg_handle_thread, usage="处理来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            self._msg_handle_thread,
+            usage="处理来自 NeOmega接入点 的信息",
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         Utils.createThread(
             self._msg_show_thread,
             usage="显示来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         Utils.createThread(
             self._handle_input_thread,
             usage="处理将要写入到 NeOmega 进程中的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
+        self.omega.reset_omega_status()
         self.launch_event.wait()
-        self.set_omega(openat_port)
+        self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.wait_omega_disconn_thread()
         Print.print_suc("已获取游戏网络接入点最高权限")

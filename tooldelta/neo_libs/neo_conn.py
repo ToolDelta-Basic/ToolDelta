@@ -456,9 +456,14 @@ class PlayerKit:
     def __del__(self):
         LIB.AddGPlayerUsingCount(toCString(self._uuid), -1)
 
+
 class ConnectType(enum.Enum):
     Remote = "Remote"  # 连接到一个 neOmega Access Point
     Local = "Local"  # 在内部启动一个单独的 neOmega Core
+
+
+GOMEGA_HAD_LISTENED_PACKETS = False
+GOMEGA_HAD_LISTENED_PLAYER_CHANGE = False
 
 
 class ThreadOmega:
@@ -504,7 +509,9 @@ class ThreadOmega:
 
         # setup actions
         # make LIB listen to all packets and new packets will have eventType="MCPacket"
+
         LIB.ListenAllPackets()
+
         mapping = json.loads(toPyString(LIB.GetPacketNameIDMapping()))
         self._packet_name_to_id_mapping: dict[str, int] = mapping
         self._packet_id_to_name_mapping = {}
@@ -513,6 +520,7 @@ class ThreadOmega:
             self._packet_listeners[packet_name] = set()
 
         LIB.ListenPlayerChange()
+
         self._player_change_listeners: list[Callable[[PlayerKit, str], None]] = []
 
         # get bot basic info (this info will not change so we need to get it only once)
@@ -521,7 +529,11 @@ class ThreadOmega:
         )
 
         # start routine
-        Utils.createThread(self._react, usage="Omega React Thread", thread_level=Utils.ToolDeltaThread.SYSTEM)
+        return Utils.createThread(
+            self._react,
+            usage="接入点反应核心",
+            thread_level=Utils.ToolDeltaThread.SYSTEM,
+        )
 
     def _react(self):
         while True:
@@ -558,11 +570,12 @@ class ThreadOmega:
 
     def _handle_mc_packet(self, packetTypeName):
         if packetTypeName == "":
-            print("'', ignored")
+            LIB.OmitEvent()
         elif listeners := self._packet_listeners.get(packetTypeName, []):
             ret = LIB.ConsumeMCPacket()
             if convertError := toPyString(ret.convertError):
-                raise ValueError(convertError)
+                Print.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
+                return
             jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
             for listener in listeners:
                 Utils.createThread(
@@ -583,8 +596,6 @@ class ThreadOmega:
                     (self._get_bind_player(playerUUID), action),
                     usage="Player Change Callback Thread",
                 )
-
-
 
     @staticmethod
     def _handle_player_intercept_or_chat():
@@ -759,13 +770,28 @@ class ThreadOmega:
     def place_command_block(place_option: CommandBlockPlaceOption):
         LIB.PlaceCommandBlock(toCString(json.dumps(place_option.__dict__)))
 
+    # hi level bot action
+
+    @staticmethod
+    def use_hotbar_item(slotID: int) -> None:
+        LIB.UseHotbarItem(slotID)
+
+    @staticmethod
+    def drop_item_from_hotbar(slotID: int) -> None:
+        LIB.DropItemFromHotBar(slotID)
+
+    @staticmethod
+    def reset_omega_status():
+        LIB.ResetListenPlayerChangeStatus()
+        LIB.ResetListenPacketsStatus()
+
     def __del__(self):
         for t in self._running_threads.values():
             t.join()
 
 
-def load_lib():  # noqa: PLR0915
-    global LIB  # noqa: PLW0603
+def load_lib():
+    global LIB
 
     sys_machine = platform.machine().lower()
     sys_type = platform.uname().system
@@ -819,7 +845,7 @@ def load_lib():  # noqa: PLR0915
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
     LIB.GetClientMaintainedExtendInfo.restype = CString
     LIB.GetAllOnlinePlayers.restype = CString
-    LIB.AddGPlayerUsingCount.argtypes = [CString,CInt]
+    LIB.AddGPlayerUsingCount.argtypes = [CString, CInt]
     LIB.ForceReleaseBindPlayer.argtypes = [CString]
     LIB.PlayerName.argtypes = [CString]
     LIB.PlayerName.restype = CString
@@ -879,3 +905,5 @@ def load_lib():  # noqa: PLR0915
     LIB.GetPlayerByName.restype = CString
     LIB.ConsumePlayerChange.restype = CString
     LIB.PlaceCommandBlock.argtypes = [CString]
+    LIB.UseHotbarItem.argtypes = [ctypes.c_uint8]
+    LIB.DropItemFromHotBar.argtypes = [ctypes.c_uint8]

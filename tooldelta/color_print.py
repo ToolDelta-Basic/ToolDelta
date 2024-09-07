@@ -132,6 +132,7 @@ class Print:
     @staticmethod
     def _strike(text: str) -> str:
         """删除线
+        对于Unicode字符不适用
 
         Args:
             text (str): 需要删除线的字符串
@@ -146,7 +147,7 @@ class Print:
             char = text[i]
             try:
                 if char == "§":
-                    if text[i + 1] == "s":
+                    if text[i + 1] == "S":
                         strike_mode = True
                         i += 2
                         continue

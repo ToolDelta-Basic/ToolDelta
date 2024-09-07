@@ -3,7 +3,8 @@
 """
 
 import time
-from typing import TYPE_CHECKING, Optional, Callable
+from typing import TYPE_CHECKING, Optional
+from collections.abc import Callable
 import json
 import threading
 
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
 game_ctrl: Optional["GameCtrl"] = None
 movent_frame: Optional["ToolDelta"] = None
 player_waitmsg_cb: dict[str, Callable[[str], None]] = {}
+
 
 def _create_lock_and_result_setter():
     """
@@ -504,6 +506,7 @@ def __set_effect_while__(
         else:
             break
 
+
 def set_player_effect(
     player_name: str,
     effect: str,
@@ -556,6 +559,7 @@ def set_player_effect(
             return True
         case _:
             return ValueError(f"未知错误: {result.OutputMessages[0].Message}")
+
 
 def waitMsg(player: str, timeout: int = 30) -> str | None:
     """
