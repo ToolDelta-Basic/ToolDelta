@@ -1,7 +1,6 @@
 "ToolDelta 常量定义"
 
-TOOLDELTA_LOGO = \
-"""╔═════════════════════════════════════════════════════════════════════════╗
+TOOLDELTA_LOGO = """╔═════════════════════════════════════════════════════════════════════════╗
 ║§9████████╗ ██████╗  ██████╗ ██╗     §b██████╗ ███████╗██╗  ████████╗ █████╗ §r║
 ║§9╚══██╔══╝██╔═══██╗██╔═══██╗██║     §b██╔══██╗██╔════╝██║  ╚══██╔══╝██╔══██╗§r║
 ║§9   ██║   ██║   ██║██║   ██║██║     §b██║  ██║█████╗  ██║     ██║   ███████║§r║
@@ -13,8 +12,7 @@ TOOLDELTA_LOGO = \
 "ToolDelta标志"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "https://tdload.whiteleaf.cn"
-    "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+    "http://222.187.254.86:5244/d/ToolDelta-Basic/PluginMarket/main"
 )
 "插件市场源"
 
@@ -106,8 +104,12 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "https://tdload.whiteleaf.cn"
-"ToolDelta专用镜像"
+TDSPECIFIC_MIRROR = "http://222.187.254.86:5244/d"
+"ToolDelta镜像"
+
+TDREPO_URL = (
+    f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta-Basic/ToolDelta"
+)
 
 
 class PacketIDS:
@@ -124,7 +126,7 @@ class PacketIDS:
     IDText = 9  # 文本消息
     IDSetTime = 10  # 更新客户端时间（服务端 -> 客户端）
     IDStartGame = 11  # 开始游戏
-    IDAddPlayer = 112  # 添加玩家实体
+    IDAddPlayer = 12  # 添加玩家实体
     IDAddActor = 13  # 添加实体
     IDRemoveActor = 14  # 添加实体
     IDAddItemActor = 15  # 添加物品实体
