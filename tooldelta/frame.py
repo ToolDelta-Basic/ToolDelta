@@ -644,6 +644,8 @@ class ToolDelta:
                 rsp = ""
                 try:
                     while True:
+                        if self.link_game_ctrl.linked_frame.launcher.status != SysStatus.RUNNING:
+                            continue
                         res = sys.stdin.read(1)
                         if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
                             break
