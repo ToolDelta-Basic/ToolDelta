@@ -13,7 +13,6 @@ repository = "https://github.com/ToolDelta-Basic/ToolDelta"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 psutil = "5.9.8"
-ujson = "5.9.0"
 colorama = "^0.4.6"
 pillow = "^10.2.0"
 shellescape = "^3.8.1"
