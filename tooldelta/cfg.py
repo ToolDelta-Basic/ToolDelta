@@ -1,9 +1,8 @@
 """配置文件模块"""
 
 import os
+import json
 from typing import Any, Union
-
-import ujson
 
 NoneType = type(None)
 
@@ -21,7 +20,7 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
         Cfg.PNumber: lambda: isinstance(obj, int | float) and obj > 0,
         Cfg.NNNumber: lambda: isinstance(obj, int | float) and obj >= 0,
-        int: lambda: type(obj) is int,  # noqa: E721
+        int: lambda: type(obj) is int,
     }.get(typ, lambda: isinstance(obj, typ))()
 
 
@@ -148,8 +147,8 @@ class Cfg:
         path = path if path.endswith(".json") else f"{path}.json"
         with open(path, encoding="utf-8") as f:
             try:
-                obj = ujson.load(f)
-            except ujson.JSONDecodeError as exc:
+                obj = json.load(f)
+            except json.JSONDecodeError as exc:
                 raise self.ConfigValueError(
                     "JSON 配置文件格式不正确，请修正或直接删除", None
                 ) from exc
@@ -168,7 +167,7 @@ class Cfg:
         path = path if path.endswith(".json") else f"{path}.json"
         if force or not os.path.isfile(path):
             with open(path, "w", encoding="utf-8") as f:
-                ujson.dump(default, f, indent=4, ensure_ascii=False)
+                json.dump(default, f, indent=4, ensure_ascii=False)
 
     @staticmethod
     def exists(path: str) -> bool:
@@ -244,7 +243,7 @@ class Cfg:
                 if isinstance(val, dict):
                     raise self.ConfigValueError(
                         f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, '
-                        f"实际上为 json 对象：{ujson.dumps(val, ensure_ascii=False)}"
+                        f"实际上为 json 对象：{json.dumps(val, ensure_ascii=False)}"
                     )
                 raise self.ConfigValueError(
                     f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}'

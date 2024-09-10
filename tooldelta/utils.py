@@ -11,7 +11,7 @@ from io import TextIOWrapper
 from typing import Any, TypeVar
 from collections.abc import Callable
 
-import ujson as json
+import json
 
 from .color_print import Print
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR

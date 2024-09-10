@@ -5,7 +5,7 @@ import platform
 import shlex
 import shutil
 
-import ujson as json
+import json
 
 from .color_print import Print
 from .constants import (

@@ -8,7 +8,7 @@ import time
 import traceback
 
 import requests
-import ujson as json
+import json
 
 from . import urlmethod
 from .cfg import Cfg

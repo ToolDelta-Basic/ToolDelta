@@ -1,11 +1,10 @@
-"认证模块"
+"验证服务器的各种登录方法"
 
 import getpass
 import hashlib
-from typing import Any
-
 import requests
-import ujson as json
+import json
+from typing import Any
 
 from .color_print import Print
 

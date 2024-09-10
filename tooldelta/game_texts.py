@@ -10,7 +10,7 @@ from importlib import util
 from typing import Any
 
 import requests
-import ujson as json
+import json
 import urllib3
 
 from .utils import Utils
