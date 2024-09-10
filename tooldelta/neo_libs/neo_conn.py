@@ -478,15 +478,13 @@ class ThreadOmega:
         self.connect_type = connect_type
         self.address = address
         self.accountOption = accountOption
-        self._omega_disconnected_lock: threading.Event
+        self._omega_disconnected_lock = threading.Event()
         self._omega_disconnected_reason: str
         self._cmd_callback_retriever_counter: Counter
         self._omega_cmd_callback_events: dict[str, Callable]
         self._packet_listeners: dict[str, set[Callable[[str, Any], None]]]
         self._player_change_listeners: list[Callable[[PlayerKit, str], None]]
         self._bot_basic_info: ClientMaintainedBotBasicInfo
-        self._packet_name_to_id_mapping: dict[str, int]
-        self._packet_id_to_name_mapping: dict[int, str]
 
     def connect(self):
         if self.connect_type == ConnectType.Local:
@@ -496,7 +494,6 @@ class ThreadOmega:
             ConnectOmega(self.address)
 
         # disconnect event
-        self._omega_disconnected_lock = threading.Event()
         self._omega_disconnected_lock.clear()  # lock
         self._omega_disconnected_reason = ""
 

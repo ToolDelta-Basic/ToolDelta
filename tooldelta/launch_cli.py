@@ -271,7 +271,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 ServerPassword=self.serverPassword,
             )
 
-    def set_omega_conn(self, openat_port: int) -> None:
+    def set_omega_conn(self, openat_port: int) -> bool:
         """设置 Omega 连接
 
         Args:
@@ -288,13 +288,14 @@ class FrameNeOmgAccessPoint(StandardFrame):
             try:
                 self.omega.connect()
                 retries = 1
-                return
+                return True
             except Exception as err:
-                Print.print_war(f"OMEGA 连接失败第 {err} (第{retries}次)")
+                Print.print_war(f"OMEGA 连接失败: {err} (第{retries}次)")
                 time.sleep(5)
                 retries += 1
         Print.print_err("最大重试次数已超过")
         self.update_status(SysStatus.CRASHED_EXIT)
+        return False
 
     def start_neomega_proc(self) -> int:
         """启动 NeOmega 进程
@@ -390,17 +391,17 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
         self.omega.reset_omega_status()
         self.launch_event.wait()
-        self.set_omega_conn(openat_port)
-        self.update_status(SysStatus.RUNNING)
-        self.wait_omega_disconn_thread()
-        Print.print_suc("已获取游戏网络接入点最高权限")
-        pcks = [
-            self.omega.get_packet_id_to_name_mapping(i)
-            for i in self.need_listen_packets
-        ]
-        self.omega.listen_packets(pcks, self.packet_handler_parent)
-        self._launcher_listener()
-        Print.print_suc("接入点注入已就绪")
+        if self.set_omega_conn(openat_port):
+            self.update_status(SysStatus.RUNNING)
+            self.wait_omega_disconn_thread()
+            Print.print_suc("已获取游戏网络接入点最高权限")
+            pcks = [
+                self.omega.get_packet_id_to_name_mapping(i)
+                for i in self.need_listen_packets
+            ]
+            self.omega.listen_packets(pcks, self.packet_handler_parent)
+            self._launcher_listener()
+            Print.print_suc("接入点注入已就绪")
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
