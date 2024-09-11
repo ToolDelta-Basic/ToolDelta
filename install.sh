@@ -30,7 +30,7 @@ function download_exec_for_termux(){
 echo "开始更新系统环境，遇到停顿请回车"
 sleep 5
 #更换termux源
-sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && pkg update && pkg upgrade
+sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && pkg update
 
 # 使用apt安装Python
 echo "正在使用 pkg 安装 Python及相关环境..."
