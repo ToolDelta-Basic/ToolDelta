@@ -4,7 +4,7 @@ import os
 import shutil
 from typing import Any
 
-import ujson as json
+import json
 
 from tooldelta.color_print import Print
 from tooldelta.constants import (
