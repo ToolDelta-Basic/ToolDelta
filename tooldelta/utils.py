@@ -84,7 +84,7 @@ class Utils:
                 threads_list.remove(self)
 
         def stop(self) -> bool:
-            """终止线程"""
+            """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
             self.stopping = True
             thread_id = self.ident
             if thread_id is None:
