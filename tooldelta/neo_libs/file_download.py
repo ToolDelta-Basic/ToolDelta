@@ -5,7 +5,7 @@ import platform
 
 import brotli
 import requests
-import ujson as json
+import json
 
 from tooldelta import constants, urlmethod
 from tooldelta.cfg import Config
