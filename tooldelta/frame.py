@@ -395,6 +395,7 @@ class ToolDelta:
             md = (
                 "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
                 "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
+                "混合启动模式 (同一个机器人同时启动 ToolDelta 和 NeOmega)",
             )
             Print.clean_print("§b现有配置项如下:")
             Print.clean_print(
