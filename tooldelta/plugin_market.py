@@ -81,18 +81,20 @@ class PluginMarket:
             self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
 
     def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
-        """进入插件市场
+        """
+        进入插件市场
 
         Args:
             source_url (str | None, optional): 插件市场源
-            in_game (bool, optional): 是否在游戏内
+            in_game (bool, optional): 是否在游戏内调用的插件市场命令
         """
         Print.clean_print("§6正在连接到插件市场..")
         self.plugin_id_name_map = self.get_plugin_id_name_map()
         CTXS = 12
 
         def display_plugins(start_index: int, total_pages: int):
-            """显示插件列表
+            """
+            显示插件列表
 
             Args:
                 start_index (int): 起始索引
@@ -117,7 +119,7 @@ class PluginMarket:
                     need_log=False,
                 )
             Print.print_inf(
-                f"§f第 {start_index // CTXS + 1} / {total_pages} 页，输入 §b+§f/§b- §f翻页",
+                f"§f第§a{start_index // CTXS + 1}§f/§a{total_pages}§f页, 输入§b+§f/§b-§f翻页, §bpkg§f下载整合包",
                 need_log=False,
             )
             Print.print_inf("§f输入插件序号选中插件并查看其下载页", need_log=False)
@@ -176,6 +178,8 @@ class PluginMarket:
                             all_indexes - 1,
                         ),
                     )
+                elif last_operation == "pkg":
+                    ...
                 elif last_operation == "q":  # 退出操作
                     break
                 else:

@@ -531,8 +531,7 @@ class ToolDelta:
                 else:
                     if game_text_handler := self.link_game_ctrl.game_data_handler:
                         msgs_output = " ".join(
-                            json.dumps(i)
-                            for i in game_text_handler.Handle_Text_Class1(
+                            json.loads(i) for i in game_text_handler.Handle_Text_Class1(
                                 result.as_dict["OutputMessages"]
                             )
                         )
@@ -645,7 +644,10 @@ class ToolDelta:
                 rsp = ""
                 try:
                     while True:
-                        if self.link_game_ctrl.linked_frame.launcher.status != SysStatus.RUNNING:
+                        if (
+                            self.link_game_ctrl.linked_frame.launcher.status
+                            != SysStatus.RUNNING
+                        ):
                             continue
                         res = sys.stdin.read(1)
                         if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
@@ -769,6 +771,7 @@ class ToolDelta:
             Print.print_err(traceback.format_exc())
         finally:
             self.init_console_menu()
+            utils.timer_event_boostrap()
 
 
 class GameCtrl:
