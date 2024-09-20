@@ -52,6 +52,7 @@ class PluginManager:
                 return
             if r1 == "u":
                 self.update_all_plugins(self.get_all_plugin_datas())
+                input("[Enter 键继续..]")
             else:
                 res = self.search_plugin(r, plugins)
                 if res is None:
@@ -167,13 +168,13 @@ class PluginManager:
         Args:
             plugins (list[PluginRegData]): 插件注册信息列表
         """
-        market_datas = market.get_datas_from_market()["MarketPlugins"]
+        market_datas = market.get_market_datas()["MarketPlugins"]
         need_updates: list[tuple[PluginRegData, str]] = []
         for i in plugins:
             s_data = market_datas.get(i.plugin_id)
             if s_data is None:
                 continue
-            if i.version_str != s_data["version"]:
+            if i.version_str != s_data["version"] and i.is_enabled:
                 need_updates.append((i, s_data["version"]))
         if need_updates:
             clear_screen()
@@ -192,7 +193,7 @@ class PluginManager:
             else:
                 Print.clean_print("§6已取消插件更新.")
         else:
-            Print.clean_print("§a无可更新的插件")
+            Print.clean_print("§a无可更新的插件.")
 
     def update_plugin_from_market(self, plugin: PluginRegData):
         """

@@ -107,8 +107,8 @@ async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
                         progress_bar.refresh()
             return progress_bar
 
-    sem: asyncio.Semaphore = asyncio.Semaphore(4)  # 限制同时进行的下载任务数量为4
-    sem2: asyncio.Semaphore = asyncio.Semaphore(10)  # 只显示 10 个下载任务
+    sem = asyncio.Semaphore(6)  # 限制同时进行的下载任务数量为4
+    sem2 = asyncio.Semaphore(10)  # 只显示 10 个下载任务
 
     async with aiohttp.ClientSession() as session:
         tasks: list[asyncio.Task] = []

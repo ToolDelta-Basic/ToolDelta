@@ -472,11 +472,11 @@ def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
     game_ctrl = _get_game_ctrl()
     BotPos: tuple[float, float, float] = getPosXYZ(game_ctrl.bot_name)
     game_ctrl.sendwocmd(
-        f"tp {game_ctrl.bot_name} {str(int(pos[0])) + ' ' + str(int(pos[1])) + ' ' + str(int(pos[2]))}"
+        f"tp {game_ctrl.bot_name} {int(pos[0])} {int(pos[1])} {int(pos[2])}"
     )
     game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
     game_ctrl.sendwocmd(
-        f"tp {game_ctrl.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
+        f"tp {game_ctrl.bot_name} {int(BotPos[0])} {int(BotPos[1])} {int(BotPos[2])}"
     )
 
 

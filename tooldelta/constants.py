@@ -18,7 +18,6 @@ PLUGIN_MARKET_SOURCE_OFFICIAL = (
 
 LAUNCH_CFG: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
-    "验证服务器地址(更换时记得更改fbtoken)": "",
     "是否记录日志": True,
     "是否使用github镜像": True,
     "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL,
@@ -27,7 +26,6 @@ LAUNCH_CFG: dict = {
 
 LAUNCH_CFG_STD: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": int,
-    "验证服务器地址(更换时记得更改fbtoken)": str,
     "是否记录日志": bool,
     "是否使用github镜像": bool,
     "插件市场源": str,
@@ -94,6 +92,9 @@ TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
 
 TOOLDELTA_INJECTED_PLUGIN = "ToolDelta注入式插件"
 "插件文件：ToolDelta 注入式插件 路径"
+
+TOOLDELTA_PLUGIN_CFG_DIR = "插件配置文件"
+"插件配置文件文件夹路径"
 
 TOOLDELTA_PLUGIN_DATA_DIR = "插件数据文件"
 "插件数据文件文件夹路径"

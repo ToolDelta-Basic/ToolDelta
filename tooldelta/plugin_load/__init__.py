@@ -86,7 +86,7 @@ class PluginRegData:
 
     @property
     def dir(self):
-        return os.path.join(
+        name = os.path.join(
             str(TOOLDELTA_PLUGIN_DIR),
             {
                 "classic": TOOLDELTA_CLASSIC_PLUGIN,
@@ -94,6 +94,7 @@ class PluginRegData:
             }[self.plugin_type],
             self.name,
         )
+        return name + ("" if self.is_enabled else "+disabled")
 
     def dump(self) -> dict[str, Any]:
         """转储数据"""
@@ -128,6 +129,20 @@ class PluginRegData:
             "injected": "注入式",
             "unknown": "未知类型",
         }.get(self.plugin_type, "未知类型")
+
+class PluginsPackage:
+    """插件整合包"""
+
+    def __init__(
+        self,
+        name: str,
+        pack_datas: dict
+    ):
+        self.name = name
+        self.author: str = pack_datas["author"]
+        self.version: str = pack_datas["version"]
+        self.description: str = pack_datas["description"]
+        self.plugin_ids: list[str] = pack_datas["plugin-ids"]
 
 
 def plugin_is_enabled(pname: str) -> bool:

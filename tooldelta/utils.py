@@ -507,6 +507,44 @@ class Utils:
         return receiver
 
     @staticmethod
+    def thread_gather(funcs_and_args: list[tuple[Callable[..., VT], tuple]]) -> list[VT]:
+        r"""
+        使用线程的伪异步执行器
+        ```
+        >>> results = thread_gather([
+            (requests.get, ("https://www.github.com",)),
+            (time.sleep, (1,)),
+            (sum, (1, 3, 5))
+        ])
+        >>> results
+        [<Response 200>, None, 9]
+        ```
+
+        Args:
+            funcs_and_args (list[tuple[Callable[..., VT], tuple]]): 传入线程方法
+        Returns
+
+        Returns:
+            list[VT]: _description_
+        """
+        res: list[Any] = [None] * len(funcs_and_args)
+        oks = [False for _ in range(len(funcs_and_args))]
+        for i, (func, args) in enumerate(funcs_and_args):
+            def _closet(_i, _func):
+                def _cbfunc(*args):
+                    try:
+                        assert isinstance(args, tuple), "传参必须是 tuple 类型"
+                        res[_i] = _func(*args)
+                    finally:
+                        oks[_i] = True
+                return _cbfunc
+            fun, usage = _closet(i, func), f"并行方法 {func.__name__}"
+            Utils.createThread(fun, args, usage=usage)
+        while not all(oks):
+            pass
+        return res
+
+    @staticmethod
     def try_int(arg: Any) -> int | None:
         """尝试将提供的参数化为 int 类型并返回，否则返回 None"""
         try:
