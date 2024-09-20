@@ -345,6 +345,23 @@ class PluginMarket:
         Print.clean_print("§d包含的插件的列表:")
         for pname in inc_plugins_name:
             Print.clean_print(f" §7- §r{pname}")
+        # 显示其他文件数量
+        ftree = self.get_market_filetree()
+        dirdata = ftree.get(pack.name)
+        if dirdata is None:
+            raise ValueError(f"插件市场内不存在整合包 {pack.name}")
+        plugin_config_files = ftree[url_join(pack.name, "插件配置文件")]
+        # 计算插件配置文件数量
+        config_files_num = len(plugin_config_files)
+        # 计算插件数据文件数量
+        data_files_num = 0
+        for folder_path, inc_files in ftree.items():
+            spliter = folder_path.split("/")
+            if len(spliter) < 2:
+                continue
+            if spliter[0] == pack.name and spliter[1] == "插件数据文件":
+                data_files_num += len(inc_files)
+        Print.clean_print(f"§2并包含§r{config_files_num}§2个插件配置文件, §r{data_files_num}§2个插件数据文件")
         if (
             input(Print.clean_fmt("§f下载安装 = §aY§f, 取消 = §cN§f, 请输入："))
             .lower()
