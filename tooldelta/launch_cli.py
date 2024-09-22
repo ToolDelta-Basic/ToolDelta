@@ -278,7 +278,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             openat_port (int): 端口号
 
         Raises:
-            SystemExit: 系统退出
+            bool: 是否启动成功
         """
         retries = 1
         self.omega.address = f"tcp://localhost:{openat_port}"
@@ -389,7 +389,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             usage="显示来自 NeOmega接入点 的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
-        self.omega.reset_omega_status()
+        #self.omega.reset_omega_status()
         self.launch_event.wait()
         if self.set_omega_conn(openat_port):
             self.update_status(SysStatus.RUNNING)
@@ -402,6 +402,8 @@ class FrameNeOmgAccessPoint(StandardFrame):
             self.omega.listen_packets(pcks, self.packet_handler_parent)
             self._launcher_listener()
             Print.print_suc("接入点注入已就绪")
+        else:
+            return SystemError("连接超时")
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
@@ -629,17 +631,19 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             openat_port = 24015
             return SystemExit("未指定端口号")
         Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
-        self.set_omega_conn(openat_port)
-        self.update_status(SysStatus.RUNNING)
-        self.wait_omega_disconn_thread()
-        Print.print_suc("已与接入点进程建立通信网络")
-        pcks = [
-            self.omega.get_packet_id_to_name_mapping(i)
-            for i in self.need_listen_packets
-        ]
-        self.omega.listen_packets(pcks, self.packet_handler_parent)
-        self._launcher_listener()
-        Print.print_suc("ToolDelta 待命中")
+        if self.set_omega_conn(openat_port):
+            self.update_status(SysStatus.RUNNING)
+            self.wait_omega_disconn_thread()
+            Print.print_suc("已与接入点进程建立通信网络")
+            pcks = [
+                self.omega.get_packet_id_to_name_mapping(i)
+                for i in self.need_listen_packets
+            ]
+            self.omega.listen_packets(pcks, self.packet_handler_parent)
+            self._launcher_listener()
+            Print.print_suc("ToolDelta 待命中")
+        else:
+            return SystemError("连接超时")
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
@@ -703,6 +707,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         Returns:
             int: 端口号
         """
+        Print.print_inf("正在获取空闲端口用于通信..", end = "\n")
         free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":

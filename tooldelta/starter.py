@@ -36,6 +36,7 @@ def start_tool_delta() -> None:
         game_control.set_listen_packets_to_launcher()
         tooldelta.comsole_cmd_active()
         while 1:
+            Print.print_inf("正在唤醒游戏框架, 等待中...", end = "\r")
             err = tooldelta.launcher.launch()
             if isinstance(err, SystemExit):
                 break
