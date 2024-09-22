@@ -10,22 +10,7 @@ shortcut_command="td"
 function EXIT_FAILURE(){
     exit -1
 }
-# function Download_termux() {
-# read -p "请确保您当前termux没有必要数据(后续步骤将强制覆盖数据，停止请Ctrl+C，同意请回车):"
-# echo "开始下载系统包"
-# curl -o /storage/emulated/0/Download/termux.tar.gz https://down.tblstudio.cn/Android_arm64-v8a.tar.gz
-# echo "下载完成"
-# echo "开始解压并替换"
-# cd /data/data/com.termux/files
-# tar -zxf /storage/emulated/0/Download/termux.tar.gz --recursive-unlink --preserve-permissions
-# rm /storage/emulated/0/Download/termux.tar.gz
-# echo "开始更新启动文件"
-# cat > "/data/data/com.termux/files/usr/bin/$shortcut_command" << EOF
-# python -c "import tooldelta; tooldelta.client_title()"
-# EOF
-# echo "安装完成，请退出termux并清除后台后重新运行"
 
-# }
 function download_exec_for_termux(){
 echo "开始更新系统环境，遇到停顿请回车"
 sleep 5
@@ -34,7 +19,7 @@ sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/t
 
 # 使用apt安装Python
 echo "正在使用 apt 安装 Python及相关环境..."
-apt install python python-numpy python-pillow git -y
+apt install python python-numpy python-pillow git libexpat -y
 
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
@@ -42,12 +27,12 @@ apt install libjpeg-turbo -y
 apt install zlib -y
 
 #更换pip源
-pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
 
 # 安装tooldelta库
 echo "安装tooldelta..."
 gitclone="https://github.dqyt.online/https://github.com/ToolDelta-Basic/ToolDelta"
-until git clone "$gitclone";do
+until timeout 5m git clone "$gitclone";do
   echo "下载失败，5秒后切换镜像源"
   sleep 5
   ((N++))
@@ -58,9 +43,17 @@ until git clone "$gitclone";do
   esac
 done
 cd ToolDelta
-rm -rf .git
 echo "开始安装环境"
-pip install psutil ujson colorama shellescape pyspeedtest aiohttp python-socketio flask websocket-client fcwslib pyyaml brotli websockets tqdm anyio requests sqlite-easy-ctrl
+until timeout 5m pip install psutil ujson colorama shellescape pyspeedtest aiohttp python-socketio flask websocket-client fcwslib pyyaml brotli websockets tqdm anyio requests sqlite-easy-ctrl;do
+  echo "下载失败，5秒后切换镜像源"
+  sleep 5
+  ((N++))
+  case "$N" in
+    1)pip config set global.index-url http://mirrors.aliyun.com/pypi/simple;;
+    2)echo "你的网络似乎有什么问题呢？请稍后重新尝试吧";rm -r ../ToolDelta ;EXIT_FAILURE;;
+    *)pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple;N=0
+  esac
+done
 # 生成main.py文件
 echo "生成快捷入口..."
  cat > "/data/data/com.termux/files/usr/bin/$shortcut_command" << EOF
