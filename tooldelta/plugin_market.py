@@ -122,7 +122,7 @@ class PluginMarket:
                         f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"
                     )
             Print.clean_print(
-                f"§f第§a{start_index // CTXS + 1}§f/§a{total_pages}§f页, 输入§b+§f/§b-§f翻页, §bpkg§f下载整合包"
+                f"§f第§a{start_index // CTXS + 1}§f/§a{total_pages}§f页, 输入§b+§f/§b-§f翻页"
             )
             Print.clean_print("§f输入插件序号选中插件并查看其下载页")
 

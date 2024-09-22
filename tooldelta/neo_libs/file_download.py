@@ -111,12 +111,12 @@ def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
 
 def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
     try:
-        require_depen = json.loads(
-            requests.get(f"{mirror_src}/require_files.json", timeout=5).text
-        )
-        require_neomega = json.loads(
-            requests.get(f"{mirror_src}/neomega_files.json", timeout=5).text
-        )
+        resp1 = requests.get(f"{mirror_src}/require_files.json", timeout=5)
+        resp1.raise_for_status()
+        require_depen = resp1.json()
+        resp2 = requests.get(f"{mirror_src}/neomega_files.json", timeout=5)
+        resp2.raise_for_status()
+        require_neomega = resp2.json()
     except Exception as err:
         Print.print_err(f"获取依赖库表出现问题：{err} (链接:{mirror_src})")
         return ({}, {})

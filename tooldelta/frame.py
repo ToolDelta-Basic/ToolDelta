@@ -909,7 +909,7 @@ class GameCtrl:
                     plugin_grp.execute_player_join(
                         player, self.linked_frame.on_plugin_err
                     )
-                elif not pkt["Message"].startswith("§e%multiplayer.player.joined"):
+                elif pkt["Message"] != "§e%multiplayer.player.left":
                     if self.game_data_handler is not None:
                         jon = self.game_data_handler.Handle_Text_Class1(pkt)
                         Print.print_inf("§1" + " ".join(jon).strip('"'))

@@ -318,7 +318,7 @@ class PluginGroup:
             Print.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_def(self.linked_frame.on_plugin_err)
             Print.print_suc(
-                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个组合式插件，§f{self.injected_plugin_loaded_num}§a 个注入式插件"
+                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个类式插件, §f{self.injected_plugin_loaded_num}§a 个注入式插件"
             )
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
