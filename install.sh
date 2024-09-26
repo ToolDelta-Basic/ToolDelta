@@ -19,7 +19,7 @@ sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/t
 
 # 使用apt安装Python
 echo "正在使用 apt 安装 Python及相关环境..."
-apt install python python-numpy python-pillow git libexpat -y
+apt install python python-numpy python-pillow git libexpat openssl -y
 
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
