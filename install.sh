@@ -49,9 +49,9 @@ until timeout 5m pip install psutil ujson colorama shellescape pyspeedtest aioht
   sleep 5
   ((N++))
   case "$N" in
-    1)pip config set global.index-url http://mirrors.aliyun.com/pypi/simple;;
+    1)pip config set global.index-url http://mirrors.aliyun.com/pypi/simple;pip config set install.trusted-host mirrors.aliyun.com;;
     2)echo "你的网络似乎有什么问题呢？请稍后重新尝试吧";rm -r ../ToolDelta ;EXIT_FAILURE;;
-    *)pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple;N=0
+    *)pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple;pip config set install.trusted-host pypi.tuna.tsinghua.edu.cn;N=0
   esac
 done
 # 生成main.py文件
