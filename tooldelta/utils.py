@@ -652,6 +652,8 @@ def safe_close():
     event_pool["timer_events"].set()
     force_stop_common_threads()
     _tmpjson_save()
+    jsonPathTmp.clear()
+    jsonUnloadPathTmp.clear()
 
 
 def force_stop_common_threads():
