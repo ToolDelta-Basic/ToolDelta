@@ -58,7 +58,6 @@ def start_tool_delta() -> None:
 
 # /kick FSkyBlueBot
 
-
 def safe_jump(out_task: bool = True, exit_directly: bool = False) -> None:
     """安全退出
 
