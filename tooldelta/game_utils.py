@@ -108,7 +108,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
         and target != game_ctrl.bot_name
     ):
         raise ValueError(f'玩家 "{target}" 不存在')
-    resp = game_ctrl.sendcmd_with_resp(f'/querytarget @a[name="{target}"]', timeout)
+    resp = game_ctrl.sendcmd_with_resp(f"/querytarget {target}", timeout)
     if not resp.OutputMessages[0].Success:
         raise ValueError(f"无法获取坐标信息：{resp.OutputMessages[0].Message}")
     parameter = json.loads(resp.OutputMessages[0].Parameters[0])

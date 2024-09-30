@@ -584,6 +584,11 @@ class Utils:
         return [lst[i : i + length] for i in range(0, len(lst), length)]
 
     @staticmethod
+    def fill_list_index(lst: list[VT], default: list[VT]):
+        if len(lst) < len(default):
+            lst.extend(default[len(lst):])
+
+    @staticmethod
     def to_plain_name(name: str) -> str:
         """去除 网易版 Minecraft 的名字中的颜色代码
 
@@ -629,6 +634,8 @@ class Utils:
         result = getter()
 
         # 与此同时, 在另一边...
+        if special_id in cbs.keys():
+            cbs[special_id](getting_data)
 
         ```
         """
