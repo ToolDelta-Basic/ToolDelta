@@ -60,6 +60,12 @@ class Plugin:
         os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
         self.__path_created__ = True
 
+    def print(self, msg: str):
+        Print.print_inf(f"{self.name}: {msg}")
+
+    def format_data_path(self, *paths: str):
+        return os.path.join(self.data_path, *paths)
+
 
 _PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
 
