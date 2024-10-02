@@ -642,7 +642,11 @@ class Utils:
         Returns:
             str: 含玩家名的目标选择器
         """
-        return f'@a[name="{playername}"]'
+        if not playername.startswith("@"):
+            return f'@a[name="{playername}"]'
+        else:
+            # 很可能这就已经是目标选择器了
+            return playername
 
 
     @staticmethod
