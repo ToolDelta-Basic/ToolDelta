@@ -108,6 +108,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
         and target != game_ctrl.bot_name
     ):
         raise ValueError(f'玩家 "{target}" 不存在')
+    target = Utils.to_player_selector(target)
     resp = game_ctrl.sendcmd_with_resp(f"/querytarget {target}", timeout)
     if not resp.OutputMessages[0].Success:
         raise ValueError(f"无法获取坐标信息：{resp.OutputMessages[0].Message}")
@@ -165,6 +166,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         and (not target.startswith("@a"))
     ):
         raise ValueError("未找到目标玩家")
+    target = Utils.to_player_selector(target)
     result: Packet_CommandOutput = game_ctrl.sendcmd_with_resp(
         f"/clear {target} {itemName} {itemSpecialID} 0"
     )
@@ -206,6 +208,8 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     ).OutputMessages
     result = {}
     result2 = {}
+    if targetNameToGet.strip() != "*":
+        targetNameToGet = Utils.to_player_selector(targetNameToGet)
     for i in resultList:
         Message = i.Message
         if Message == r"commands.scoreboard.players.list.player.empty":
@@ -249,6 +253,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
         int: 计分板分数
     """
     game_ctrl = _get_game_ctrl()
+    target = Utils.to_player_selector(target)
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
     resp = game_ctrl.sendcmd_with_resp(

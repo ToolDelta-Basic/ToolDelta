@@ -635,6 +635,8 @@ class Utils:
         将玩家名转换为目标选择器.
         >>> to_player_selector("123坐端正")
         '@a[name="123坐端正"]'
+        >>> to_player_selector('@a[name="123坐端正"]') # 已有选择器不会再套选择器
+        '@a[name="123坐端正"]'
 
         Args:
             playername (str): 玩家名
