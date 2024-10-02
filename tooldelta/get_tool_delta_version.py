@@ -13,4 +13,4 @@ def get_tool_delta_version() -> tuple[int, ...]:
     except Exception:
         # 该返回值不必手动修改，
         # 它会由 GitHub Action 自动从 version 文件同步
-        return (0, 10, 2)
+        return (0, 10, 3)
