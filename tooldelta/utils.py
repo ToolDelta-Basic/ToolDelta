@@ -214,7 +214,10 @@ class Utils:
 
         @staticmethod
         def read_as_tmp(
-            path: str, needFileExists: bool = True, timeout: int = 60
+            path: str,
+            needFileExists: bool = True,
+            timeout: int = 60,
+            default: Callable[[], Any] | Any = None,
         ) -> Any:
             """读取 json 文件并将其从磁盘加载到缓存区，以便一段时间内能快速读写.
 
@@ -229,7 +232,7 @@ class Utils:
             if path not in jsonUnloadPathTmp and path not in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Utils.TMPJson.loadPathJson(path, needFileExists)
-            return Utils.TMPJson.read(path)
+            return Utils.TMPJson.read(path) or (default() if callable(default) else default)
 
         @staticmethod
         def write_as_tmp(
@@ -507,7 +510,9 @@ class Utils:
         return receiver
 
     @staticmethod
-    def thread_gather(funcs_and_args: list[tuple[Callable[..., VT], tuple]]) -> list[VT]:
+    def thread_gather(
+        funcs_and_args: list[tuple[Callable[..., VT], tuple]],
+    ) -> list[VT]:
         r"""
         使用线程的伪异步执行器
         ```
@@ -530,6 +535,7 @@ class Utils:
         res: list[Any] = [None] * len(funcs_and_args)
         oks = [False for _ in range(len(funcs_and_args))]
         for i, (func, args) in enumerate(funcs_and_args):
+
             def _closet(_i, _func):
                 def _cbfunc(*args):
                     try:
@@ -537,7 +543,9 @@ class Utils:
                         res[_i] = _func(*args)
                     finally:
                         oks[_i] = True
+
                 return _cbfunc
+
             fun, usage = _closet(i, func), f"并行方法 {func.__name__}"
             Utils.createThread(fun, args, usage=usage)
         while not all(oks):
@@ -586,7 +594,7 @@ class Utils:
     @staticmethod
     def fill_list_index(lst: list[VT], default: list[VT]):
         if len(lst) < len(default):
-            lst.extend(default[len(lst):])
+            lst.extend(default[len(lst) :])
 
     @staticmethod
     def to_plain_name(name: str) -> str:
@@ -620,6 +628,22 @@ class Utils:
 
             return "".join(last_word)
         return name
+
+    @staticmethod
+    def to_player_selector(playername: str) -> str:
+        """
+        将玩家名转换为目标选择器.
+        >>> to_player_selector("123坐端正")
+        '@a[name="123坐端正"]'
+
+        Args:
+            playername (str): 玩家名
+
+        Returns:
+            str: 含玩家名的目标选择器
+        """
+        return f'@a[name="{playername}"]'
+
 
     @staticmethod
     def create_result_cb():
