@@ -22,6 +22,7 @@ timer_events_table: dict[int, tuple[str, Callable, tuple, dict, int]] = {}
 _timer_event_lock = threading.Lock()
 
 VT = TypeVar("VT")
+FACTORY_TYPE = TypeVar("FACTORY_TYPE")
 
 
 class Utils:
@@ -557,6 +558,23 @@ class Utils:
         """尝试将提供的参数化为 int 类型并返回，否则返回 None"""
         try:
             return int(arg)
+        except Exception:
+            return None
+
+    @staticmethod
+    def try_convert(arg: Any, factory: Callable[[Any], FACTORY_TYPE]) -> FACTORY_TYPE | None:
+        """
+        尝试将提供的参数交给传入的 factory 处理并返回
+
+        Args:
+            arg (Any): 参数
+            factory (Callable[[Any], FACTORY_TYPE]): 处理器方法
+
+        Returns:
+            FACTORY_TYPE | None: 处理结果, 遇到 ValueError 则返回 None
+        """
+        try:
+            return factory(arg)
         except Exception:
             return None
 
