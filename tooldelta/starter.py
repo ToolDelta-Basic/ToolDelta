@@ -36,7 +36,7 @@ def start_tool_delta() -> None:
         game_control.set_listen_packets_to_launcher()
         tooldelta.comsole_cmd_active()
         while 1:
-            Print.print_inf("正在唤醒游戏框架, 等待中...", end = "\r")
+            Print.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
             err = tooldelta.launcher.launch()
             if isinstance(err, SystemExit):
                 break
@@ -49,14 +49,34 @@ def start_tool_delta() -> None:
                 time.sleep(RETRY_TIME)
                 tooldelta.reload()
     except (KeyboardInterrupt, SystemExit, EOFError) as err:
-        Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
-        time.sleep(3)
+        if str(err):
+            Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
+        else:
+            Print.print_inf("ToolDelta 已关闭")
     except Exception:
         Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
-        input(Print.clean_fmt("§c按回车键退出..."))
 
 
-# /kick FSkyBlueBot
+def init_cfg_only() -> None:
+    Print.print_load("ToolDelta 正在以仅初始插件模式启动")
+    try:
+        tooldelta.basic_operation()
+        tooldelta.loadConfiguration()
+        tooldelta.launcher.init()
+        game_control = GameCtrl(tooldelta)
+        tooldelta.set_game_control(game_control)
+        tooldelta.set_plugin_group(plugin_group)
+        plugin_group.set_frame(tooldelta)
+        plugin_group.read_all_plugins()
+        Print.print_suc("ToolDelta 已初始化所有配置文件。")
+    except (KeyboardInterrupt, SystemExit, EOFError) as err:
+        if str(err):
+            Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
+        else:
+            Print.print_inf("ToolDelta 已关闭")
+    except Exception:
+        Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
+
 
 def safe_jump(out_task: bool = True, exit_directly: bool = False) -> None:
     """安全退出

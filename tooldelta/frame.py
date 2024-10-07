@@ -467,6 +467,16 @@ class ToolDelta:
         return need_upgrade_cfg
 
     @staticmethod
+    def win_create_batch_file():
+        if not os.path.isfile("点我启动.bat"):
+            argv = sys.argv.copy()
+            if argv[0].endswith(".py"):
+                argv.insert(0, "python")
+            exec_cmd = " ".join(argv)
+            with open("点我启动.bat", "w") as f:
+                f.write(f"@echo off\n{exec_cmd}\npause")
+
+    @staticmethod
     def welcome() -> None:
         """欢迎提示"""
         Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
@@ -481,15 +491,16 @@ class ToolDelta:
         )
         Print.print_with_info("§dToolDelta Panel 已启动", Print.INFO_LOAD)
 
-    @staticmethod
-    def basic_operation():
-        """初始化文件夹"""
+    def basic_operation(self):
+        """初始化文件夹等"""
         os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
         os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs("数据库文件", exist_ok=True)
         os.makedirs("tooldelta/neo_libs", exist_ok=True)
         os.makedirs("插件数据文件/game_texts", exist_ok=True)
+        if sys.platform == "win32":
+            self.win_create_batch_file()
 
     def add_console_cmd_trigger(
         self,
@@ -531,7 +542,8 @@ class ToolDelta:
                 else:
                     if game_text_handler := self.link_game_ctrl.game_data_handler:
                         msgs_output = " ".join(
-                            json.loads(i) for i in game_text_handler.Handle_Text_Class1(
+                            json.loads(i)
+                            for i in game_text_handler.Handle_Text_Class1(
                                 result.as_dict["OutputMessages"]
                             )
                         )
@@ -1047,7 +1059,9 @@ class GameCtrl:
             text (str): 文本
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
-        self.sendwocmd(f"titleraw {Utils.to_player_selector(target)} subtitle {text_json}")
+        self.sendwocmd(
+            f"titleraw {Utils.to_player_selector(target)} subtitle {text_json}"
+        )
 
     def player_actionbar(self, target: str, text: str) -> None:
         """向玩家展示动作栏文本
@@ -1057,7 +1071,9 @@ class GameCtrl:
             text (str): 文本
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
-        self.sendwocmd(f"titleraw {Utils.to_player_selector(target)} actionbar {text_json}")
+        self.sendwocmd(
+            f"titleraw {Utils.to_player_selector(target)} actionbar {text_json}"
+        )
 
     def get_game_data(self) -> dict:
         """获取游戏常见字符串数据

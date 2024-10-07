@@ -287,7 +287,7 @@ class PluginGroup:
 
     def read_all_plugins(self) -> None:
         """
-        读取所有插件/重载所有插件
+        读取所有插件/重载所有插件 并对插件进行预初始化
 
         Raises:
             SystemExit: 读取插件出现问题

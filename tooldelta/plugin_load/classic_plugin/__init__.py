@@ -258,7 +258,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
                     broadcast_evts_listener[evt].append(ins_func)
 
         Print.print_suc(
-            f"成功{mode_str}插件 {plugin.name} 版本：{_v0}.{_v1}.{_v2} 作者：{plugin.author}"
+            f"已{mode_str}插件 §f{plugin.name}§b@{_v0}.{_v1}.{_v2} §a作者: §r{plugin.author}"
         )
         plugin_group.normal_plugin_loaded_num += 1
         return plugin

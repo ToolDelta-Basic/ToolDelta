@@ -515,5 +515,5 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:
         Print.print_suc(
-            f"成功载入插件 {metadata.name} 版本：{metadata.version} 作者：{metadata.author}"
+            f"已载入插件 §f{metadata.name}§b@{metadata.version} §a作者: §f{metadata.author}"
         )

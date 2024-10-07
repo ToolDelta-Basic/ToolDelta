@@ -7,6 +7,7 @@ import os
 import threading
 import time
 import traceback
+import shelve
 from io import TextIOWrapper
 from typing import Any, TypeVar
 from collections.abc import Callable
@@ -109,6 +110,19 @@ class Utils:
 
     createThread = ClassicThread = ToolDeltaThread
 
+    class DB:
+        @staticmethod
+        def open(fp: str):
+            shelf = shelve.open(fp, writeback=True)
+            shelvePathTmp[fp] = shelf
+            return shelf
+
+        @staticmethod
+        def flush(fp: str):
+            if shelvePathTmp.get(fp) is None:
+                raise ValueError("数据库文件未打开")
+            shelvePathTmp[fp].sync()
+
     class TMPJson:
         """提供了加载、卸载、读取和写入 JSON 文件到缓存区的方法的类."""
 
@@ -184,7 +198,7 @@ class Utils:
             raise ValueError("json 路径未初始化，不能进行读取和写入操作：" + path)
 
         @staticmethod
-        def get(path: str) -> None:
+        def get(path: str) -> Any:
             """
             直接获取缓存区的该虚拟路径的 JSON, 不使用 copy
             WARNING: 如果你不知道有什么后果，请老老实实使用`read(...)`而不是`get(...)`!
@@ -722,23 +736,6 @@ def force_stop_common_threads():
                 Print.print_suc(f"无法终止线程 {i.usage}")
 
 
-def _tmpjson_save(fp: str | None = None):
-    "请不要在系统调用以外调用"
-    if not fp:
-        for k, (isChanged, dat) in jsonPathTmp.copy().items():
-            if isChanged:
-                Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
-                jsonPathTmp[k][0] = False
-        for k, v in jsonUnloadPathTmp.copy().items():
-            if time.time() - v > 0:
-                Utils.TMPJson.unloadPathJson(k)
-                del jsonUnloadPathTmp[k]
-    else:
-        _, dat = jsonPathTmp[fp]
-        Utils.SimpleJsonDataReader.SafeJsonDump(dat, fp)
-        jsonPathTmp[fp][0] = False
-
-
 def if_token() -> None:
     """检查路径下是否有 fbtoken，没有就提示输入
 
@@ -768,11 +765,43 @@ def fbtokenFix():
                 file2.write(token.replace("\n", ""))
 
 
+def _tmpjson_save(fp: str | None = None):
+    "请不要在系统调用以外调用"
+    if not fp:
+        for k, (isChanged, dat) in jsonPathTmp.copy().items():
+            if isChanged:
+                Utils.SimpleJsonDataReader.SafeJsonDump(dat, k)
+                jsonPathTmp[k][0] = False
+        for k, v in jsonUnloadPathTmp.copy().items():
+            if time.time() - v > 0:
+                Utils.TMPJson.unloadPathJson(k)
+                del jsonUnloadPathTmp[k]
+    else:
+        _, dat = jsonPathTmp[fp]
+        Utils.SimpleJsonDataReader.SafeJsonDump(dat, fp)
+        jsonPathTmp[fp][0] = False
+
+
+def _shelve_save(fp: str | None = None):
+    "请不要在系统调用以外调用"
+    if not fp:
+        for shelf in shelvePathTmp.copy().values():
+            shelf.sync()
+    else:
+        shelvePathTmp[fp].close()
+
+
 @Utils.timer_event(120, "缓存JSON数据定时保存", Utils.ToolDeltaThread.SYSTEM)
 @Utils.thread_func("JSON 缓存文件定时保存", Utils.ToolDeltaThread.SYSTEM)
 def tmpjson_save():
     "请不要在系统调用以外调用"
     _tmpjson_save()
+
+@Utils.timer_event(120, "缓存JSON数据定时保存", Utils.ToolDeltaThread.SYSTEM)
+@Utils.thread_func("JSON 缓存文件定时保存", Utils.ToolDeltaThread.SYSTEM)
+def shelve_save():
+    "请不要在系统调用以外调用"
+    _shelve_save()
 
 
 def timer_event_clear():
@@ -799,6 +828,7 @@ def timer_event_boostrap():
         timer += 1
 
 
-jsonPathTmp = {}
+jsonPathTmp: dict[str, list[bool | Any]] = {}
 chatbar_lock_list = []
 jsonUnloadPathTmp = {}
+shelvePathTmp: dict[str, shelve.Shelf] = {}
