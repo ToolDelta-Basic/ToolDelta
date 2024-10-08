@@ -1,4 +1,7 @@
-"""客户端启动器框架"""
+"""
+客户端启动器框架
+提供与游戏进行交互的标准接口
+"""
 
 import hashlib
 import os
@@ -50,6 +53,7 @@ class SysStatus:
 class StandardFrame:
     """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""
 
+    # 启动器类型
     launch_type = "Original"
 
     def __init__(self) -> None:
@@ -61,9 +65,9 @@ class StandardFrame:
             fbToken (str): 验证服务器 Token
             auth_server_url (str): 验证服务器地址
         """
-        self.system_type = platform.uname().system
-        self.inject_events: list = []
-        self.packet_handler: Callable = lambda pckType, pck: None
+        self.packet_handler: Callable = (
+            lambda pckType, pck: None
+        )
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launcher_listener: Callable
         self.exit_event = threading.Event()
@@ -78,7 +82,7 @@ class StandardFrame:
             self.need_listen_packets.add(i)
 
     def reload_listen_packets(self, listen_packets: set[int]) -> None:
-        """重载"""
+        """重载需要监听的数据包ID"""
         self.need_listen_packets = {9, 79, 63} | listen_packets
 
     def launch(self) -> None:
@@ -186,27 +190,6 @@ class StandardFrame:
 
         Returns:
             bool: 是否为 OP
-        """
-        raise NotImplementedError
-
-    def place_command_block_with_nbt_data(
-        self,
-        block_name: str,
-        block_states: str,
-        position: tuple[int, int, int],
-        nbt_data: neo_conn.CommandBlockNBTData,
-    ):
-        """在 position 放置方块名为 block_name 且方块状态为 block_states 的命令块，
-        同时向该方块写入 nbt_data 所指代的 NBT 数据
-
-        Args:
-            block_name (str): 命令块的方块名，如 chain_command_block
-            block_states (str): 命令块的方块状态，如 朝向南方 的命令方块表示为 ["facing_direction":3]
-            position (tuple[int, int, int]): 命令块应当被放置的位置。三元整数元组从左到右依次对应世界坐标的 X, Y, Z 轴坐标
-            nbt_data (neo_conn.CommandBlockNBTData): 该命令块的原始 NBT 数据
-
-        Raises:
-            NotImplementedError: 未实现此方法
         """
         raise NotImplementedError
 
@@ -389,7 +372,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             usage="显示来自 NeOmega接入点 的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
-        #self.omega.reset_omega_status()
+        # self.omega.reset_omega_status()
         self.launch_event.wait()
         if self.set_omega_conn(openat_port):
             self.update_status(SysStatus.RUNNING)
@@ -445,7 +428,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         if self.omega is None or self.packet_handler is None:
             raise ValueError("未连接到接入点")
-        packetType = self.omega.get_packet_name_to_id_mapping(pkt_type)
+        packetType: int = self.omega.get_packet_name_to_id_mapping(pkt_type)  # type: ignore
         self.packet_handler(packetType, pkt)
 
     def check_avaliable(self):
@@ -537,8 +520,14 @@ class FrameNeOmgAccessPoint(StandardFrame):
             bool: 是否为 OP
         """
         self.check_avaliable()
-        if player not in (allplayers := [i.name for i in self.omega.get_all_online_players()]):
-            raise ValueError(f"玩家 '{player}' 不处于全局玩家中 (全局玩家: " + ", ".join(allplayers) + ")")
+        if player not in (
+            allplayers := [i.name for i in self.omega.get_all_online_players()]
+        ):
+            raise ValueError(
+                f"玩家 '{player}' 不处于全局玩家中 (全局玩家: "
+                + ", ".join(allplayers)
+                + ")"
+            )
         player_obj = self.omega.get_player_by_name(player)
         if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
             raise ValueError("未能获取玩家对象")
@@ -707,7 +696,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         Returns:
             int: 端口号
         """
-        Print.print_inf("正在获取空闲端口用于通信..", end = "\n")
+        Print.print_inf("正在获取空闲端口用于通信..", end="\n")
         free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":

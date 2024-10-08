@@ -43,6 +43,7 @@ def print_help():
     print("启动参数帮助：")
     print("    -h, -help  查看帮助 (当前页)")
     print("    -v, --version  获取当前程序版本")
+    print("    -title <文本> 在开始界面显示指定的文本 (支持mc彩色符号)")
     print("    -no-update-check  禁用自动更新")
     print("    -no-download-libs  禁用自动更新依赖库")
     print("    -no-download-neomega 禁用自动更新NeOmega")

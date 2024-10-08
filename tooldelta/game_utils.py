@@ -255,6 +255,8 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
     game_ctrl = _get_game_ctrl()
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
+    if target in game_ctrl.allplayers:
+        target = Utils.to_player_selector(target)
     resp = game_ctrl.sendcmd_with_resp(
         f"/scoreboard players test {target} {scb_name} 0 0", timeout
     ).OutputMessages[0]

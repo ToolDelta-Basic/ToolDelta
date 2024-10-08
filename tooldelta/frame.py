@@ -479,26 +479,19 @@ class ToolDelta:
     @staticmethod
     def welcome() -> None:
         """欢迎提示"""
-        Print.print_with_info("§dToolDelta Panel Embed By SuperScript", Print.INFO_LOAD)
-        Print.print_with_info(
-            "§dToolDelta Wiki: https://td-wiki.dqyt.online/", Print.INFO_LOAD
-        )
-        Print.print_with_info(
-            "§dToolDelta 项目地址：https://github.com/ToolDelta-Basic", Print.INFO_LOAD
-        )
-        Print.print_with_info(
-            f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}", Print.INFO_LOAD
-        )
-        Print.print_with_info("§dToolDelta Panel 已启动", Print.INFO_LOAD)
+        Print.print_load("§dToolDelta Panel Embed By SuperScript")
+        Print.print_load("§dToolDelta Wiki: https://td-wiki.dqyt.online/")
+        Print.print_load("§dToolDelta 项目地址：https://github.com/ToolDelta-Basic")
+        Print.print_load(f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}")
+        Print.print_load("§dToolDelta Panel 已启动")
 
     def basic_operation(self):
         """初始化文件夹等"""
-        os.makedirs(f"插件文件/{constants.TOOLDELTA_CLASSIC_PLUGIN}", exist_ok=True)
-        os.makedirs(f"插件文件/{constants.TOOLDELTA_INJECTED_PLUGIN}", exist_ok=True)
+        os.makedirs(os.path.join("插件文件", constants.TOOLDELTA_CLASSIC_PLUGIN), exist_ok=True)
+        os.makedirs(os.path.join("插件文件", constants.TOOLDELTA_INJECTED_PLUGIN), exist_ok=True)
         os.makedirs("插件配置文件", exist_ok=True)
-        os.makedirs("数据库文件", exist_ok=True)
-        os.makedirs("tooldelta/neo_libs", exist_ok=True)
-        os.makedirs("插件数据文件/game_texts", exist_ok=True)
+        os.makedirs(os.path.join("tooldelta", "neo_libs"), exist_ok=True)
+        os.makedirs(os.path.join("插件数据文件", "game_texts"), exist_ok=True)
         if sys.platform == "win32":
             self.win_create_batch_file()
 

@@ -218,8 +218,7 @@ class PluginMarket:
                         Print.clean_print("§c超出序号范围")
 
         except (KeyError, requests.RequestException) as err:
-            Print.clean_print(f"§c获取插件市场插件出现问题:{err}")
-            Print.clean_print("§c" + traceback.format_exc().replace("\n", "\n§c"))
+            Print.clean_print(f"§c获取插件市场插件出现问题({err.__class__.__name__}): {err}")
             input(Print.clean_fmt("§6按回车键继续.."))
         except Exception:
             Print.clean_print("§c获取插件市场插件出现问题, 报错如下:")

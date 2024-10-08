@@ -41,13 +41,13 @@ def start_tool_delta() -> None:
             if isinstance(err, SystemExit):
                 break
             else:
-                # not achieved?
                 Print.print_err(f"启动器框架崩溃, 原因: {err}")
                 break
-                RETRY_TIME = 1
-                Print.print_war(f"将在 {RETRY_TIME}s 后进行重启")
-                time.sleep(RETRY_TIME)
-                tooldelta.reload()
+                # #因为某些游戏启动器的框架原因, 暂时无法实现重启功能
+                # RETRY_TIME = 1
+                # Print.print_war(f"将在 {RETRY_TIME}s 后进行重启")
+                # time.sleep(RETRY_TIME)
+                # tooldelta.reload()
     except (KeyboardInterrupt, SystemExit, EOFError) as err:
         if str(err):
             Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
