@@ -53,7 +53,7 @@ class GameTextsLoader:
             result = re.match(
                 r"(\d+\.\d+\.\d+)",
                 requests.get(
-                    f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta/GameText/releases/latest",
+                    f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta-Basic/GameText/releases/latest",
                     timeout=5,
                     verify=True,
                 ).json()["tag_name"],
@@ -91,7 +91,7 @@ class GameTextsLoader:
     def download_and_extract(self, version) -> None:
         "下载并解压"
         packets_url: str = (
-            f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta/"
+            f"{TDSPECIFIC_MIRROR}/https://github.com/ToolDelta-Basic/"
             f"GameText/releases/download/{version}/"
             "ToolDelta_Game_Texts.tar.gz"
         )
