@@ -9,6 +9,29 @@ NoneType = type(None)
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
 
+# 可用的模版键类型
+KEY_AVALI = Union[str, "Cfg.KeyGroup"]
+# 可用的模版值类型
+VAL_AVALI = Union[
+    str,
+    int,
+    float,
+    bool,
+    NoneType,
+    tuple["STD_DICT_PATTERN"],
+    "Cfg.PInt",
+    "Cfg.NNInt",
+    "Cfg.PFloat",
+    "Cfg.NNFloat",
+    "Cfg.PNumber",
+    "Cfg.NNNumber",
+    "Cfg.JsonList",
+    "Cfg.AnyKeyValue",
+    "STD_DICT_PATTERN",
+]
+# 可用的模版类型
+STD_DICT_PATTERN = Union[dict[KEY_AVALI, VAL_AVALI], "Cfg.AnyKeyValue"]
+
 
 def cfg_isinstance_single(obj: Any, typ: type) -> bool:
     if not isinstance(typ, type):
@@ -75,10 +98,6 @@ def _CfgShowType(typ: Any) -> str:
 class Cfg:
     """配置文件模块"""
 
-    AVALI_JSON_TYPE = Union[
-        type, dict, tuple[type | dict, ...], "JsonList", "AnyKeyValue"
-    ]
-
     class ConfigError(Exception):
         """配置文件错误"""
 
@@ -96,14 +115,14 @@ class Cfg:
             len_limit (int): 限制列表的特定长度, 不限制则为-1
         """
 
-        def __init__(self, patt: "Cfg.AVALI_JSON_TYPE", len_limit=-1):
+        def __init__(self, patt: VAL_AVALI, len_limit=-1):
             self.patt = patt
             self.len_limit = len_limit
 
     class AnyKeyValue:
         """配置文件的任意键名键值对类型"""
 
-        def __init__(self, val_type: "Cfg.AVALI_JSON_TYPE"):
+        def __init__(self, val_type: VAL_AVALI):
             self.type = val_type
 
     class KeyGroup:
@@ -142,7 +161,7 @@ class Cfg:
     class FindNone:
         """找不到值"""
 
-    def get_cfg(self, path: str, standard_type: dict):
+    def get_cfg(self, path: str, standard_type: STD_DICT_PATTERN):
         """从 path 路径获取 json 文件文本信息，并按照 standard_type 给出的标准形式进行检测。"""
         path = path if path.endswith(".json") else f"{path}.json"
         with open(path, encoding="utf-8") as f:
@@ -184,7 +203,7 @@ class Cfg:
     def get_plugin_config_and_version(
         self,
         pluginName: str,
-        standardType: Any,
+        standardType: STD_DICT_PATTERN,
         default: dict,
         default_vers: tuple[int, int, int] | list,
     ) -> tuple[dict[str, Any], tuple[int, int, int]]:
@@ -210,7 +229,7 @@ class Cfg:
             self.default_cfg(f"{p}.json", defaultCfg, force=True)
         cfg_stdtyp = PLUGINCFG_STANDARD_TYPE.copy()
         cfg_stdtyp["配置项"] = standardType
-        cfgGet = self.get_cfg(p, cfg_stdtyp)
+        cfgGet = self.get_cfg(p, cfg_stdtyp) # type: ignore
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         VERSION_LENGTH = 3  # 版本长度
         if len(cfgVers) != VERSION_LENGTH:
@@ -221,16 +240,17 @@ class Cfg:
 
     def check_auto(
         self,
-        standard: "Cfg.AVALI_JSON_TYPE",
+        standard: VAL_AVALI,
         val: Any,
         fromkey: str = "?",
     ):
-        """检查配置文件 (自动类型判断)
+        """
+        检测任意类型的json类型是否合法
 
         Args:
-            standard (type, dict, list): 标准
-            val (Any): 值
-            fromkey (Any, optional): 键
+            standard (type, dict, list): 标准模版
+            val (Any): 待检测的值
+            fromkey (Any, optional): 从哪个json键向下检索而来
 
         Raises:
             ValueError: 未知标准检测类型
@@ -250,7 +270,7 @@ class Cfg:
                 )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
-        elif isinstance(standard, tuple | list):
+        elif isinstance(standard, tuple):
             errs = []
             for single_type in standard:
                 try:
@@ -270,12 +290,12 @@ class Cfg:
                 f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard}'
             )
 
-    def check_dict(self, pattern: dict | AnyKeyValue, jsondict: Any, from_key="?"):
+    def check_dict(self, pattern: STD_DICT_PATTERN, jsondict: Any, from_key="?"):
         """
         按照给定的标准配置样式比对传入的配置文件 jsondict, 对不上则引发相应异常
 
         参数:
-            pattern: 标准样式 dict
+            pattern: 标准模版 dict
             jsondict: 待检测的配置文件 dict
         """
         if not isinstance(jsondict, dict):
@@ -300,12 +320,13 @@ class Cfg:
                     raise ValueError(f"Invalid key type: {key.__class__.__name__}")
 
     def check_list(self, pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
-        """检查列表
+        """
+        检查json列表是否合法
 
         Args:
-            pattern (list): 标准
-            value (Any): 值
-            fromkey (Any, optional): 键
+            pattern (list): 标准模版
+            value (Any): 待检测值
+            fromkey (Any, optional): 从哪个json键向下检索而来
 
         Raises:
             ValueError: 不是合法的标准列表检测样式
@@ -327,8 +348,8 @@ class Cfg:
 
     def auto_to_std(self, cfg):
         """
-        自动以默认配置文件生成标准配置文件格式.
-        注意：不支持固定长度列表以及 Cfg.NeccessaryKey 与 Cfg.Group 的自动转换
+        从默认配置文件自动生成配置文件检测模版
+        注意: 无法自动检测 AnyKeyValue
 
         Args:
             cfg: 默认的 CFG 配置文件
