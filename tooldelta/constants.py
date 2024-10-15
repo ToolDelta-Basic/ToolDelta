@@ -97,7 +97,7 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "http://222.187.254.86:5244/d"
+TDSPECIFIC_MIRROR = "http://github.dqyt.online"
 "ToolDelta镜像"
 
 TDREPO_URL = (
