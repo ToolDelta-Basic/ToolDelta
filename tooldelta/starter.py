@@ -23,7 +23,7 @@ def start_tool_delta() -> None:
         else:
             Print.print_war("将不会进行自动更新。")
         tooldelta.basic_operation()
-        tooldelta.loadConfiguration()
+        tooldelta.load_tooldelta_cfg()
         tooldelta.launcher.init()
         game_control = GameCtrl(tooldelta)
         tooldelta.set_game_control(game_control)
@@ -37,13 +37,15 @@ def start_tool_delta() -> None:
         tooldelta.comsole_cmd_active()
         while 1:
             Print.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
+            # 主进程
             err = tooldelta.launcher.launch()
+            # 主进程结束
             if isinstance(err, SystemExit):
                 break
             else:
                 Print.print_err(f"启动器框架崩溃, 原因: {err}")
                 break
-                # #因为某些游戏启动器的框架原因, 暂时无法实现重启功能
+                # 因为某些游戏启动器的框架原因, 暂时无法实现重启功能
                 # RETRY_TIME = 1
                 # Print.print_war(f"将在 {RETRY_TIME}s 后进行重启")
                 # time.sleep(RETRY_TIME)
@@ -61,7 +63,7 @@ def init_cfg_only() -> None:
     Print.print_load("ToolDelta 正在以仅初始插件模式启动")
     try:
         tooldelta.basic_operation()
-        tooldelta.loadConfiguration()
+        tooldelta.load_tooldelta_cfg()
         tooldelta.launcher.init()
         game_control = GameCtrl(tooldelta)
         tooldelta.set_game_control(game_control)

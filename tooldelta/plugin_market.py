@@ -91,7 +91,7 @@ class PluginMarket:
             in_game (bool, optional): 是否在游戏内调用的插件市场命令
         """
         Print.clean_print("§6正在连接到插件市场..")
-        CTXS = 12
+        CONTENT_LENGTH = 12
 
         def display_plugins_and_packages(start_index: int, total_pages: int):
             """
@@ -105,7 +105,7 @@ class PluginMarket:
             Print.clean_print(
                 f"{market_datas['SourceName']}: {market_datas['Greetings']}"
             )
-            for i in range(start_index, min(start_index + CTXS, all_indexes)):
+            for i in range(start_index, min(start_index + CONTENT_LENGTH, all_indexes)):
                 if show_list[i][0].startswith("[pkg]"):
                     pkg_name = show_list[i][0]
                     Print.clean_print(f" {i + 1}. §c[整合包]§e{pkg_name[5:]}")
@@ -122,7 +122,7 @@ class PluginMarket:
                         f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"
                     )
             Print.clean_print(
-                f"§f第§a{start_index // CTXS + 1}§f/§a{total_pages}§f页, 输入§b+§f/§b-§f翻页"
+                f"§f第§a{start_index // CONTENT_LENGTH + 1}§f/§a{total_pages}§f页, 输入§b+§f/§b-§f翻页"
             )
             Print.clean_print("§f输入插件序号选中插件并查看其下载页")
 
@@ -173,7 +173,7 @@ class PluginMarket:
             ] + list(market_datas["MarketPlugins"].items())
             all_indexes = len(show_list)
             now_index = 0
-            sum_pages = (all_indexes - 1) // CTXS + 1
+            sum_pages = (all_indexes - 1) // CONTENT_LENGTH + 1
             last_operation = ""
 
             while True:
@@ -194,7 +194,7 @@ class PluginMarket:
                     now_index = max(
                         0,
                         min(
-                            now_index + (CTXS if last_operation == "+" else -CTXS),
+                            now_index + (CONTENT_LENGTH if last_operation == "+" else -CONTENT_LENGTH),
                             all_indexes - 1,
                         ),
                     )

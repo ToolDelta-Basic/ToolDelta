@@ -37,46 +37,38 @@ LAUNCHER_NEOMEGA_STD: dict = {
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
-"启动器：NeOmega 启动配置验证格式"
+"启动器: NeOmega 启动配置验证格式"
 
 LAUNCHER_NEOMEGA_DEFAULT: dict = {
     "服务器号": 0,
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
-LAUNCHER_NEOMGPARALLELTTOOLDELTA_DEFAULT: dict = {
+LAUNCHER_NEOMG2TD_DEFAULT: dict = {
     "服务器号": 0,
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
-LAUNCHER_NEOMGPARALLELTTOOLDELTA_STD: dict = {
+LAUNCHER_NEOMG2TD_STD: dict = {
     "服务器号": int,
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
 
-"启动器：NeOmega 默认启动配置"
+"启动器: NeOmega 默认启动配置"
 
 LAUNCHER_BEWS_STD: dict = {"服务端开放地址": str}
-"启动器：BEWSServer 启动配置验证格式"
+"启动器: BEWSServer 启动配置验证格式"
 
 LAUNCHER_BEWS_DEFAULT: dict = {"服务端开放地址": ""}
-"启动器：BEWSServer 默认启动配置"
+"启动器: BEWSServer 默认启动配置"
 
-FB_APIS = [
-    "https://user.fastbuilder.pro/api/phoenix/login",
-    "https://user.fastbuilder.pro/api/new",
-    "https://user.fastbuilder.pro",
+FBLIKE_APIS = [
+    "%s/api/phoenix/login",
+    "%s/api/new",
+    "%s",
 ]
-"验证服务器：FastBuilder API 列表"
-
-
-GUGU_APIS = [
-    "https://liliya233.uk/api/phoenix/login",
-    "https://liliya233.uk/api/new",
-    "https://liliya233.uk",
-]
-"验证服务器：Liliya API 列表"
+"验证服务器: FastBuilder API 列表"
 
 AUTH_SERVERS = [
     ("FastBuilder 官方验证服务器", "https://user.fastbuilder.pro"),
@@ -88,10 +80,10 @@ TOOLDELTA_PLUGIN_DIR = "插件文件"
 "插件文件路径"
 
 TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
-"插件文件：ToolDelta 类式插件 路径"
+"插件文件: ToolDelta 类式插件 路径"
 
 TOOLDELTA_INJECTED_PLUGIN = "ToolDelta注入式插件"
-"插件文件：ToolDelta 注入式插件 路径"
+"插件文件: ToolDelta 注入式插件 路径"
 
 TOOLDELTA_PLUGIN_CFG_DIR = "插件配置文件"
 "插件配置文件文件夹路径"

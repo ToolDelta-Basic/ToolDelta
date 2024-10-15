@@ -67,7 +67,7 @@ def _get_frame() -> "ToolDelta":
     return movent_frame
 
 
-def getTarget(sth: str, timeout: int = 5) -> list:
+def getTarget(sth: str, timeout: int = 5) -> list[str]:
     """
     获取符合目标选择器实体的列表
 
