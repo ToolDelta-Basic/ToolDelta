@@ -818,6 +818,8 @@ def timer_event_boostrap():
     "请不要在系统调用以外调用"
     timer = 0
     evt = event_pool["timer_events"] = threading.Event()
+    evt.clear()
+    Print.print_suc("已开始执行 ToolDelta定时任务 函数集.")
     while not evt.is_set():
         _timer_event_lock.acquire()
         for k, (_, caller, args, kwargs, _) in timer_events_table.items():
