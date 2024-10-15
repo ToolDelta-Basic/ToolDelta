@@ -246,7 +246,7 @@ class Cfg:
                 )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
-        elif isinstance(standard, tuple):
+        elif isinstance(standard, tuple | list):
             errs = []
             for single_type in standard:
                 try:
