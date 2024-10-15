@@ -2,36 +2,12 @@
 
 import os
 import json
-from typing import Any, Union
+from typing import Any
 
 NoneType = type(None)
 
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
-
-# 可用的模版键类型
-KEY_AVALI = Union[str, "Cfg.KeyGroup"]
-# 可用的模版值类型
-VAL_AVALI = Union[
-    str,
-    int,
-    float,
-    bool,
-    NoneType,
-    tuple["STD_DICT_PATTERN"],
-    "Cfg.PInt",
-    "Cfg.NNInt",
-    "Cfg.PFloat",
-    "Cfg.NNFloat",
-    "Cfg.PNumber",
-    "Cfg.NNNumber",
-    "Cfg.JsonList",
-    "Cfg.AnyKeyValue",
-    "STD_DICT_PATTERN",
-]
-# 可用的模版类型
-STD_DICT_PATTERN = Union[dict[KEY_AVALI, VAL_AVALI], "Cfg.AnyKeyValue"]
-
 
 def cfg_isinstance_single(obj: Any, typ: type) -> bool:
     if not isinstance(typ, type):
@@ -115,14 +91,14 @@ class Cfg:
             len_limit (int): 限制列表的特定长度, 不限制则为-1
         """
 
-        def __init__(self, patt: VAL_AVALI, len_limit=-1):
+        def __init__(self, patt: Any, len_limit=-1):
             self.patt = patt
             self.len_limit = len_limit
 
     class AnyKeyValue:
         """配置文件的任意键名键值对类型"""
 
-        def __init__(self, val_type: VAL_AVALI):
+        def __init__(self, val_type: Any):
             self.type = val_type
 
     class KeyGroup:
@@ -161,7 +137,7 @@ class Cfg:
     class FindNone:
         """找不到值"""
 
-    def get_cfg(self, path: str, standard_type: STD_DICT_PATTERN):
+    def get_cfg(self, path: str, standard_type: Any):
         """从 path 路径获取 json 文件文本信息，并按照 standard_type 给出的标准形式进行检测。"""
         path = path if path.endswith(".json") else f"{path}.json"
         with open(path, encoding="utf-8") as f:
@@ -203,7 +179,7 @@ class Cfg:
     def get_plugin_config_and_version(
         self,
         pluginName: str,
-        standardType: STD_DICT_PATTERN,
+        standardType: Any,
         default: dict,
         default_vers: tuple[int, int, int] | list,
     ) -> tuple[dict[str, Any], tuple[int, int, int]]:
@@ -229,7 +205,7 @@ class Cfg:
             self.default_cfg(f"{p}.json", defaultCfg, force=True)
         cfg_stdtyp = PLUGINCFG_STANDARD_TYPE.copy()
         cfg_stdtyp["配置项"] = standardType
-        cfgGet = self.get_cfg(p, cfg_stdtyp) # type: ignore
+        cfgGet = self.get_cfg(p, cfg_stdtyp)
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         VERSION_LENGTH = 3  # 版本长度
         if len(cfgVers) != VERSION_LENGTH:
@@ -240,7 +216,7 @@ class Cfg:
 
     def check_auto(
         self,
-        standard: VAL_AVALI,
+        standard: Any,
         val: Any,
         fromkey: str = "?",
     ):
@@ -290,7 +266,7 @@ class Cfg:
                 f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard}'
             )
 
-    def check_dict(self, pattern: STD_DICT_PATTERN, jsondict: Any, from_key="?"):
+    def check_dict(self, pattern: Any, jsondict: Any, from_key="?"):
         """
         按照给定的标准配置样式比对传入的配置文件 jsondict, 对不上则引发相应异常
 
