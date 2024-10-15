@@ -181,6 +181,7 @@ class ClientMaintainedBotBasicInfo:
     BotUniqueID: int = 0
     BotIdentity: str = ""
     BotUUIDStr: str = ""
+    BotUID: str = ""
 
 
 @dataclass

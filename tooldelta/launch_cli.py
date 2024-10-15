@@ -724,6 +724,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
         Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
+        Print.print_suc(f"NeOmega 可执行文件路径: {exe_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
                 exe_file_path,
@@ -738,7 +739,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                 "-auth-server",
                 self.auth_server,
                 "-storage-root",
-                os.path.join(os.getcwd(), "NeOmega数据"),
+                os.path.join(os.getcwd(), "NeOmega数据")
             ],
             encoding="utf-8",
             stdin=subprocess.PIPE,
@@ -778,6 +779,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             f"NeOmega 进程输出速度限制: {int(1.0 / self.out_speed)!s} 条/秒"
         )
         buffer = ""
+        auto_pass = False
         while True:
             char = self.neomg_proc.stdout.read(1)
             if self.neomg_proc.stderr is not None:
@@ -810,9 +812,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                 ):
                     msg_orig = (
                         msg_orig.replace("SUCCESS", "成功")
-                        .replace("  ERROR  ", "错误")
-                        .replace("WARNING", "警告")
-                        .replace("  INFO  ", "消息")
+                        .replace("  ERROR  ", " 错误 ")
+                        .replace(" WARNING ", " 警告 ")
+                        .replace("  INFO  ", " 消息 ")
                         .strip(" ")
                     )
                     self.put_msg_to_queue(Print.fmt_info("\b" + msg_orig, ""))
@@ -820,7 +822,15 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                     self.put_msg_to_queue(Print.fmt_info(msg_orig, "§b NOMG "))
             else:
                 buffer += char
-                if (
+                # 自动通过相同配置文件启动
+                if "要使用和上次完全相同的配置启动吗?" in buffer:
+                    if not auto_pass:
+                        auto_pass = True
+                        self.neomg_proc.stdin.write("\n")
+                        self.neomg_proc.stdin.flush()
+                        Print.print_inf(f"{buffer}, 已自动选择为 y")
+                # 其他处理, 先独占输入通道, 等待用户输入
+                elif (
                     "请输入 y" in buffer
                     and "请输入 n:" in buffer
                     and char != "\n"
@@ -828,7 +838,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                 ):
                     msg_orig = buffer.strip()
                     md5 = self.put_msg_to_queue(
-                        Print.fmt_info("\b" + msg_orig, ""), False
+                        Print.fmt_info("\b" + msg_orig, "§6 输入 §r"), False
                     )
                     self.neomg_proc.stdin.write(f"{self.get_input(md5).lower()}\n")
                     self.neomg_proc.stdin.flush()
@@ -883,7 +893,6 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             usage="处理将要写入到 NeOmega 进程中的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
-        self.omega.reset_omega_status()
         self.launch_event.wait()
         self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
