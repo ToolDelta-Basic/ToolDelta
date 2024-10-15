@@ -14,51 +14,15 @@ function EXIT_FAILURE(){
 function download_exec_for_termux(){
 echo "开始更新系统环境，遇到停顿请回车"
 sleep 5
-#更换termux源
-sed -i 's@^\(deb.*stable main\)$@#\1\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list && apt update
-
-# 使用apt安装Python
-echo "正在使用 apt 安装 Python及相关环境..."
-apt install python python-numpy python-pillow git libexpat openssl -y
-
 # 安装 PIL 的前置库
 echo "正在安装图片处理依赖库(用于地图画导入)..."
-apt install libjpeg-turbo -y
-apt install zlib -y
-
-#更换pip源
-
-
-# 安装tooldelta库
-echo "安装tooldelta..."
-gitclone="https://github.dqyt.online/https://github.com/ToolDelta-Basic/ToolDelta"
-until timeout 5m git clone "$gitclone";do
-  echo "下载失败，5秒后切换镜像源"
-  sleep 5
-  ((N++))
-  case "$N" in
-    1)gitclone="https://github.moeyy.xyz/https://github.com/ToolDelta-Basic/ToolDelta";;
-    2)echo "你的网络似乎有什么问题呢？请稍后重新尝试吧";EXIT_FAILURE;;
-    *)gitclone="https://github.com/ToolDelta-Basic/ToolDelta";N=0
-  esac
-done
-cd ToolDelta
-echo "开始安装环境"
-until timeout 5m pip install psutil ujson colorama shellescape pyspeedtest aiohttp python-socketio flask websocket-client fcwslib pyyaml brotli websockets tqdm anyio requests sqlite-easy-ctrl;do
-  echo "下载失败，5秒后切换镜像源"
-  sleep 5
-  ((N++))
-  case "$N" in
-    1)pip config set global.index-url http://mirrors.aliyun.com/pypi/simple;pip config set install.trusted-host mirrors.aliyun.com;;
-    2)echo "你的网络似乎有什么问题呢？请稍后重新尝试吧";rm -r ../ToolDelta ;EXIT_FAILURE;;
-    *)pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple;pip config set install.trusted-host pypi.tuna.tsinghua.edu.cn;N=0
-  esac
-done
-# 生成main.py文件
-echo "生成快捷入口..."
- cat > "/data/data/com.termux/files/usr/bin/$shortcut_command" << EOF
-python /data/data/com.termux/files/home/ToolDelta/main.py
-EOF
+curl http://222.187.254.86:5244/d/QQd/bot/ToolDelta/ToolDelta/d/libexpat.deb -o libexpat.deb
+curl http://222.187.254.86:5244/d/QQd/bot/ToolDelta/ToolDelta/d/libffi.deb -o libffi.deb
+curl http://222.187.254.86:5244/d/QQd/bot/ToolDelta/ToolDelta/d/openssl.deb -o openssl.deb
+curl http://222.187.254.86:5244/d/QQd/bot/ToolDelta/ToolDelta/d/zlib.deb -o zlib.deb
+curl http://222.187.254.86:5244/d/QQd/bot/ToolDelta/ToolDelta/d/libjpeg-turbo.deb -o libjpeg-turbo.deb
+curl http://222.187.254.86:5244/d/QQd/bot/ToolDelta/ToolDelta/d/ToolDelta -o "/data/data/com.termux/files/usr/bin/td"
+apt install ./openssl.deb ./libffi.deb ./libexpat.deb ./zlib.deb ./libjpeg-turbo.deb
 chmod +x "/data/data/com.termux/files/usr/bin/$shortcut_command"
 echo "安装完成啦，您现在可以在命令行中输入 '$shortcut_command' 来启动 $app_name。"
 
@@ -154,6 +118,3 @@ else
     echo "不支持该系统，你的系统是"
     uname -a
 fi
-
-
-popd
