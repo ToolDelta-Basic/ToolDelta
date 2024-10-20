@@ -41,7 +41,7 @@ def client_title() -> None:
         elif is_faststart:
             Print.clean_print("§a快速启动功能已打开, 将跳过选择界面")
             Print.clean_print("删除本地的 §f快速启动.sig§r 文件即可取消快速启动功能")
-            time.sleep(1.5)
+            time.sleep(0.5)
             start_tool_delta()
             return
         else:
@@ -57,6 +57,7 @@ def client_title() -> None:
             Print.clean_print("4 - §6初始化所有插件配置")
             Print.clean_print("5 - §a修改启动配置")
             Print.clean_print("6 - §c开启直接启动模式")
+            Print.clean_print("q - §7退出")
             r = input("请选择：").strip()
         match r:
             case "1":
@@ -75,6 +76,8 @@ def client_title() -> None:
                 Print.clean_print(
                     "§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能"
                 )
+            case "q":
+                Print.clean_print("§aToolDelta 已退出.")
             case _:
                 Print.clean_print("§c不合法的启动模式: " + r)
     except (EOFError, SystemExit):
