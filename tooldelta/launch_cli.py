@@ -345,6 +345,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
+                    self.launch_event.set()
                 break
             if "[neOmega 接入点]: 就绪" in msg_orig:
                 self.launch_event.set()
@@ -374,6 +375,8 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
         # self.omega.reset_omega_status()
         self.launch_event.wait()
+        if self.status != SysStatus.LAUNCHING:
+            return SystemError("接入点无法连接到服务器")
         if self.set_omega_conn(openat_port):
             self.update_status(SysStatus.RUNNING)
             self.wait_omega_disconn_thread()
@@ -387,6 +390,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             Print.print_suc("接入点注入已就绪")
         else:
             return SystemError("连接超时")
+        self.update_status(SysStatus.RUNNING)
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
