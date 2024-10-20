@@ -98,7 +98,10 @@ PLUGIN_TYPE_MAPPING = {
 "插件属性名映射"
 
 TDSPECIFIC_MIRROR = "http://github.dqyt.online"
-"ToolDelta镜像"
+"ToolDelta的github镜像"
+
+TDSPECIFIC_GITHUB_DOWNLOAD_URL = TDSPECIFIC_MIRROR + "/http://raw.githubusercontent.com"
+"ToolDelta镜像: github文件下载"
 
 TDREPO_URL = (
     f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta-Basic/ToolDelta"

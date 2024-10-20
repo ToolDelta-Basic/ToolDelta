@@ -287,6 +287,90 @@ def isCmdSuccess(cmd: str, timeout: float = 30):
     return bool(res)
 
 
+def waitMsg(player: str, timeout: int = 30) -> str | None:
+    """
+    等待玩家在聊天栏发送消息, 并获取返回内容
+
+    Args:
+        player (str): 玩家名
+        timeout (int): 超时等待时间
+
+    Returns:
+        result (str | None): 返回, 如果超时或玩家中途退出则返回None
+    """
+    s, g = _create_lock_and_result_setter()
+    player_waitmsg_cb[player] = s
+    try:
+        res = g(timeout)
+    finally:
+        del player_waitmsg_cb[player]
+    return res
+
+
+def is_op(playername: str) -> bool:
+    """
+    判断玩家是否为 OP
+
+    参数:
+        playername: 玩家名称
+    """
+    frame = _get_frame()
+    return frame.launcher.is_op(playername)
+
+
+def getBlockTile(x: int, y: int, z: int) -> str:
+    """
+    获取指定坐标的方块的 ID
+
+    参数:
+        x: X 坐标
+        y: Y 坐标
+        z: Z 坐标
+    """
+    game_ctrl = _get_game_ctrl()
+    res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
+    if (
+        res.SuccessCount
+        or res.OutputMessages[0].Message == "commands.testforblock.outOfWorld"
+    ):
+        return "air"
+    return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
+
+
+def getTickingAreaList() -> dict:
+    """
+    获取 tickingarea 列表
+
+    异常:
+        AttributeError: 获取 tickingarea 列表失败
+    """
+    result = {}
+    cmd = sendwscmd("/tickingarea list all-dimensions", True)
+    if cmd is not None:
+        resultList = cmd.OutputMessages
+    else:
+        raise AttributeError("Failed to get the tickingarea list.")
+
+    if resultList[0].Success is False:
+        return result
+    for tickareaData in resultList[1].Message.split("%dimension.dimensionName")[1:]:
+        tickareaDimension = tickareaData.split(": \n")[0]
+        tickareaList = tickareaData.split(": \n")[1].split("\n")
+        for tickarea in tickareaList:
+            if not tickarea:
+                continue
+            tickareaName = tickarea.split("- ", 1)[1].split(": ", 1)[0]
+            tickareaPos = {
+                "start": tickarea.split(" ")[2:5],
+                "end": tickarea.split(" ")[6:9],
+            }
+            tickareaPos["start"].pop(1)
+            tickareaPos["end"].pop(1)
+            result[tickareaName] = {"dimension": tickareaDimension}
+            result[tickareaName].update(tickareaPos)
+    return result
+
+
 def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> None | Packet_CommandOutput:
@@ -375,17 +459,6 @@ def get_all_player() -> list:
     return game_ctrl.allplayers
 
 
-def is_op(playername: str) -> bool:
-    """
-    判断玩家是否为 OP
-
-    参数:
-        playername: 玩家名称
-    """
-    frame = _get_frame()
-    return frame.launcher.is_op(playername)
-
-
 def get_robotname() -> str:
     """获取机器人名称。"""
     game_ctrl = _get_game_ctrl()
@@ -412,59 +485,6 @@ def countdown(delay: float, msg: str | None = None) -> None:
         Print.print_inf(f"{msg}: {delay:.2f}s", end="\r")
         time.sleep(0.01)
     print("", end="\n")
-
-
-def getBlockTile(x: int, y: int, z: int) -> str:
-    """
-    获取指定坐标的方块的 ID
-
-    参数:
-        x: X 坐标
-        y: Y 坐标
-        z: Z 坐标
-    """
-    game_ctrl = _get_game_ctrl()
-    res = game_ctrl.sendcmd_with_resp(f"/testforblock {x} {y} {z} air")
-    if (
-        res.SuccessCount
-        or res.OutputMessages[0].Message == "commands.testforblock.outOfWorld"
-    ):
-        return "air"
-    return res.OutputMessages[0].Parameters[4].strip("%tile.").strip(".name")
-
-
-def getTickingAreaList() -> dict:
-    """
-    获取 tickingarea 列表
-
-    异常:
-        AttributeError: 获取 tickingarea 列表失败
-    """
-    result = {}
-    cmd = sendwscmd("/tickingarea list all-dimensions", True)
-    if cmd is not None:
-        resultList = cmd.OutputMessages
-    else:
-        raise AttributeError("Failed to get the tickingarea list.")
-
-    if resultList[0].Success is False:
-        return result
-    for tickareaData in resultList[1].Message.split("%dimension.dimensionName")[1:]:
-        tickareaDimension = tickareaData.split(": \n")[0]
-        tickareaList = tickareaData.split(": \n")[1].split("\n")
-        for tickarea in tickareaList:
-            if not tickarea:
-                continue
-            tickareaName = tickarea.split("- ", 1)[1].split(": ", 1)[0]
-            tickareaPos = {
-                "start": tickarea.split(" ")[2:5],
-                "end": tickarea.split(" ")[6:9],
-            }
-            tickareaPos["start"].pop(1)
-            tickareaPos["end"].pop(1)
-            result[tickareaName] = {"dimension": tickareaDimension}
-            result[tickareaName].update(tickareaPos)
-    return result
 
 
 def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
@@ -565,23 +585,3 @@ def set_player_effect(
             return True
         case _:
             return ValueError(f"未知错误: {result.OutputMessages[0].Message}")
-
-
-def waitMsg(player: str, timeout: int = 30) -> str | None:
-    """
-    等待玩家在聊天栏发送消息, 并获取返回内容
-
-    Args:
-        player (str): 玩家名
-        timeout (int): 超时等待时间
-
-    Returns:
-        result (str | None): 返回, 如果超时或玩家中途退出则返回None
-    """
-    s, g = _create_lock_and_result_setter()
-    player_waitmsg_cb[player] = s
-    try:
-        res = g(timeout)
-    finally:
-        del player_waitmsg_cb[player]
-    return res

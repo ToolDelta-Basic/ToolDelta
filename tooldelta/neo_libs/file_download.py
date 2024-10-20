@@ -2,10 +2,8 @@ import asyncio
 import hashlib
 import os
 import platform
-
 import brotli
 import requests
-import json
 
 from tooldelta import constants, urlmethod
 from tooldelta.cfg import Config
@@ -20,7 +18,7 @@ def download_libs() -> bool:
         return True
     cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
     is_mir: bool = cfgs["是否使用github镜像"]
-    mirror_src, depen_url = get_mirror_urls(is_mir)
+    mirror_src, depen_url = get_github_content_url(is_mir)
     require_depen = get_required_dependencies(mirror_src)[0]
     sys_info_fmt = get_system_info()
     source_dict = require_depen.get(sys_info_fmt)
@@ -47,7 +45,7 @@ def download_neomg() -> bool:
     download_libs()
     cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
     is_mir: bool = cfgs["是否使用github镜像"]
-    mirror_src, _ = get_mirror_urls(is_mir)
+    mirror_src, _ = get_github_content_url(is_mir)
     require_depen = get_required_dependencies(mirror_src)[1]
     sys_info_fmt = get_system_info()
     source_dict = require_depen[sys_info_fmt][0]
@@ -91,14 +89,14 @@ def download_neomg() -> bool:
     return True
 
 
-def get_mirror_urls(is_mir: bool) -> tuple[str, str]:
-    if is_mir:
+def get_github_content_url(use_special_mirror: bool) -> tuple[str, str]:
+    if use_special_mirror:
         mirror_src = (
-            constants.TDSPECIFIC_MIRROR
+            constants.TDSPECIFIC_GITHUB_DOWNLOAD_URL
             + "/ToolDelta-Basic/ToolDelta/main"
         )
         depen_url = (
-            constants.TDSPECIFIC_MIRROR
+            constants.TDSPECIFIC_GITHUB_DOWNLOAD_URL
             + "/ToolDelta-Basic/DependencyLibrary/main"
         )
     else:
