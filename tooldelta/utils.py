@@ -508,11 +508,18 @@ class Utils:
         """
         将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
         注意: 请不要在函数内放可能造成堵塞的内容
-        注意: 当此函数被修饰后, 需要调用一次才能开始定时任务线程!
+        注意: 当方法被 timer_event 修饰后, 需要调用一次该方法才能开始定时任务线程!
 
         Args:
             seconds (int): 周期秒数
             name (Optional[str], optional): 名字, 默认为自动生成的
+
+        ```python
+            @timer_event(60, "定时问好")
+            def greeting():
+                print("Hello!")
+            greeting()
+        ```
         """
 
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
@@ -529,7 +536,8 @@ class Utils:
         funcs_and_args: list[tuple[Callable[..., VT], tuple]],
     ) -> list[VT]:
         r"""
-        使用线程的伪异步执行器
+        使用回调线程作为并行器的伪异步执行器
+        可以用于并发获取多个阻塞方法的返回
         ```
         >>> results = thread_gather([
             (requests.get, ("https://www.github.com",)),
@@ -541,11 +549,11 @@ class Utils:
         ```
 
         Args:
-            funcs_and_args (list[tuple[Callable[..., VT], tuple]]): 传入线程方法
+            funcs_and_args (list[tuple[Callable[..., VT], tuple]]): (方法, 参数) 的列表
         Returns
 
         Returns:
-            list[VT]: _description_
+            list[VT]: 方法的返回 (按传入方法的顺序依次返回其结果)
         """
         res: list[Any] = [None] * len(funcs_and_args)
         oks = [False for _ in range(len(funcs_and_args))]
@@ -582,10 +590,15 @@ class Utils:
 
         Args:
             arg (Any): 参数
-            factory (Callable[[Any], FACTORY_TYPE]): 处理器方法
+            factory (Callable[[Any], factory_type]): 处理器方法
 
         Returns:
-            FACTORY_TYPE | None: 处理结果, 遇到 ValueError 则返回 None
+            factory_type | None: 处理结果, 遇到 ValueError 则返回 None
+
+        >>> try_convert("4.5", float)
+        4.5
+        >>> print(try_convert("3", bool))
+        None
         """
         try:
             return factory(arg)
@@ -630,7 +643,9 @@ class Utils:
 
     @staticmethod
     def to_plain_name(name: str) -> str:
-        """去除 网易版 Minecraft 的名字中的颜色代码
+        """
+        去除 网易版 Minecraft 的名字中的颜色代码
+        可用于将 VIP 玩家名 转换为普通玩家名
 
         Args:
             name (str): 玩家名

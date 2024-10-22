@@ -45,7 +45,7 @@ def _set_frame(my_Frame: "ToolDelta") -> None:
     """
     全局初始化框架
 
-    参数:
+    Args:
         my_Frame: 要设置的框架对象
     """
     global movent_frame, game_ctrl  # pylint: disable=global-statement
@@ -71,10 +71,10 @@ def getTarget(sth: str, timeout: int = 5) -> list[str]:
     """
     获取符合目标选择器实体的列表
 
-    参数:
+    Args:
         sth: 目标选择器
         timeout: 超时时间，默认为 5 秒
-    异常:
+    Raises:
         ValueError: 指令返回超时，或者无法获取目标
     """
     game_ctrl = _get_game_ctrl()
@@ -90,13 +90,16 @@ def getTarget(sth: str, timeout: int = 5) -> list[str]:
 
 
 def getPos(target: str, timeout: float = 5) -> dict:
-    """获取目标玩家的详细位置信息
+    """
+    获取目标玩家的详细位置信息
 
-    参数:
-        targetNameToGet: 目标玩家的名称
+    一般情况下请使用 `x, y, z = getPosXYZ(target)` 来更方便地获取坐标
+
+    Args:
+        target: 目标玩家的名称
         timeout: 超时时间（秒）。默认为 5 秒
 
-    异常:
+    Raises:
         ValueError: 当目标玩家不存在时抛出该异常
         ValueError: 当获取位置信息失败时抛出该异常
         AttributeError: 当获取玩家 UUID 失败时抛出该异常
@@ -154,7 +157,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
 def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
     """
     获取玩家背包内指定的物品的数量
-    参数:
+    Args:
         targetName (str): 玩家选择器 / 玩家名
         itemName (str): 物品 ID
         itemSpecialID (int): 物品特殊值，默认值 -1
@@ -181,10 +184,10 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
 def getPosXYZ(player, timeout: float = 30) -> tuple[float, float, float]:
     """
     获取玩家的简略坐标值，并以坐标三元元组返回
-    参数:
+    Args:
         player (str): 玩家名
         timeout (int): 最长超时时间
-    返回:
+    Returns:
         tuple[float, float, float]
     """
     res = getPos(player, timeout=timeout)["position"]
@@ -194,12 +197,12 @@ def getPosXYZ(player, timeout: float = 30) -> tuple[float, float, float]:
 def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     """
     获取单个或多个计分板分数项
-    参数:
+    Args:
         scoreboardNameToGet: 计分板名
         targetNameToGet: 获取分数的对象/目标选择器
-    返回:
+    Returns:
         分数：int
-    异常:
+    Raises:
         ValueError: 无法获取分数
     """
     game_ctrl = _get_game_ctrl()
@@ -241,15 +244,15 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
 
 def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
     """获取计分板对应分数
-    参数:
+    Args:
         scb_name: 计分板名
         target: 目标选择器
         timeout: 超时时间
 
-    异常:
+    Raises:
         ValueError: 计分板错误
 
-    返回:
+    Returns:
         int: 计分板分数
     """
     game_ctrl = _get_game_ctrl()
@@ -268,7 +271,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     if len(resp.Parameters) < 1:
         raise ValueError(
-            f"计分板分数获取的Parameters获取异常: {resp.Message}: {resp.Parameters}"
+            f"计分板分数获取的Parameters获取Raises: {resp.Message}: {resp.Parameters}"
         )
     return int(resp.Parameters[0])
 
@@ -276,10 +279,10 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
 def isCmdSuccess(cmd: str, timeout: float = 30):
     """
     获取命令执行成功与否的状态
-    参数:
+    Args:
         cmd: MC 指令
         timeout: 超时时间
-    返回:
+    Returns:
         命令执行是否成功：bool
     """
     game_ctrl = _get_game_ctrl()
@@ -311,7 +314,7 @@ def is_op(playername: str) -> bool:
     """
     判断玩家是否为 OP
 
-    参数:
+    Args:
         playername: 玩家名称
     """
     frame = _get_frame()
@@ -322,7 +325,7 @@ def getBlockTile(x: int, y: int, z: int) -> str:
     """
     获取指定坐标的方块的 ID
 
-    参数:
+    Args:
         x: X 坐标
         y: Y 坐标
         z: Z 坐标
@@ -341,7 +344,7 @@ def getTickingAreaList() -> dict:
     """
     获取 tickingarea 列表
 
-    异常:
+    Raises:
         AttributeError: 获取 tickingarea 列表失败
     """
     result = {}
@@ -378,7 +381,7 @@ def sendcmd(
 
     如果 waitForResp 为 False，则返回 None，否则返回 Packet_CommandOutput 对象
 
-    参数:
+    Args:
         cmd: 要发送的命令
         waitForResp: 是否等待响应，默认为 False
         timeout: 等待响应的超时时间（秒）,默认为 30
@@ -393,7 +396,7 @@ def sendwscmd(
     """
     发送 WSCMD 命令到游戏控制器
 
-    参数:
+    Args:
         cmd: 要发送的 WSCMD 命令
         waitForResp: 是否等待响应 默认为 False
         timeout: 超时时间（秒）默认为 30
@@ -406,7 +409,7 @@ def sendwocmd(cmd: str) -> None:
     """
     发送 WO 命令到游戏控制器
 
-    参数:
+    Args:
         cmd: 要发送的 WO 命令
     """
     game_ctrl = _get_game_ctrl()
@@ -417,7 +420,7 @@ def sendPacket(pktID: int, pkt: dict) -> None:
     """
     发送数据包给游戏控制器
 
-    参数:
+    Args:
         pktID: 数据包 ID
         pkt: 数据包内容
     """
@@ -429,7 +432,7 @@ def rawText(playername: str, text: str) -> None:
     """
     向指定玩家发送原始文本消息
 
-    参数:
+    Args:
         playername: 玩家名称
         text: 要发送的文本
     """
@@ -441,7 +444,7 @@ def tellrawText(playername: str, title: str | None = None, text: str = "") -> No
     """
     向指定玩家发送 tellraw 消息
 
-    参数:
+    Args:
         playername: 玩家名称
         title: 标题文本（可选）
         text: 消息文本
@@ -469,9 +472,9 @@ def countdown(delay: float, msg: str | None = None) -> None:
     """
     倒计时函数
 
-    参数:
+    Args:
         delay: 延迟时间，可以是整数或浮点数
-        msg: 倒计时消息，可选参数，默认为"Countdown"
+        msg: 倒计时消息，可选Args，默认为"Countdown"
     """
     if msg is None:
         msg = "Countdown"
@@ -490,9 +493,9 @@ def countdown(delay: float, msg: str | None = None) -> None:
 def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
     """
     从物品展示框取出物品
-    参数:
+    Args:
         position: 物品展示框的坐标 (x, y, z)
-    返回:
+    Returns:
         None
     """
     game_ctrl = _get_game_ctrl()
@@ -511,13 +514,13 @@ def __set_effect_while__(
 ) -> None:
     """
     内部方法: 设置玩家状态效果
-    参数:
+    Args:
         player_name: 玩家名称 (String)
         effect: 效果 ID (String) 参考 EffectIDS 中内容
         level: 效果等级 (int) Max: 255
         particle: 是否显示粒子 (Boolean)
         icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
-    返回:
+    Returns:
         None
     """
     game_ctrl = _get_game_ctrl()
@@ -545,7 +548,7 @@ def set_player_effect(
     """
     设置玩家的状态效果
 
-    参数:
+    Args:
         player_name: 玩家名称 (String) 或是选择器 (String)
         effect: 效果 ID (String) 参考 EffectIDS 中内容
         duration: 持续时间 (int) [为0代表永久(仅限ToolDelta运行时)] Max: 1000000
@@ -554,7 +557,7 @@ def set_player_effect(
         icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
         timeout: 超时时间 (float) [可选]
 
-    返回:
+    Returns:
         Bool | ValueError: 是否设置成功
     """
     if level > 255:

@@ -177,7 +177,7 @@ def progress_bar(
     Returns:
         str: 格式化后的进度条字符串
     """
-    pc = round(current / total * length)
+    pc = round(min(1, current / total) * length)
     return Print.colormode_replace(
         color1 + " " * pc + color2 + " " * (20 - pc) + "§r ", 7
     )
@@ -249,7 +249,8 @@ def is_common_text_file(url_path: str) -> bool:
 
 
 def get_file_size(url: str) -> int | None:
-    """获取文件大小
+    """
+    获取文件大小 (不安全的, 有可能无法获取到正确大小)
 
     Args:
         url (str): 网址
@@ -258,8 +259,8 @@ def get_file_size(url: str) -> int | None:
         Union[int, None]: 文件大小（单位：字节）
     """
     response = requests.head(url, timeout=10)
-    if "Content-Length" in response.headers:
-        file_size = int(response.headers["Content-Length"])
+    if "content-length" in response.headers:
+        file_size = int(response.headers["content-length"])
         return file_size
     return None
 
