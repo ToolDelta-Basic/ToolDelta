@@ -36,9 +36,9 @@ chown -R +x "$install_dir"
 # 切换到安装目录
 pushd "$install_dir" || exit
 # 获取ToolDelta的最新版本
-LatestTag=$(wget -qO- -t1 -T2 "https://tdload.tblstudio.cn/https://api.github.com/repos/ToolDelta/ToolDelta/releases/latest" | jq -r '.tag_name')
+LatestTag=$(wget -qO- -t1 -T2 "https://github.dqyt.online/https://api.github.com/repos/ToolDelta-Basic/ToolDelta/releases/latest" | jq -r '.tag_name')
 # 设置 GitHub release URL
-github_release_url="https://tdload.tblstudio.cn/https://github.com/ToolDelta/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
+github_release_url="https://github.dqyt.online/https://github.com/ToolDelta-Basic/ToolDelta/releases/download/${LatestTag}/ToolDelta-linux"
 # 下载
 if curl -o "$app_name" -L "$github_release_url"; then
     echo "下载完成。"

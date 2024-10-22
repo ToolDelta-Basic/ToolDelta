@@ -12,7 +12,7 @@ TOOLDELTA_LOGO = \
 "ToolDelta标志"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "http://222.187.254.86:5244/d/ToolDelta-Basic/PluginMarket/main"
+    "http://github.dqyt.online/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 )
 "插件市场源"
 

@@ -59,7 +59,12 @@ def get_json_from_url(url: str) -> dict:
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
-        return resp.json()
+        if resp.status_code != 200:
+            raise ValueError(f"EXC {resp.status_code}")
+        jsons = resp.json()
+        if "code" in jsons.keys() and jsons["code"] != 200:
+            raise requests.RequestException(f"服务器传回异常 (500): {jsons['message']}")
+        return jsons
     except requests.RequestException as exc:
         raise requests.RequestException(
             f"URL 请求失败: {url} \n§6(看起来您要更改配置文件中的链接)"
