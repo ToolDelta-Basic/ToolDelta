@@ -200,6 +200,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
             "on_player_leave",
             "on_command",
             "on_frame_exit",
+            "on_reload"
         ):
             if hasattr(plugin, evt_name):
                 plugin_group.plugins_funcs[evt_name].append(

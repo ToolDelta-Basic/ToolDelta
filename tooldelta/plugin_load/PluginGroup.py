@@ -41,6 +41,7 @@ from .injected_plugin import (
     execute_player_message,
     execute_player_prejoin,
     execute_repeat,
+    execute_reloaded
 )
 
 if TYPE_CHECKING:
@@ -48,6 +49,7 @@ if TYPE_CHECKING:
 
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
+_ON_ERROR_CB = Callable[[str, Exception, str], None]
 
 # add_plugin(): 类式插件调用, 插件框架会将其缓存到自身缓存区, 等待类式插件将插件类实例化
 # add_broadcast_listener(), add_packet_listener() 同理
@@ -55,7 +57,7 @@ _SUPER_CLS = TypeVar("_SUPER_CLS")
 
 
 class PluginGroup:
-    "插件组"
+    "插件组类, 存放插件代码有关数据"
 
     plugins: ClassVar[list[Plugin]] = []
     plugins_funcs: ClassVar[dict[str, list]] = {
@@ -68,6 +70,7 @@ class PluginGroup:
         "on_player_leave": [],
         "on_command": [],
         "on_frame_exit": [],
+        "on_reload": [],
     }
     Agree_bot_patrol: ClassVar["list[bool]"] = []
 
@@ -96,6 +99,8 @@ class PluginGroup:
         injected_plugin.system_reset_all_funcs()
         Print.print_inf("正在重新读取所有插件")
         self.read_all_plugins()
+        assert self.linked_frame is not None
+        self.execute_reloaded(self.linked_frame.on_plugin_err)
         Print.print_inf("开始执行插件游戏初始化方法")
         self.execute_init()
         Print.print_suc("重载插件完成！")
@@ -373,7 +378,7 @@ class PluginGroup:
         self._update_player_attributes_funcs.append(func)
 
     def execute_def(
-        self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self, onerr: _ON_ERROR_CB = NON_FUNC
     ) -> None:
         """执行插件的二次初始化方法
 
@@ -400,7 +405,7 @@ class PluginGroup:
             raise SystemExit
 
     def execute_init(
-        self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self, onerr: _ON_ERROR_CB = NON_FUNC
     ) -> None:
         """执行插件的连接游戏后初始化方法
 
@@ -416,7 +421,7 @@ class PluginGroup:
         Utils.createThread(asyncio.run, (execute_repeat(),), "注入式插件定时任务")
 
     def execute_player_prejoin(
-        self, player, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self, player, onerr: _ON_ERROR_CB = NON_FUNC
     ) -> None:
         """执行玩家加入前的方法
 
@@ -432,7 +437,7 @@ class PluginGroup:
         asyncio.run(execute_player_prejoin(player))
 
     def execute_player_join(
-        self, player: str, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self, player: str, onerr: _ON_ERROR_CB = NON_FUNC
     ) -> None:
         """执行玩家加入的方法
 
@@ -451,7 +456,7 @@ class PluginGroup:
         self,
         player: str,
         msg: str,
-        onerr: Callable[[str, Exception, str], None] = NON_FUNC,
+        onerr: _ON_ERROR_CB = NON_FUNC,
     ) -> None:
         """执行玩家消息的方法
 
@@ -471,7 +476,7 @@ class PluginGroup:
         asyncio.run(execute_player_message(player, msg))
 
     def execute_player_leave(
-        self, player: str, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self, player: str, onerr: _ON_ERROR_CB = NON_FUNC
     ) -> None:
         """执行玩家离开的方法
 
@@ -491,7 +496,7 @@ class PluginGroup:
         player: str,
         killer: str | None,
         msg: str,
-        onerr: Callable[[str, Exception, str], None] = NON_FUNC,
+        onerr: _ON_ERROR_CB = NON_FUNC,
     ):
         """执行玩家死亡的方法
 
@@ -512,7 +517,7 @@ class PluginGroup:
         self,
         name: str,
         msg: str,
-        onerr: Callable[[str, Exception, str], None] = NON_FUNC,
+        onerr: _ON_ERROR_CB = NON_FUNC,
     ) -> None:
         """执行命令 say 的方法
 
@@ -529,7 +534,7 @@ class PluginGroup:
         asyncio.run(execute_command_say(name, msg))
 
     def execute_frame_exit(
-        self, onerr: Callable[[str, Exception, str], None] = NON_FUNC
+        self, onerr: _ON_ERROR_CB = NON_FUNC
     ):
         """执行框架退出的方法
 
@@ -542,6 +547,19 @@ class PluginGroup:
             except Exception as err:
                 onerr(name, err, traceback.format_exc())
         asyncio.run(execute_frame_exit())
+
+    def execute_reloaded(self, onerr: _ON_ERROR_CB = NON_FUNC):
+        """执行插件重载的方法
+
+        Args:
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        for name, func in self.plugins_funcs["on_reloaded"]:
+            try:
+                func()
+            except Exception as err:
+                onerr(name, err, traceback.format_exc())
+        asyncio.run(execute_reloaded())
 
     def processPacketFunc(self, pktID: int, pkt: dict) -> bool:
         """处理数据包监听器

@@ -30,6 +30,7 @@ commmand_message_funcs: dict[Callable, int | None] = {}
 repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
+frame_reloaded_funcs: dict[Callable, int | None] = {}
 packet_funcs: dict[int, dict[Callable, int | None]] = {}
 loaded_plugin_modules = []
 
@@ -45,11 +46,12 @@ def system_reset_all_funcs():
     repeat_funcs.clear()
     init_plugin_funcs.clear()
     frame_exit_funcs.clear()
+    frame_reloaded_funcs.clear()
     packet_funcs.clear()
 
 
 def player_message(priority: int | None = None) -> Callable:
-    """载入处理玩家消息
+    """载入处理玩家消息方法
 
     Args:
         priority (int, optional): 插件优先级
@@ -66,7 +68,7 @@ def player_message(priority: int | None = None) -> Callable:
 
 
 def player_prejoin(priority: int | None = None) -> Callable[["player_name"], None]:
-    """载入处理玩家加入前事件
+    """载入处理玩家加入前事件方法
 
     Args:
         priority (int | None, optional): 插件优先级
@@ -83,7 +85,7 @@ def player_prejoin(priority: int | None = None) -> Callable[["player_name"], Non
 
 
 def player_join(priority: int | None = None) -> Callable:
-    """载入处理玩家加入事件
+    """载入处理玩家加入事件方法
 
     Args:
         priority (int | None, optional): 插件优先级
@@ -100,7 +102,7 @@ def player_join(priority: int | None = None) -> Callable:
 
 
 def player_left(priority: int | None = None) -> Callable:
-    """载入处理玩家离开事件
+    """载入处理玩家离开事件方法
 
     Args:
         priority (int | None, optional): 插件优先级
@@ -117,7 +119,7 @@ def player_left(priority: int | None = None) -> Callable:
 
 
 def player_death(priority: int | None = None) -> Callable:
-    """载入处理玩家死亡事件
+    """载入处理玩家死亡事件方法
 
     Args:
         priority (int | None, optional): 插件优先级
@@ -134,7 +136,7 @@ def player_death(priority: int | None = None) -> Callable:
 
 
 def init(priority: int | None = None) -> Callable:
-    """载入机器人进入游戏后初始化插件
+    """载入机器人进入游戏后初始化方法
 
     Args:
         priority (int | None, optional): 插件优先级
@@ -151,7 +153,23 @@ def init(priority: int | None = None) -> Callable:
 
 
 def frame_exit(priority: int | None = None) -> Callable:
-    """载入处理框架退出事件的插件
+    """载入处理框架退出事件的方法
+
+    Args:
+        priority (int | None, optional): 插件优先级
+
+    Returns:
+        Callable: 插件处理函数
+    """
+
+    def decorator(func):
+        frame_exit_funcs[func] = priority
+        return func
+
+    return decorator
+
+def reloaded(priority: int | None = None) -> Callable:
+    """载入处理插件重载事件的方法
 
     Args:
         priority (int | None, optional): 插件优先级
@@ -408,6 +426,10 @@ async def execute_command_say(name: str, message: str) -> None:
 async def execute_frame_exit() -> None:
     """执行框架退出处理函数"""
     await execute_asyncio_task(frame_exit_funcs)
+
+async def execute_reloaded() -> None:
+    """执行重载插件处理函数"""
+    await execute_asyncio_task(frame_reloaded_funcs)
 
 
 class PluginMetadata:
