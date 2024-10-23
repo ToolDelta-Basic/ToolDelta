@@ -9,21 +9,39 @@ from collections.abc import Callable
 
 from tooldelta.cfg import Cfg
 from tooldelta.color_print import Print
+from tooldelta.utils import Utils
 from tooldelta.constants import (
+    TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_PLUGIN_DATA_DIR,
     PacketIDS,
 )
-from tooldelta.plugin_load import NotValidPluginError, plugin_is_enabled
-from tooldelta.utils import Utils
+from .. import (
+    NotValidPluginError,
+    PluginAPINotFoundError,
+    PluginAPIVersionError,
+    plugin_is_enabled,
+)
 
 if TYPE_CHECKING:
     # 类型注释
     from tooldelta import ToolDelta
     from tooldelta.plugin_load.PluginGroup import PluginGroup
 
+_ON_ERROR_CB = Callable[[str, Exception, str], None]
 __caches__ = {"plugin": None, "api_name": "", "frame": None}
-
+plugins_funcs: dict[str, list[tuple[str, Callable]]] = {
+    "on_def": [],
+    "on_inject": [],
+    "on_player_prejoin": [],
+    "on_player_join": [],
+    "on_player_message": [],
+    "on_player_death": [],
+    "on_player_leave": [],
+    "on_command": [],
+    "on_frame_exit": [],
+    "on_reload": [],
+}
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
 loaded_plugin_modules = []
@@ -115,7 +133,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
     Args:
         plugin_grp (PluginGroup): 插件组
     """
-    PLUGIN_PATH = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
+    PLUGIN_PATH = os.path.join(TOOLDELTA_PLUGIN_DIR, TOOLDELTA_CLASSIC_PLUGIN)
     if PLUGIN_PATH not in sys.path:
         sys.path.append(PLUGIN_PATH)
     broadcast_evts_listener.clear()
@@ -190,22 +208,10 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
         _v0, _v1, _v2 = plugin.version
 
         # 收集事件监听函数
-        for evt_name in (
-            "on_def",
-            "on_inject",
-            "on_player_prejoin",
-            "on_player_join",
-            "on_player_message",
-            "on_player_death",
-            "on_player_leave",
-            "on_command",
-            "on_frame_exit",
-            "on_reload"
-        ):
+        for evt_name in plugins_funcs.keys():
             if hasattr(plugin, evt_name):
-                plugin_group.plugins_funcs[evt_name].append(
-                    [plugin.name, getattr(plugin, evt_name)]
-                )
+                plugins_funcs.setdefault(evt_name, [])
+                plugins_funcs[evt_name].append((plugin.name, getattr(plugin, evt_name)))
 
         # 收集到了需要监听的数据包
         if plugin_group._cached_packet_cbs != []:
@@ -241,7 +247,6 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
                     packet_funcs[pktID].append(
                         make_cached_func(allpkt_func.__name__, pktID)
                     )
-            pktID = 999
 
         # 收集到了作为API的插件
         if __caches__["api_name"] != "":
@@ -288,5 +293,207 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
     return None
 
 
+# 魔法方法执行部分
+
+
 def _init_frame(frame: "ToolDelta"):
     __caches__["frame"] = frame
+
+
+def reload():
+    """系统调用, 重置所有处理函数"""
+    for v in plugins_funcs.values():
+        v.clear()
+    for v in packet_funcs.values():
+        v.clear()
+
+
+def execute_def(onerr: _ON_ERROR_CB) -> None:
+    """执行插件的二次初始化方法
+
+    Args:
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法。Defaults to NON_FUNC.
+
+    Raises:
+        SystemExit: 缺少前置
+        SystemExit: 前置版本过低
+    """
+    try:
+        for name, func in plugins_funcs["on_def"]:
+            func()
+    except PluginAPINotFoundError as err:
+        Print.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
+        raise SystemExit from err
+    except PluginAPIVersionError as err:
+        Print.print_err(
+            f"插件 {name} 需要该前置组件 {err.name} 版本：{err.m_ver}, 但是现有版本过低：{err.n_ver}"
+        )
+        raise SystemExit from err
+    except Exception as err:
+        onerr(name, err, traceback.format_exc())
+        raise SystemExit
+
+
+def execute_init(onerr: _ON_ERROR_CB) -> None:
+    """执行插件的连接游戏后初始化方法
+
+    Args:
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_inject"]:
+        try:
+            func()
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_player_prejoin(player, onerr: _ON_ERROR_CB) -> None:
+    """执行玩家加入前的方法
+
+    Args:
+        player (_type_): 玩家
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_player_prejoin"]:
+        try:
+            func(player)
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_player_join(player: str, onerr: _ON_ERROR_CB) -> None:
+    """执行玩家加入的方法
+
+    Args:
+        player (str): 玩家
+        onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_player_join"]:
+        try:
+            func(player)
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_player_message(
+    player: str,
+    msg: str,
+    onerr: _ON_ERROR_CB,
+) -> None:
+    """执行玩家消息的方法
+
+    Args:
+        player (str): 玩家
+        msg (str): 消息
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    pat = f"[{player}] "
+    if msg.startswith(pat):
+        msg = msg.strip(pat)
+    for name, func in plugins_funcs["on_player_message"]:
+        try:
+            func(player, msg)
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_player_leave(player: str, onerr: _ON_ERROR_CB) -> None:
+    """执行玩家离开的方法
+
+    Args:
+        player (str): 玩家
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_player_leave"]:
+        try:
+            func(player)
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_player_death(
+    player: str,
+    killer: str | None,
+    msg: str,
+    onerr: _ON_ERROR_CB,
+):
+    """执行玩家死亡的方法
+
+    Args:
+        player (str): 玩家
+        killer (str | None): 击杀者
+        msg (str): 消息
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_player_death"]:
+        try:
+            func(player, killer, msg)
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_frame_exit(onerr: _ON_ERROR_CB):
+    """执行框架退出的方法
+
+    Args:
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_frame_exit"]:
+        try:
+            func()
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_reloaded(onerr: _ON_ERROR_CB):
+    """执行插件重载的方法
+
+    Args:
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for name, func in plugins_funcs["on_reload"]:
+        try:
+            func()
+        except Exception as err:
+            onerr(name, err, traceback.format_exc())
+
+
+def execute_command(
+    name: str,
+    msg: str,
+    onerr: _ON_ERROR_CB,
+) -> None:
+    """执行命令 say 的方法
+
+    Args:
+        player (str): 玩家
+        cmd (str): 命令
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    for plugin_name, func in plugins_funcs["on_command"]:
+        try:
+            func(plugin_name, msg)
+        except Exception as err:
+            onerr(plugin_name, err, traceback.format_exc())
+
+
+def execute_packet_funcs(pktID: int, pkt: dict, onerr: _ON_ERROR_CB) -> bool:
+    """处理数据包监听器
+
+    Args:
+        pktID (int): 数据包 ID
+        pkt (dict): 数据包
+
+    Returns:
+        bool: 是否处理成功
+    """
+    d = packet_funcs.get(pktID)
+    if d:
+        for func in d:
+            try:
+                res = func(pkt)
+                if res:
+                    return True
+            except Exception as err:
+                onerr("插件方法:" + func.__name__, err, traceback.format_exc())
+    return False

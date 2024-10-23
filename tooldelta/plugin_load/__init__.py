@@ -3,6 +3,7 @@
 import os
 import shutil
 from typing import Any
+from collections.abc import Callable
 
 import json
 
@@ -19,6 +20,7 @@ def NON_FUNC(*_) -> None:
     """空函数"""
     return None
 
+_ON_ERROR_CB = Callable[[str, Exception, str], None]
 
 class PluginSkip(EOFError):
     """跳过插件加载"""

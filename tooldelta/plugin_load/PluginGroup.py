@@ -18,9 +18,7 @@ from ..plugin_load import (
     NON_FUNC,
     PluginAPINotFoundError,
     PluginAPIVersionError,
-    auto_move_plugin_dir,
-    classic_plugin,
-    injected_plugin,
+    auto_move_plugin_dir
 )
 from ..utils import Utils
 from .classic_plugin import (
@@ -30,26 +28,15 @@ from .classic_plugin import (
     add_plugin,
     add_plugin_as_api,
 )
-from .injected_plugin import (
-    execute_command_say,
-    execute_death_message,
-    execute_frame_exit,
-    execute_init,
-    execute_packet_funcs,
-    execute_player_join,
-    execute_player_left,
-    execute_player_message,
-    execute_player_prejoin,
-    execute_repeat,
-    execute_reloaded
-)
+from . import classic_plugin
+from . import injected_plugin
+from . import _ON_ERROR_CB
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
 
 _TV = TypeVar("_TV")
 _SUPER_CLS = TypeVar("_SUPER_CLS")
-_ON_ERROR_CB = Callable[[str, Exception, str], None]
 
 # add_plugin(): 类式插件调用, 插件框架会将其缓存到自身缓存区, 等待类式插件将插件类实例化
 # add_broadcast_listener(), add_packet_listener() 同理
@@ -60,18 +47,6 @@ class PluginGroup:
     "插件组类, 存放插件代码有关数据"
 
     plugins: ClassVar[list[Plugin]] = []
-    plugins_funcs: ClassVar[dict[str, list]] = {
-        "on_def": [],
-        "on_inject": [],
-        "on_player_prejoin": [],
-        "on_player_join": [],
-        "on_player_message": [],
-        "on_player_death": [],
-        "on_player_leave": [],
-        "on_command": [],
-        "on_frame_exit": [],
-        "on_reload": [],
-    }
     Agree_bot_patrol: ClassVar["list[bool]"] = []
 
     def __init__(self):
@@ -79,7 +54,6 @@ class PluginGroup:
         self._cached_broadcast_evts: dict[str, list[Callable]] = {}
         self._cached_packet_cbs: list[tuple[int, Callable]] = []
         self._cached_all_packets_listener: Callable | None = None
-        self._packet_funcs: dict[str, list[Callable]] = {}
         self._update_player_attributes_funcs: list[Callable] = []
         self._broadcast_listeners: dict[str, list[Callable]] = {}
         self.plugins_api: dict[str, Plugin] = {}
@@ -89,14 +63,16 @@ class PluginGroup:
         self.linked_frame: "ToolDelta | None" = None
 
     def reload(self):
-        """重载插件框架 (这是一个不安全的操作)"""
+        """
+        重载插件框架
+        这是一个不很安全的操作, 多次 reload 后
+        可能会因为一些插件线程由于底层原因无法被停止, 或者有垃圾无法被回收, 导致内存泄露等问题
+        """
         self.plugins_api = {}
-        self._packet_funcs = {}
         self._update_player_attributes_funcs = []
         self._broadcast_listeners = {}
-        for v in self.plugins_funcs.values():
-            v.clear()
-        injected_plugin.system_reset_all_funcs()
+        classic_plugin.reload()
+        injected_plugin.reload()
         Print.print_inf("正在重新读取所有插件")
         self.read_all_plugins()
         assert self.linked_frame is not None
@@ -312,8 +288,6 @@ class PluginGroup:
             # 主动读取类式插件监听的数据包
             for i in classic_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
-            for k, v in classic_plugin.packet_funcs.items():
-                self._packet_funcs[str(k)] = v
             # 主动读取类式插件监听的广播事件器
             self._broadcast_listeners.update(classic_plugin.broadcast_evts_listener)
             # 主动读取注入式插件监听的数据包
@@ -389,20 +363,7 @@ class PluginGroup:
             SystemExit: 缺少前置
             SystemExit: 前置版本过低
         """
-        try:
-            for name, func in self.plugins_funcs["on_def"]:
-                func()
-        except PluginAPINotFoundError as err:
-            Print.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
-            raise SystemExit from err
-        except PluginAPIVersionError as err:
-            Print.print_err(
-                f"插件 {name} 需要该前置组件 {err.name} 版本：{err.m_ver}, 但是现有版本过低：{err.n_ver}"
-            )
-            raise SystemExit from err
-        except Exception as err:
-            onerr(name, err, traceback.format_exc())
-            raise SystemExit
+        classic_plugin.execute_def(onerr)
 
     def execute_init(
         self, onerr: _ON_ERROR_CB = NON_FUNC
@@ -412,13 +373,9 @@ class PluginGroup:
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_inject"]:
-            try:
-                func()
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_init())
-        Utils.createThread(asyncio.run, (execute_repeat(),), "注入式插件定时任务")
+        classic_plugin.execute_init(onerr)
+        asyncio.run(injected_plugin.execute_init())
+        Utils.createThread(asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务")
 
     def execute_player_prejoin(
         self, player, onerr: _ON_ERROR_CB = NON_FUNC
@@ -429,12 +386,8 @@ class PluginGroup:
             player (_type_): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_player_prejoin"]:
-            try:
-                func(player)
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_player_prejoin(player))
+        classic_plugin.execute_player_prejoin(player)
+        asyncio.run(injected_plugin.execute_player_prejoin(player))
 
     def execute_player_join(
         self, player: str, onerr: _ON_ERROR_CB = NON_FUNC
@@ -445,12 +398,8 @@ class PluginGroup:
             player (str): 玩家
             onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_player_join"]:
-            try:
-                func(player)
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_player_join(player))
+        classic_plugin.execute_player_join(player, onerr)
+        asyncio.run(injected_plugin.execute_player_join(player))
 
     def execute_player_message(
         self,
@@ -468,12 +417,8 @@ class PluginGroup:
         pat = f"[{player}] "
         if msg.startswith(pat):
             msg = msg.strip(pat)
-        for name, func in self.plugins_funcs["on_player_message"]:
-            try:
-                func(player, msg)
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_player_message(player, msg))
+        classic_plugin.execute_player_message(player, msg)
+        asyncio.run(injected_plugin.execute_player_message(player, msg))
 
     def execute_player_leave(
         self, player: str, onerr: _ON_ERROR_CB = NON_FUNC
@@ -484,12 +429,8 @@ class PluginGroup:
             player (str): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_player_leave"]:
-            try:
-                func(player)
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_player_left(player))
+        classic_plugin.execute_player_leave(player, onerr)
+        asyncio.run(injected_plugin.execute_player_left(player))
 
     def execute_player_death(
         self,
@@ -506,12 +447,8 @@ class PluginGroup:
             msg (str): 消息
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_player_death"]:
-            try:
-                func(player, killer, msg)
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_death_message(player, killer, msg))
+        classic_plugin.execute_player_death(player, killer, msg, onerr)
+        asyncio.run(injected_plugin.execute_death_message(player, killer, msg))
 
     def execute_command(
         self,
@@ -526,12 +463,8 @@ class PluginGroup:
             cmd (str): 命令
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for plugin_name, func in self.plugins_funcs["on_command"]:
-            try:
-                func(plugin_name, msg)
-            except Exception as err:
-                onerr(plugin_name, err, traceback.format_exc())
-        asyncio.run(execute_command_say(name, msg))
+        classic_plugin.execute_command(name, msg, onerr)
+        asyncio.run(injected_plugin.execute_command_say(name, msg))
 
     def execute_frame_exit(
         self, onerr: _ON_ERROR_CB = NON_FUNC
@@ -541,12 +474,8 @@ class PluginGroup:
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_frame_exit"]:
-            try:
-                func()
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_frame_exit())
+        classic_plugin.execute_frame_exit(onerr)
+        asyncio.run(injected_plugin.execute_frame_exit())
 
     def execute_reloaded(self, onerr: _ON_ERROR_CB = NON_FUNC):
         """执行插件重载的方法
@@ -554,14 +483,10 @@ class PluginGroup:
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        for name, func in self.plugins_funcs["on_reloaded"]:
-            try:
-                func()
-            except Exception as err:
-                onerr(name, err, traceback.format_exc())
-        asyncio.run(execute_reloaded())
+        classic_plugin.execute_reloaded(onerr)
+        asyncio.run(injected_plugin.execute_reloaded())
 
-    def processPacketFunc(self, pktID: int, pkt: dict) -> bool:
+    def processPacketFunc(self, pktID: int, pkt: dict, onerr: _ON_ERROR_CB = NON_FUNC) -> bool:
         """处理数据包监听器
 
         Args:
@@ -571,19 +496,8 @@ class PluginGroup:
         Returns:
             bool: 是否处理成功
         """
-        # Classic Plugin
-        d = self._packet_funcs.get(str(pktID))
-        if d:
-            for func in d:
-                try:
-                    res = func(pkt)
-                    if res:
-                        return True
-                except Exception:
-                    Print.print_err(f"插件方法 {func.__name__} 出错：")
-                    Print.print_err(traceback.format_exc())
-        # Injected Plugin
-        asyncio.run(execute_packet_funcs(pktID, pkt))
+        classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
+        asyncio.run(injected_plugin.execute_packet_funcs(pktID, pkt))
         return False
 
 
