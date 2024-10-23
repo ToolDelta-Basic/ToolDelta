@@ -3,13 +3,10 @@
 提供与游戏进行交互的标准接口
 """
 
-import hashlib
 import os
 import platform
-import queue
 import shlex
 import subprocess
-import sys
 import threading
 import time
 from collections.abc import Callable
@@ -65,9 +62,7 @@ class StandardFrame:
             fbToken (str): 验证服务器 Token
             auth_server_url (str): 验证服务器地址
         """
-        self.packet_handler: Callable = (
-            lambda pckType, pck: None
-        )
+        self.packet_handler: Callable = lambda pckType, pck: None
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launcher_listener: Callable
         self.exit_event = threading.Event()
@@ -675,10 +670,6 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         self.serverPassword: str | None = None
         self.fbToken: str | None = None
         self.auth_server: str | None = None
-        self.neomega_msg_queue = queue.Queue()
-        self.neomega_input_queue = queue.Queue()
-        self.input_msg: list = []
-        self.out_speed: float = 0.002
 
     def init(self):
         os.makedirs("NeOmega数据", exist_ok=True)
@@ -743,7 +734,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                 "-auth-server",
                 self.auth_server,
                 "-storage-root",
-                os.path.join(os.getcwd(), "NeOmega数据")
+                os.path.join(os.getcwd(), "NeOmega数据"),
             ],
             encoding="utf-8",
             stdin=subprocess.PIPE,
@@ -752,36 +743,11 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         )
         return free_port
 
-    def get_text_md5(self, text: str) -> str:
-        """计算字符串的MD5值"""
-        md5 = hashlib.md5()
-        md5.update(text.encode("utf-8"))
-        unique_md5 = md5.hexdigest()
-        return unique_md5
-
-    def put_msg_to_queue(self, msg: str, out_type: bool = True) -> str:
-        """将元组放入消息队列"""
-        self.neomega_msg_queue.put_nowait(
-            ("out" if out_type else "in", self.get_text_md5(msg), msg)
-        )
-        return self.get_text_md5(msg)
-
-    def get_input(self, md5: str) -> str:
-        while True:
-            if not self.input_msg:
-                continue
-            for in_tuple in self.input_msg:
-                if in_tuple[0] == md5:
-                    return in_tuple[1]
-
     def _msg_handle_thread(self) -> None:
-        """处理来自 NeOmega 的信息"""
+        """处理来自 NeOmega启动器 的信息"""
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
             raise ValueError("NeOmega进程未启动")
-        assert self.neomg_proc.stdin
-        Print.print_load(
-            f"NeOmega 进程输出速度限制: {int(1.0 / self.out_speed)!s} 条/秒"
-        )
+        assert self.neomg_proc.stdin, "标准输入流不可用"
         buffer = ""
         auto_pass = False
         while True:
@@ -795,7 +761,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
             if char == "\n":
-                msg_orig = buffer.strip()
+                msg_orig = buffer
                 buffer = ""
                 if msg_orig == "SIGNAL: exit":
                     Print.print_with_info("接入点进程已结束", "§b NOMG ")
@@ -804,6 +770,8 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                     break
                 if "[neOmega 接入点]: 就绪" in msg_orig:
                     self.launch_event.set()
+                if msg_orig.startswith(tm_fmt := time.strftime("%H:%M ")):
+                    msg_orig = msg_orig.removeprefix(tm_fmt)
                 if any(
                     info_type in msg_orig
                     for info_type in [
@@ -821,9 +789,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                         .replace("  INFO  ", " 消息 ")
                         .strip(" ")
                     )
-                    self.put_msg_to_queue(Print.fmt_info("\b" + msg_orig, ""))
+                    Print.print_with_info("\b" + msg_orig, "")
                 else:
-                    self.put_msg_to_queue(Print.fmt_info(msg_orig, "§b NOMG "))
+                    Print.print_with_info(msg_orig, "§b OMGL ")
             else:
                 buffer += char
                 # 自动通过相同配置文件启动
@@ -841,33 +809,18 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                     or ("请输入" in buffer and ":" in buffer and char != "\n")
                 ):
                     msg_orig = buffer.strip()
-                    md5 = self.put_msg_to_queue(
-                        Print.fmt_info("\b" + msg_orig, "§6 输入 §r"), False
+                    self.input_to_neomega(
+                        input(Print.fmt_info("\b" + msg_orig, "§6 输入 §r"))
                     )
-                    self.neomg_proc.stdin.write(f"{self.get_input(md5).lower()}\n")
-                    self.neomg_proc.stdin.flush()
                     buffer = ""
 
-    def _msg_show_thread(self) -> None:
-        """显示来自 NeOmega 的信息"""
-        while True:
-            if not self.neomega_msg_queue.empty():
-                time.sleep(self.out_speed)
-                Message: tuple = self.neomega_msg_queue.get_nowait()
-                if Message[0] == "out":
-                    with Print.lock:
-                        sys.stdout.write(Message[-1] + "\n")
-                        sys.stdout.flush()
-                elif Message[0] == "in":
-                    val: str = input(Message[-1])
-                    self.neomega_input_queue.put_nowait((Message[1], val))
-
-    def _handle_input_thread(self) -> None:
-        """处理将要写入到 NeOmega 进程中的信息"""
-        while True:
-            if not self.neomega_input_queue.empty():
-                InputMessage: tuple = self.neomega_input_queue.get_nowait()
-                self.input_msg.append(InputMessage)
+    def input_to_neomega(self, inputter: str) -> None:
+        """写入文本到neomega进程"""
+        if self.neomg_proc is None or self.neomg_proc.stdout is None:
+            raise ValueError("NeOmega进程未启动")
+        assert self.neomg_proc.stdin, "标准输入流不可用"
+        self.neomg_proc.stdin.write(inputter + "\n")
+        self.neomg_proc.stdin.flush()
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
@@ -884,17 +837,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         )
         Utils.createThread(
             self._msg_handle_thread,
-            usage="处理来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM,
-        )
-        Utils.createThread(
-            self._msg_show_thread,
-            usage="显示来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM,
-        )
-        Utils.createThread(
-            self._handle_input_thread,
-            usage="处理将要写入到 NeOmega 进程中的信息",
+            usage="处理来自 NeOmega启动器 的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
         self.launch_event.wait()

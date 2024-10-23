@@ -386,7 +386,7 @@ class PluginGroup:
             player (_type_): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        classic_plugin.execute_player_prejoin(player)
+        classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
     def execute_player_join(
@@ -417,7 +417,7 @@ class PluginGroup:
         pat = f"[{player}] "
         if msg.startswith(pat):
             msg = msg.strip(pat)
-        classic_plugin.execute_player_message(player, msg)
+        classic_plugin.execute_player_message(player, msg, onerr)
         asyncio.run(injected_plugin.execute_player_message(player, msg))
 
     def execute_player_leave(
