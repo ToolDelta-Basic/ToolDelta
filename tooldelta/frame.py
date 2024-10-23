@@ -384,7 +384,8 @@ class ToolDelta:
         """欢迎提示"""
         Print.print_load("§dToolDelta Panel Embed By SuperScript")
         Print.print_load("§dToolDelta Wiki: https://td-wiki.dqyt.online/")
-        Print.print_load("§dToolDelta 项目地址：https://github.com/ToolDelta-Basic")
+        Print.print_load("§dToolDelta 交流群: 194838530")
+        Print.print_load("§dToolDelta 项目地址: https://github.com/ToolDelta-Basic")
         Print.print_load(f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}")
         Print.print_load("§dToolDelta Panel 已启动")
 
