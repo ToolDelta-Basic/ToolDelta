@@ -798,8 +798,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                 if "要使用和上次完全相同的配置启动吗?" in buffer:
                     if not auto_pass:
                         auto_pass = True
-                        self.neomg_proc.stdin.write("\n")
-                        self.neomg_proc.stdin.flush()
+                        self.input_to_neomega("")
                         Print.print_inf(f"{buffer}, 已自动选择为 y")
                 # 其他处理, 先独占输入通道, 等待用户输入
                 elif (

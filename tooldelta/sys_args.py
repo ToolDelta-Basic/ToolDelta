@@ -46,6 +46,6 @@ def print_help():
     print("    -title <文本> 在开始界面显示指定的文本 (支持mc彩色符号)")
     print("    -no-update-check  禁用自动更新")
     print("    -no-download-libs  禁用自动更新依赖库")
-    print("    -no-download-neomega 禁用自动更新NeOmega")
+    print("    -no-download-neomega 在NeOmega混合启动模式下, 禁用自动更新NeOmega启动器")
     print("    -l <启动模式>  按照特定的启动模式，跳过启动页面")
     print("    -user-token <token>  使用传入的而非本地的token来登录验证服务器")

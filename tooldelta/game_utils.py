@@ -271,7 +271,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
         raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
     if len(resp.Parameters) < 1:
         raise ValueError(
-            f"计分板分数获取的Parameters获取Raises: {resp.Message}: {resp.Parameters}"
+            f"计分板分数获取的Parameters获取异常: {resp.Message}: {resp.Parameters}"
         )
     return int(resp.Parameters[0])
 
@@ -283,7 +283,7 @@ def isCmdSuccess(cmd: str, timeout: float = 30):
         cmd: MC 指令
         timeout: 超时时间
     Returns:
-        命令执行是否成功：bool
+        命令执行是否成功: bool
     """
     game_ctrl = _get_game_ctrl()
     res = game_ctrl.sendcmd_with_resp(cmd, timeout).SuccessCount
