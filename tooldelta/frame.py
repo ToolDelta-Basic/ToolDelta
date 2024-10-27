@@ -9,20 +9,16 @@ ToolDelta 基本框架
 """
 
 import asyncio
-import contextlib
 import getpass
 import os
 import signal
 import sys
 import traceback
-from collections.abc import Callable
-from typing import TYPE_CHECKING
-
 import requests
 import json
+from typing import TYPE_CHECKING, Callable  # noqa: UP035
 
-from tooldelta import auths, constants, plugin_market, game_utils, utils
-
+from . import auths, constants, plugin_market, game_utils, utils
 from .cfg import Config
 from .color_print import Print
 from .constants import PacketIDS
@@ -611,10 +607,12 @@ class ToolDelta:
         asyncio.run(safe_jump())
         self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
         if not isinstance(self.launcher, FrameNeOmgAccessPointRemote):
-            with contextlib.suppress(Exception):
+            try:
                 self.link_game_ctrl.sendwscmd(
                     f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
                 )
+            except Exception:
+                pass
             if not isinstance(self.launcher.neomg_proc, type(None)):
                 if os.name == "nt":
                     self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
@@ -930,6 +928,10 @@ class GameCtrl:
         raise ValueError("此启动器框架无法产生机器人名")
 
     def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
+        resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
+        return resp
+
+    def sendwscmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 

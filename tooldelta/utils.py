@@ -9,8 +9,7 @@ import time
 import traceback
 import shelve
 from io import TextIOWrapper
-from typing import Any, TypeVar
-from collections.abc import Callable
+from typing import Any, TypeVar, Callable  # noqa: UP035
 
 import json
 
