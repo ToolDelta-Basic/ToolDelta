@@ -732,7 +732,8 @@ class Utils:
 
 def safe_close():
     """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
-    event_pool["timer_events"].set()
+    if event_pool.get("timer_events"):
+        event_pool["timer_events"].set()
     force_stop_common_threads()
     _tmpjson_save()
     jsonPathTmp.clear()
