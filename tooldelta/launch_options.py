@@ -12,7 +12,7 @@ from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .starter import start_tool_delta, init_cfg_only
 from .get_tool_delta_version import get_tool_delta_version
-from .sys_args import print_help, sys_args_to_dict
+from .sys_args import print_help, sys_args_to_dict, parse_addopt
 
 
 def signal_handler(*_) -> None:
@@ -27,6 +27,10 @@ def client_title() -> None:
     """选择启动模式"""
     try:
         launch_args = sys_args_to_dict()
+        if opt_str := launch_args.get("optadd"):
+            more_opts = {str(i+7): (k, v) for (i, (k, v)) in enumerate(parse_addopt(opt_str).items())}
+        else:
+            more_opts = {}
         if "h" in launch_args or "help" in launch_args:
             print_help()
             return
@@ -57,6 +61,8 @@ def client_title() -> None:
             Print.clean_print("4 - §6初始化所有插件配置")
             Print.clean_print("5 - §a修改启动配置")
             Print.clean_print("6 - §c开启直接启动模式")
+            for i, (opt_name, _) in enumerate(more_opts.values()):
+                Print.clean_print(f"{i+7} - {opt_name}")
             Print.clean_print("q - §7退出")
             r = input("请选择：").strip()
         match r:
@@ -79,7 +85,10 @@ def client_title() -> None:
             case "q":
                 Print.clean_print("§aToolDelta 已退出.")
             case _:
-                Print.clean_print("§c不合法的启动模式: " + r)
+                if r in more_opts.keys():
+                    os.system(more_opts[r][1])
+                else:
+                    Print.clean_print("§c不合法的启动模式: " + r)
     except (EOFError, SystemExit):
         pass
     except Exception:

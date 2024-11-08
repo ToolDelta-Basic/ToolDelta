@@ -44,8 +44,26 @@ def print_help():
     print("    -h, -help  查看帮助 (当前页)")
     print("    -v, --version  获取当前程序版本")
     print("    -title <文本> 在开始界面显示指定的文本 (支持mc彩色符号)")
+    print(
+        '    -optadd "<选项名>: <执行的cmd>" 添加额外的启动选项, 使用分号分割多个选项'
+    )
     print("    -no-update-check  禁用自动更新")
     print("    -no-download-libs  禁用自动更新依赖库")
     print("    -no-download-neomega 在NeOmega混合启动模式下, 禁用自动更新NeOmega启动器")
     print("    -l <启动模式>  按照特定的启动模式，跳过启动页面")
     print("    -user-token <token>  使用传入的而非本地的token来登录验证服务器")
+
+
+def parse_addopt(opt_str: str):
+    arg2cmds: dict[str, str] = {}
+    for val in opt_str.split(";"):
+        split_res = val.split(":")
+        if len(split_res) < 2:
+            print('无效的添加选项命令, 应为 -optadd "<选项名>: <执行的cmd>", 如:')
+            print('  -optadd "§b管理您的账号: ./acc_mana"')
+            print('  -optadd "§b管理您的账号: ./acc_mana; §6自动更新: ./update.sh"')
+            raise SystemExit
+        opt_str = split_res[0].removeprefix(" ")
+        opt_cmd = ":".join(split_res[1:])
+        arg2cmds[opt_str] = opt_cmd
+    return arg2cmds
