@@ -444,7 +444,7 @@ class PluginGroup:
         Args:
             player (str): 玩家
             killer (str | None): 击杀者
-            msg (str): 消息
+            msg (str): 击杀消息
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_death(player, killer, msg, onerr)
@@ -467,14 +467,14 @@ class PluginGroup:
         asyncio.run(injected_plugin.execute_command_say(name, msg))
 
     def execute_frame_exit(
-        self, onerr: _ON_ERROR_CB = NON_FUNC
+        self, signal: int, reason: str, onerr: _ON_ERROR_CB = NON_FUNC
     ):
         """执行框架退出的方法
 
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        classic_plugin.execute_frame_exit(onerr)
+        classic_plugin.execute_frame_exit(signal, reason, onerr)
         asyncio.run(injected_plugin.execute_frame_exit())
 
     def execute_reloaded(self, onerr: _ON_ERROR_CB = NON_FUNC):
@@ -496,9 +496,9 @@ class PluginGroup:
         Returns:
             bool: 是否处理成功
         """
-        classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
+        blocking = classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
         asyncio.run(injected_plugin.execute_packet_funcs(pktID, pkt))
-        return False
+        return blocking
 
 
 plugin_group = PluginGroup()

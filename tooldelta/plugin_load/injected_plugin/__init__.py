@@ -293,7 +293,7 @@ async def run_repeat():
     await asyncio.gather(*tasks)
 
 
-async def safe_jump():
+async def safe_jump_repeat_tasks():
     """安全跳出重复任务"""
     try:
         main_task.cancel()

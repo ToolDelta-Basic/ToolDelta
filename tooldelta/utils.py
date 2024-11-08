@@ -742,12 +742,12 @@ def safe_close():
 def force_stop_common_threads():
     for i in threads_list:
         if i._thread_level != i.SYSTEM:
-            Print.print_suc(f"正在终止线程 {i.usage}", end="\r")
+            Print.print_suc(f"正在终止线程 {i.usage}  ", end="\r")
             res = i.stop()
             if res:
-                Print.print_suc(f"已终止线程 {i.usage}")
+                Print.print_suc(f"已终止线程 {i.usage}    ")
             else:
-                Print.print_suc(f"无法终止线程 {i.usage}")
+                Print.print_suc(f"无法终止线程 {i.usage}  ")
 
 
 def if_token() -> None:

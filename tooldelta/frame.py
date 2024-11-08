@@ -33,7 +33,7 @@ from .launch_cli import (
 )
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
-from .plugin_load.injected_plugin import safe_jump
+from .plugin_load import injected_plugin
 from .sys_args import sys_args_to_dict
 from .utils import Utils, fbtokenFix, if_token
 
@@ -496,7 +496,7 @@ class ToolDelta:
             _basic_help,
         )
         self.add_console_cmd_trigger(
-            ["exit"], None, "退出并关闭ToolDelta", lambda _: self.system_exit()
+            ["exit"], None, "退出并关闭ToolDelta", lambda _: self.system_exit("normal")
         )
         self.add_console_cmd_trigger(
             ["插件市场"],
@@ -602,25 +602,38 @@ class ToolDelta:
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
 
-    def system_exit(self) -> None:
-        """系统退出"""
-        asyncio.run(safe_jump())
-        self.link_plugin_group.execute_frame_exit(self.on_plugin_err)
-        if not isinstance(self.launcher, FrameNeOmgAccessPointRemote):
-            try:
-                self.link_game_ctrl.sendwscmd(
-                    f"/kick {self.link_game_ctrl.bot_name} ToolDelta 退出中。"
-                )
-            except Exception:
-                pass
-            if not isinstance(self.launcher.neomg_proc, type(None)):
-                if os.name == "nt":
-                    self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
-                else:
-                    self.launcher.neomg_proc.send_signal(signal.SIGTERM)
-
+    def system_exit(self, reason: str) -> None:
+        """ToolDelta 系统退出"""
+        if self.launcher.status == SysStatus.RUNNING:
+            self.launcher.update_status(SysStatus.NORMAL_EXIT)
+        self.link_plugin_group.execute_frame_exit(
+            self.launcher.status, reason, self.on_plugin_err
+        )
+        asyncio.run(injected_plugin.safe_jump_repeat_tasks())
+        # 先将启动框架 (进程) 关闭了
+        if self.launcher.status == SysStatus.NORMAL_EXIT:
+            # 运行中退出
+            if isinstance(self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher):
+                try:
+                    self.link_game_ctrl.sendwocmd(
+                        f'/kick "{self.link_game_ctrl.bot_name}" ToolDelta 退出中。'
+                    )
+                except Exception:
+                    pass
+                if not isinstance(self.launcher.neomg_proc, type(None)):
+                    if os.name == "nt":
+                        self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
+                    else:
+                        self.launcher.neomg_proc.send_signal(signal.SIGTERM)
+        else:
+            # 其他情况下退出 (例如启动失败)
+            pass
+        # 然后使得启动框架联络进程也退出
         if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
             self.launcher.exit_event.set()
+        # 最后做善后工作
+        self.actions_before_exited()
+        # 到这里就基本上是退出完成了
 
     def get_console_menus(self) -> list:
         """获取控制台命令列表
@@ -656,7 +669,7 @@ class ToolDelta:
         return gcl
 
     @staticmethod
-    def safelyExit() -> None:
+    def actions_before_exited() -> None:
         """安全退出"""
         utils.safe_close()
         publicLogger.exit()
@@ -782,7 +795,6 @@ class GameCtrl:
                 )
                 self.all_players_data = self.launcher.omega.get_all_online_players()
             if isJoining:
-                self.tmp_tp_player(playername)
                 Print.print_inf(f"§e{playername} 加入了游戏")
                 self.all_players_data = self.launcher.omega.get_all_online_players()
                 if playername not in self.allplayers and not res:
@@ -872,8 +884,8 @@ class GameCtrl:
 
     def system_inject(self) -> None:
         """载入游戏时的初始化"""
-        if hasattr(self.launcher, "bot_name"):
-            self.tmp_tp_all_players()
+        # if hasattr(self.launcher, "bot_name"):
+        #    self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
         self.all_players_data = self.launcher.omega.get_all_online_players()
         self.give_bot_effect_invisibility()
@@ -931,7 +943,9 @@ class GameCtrl:
         resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
         return resp
 
-    def sendwscmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
+    def sendwscmd_with_resp(
+        self, cmd: str, timeout: float = 30
+    ) -> Packet_CommandOutput:
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 
@@ -1004,19 +1018,6 @@ class GameCtrl:
             if player == self.bot_name:
                 continue
             self.sendwocmd(f"tp {self.bot_name} {player}")
-        self.sendwocmd(
-            f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
-        )
-
-    def tmp_tp_player(self, player: str) -> None:
-        """临时传送玩家 (看一眼玩家就回来，多数用于捕获数据)
-        Args:
-
-            player (str): 玩家名
-
-        """
-        BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
-        self.sendwocmd(f"tp {self.bot_name} {player}")
         self.sendwocmd(
             f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
         )

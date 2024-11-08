@@ -57,6 +57,8 @@ def start_tool_delta() -> None:
             Print.print_inf("ToolDelta 已关闭")
     except Exception:
         Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
+    finally:
+        safe_exit_tooldelta()
 
 
 def init_cfg_only() -> None:
@@ -80,16 +82,18 @@ def init_cfg_only() -> None:
         Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
 
 
-def safe_jump(out_task: bool = True, exit_directly: bool = False) -> None:
-    """安全退出
+def safe_exit_tooldelta(
+    out_task: bool = True, exit_directly: bool = False, reason="normal"
+) -> None:
+    """
+    安全退出ToolDelta (外部调用)
 
     Args:
         out_task (bool, optional): frame 框架系统是否退出
         exit_directly (bool, optional): 是否三秒强制直接退出
     """
     if out_task:
-        tooldelta.system_exit()
-    tooldelta.safelyExit()
+        tooldelta.system_exit(reason)
     if exit_directly:
         for counter in range(3, -1, -1):
             Print.print_war(f"{counter}秒后强制退出...", end="\r")

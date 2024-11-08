@@ -31,7 +31,7 @@ from .frame import Config, GameCtrl, ToolDelta, Utils  # noqa: F401
 from .launch_options import client_title  # noqa: F401
 from .plugin_load.PluginGroup import Plugin  # noqa: F401
 from .starter import plugin_group as plugins  # noqa: F401
-from .starter import safe_jump, start_tool_delta, tooldelta  # noqa: F401
+from .starter import safe_exit_tooldelta, start_tool_delta, tooldelta  # noqa: F401
 
 # 重定向
 Builtins = Utils

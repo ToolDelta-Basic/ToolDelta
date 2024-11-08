@@ -40,7 +40,7 @@ plugins_funcs: dict[str, list[tuple[str, Callable]]] = {
     "on_player_leave": [],
     "on_command": [],
     "on_frame_exit": [],
-    "on_reload": [],
+    "on_reload": []
 }
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
@@ -432,7 +432,7 @@ def execute_player_death(
             onerr(name, err, traceback.format_exc())
 
 
-def execute_frame_exit(onerr: _ON_ERROR_CB):
+def execute_frame_exit(signal: int, reason: str, onerr: _ON_ERROR_CB):
     """执行框架退出的方法
 
     Args:
@@ -440,7 +440,7 @@ def execute_frame_exit(onerr: _ON_ERROR_CB):
     """
     for name, func in plugins_funcs["on_frame_exit"]:
         try:
-            func()
+            func(signal, reason)
         except Exception as err:
             onerr(name, err, traceback.format_exc())
 

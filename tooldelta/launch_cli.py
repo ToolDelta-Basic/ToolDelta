@@ -11,8 +11,6 @@ import threading
 import time
 from collections.abc import Callable
 
-import tooldelta
-
 from .cfg import Cfg
 from .color_print import Print
 from .neo_libs import file_download as neo_fd
@@ -107,10 +105,7 @@ class StandardFrame:
             new_status (int): 新的状态码
         """
         self.status = new_status
-        if new_status == SysStatus.NORMAL_EXIT:
-            self.exit_event.set()
-            tooldelta.safe_jump()
-        if new_status == SysStatus.CRASHED_EXIT:
+        if new_status in (SysStatus.NORMAL_EXIT, SysStatus.CRASHED_EXIT):
             self.exit_event.set()
 
     def sendcmd(
