@@ -50,5 +50,5 @@
       - `python main.py` 或 `python3 main.py`
  - 在docker运行
     ```bash
-    docker run -v .:/app -t -i registry.cn-hangzhou.aliyuncs.com/dgyt/tooldelta:latest
+    docker run -v .:/app -t -i wlingzhenyu/tooldelta:latest
     ```
