@@ -15,6 +15,7 @@ from .cfg import Cfg
 from .color_print import Print
 from .neo_libs import file_download as neo_fd
 from .neo_libs import neo_conn
+from .eulogist_libs import core_conn as eulogist_conn
 from .packets import Packet_CommandOutput
 from .sys_args import sys_args_to_dict
 from .urlmethod import get_free_port
@@ -155,12 +156,12 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def sendPacket(self, pckID: int, pck: str) -> None:
+    def sendPacket(self, pckID: int, pck: dict) -> None:
         """发送数据包
 
         Args:
             pckID (int): 数据包 ID
-            pck (str): 数据包内容
+            pck (dict): 数据包内容
 
         Raises:
             NotImplementedError: 未实现此方法
@@ -439,9 +440,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             waitForResp (bool, optional): 是否等待结果
             timeout (int | float, optional): 超时时间
 
-        Raises:
-            NotImplementedError: 未实现此方法
-
         Returns:
             Optional[Packet_CommandOutput]: 返回命令结果
         """
@@ -463,9 +461,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             cmd (str): 命令
             waitForResp (bool, optional): 是否等待结果
             timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
 
         Returns:
             Optional[Packet_CommandOutput]: 返回命令结果
@@ -853,6 +848,176 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             return Exception("接入点进程已崩溃")
         return SystemError("未知的退出状态")
 
+class FrameEulogistLauncher(StandardFrame):
+    # 启动器类型
+    launch_type = "Eulogist"
+
+    def __init__(self) -> None:
+        """实例化启动器框架
+
+        Args:
+            serverNumber (int): 服务器号
+            password (str): 服务器密码
+            fbToken (str): 验证服务器 Token
+            auth_server_url (str): 验证服务器地址
+        """
+        self.eulogist = eulogist_conn.Eulogist()
+        self.need_listen_packets: set[int] = {9, 63, 79}
+        self._launcher_listener: Callable
+        self.exit_event = threading.Event()
+        self.status: int = SysStatus.LOADING
+        self.bot_name: str = ""
+
+    def init(self):
+        """初始化启动器框架"""
+
+    def add_listen_packets(self, *pcks: int) -> None:
+        """添加需要监听的数据包"""
+        for i in pcks:
+            self.need_listen_packets.add(i)
+
+    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+        """重载需要监听的数据包ID"""
+        self.need_listen_packets = {9, 79, 63} | listen_packets
+
+    def launch(self) -> SystemExit:
+        """启动器启动
+
+        Raises:
+            SystemError: 无法启动此启动器
+        """
+        self.update_status(SysStatus.LAUNCHING)
+        Print.print_inf("正在从 10132 端口连接到赞颂者...")
+        Utils.createThread(self.eulogist.start, thread_level=Utils.ToolDeltaThread.SYSTEM)
+        self.eulogist.launch_event.wait()
+        self.update_status(SysStatus.RUNNING)
+        self.eulogist.packet_listener = self.packet_handler_parent
+        self.eulogist.set_listen_server_packets(list(self.need_listen_packets))
+        self._launcher_listener()
+        self.eulogist.exit_event.wait()
+        self.update_status(SysStatus.NORMAL_EXIT)
+        return SystemExit("赞颂者和 ToolDelta 断开连接")
+
+    def listen_launched(self, cb: Callable) -> None:
+        """设置监听启动器启动事件"""
+        self._launcher_listener = cb
+
+    def get_players_and_uuids(self) -> dict[str, str]:
+        """获取玩家名和 UUID"""
+        return {k: v.uuid for k, v in self.eulogist.uqs.items()}
+
+    def get_bot_name(self) -> str:
+        """获取机器人名字"""
+        return self.eulogist.bot_name
+
+    def update_status(self, new_status: int) -> None:
+        """更新启动器状态
+
+        Args:
+            new_status (int): 新的状态码
+        """
+        self.status = new_status
+        if new_status in (SysStatus.NORMAL_EXIT, SysStatus.CRASHED_EXIT):
+            self.exit_event.set()
+
+    def packet_handler_parent(self, pkt_type: int, pkt: dict) -> None:
+        """数据包处理器
+
+        Args:
+            pkt_type (str): 数据包类型
+            pkt (dict): 数据包内容
+
+        Raises:
+            ValueError: 还未连接到游戏
+        """
+        if not self.eulogist.connected:
+            raise ValueError("还未连接到游戏")
+        self.packet_handler(pkt_type, pkt)
+
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """以玩家身份发送命令
+
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
+
+        Raises:
+            TimeoutError: 获取命令返回超时
+
+        Returns:
+            Packet_CommandOutput: 返回命令结果
+        """
+        if not waitForResp:
+            self.eulogist.sendcmd(cmd)
+        else:
+            if (res := self.eulogist.sendcmd_with_resp(cmd, timeout)):
+                return res
+            else:
+                raise TimeoutError("获取命令返回超时")
+
+    def sendwscmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """以 ws 身份发送命令
+
+        Args:
+            cmd (str): 命令
+            waitForResp (bool, optional): 是否等待结果
+            timeout (int | float, optional): 超时时间
+
+        Raises:
+            TimeoutError: 获取命令返回超时
+
+        Returns:
+            Packet_CommandOutput: 返回命令结果
+        """
+        if not waitForResp:
+            self.eulogist.sendwscmd(cmd)
+        else:
+            if (res := self.eulogist.sendwscmd_with_resp(cmd, timeout)):
+                return res
+            else:
+                raise TimeoutError("获取命令返回超时")
+
+    def sendwocmd(self, cmd: str) -> None:
+        """以 wo 身份发送命令
+
+        Args:
+            cmd (str): 命令
+
+        """
+        self.eulogist.sendwocmd(cmd)
+
+    def sendPacket(self, pckID: int, pck: dict) -> None:
+        """发送数据包
+
+        Args:
+            pckID (int): 数据包 ID
+            pck (str): 数据包内容
+
+        """
+        self.eulogist.sendPacket(pckID, pck)
+
+    sendPacketJson = sendPacket
+
+    def is_op(self, player: str) -> bool:
+        """检查玩家是否为 OP
+
+        Args:
+            player (str): 玩家名
+
+        Returns:
+            bool: 是否为 OP
+        """
+        if player not in self.eulogist.uqs.keys():
+            raise ValueError(f"玩家不存在: {player}")
+        print(self.eulogist.uqs[player].abilities)
+        return self.eulogist.uqs[player].abilities["CommandPermissions"] >= 3
+
 
 FrameNeOmg = FrameNeOmgAccessPoint
 FrameNeOmgRemote = FrameNeOmgAccessPointRemote
+FrameEulogist = FrameEulogistLauncher

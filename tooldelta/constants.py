@@ -37,8 +37,6 @@ LAUNCHER_NEOMEGA_STD: dict = {
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
-"启动器: NeOmega 启动配置验证格式"
-
 LAUNCHER_NEOMEGA_DEFAULT: dict = {
     "服务器号": 0,
     "密码": "",
@@ -55,7 +53,11 @@ LAUNCHER_NEOMG2TD_STD: dict = {
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
 
-"启动器: NeOmega 默认启动配置"
+
+LAUNCHER_EULOGIST_DEFAULT: dict = {
+}
+LAUNCHER_EULOGIST_STD: dict = {
+}
 
 LAUNCHER_BEWS_STD: dict = {"服务端开放地址": str}
 "启动器: BEWSServer 启动配置验证格式"

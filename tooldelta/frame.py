@@ -29,6 +29,7 @@ from .launch_cli import (
     FrameNeOmgAccessPoint,
     FrameNeOmgAccessPointRemote,
     FrameNeOmegaLauncher,
+    FrameEulogistLauncher,
     SysStatus,
 )
 from .logger import publicLogger
@@ -45,7 +46,10 @@ if TYPE_CHECKING:
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
 FB_LIKE_LAUNCHERS = (
-    FrameNeOmegaLauncher | FrameNeOmgAccessPoint | FrameNeOmgAccessPointRemote
+    FrameNeOmegaLauncher
+    | FrameNeOmgAccessPoint
+    | FrameNeOmgAccessPointRemote
+    | FrameEulogistLauncher
 )
 "类FastBuilder启动器框架"
 LAUNCHERS = FB_LIKE_LAUNCHERS
@@ -60,6 +64,7 @@ LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
         "NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
         FrameNeOmegaLauncher,
     ),
+    ("Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
 ]
 
 ###### FRAME DEFINE
@@ -177,10 +182,13 @@ class ToolDelta:
         elif type(self.launcher) is FrameNeOmgAccessPointRemote:
             # 不需要任何配置文件
             ...
+        elif type(self.launcher) is FrameEulogistLauncher:
+            # 不需要任何配置文件
+            ...
         else:
             raise ValueError("LAUNCHER Error")
         # 对 类FastBuilder启动器 通用的配置文件设置 (除了远程接入模式)
-        if isinstance(self.launcher, FB_LIKE_LAUNCHERS) and not isinstance(
+        if isinstance(self.launcher, FrameNeOmgAccessPoint) and not isinstance(
             self.launcher, FrameNeOmgAccessPointRemote
         ):
             serverNumber = launch_data["服务器号"]
@@ -267,9 +275,13 @@ class ToolDelta:
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
                     fbtoken = f.read()
-            self.launcher.set_launch_data(
-                serverNumber, serverPasswd, fbtoken, auth_server
-            )
+            if isinstance(self.launcher, FrameNeOmgAccessPoint) and not isinstance(
+                self.launcher, FrameNeOmgAccessPointRemote
+            ):
+                # 如果是类NeOmega启动框架
+                self.launcher.set_launch_data(
+                    serverNumber, serverPasswd, fbtoken, auth_server
+                )
         Print.print_suc("配置文件读取完成")
 
     @staticmethod
@@ -295,6 +307,7 @@ class ToolDelta:
                 "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
                 "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
                 "混合启动模式 (同一个机器人同时启动 ToolDelta 和 NeOmega)",
+                "Eulogist 框架 (赞颂者和 ToolDelta 并行运行)"
             )
             Print.clean_print("§b现有配置项如下:")
             Print.clean_print(
@@ -473,6 +486,7 @@ class ToolDelta:
 
         def _send_to_neomega(cmds: list[str]):
             # 仅当启动模式为 neomega 并行模式才生效
+            assert isinstance(self.launcher, FrameNeOmgAccessPoint)
             assert self.launcher.neomg_proc
             assert self.launcher.neomg_proc.stdin
             self.launcher.neomg_proc.stdin.write(" ".join(cmds) + "\n")
@@ -793,10 +807,12 @@ class GameCtrl:
                     "@a",
                     "§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！",
                 )
-                self.all_players_data = self.launcher.omega.get_all_online_players()
+                if isinstance(self.launcher, FrameNeOmgAccessPoint):
+                    self.all_players_data = self.launcher.omega.get_all_online_players()
             if isJoining:
                 Print.print_inf(f"§e{playername} 加入了游戏")
-                self.all_players_data = self.launcher.omega.get_all_online_players()
+                if isinstance(self.launcher, FrameNeOmgAccessPoint):
+                    self.all_players_data = self.launcher.omega.get_all_online_players()
                 if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
                     return
@@ -814,7 +830,8 @@ class GameCtrl:
                 if playername != "???" and not res:
                     self.allplayers.remove(playername)
                 Print.print_inf(f"§e{playername} 退出了游戏")
-                self.all_players_data = self.launcher.omega.get_all_online_players()
+                if isinstance(self.launcher, FrameNeOmgAccessPoint):
+                    self.all_players_data = self.launcher.omega.get_all_online_players()
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
@@ -887,7 +904,8 @@ class GameCtrl:
         # if hasattr(self.launcher, "bot_name"):
         #    self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
-        self.all_players_data = self.launcher.omega.get_all_online_players()
+        if isinstance(self.launcher, FrameNeOmgAccessPoint):
+            self.all_players_data = self.launcher.omega.get_all_online_players()
         self.give_bot_effect_invisibility()
         if res:
             self.allplayers = list(res.keys())
