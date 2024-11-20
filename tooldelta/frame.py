@@ -958,7 +958,7 @@ class GameCtrl:
         raise ValueError("此启动器框架无法产生机器人名")
 
     def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
-        resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
+        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 
     def sendwscmd_with_resp(

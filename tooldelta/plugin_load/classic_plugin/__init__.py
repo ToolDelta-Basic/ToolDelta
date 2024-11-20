@@ -54,7 +54,7 @@ class Plugin:
     "插件名"
     version = (0, 0, 1)
     "插件版本号"
-    author = "?"
+    author: str = "?"
     "作者名"
     description = "..."
     "简介"
