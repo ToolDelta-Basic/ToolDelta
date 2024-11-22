@@ -74,11 +74,20 @@ class Utils:
                 pass
             except ValueError as e:
                 if str(e) != "未连接到游戏":
-                    raise
-                Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
+                    Print.print_err(
+                        f"线程 {self.usage or self.func.__name__} 出错:\n"
+                        + traceback.format_exc()
+                    )
+                else:
+                    Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
             except Exception:
                 Print.print_err(
                     f"线程 {self.usage or self.func.__name__} 出错:\n"
+                    + traceback.format_exc()
+                )
+            except:
+                Print.print_err(
+                    f"线程 {self.usage or self.func.__name__} 出错(系统内错误):\n"
                     + traceback.format_exc()
                 )
             finally:
@@ -246,7 +255,9 @@ class Utils:
             if path not in jsonUnloadPathTmp and path not in jsonPathTmp:
                 jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Utils.TMPJson.loadPathJson(path, needFileExists)
-            return Utils.TMPJson.read(path) or (default() if callable(default) else default)
+            return Utils.TMPJson.read(path) or (
+                default() if callable(default) else default
+            )
 
         @staticmethod
         def write_as_tmp(
@@ -583,7 +594,9 @@ class Utils:
             return None
 
     @staticmethod
-    def try_convert(arg: Any, factory: Callable[[Any], FACTORY_TYPE]) -> FACTORY_TYPE | None:
+    def try_convert(
+        arg: Any, factory: Callable[[Any], FACTORY_TYPE]
+    ) -> FACTORY_TYPE | None:
         """
         尝试将提供的参数交给传入的 factory 处理并返回
 
@@ -637,6 +650,13 @@ class Utils:
 
     @staticmethod
     def fill_list_index(lst: list[VT], default: list[VT]):
+        """
+        使用默认值填充列表。
+
+        Args:
+            lst (list[VT]): 待填充列表
+            default (list[VT]): 默认的填充值 (补全待填充列表)
+        """
         if len(lst) < len(default):
             lst.extend(default[len(lst) :])
 
@@ -695,7 +715,6 @@ class Utils:
         else:
             # 很可能这就已经是目标选择器了
             return playername
-
 
     @staticmethod
     def create_result_cb():
@@ -811,6 +830,7 @@ def _shelve_save(fp: str | None = None):
 def tmpjson_save():
     "请不要在系统调用以外调用"
     _tmpjson_save()
+
 
 @Utils.timer_event(120, "缓存JSON数据定时保存", Utils.ToolDeltaThread.SYSTEM)
 @Utils.thread_func("JSON 缓存文件定时保存", Utils.ToolDeltaThread.SYSTEM)

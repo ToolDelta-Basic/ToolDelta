@@ -779,7 +779,7 @@ class GameCtrl:
             pkt_type (int): 数据包类型
             pkt (dict): 数据包内容
         """
-        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt)
+        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt, self.linked_frame.on_plugin_err)
         if is_skiped:
             return
         if pkt_type == PacketIDS.IDPlayerList:
