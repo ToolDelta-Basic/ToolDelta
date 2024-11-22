@@ -839,8 +839,12 @@ def shelve_save():
 def timer_event_clear():
     "使用reload清理所有非系统线程"
     _timer_event_lock.acquire()
-    for k, (_, _, _, _, priority) in timer_events_table.copy().items():
-        if priority != Utils.ToolDeltaThread.SYSTEM:
+    for k, funcs_args in timer_events_table.copy().items():
+        for func_args in funcs_args:
+            (_, _, _, _, priority) = func_args
+            if priority != Utils.ToolDeltaThread.SYSTEM:
+                timer_events_table[k].remove(func_args)
+        if timer_events_table[k] == []:
             del timer_events_table[k]
     _timer_event_lock.release()
 
