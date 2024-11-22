@@ -117,7 +117,7 @@ def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
         require_neomega = resp2.json()
     except Exception as err:
         Print.print_err(f"获取依赖库表出现问题：{err} (链接:{mirror_src})")
-        return ({}, {})
+        raise
     return require_depen, require_neomega
 
 

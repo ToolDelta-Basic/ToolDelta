@@ -18,7 +18,7 @@ from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
 event_pool: dict[str, threading.Event] = {}
 threads_list: list["Utils.createThread"] = []
-timer_events_table: dict[int, tuple[str, Callable, tuple, dict, int]] = {}
+timer_events_table: dict[int, list[tuple[str, Callable, tuple, dict, int]]] = {}
 _timer_event_lock = threading.Lock()
 
 VT = TypeVar("VT")
@@ -83,11 +83,6 @@ class Utils:
             except Exception:
                 Print.print_err(
                     f"线程 {self.usage or self.func.__name__} 出错:\n"
-                    + traceback.format_exc()
-                )
-            except:
-                Print.print_err(
-                    f"线程 {self.usage or self.func.__name__} 出错(系统内错误):\n"
                     + traceback.format_exc()
                 )
             finally:
@@ -535,7 +530,8 @@ class Utils:
         def receiver(func: Callable[[], None] | Callable[[Any], None]):
             def caller(*args, **kwargs):
                 func_name = name or f"简易方法:{func.__name__}"
-                timer_events_table[t] = (func_name, func, args, kwargs, thread_priority)
+                timer_events_table.setdefault(t, [])
+                timer_events_table[t].append((func_name, func, args, kwargs, thread_priority))
 
             return caller
 
@@ -755,6 +751,7 @@ def safe_close():
         event_pool["timer_events"].set()
     force_stop_common_threads()
     _tmpjson_save()
+    timer_event_clear()
     jsonPathTmp.clear()
     jsonUnloadPathTmp.clear()
 
@@ -857,9 +854,10 @@ def timer_event_boostrap():
     Print.print_suc("已开始执行 ToolDelta定时任务 函数集.")
     while not evt.is_set():
         _timer_event_lock.acquire()
-        for k, (_, caller, args, kwargs, _) in timer_events_table.items():
+        for k, func_args in timer_events_table.items():
             if timer % k == 0:
-                caller(*args, **kwargs)
+                for (_, caller, args, kwargs, _) in func_args:
+                    caller(*args, **kwargs)
         _timer_event_lock.release()
         evt.wait(1)
         timer += 1
