@@ -14,6 +14,8 @@ from tooldelta import Print
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"
     CMD_SET_CLIENT_PKTS = "SetClientListenPackets"
+    CMD_SET_SERVER_BLOCK_PKTS = "SetBlockingServerPackets"
+    CMD_SET_CLIENT_BLOCK_PKTS = "SetBlockingClientPackets"
     MSG_SERVER_PKT = "ServerMCPacket"
     MSG_CLIENT_PKT = "ClientMCPacket"
     MSG_SET_BOT_BASIC_INFO = "SetBotBasicInfo"
@@ -53,6 +55,7 @@ class Eulogist:
         self.bot_runtime_id = 0
         self.bot_uuid = ""
         self.uqs: dict[str, PlayerUQ] = {}
+        self.client_packet_handler: Callable[[int, dict], None] = lambda x, y: None
 
     @staticmethod
     def make_conn(
@@ -98,6 +101,12 @@ class Eulogist:
 
     def set_listen_client_packets(self, pkIDs: list[int]):
         self.send(Message(MessageType.CMD_SET_CLIENT_PKTS, {"PacketsID": pkIDs}))
+
+    def set_blocking_server_packets(self, pkIDs: list[int]):
+        self.send(Message(MessageType.CMD_SET_SERVER_BLOCK_PKTS, {"PacketsID": pkIDs}))
+
+    def set_blocking_client_packets(self, pkIDs: list[int]):
+        self.send(Message(MessageType.CMD_SET_CLIENT_BLOCK_PKTS, {"PacketsID": pkIDs}))
 
     def sendPacket(self, pkID: int, pk: dict):
         self.send(Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": json.dumps(pk)}))
@@ -195,6 +204,8 @@ class Eulogist:
                         #    Print.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
                     if self.packet_listener:
                         self.packet_listener(pkID, pk)
+                case MessageType.MSG_CLIENT_PKT:
+                    self.client_packet_handler(msg.content["ID"], msg.content["Content"])
                 case _:
                     Print.print_war(f"未知数据传输类型: {msg.type}")
         except Exception as err:

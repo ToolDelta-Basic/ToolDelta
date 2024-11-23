@@ -1014,7 +1014,6 @@ class FrameEulogistLauncher(StandardFrame):
         """
         if player not in self.eulogist.uqs.keys():
             raise ValueError(f"玩家不存在: {player}")
-        print(self.eulogist.uqs[player].abilities)
         return self.eulogist.uqs[player].abilities["CommandPermissions"] >= 3
 
 
