@@ -1,8 +1,9 @@
-from git import Repo
-from datetime import datetime
 import pytz
+import json
 import os
 import shutil
+from git import Repo
+from datetime import datetime
 from packaging.version import parse
 
 def clone_repo(repo_url, repo_path, branch="main"):
@@ -30,7 +31,7 @@ def generate_changelog(repo, max_version, version_file="version"):
     )
 
     new_commits_list = new_commits_log.split("\n")
-    new_real_commits_list = [eval(item) for item in new_commits_list if item]
+    new_real_commits_list = [json.loads(item) for item in new_commits_list if item]
 
     ToolDeltaVersion = open(version_file).read().strip()
 
