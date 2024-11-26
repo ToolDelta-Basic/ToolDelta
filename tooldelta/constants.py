@@ -110,6 +110,26 @@ TDREPO_URL = (
 )
 "ToolDelta镜像: github项目仓库"
 
+class SysStatus:
+    """系统状态码
+
+    LOADING: 启动器正在加载
+    LAUNCHING: 启动器正在启动
+    RUNNING: 启动器正在运行
+    NORMAL_EXIT: 正常退出
+    FB_LAUNCH_EXC: FastBuilder 启动异常
+    CRASHED_EXIT: 启动器崩溃退出
+    NEED_RESTART: 需要重启
+    """
+
+    LOADING = 100
+    LAUNCHING = 101
+    RUNNING = 102
+    NORMAL_EXIT = 103
+    FB_LAUNCH_EXC = 104
+    CRASHED_EXIT = 105
+    NEED_RESTART = 106
+    launch_type = "None"
 
 class PacketIDS:
     "数据包 ID 常量表"

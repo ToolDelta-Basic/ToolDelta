@@ -12,6 +12,7 @@ import time
 from collections.abc import Callable
 
 from .cfg import Cfg
+from .constants import SysStatus
 from .color_print import Print
 from .neo_libs import file_download as neo_fd
 from .neo_libs import neo_conn
@@ -22,29 +23,6 @@ from .urlmethod import get_free_port
 from .utils import Utils
 
 Config = Cfg()
-
-
-class SysStatus:
-    """系统状态码
-
-    LOADING: 启动器正在加载
-    LAUNCHING: 启动器正在启动
-    RUNNING: 启动器正在运行
-    NORMAL_EXIT: 正常退出
-    FB_LAUNCH_EXC: FastBuilder 启动异常
-    CRASHED_EXIT: 启动器崩溃退出
-    NEED_RESTART: 需要重启
-    """
-
-    LOADING = 100
-    LAUNCHING = 101
-    RUNNING = 102
-    NORMAL_EXIT = 103
-    FB_LAUNCH_EXC = 104
-    CRASHED_EXIT = 105
-    NEED_RESTART = 106
-    launch_type = "None"
-
 
 class StandardFrame:
     """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""

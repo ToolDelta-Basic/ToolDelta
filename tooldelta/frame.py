@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Callable  # noqa: UP035
 from . import auths, constants, plugin_market, game_utils, utils
 from .cfg import Config
 from .color_print import Print
-from .constants import PacketIDS
+from .constants import PacketIDS, SysStatus
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
@@ -30,7 +30,6 @@ from .launch_cli import (
     FrameNeOmgAccessPointRemote,
     FrameNeOmegaLauncher,
     FrameEulogistLauncher,
-    SysStatus,
 )
 from .logger import publicLogger
 from .packets import Packet_CommandOutput

@@ -12,6 +12,7 @@ from ..constants import (
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
     PacketIDS,
+    SysStatus
 )
 from ..game_utils import _set_frame
 from ..plugin_load import (
@@ -71,6 +72,7 @@ class PluginGroup:
         self.plugins_api = {}
         self._update_player_attributes_funcs = []
         self._broadcast_listeners = {}
+        self.execute_frame_exit(SysStatus.NORMAL_EXIT, "normal")
         classic_plugin.reload()
         injected_plugin.reload()
         Print.print_inf("正在重新读取所有插件")
