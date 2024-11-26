@@ -10,7 +10,6 @@ from tooldelta.utils import Utils
 from tooldelta.packets import Packet_CommandOutput
 from tooldelta import Print
 
-
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"
     CMD_SET_CLIENT_PKTS = "SetClientListenPackets"
@@ -110,6 +109,9 @@ class Eulogist:
 
     def sendPacket(self, pkID: int, pk: dict):
         self.send(Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": json.dumps(pk)}))
+
+    def sendClientPacket(self, pkID: int, pk: dict):
+        self.send(Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": json.dumps(pk)}))
 
     def sendcmd(self, cmd: str):
         ud = str(uuid.uuid4())
