@@ -31,21 +31,7 @@ def generate_changelog(repo, max_version, version_file="version"):
     )
 
     new_commits_list = new_commits_log.split("\n")
-    new_real_commits_list = []
-    for item in new_commits_list:
-        if item:
-            try:
-                item = json.loads(item)
-                item.update({"avali": True})
-            except json.JSONDecodeError:
-                item = {
-                    "commit": "Error",
-                    "author": "Error",
-                    "summary": item,
-                    "date": "Error",
-                    "avali": False
-                }
-
+    new_real_commits_list = [json.loads(item) for item in new_commits_list if item]
 
     ToolDeltaVersion = open(version_file).read().strip()
 
@@ -60,14 +46,9 @@ def generate_changelog(repo, max_version, version_file="version"):
             date = commit["date"]
             if "github-actions" in summary or "GitHub" in summary:
                 continue
-            if commit["avali"]:
-                CHANGELOG.write(
-                    f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/ToolDelta/commit/{commit_id})] {summary} By {author} ({date})\n"
-                )
-            else:
-                CHANGELOG.write(
-                    f"- [`{commit_id[:7]}`] {summary}\n"
-                )
+            CHANGELOG.write(
+                f"- [[`{commit_id[:7]}`](https://github.com/ToolDelta/ToolDelta/commit/{commit_id})] {summary} By {author} ({date})\n"
+            )
 
 def main():
     repo_path = "/home/runner/work/Test"
