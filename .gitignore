@@ -164,7 +164,7 @@ NeOmega数据
 tooldelta/neo_libs/commit
 *.tmp
 tempCodeRunnerFile.python
-.vscode/launch.json
+.vscode/*
 .autocorrectignore
 .autocorrectrc
 快速启动.sig
