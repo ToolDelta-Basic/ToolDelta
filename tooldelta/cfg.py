@@ -3,7 +3,8 @@
 import os
 import json
 from typing import Any
-
+import requests
+from .color_print import Print
 NoneType = type(None)
 
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
@@ -73,7 +74,7 @@ def _CfgShowType(typ: Any) -> str:
 
 class Cfg:
     """配置文件模块"""
-
+    url = None
     class ConfigError(Exception):
         """配置文件错误"""
 
@@ -149,6 +150,35 @@ class Cfg:
                 ) from exc
         self.check_dict(standard_type, obj)
         return obj
+
+    def geturl(self):
+        """自动选择最佳镜像地址"""
+        if self.url:
+            return self.url
+        url_list = ["https://github.dqyt.online"]
+        try:
+            if not Cfg().get_cfg(
+                    "ToolDelta基本配置.json", {"是否使用github镜像": bool}
+                )["是否使用github镜像"]:
+                self.url = "https://raw.githubusercontent.com"
+                return self.url
+            if url := Cfg().get_cfg(
+                    "ToolDelta基本配置.json", {"插件市场源": str}
+                )["插件市场源"]:
+                self.url = f"{url}/https://raw.githubusercontent.com"
+                return self.url
+        except:  # noqa: E722
+            Print.clean_print("§c未发现配置文件，将选择内置镜像地址")
+        for url in url_list:
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    self.url = f"{url}/https://raw.githubusercontent.com"
+                    return self.url
+            except requests.RequestException:
+                continue
+        self.url = "https://github.dqyt.online/https://raw.githubusercontent.com"
+        return self.url
 
     @staticmethod
     def default_cfg(path: str, default: dict, force: bool = False) -> None:

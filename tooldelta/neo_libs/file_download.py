@@ -5,7 +5,7 @@ import platform
 import brotli
 import requests
 
-from tooldelta import constants, urlmethod
+from tooldelta import urlmethod
 from tooldelta.cfg import Config
 from tooldelta.color_print import Print
 from tooldelta.sys_args import sys_args_to_dict
@@ -16,9 +16,7 @@ def download_libs() -> bool:
     if "no-download-libs" in sys_args_to_dict():
         Print.print_war("将不会进行依赖库的下载和检测更新。")
         return True
-    cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
-    is_mir: bool = cfgs["是否使用github镜像"]
-    mirror_src, depen_url = get_github_content_url(is_mir)
+    mirror_src, depen_url = get_github_content_url(Config.geturl())
     require_depen = get_required_dependencies(mirror_src)[0]
     sys_info_fmt = get_system_info()
     source_dict = require_depen.get(sys_info_fmt)
@@ -43,9 +41,7 @@ def download_neomg() -> bool:
         Print.print_war("将不会进行NeOmega的下载和检测更新。")
         return True
     download_libs()
-    cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
-    is_mir: bool = cfgs["是否使用github镜像"]
-    mirror_src, _ = get_github_content_url(is_mir)
+    mirror_src, _ = get_github_content_url(Config.geturl())
     require_depen = get_required_dependencies(mirror_src)[1]
     sys_info_fmt = get_system_info()
     source_dict = require_depen[sys_info_fmt][0]
@@ -89,21 +85,15 @@ def download_neomg() -> bool:
     return True
 
 
-def get_github_content_url(use_special_mirror: bool) -> tuple[str, str]:
-    if use_special_mirror:
-        mirror_src = (
-            constants.TDSPECIFIC_GITHUB_DOWNLOAD_URL
-            + "/ToolDelta-Basic/ToolDelta/main"
-        )
-        depen_url = (
-            constants.TDSPECIFIC_GITHUB_DOWNLOAD_URL
-            + "/ToolDelta-Basic/DependencyLibrary/main"
-        )
-    else:
-        mirror_src = "https://raw.githubusercontent.com/ToolDelta-Basic/ToolDelta/main"
-        depen_url = (
-            "https://raw.githubusercontent.com/ToolDelta-Basic/DependencyLibrary/main"
-        )
+def get_github_content_url(url) -> tuple[str, str]:
+    mirror_src = (
+        url
+        + "/ToolDelta-Basic/ToolDelta/main"
+    )
+    depen_url = (
+        url
+        + "/ToolDelta-Basic/DependencyLibrary/main"
+    )
     return mirror_src, depen_url
 
 

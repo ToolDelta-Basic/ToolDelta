@@ -11,16 +11,11 @@ TOOLDELTA_LOGO = \
 ╚═════════════════════════════════════════════════════════════════════════╝§r"""
 "ToolDelta标志"
 
-PLUGIN_MARKET_SOURCE_OFFICIAL = (
-    "http://github.dqyt.online/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
-)
-"插件市场源"
-
 LAUNCH_CFG: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
     "是否记录日志": True,
     "是否使用github镜像": True,
-    "插件市场源": PLUGIN_MARKET_SOURCE_OFFICIAL,
+    "插件市场源": '',
 }
 "默认登录配置"
 

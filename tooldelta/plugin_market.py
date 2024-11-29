@@ -14,7 +14,6 @@ from . import urlmethod
 from .cfg import Cfg
 from .color_print import Print
 from .constants import (
-    PLUGIN_MARKET_SOURCE_OFFICIAL,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_CFG_DIR,
@@ -80,12 +79,13 @@ class PluginMarket:
 
     def __init__(self):
         self._plugin_id_name_map: dict | None = None
-        try:
-            self.plugins_download_url = Cfg().get_cfg(
-                "ToolDelta基本配置.json", {"插件市场源": str}
-            )["插件市场源"]
-        except Exception:
-            self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
+        self.plugins_download_url = f"{Cfg().geturl()}/ToolDelta-Basic/PluginMarket/main"
+        # try:
+        #     self.plugins_download_url = Cfg().get_cfg(
+        #         "ToolDelta基本配置.json", {"插件市场源": str}
+        #     )["插件市场源"]
+        # except Exception:
+        #     self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
 
     def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
         """
