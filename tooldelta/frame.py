@@ -18,7 +18,7 @@ import requests
 import json
 from typing import TYPE_CHECKING, Callable  # noqa: UP035
 
-from . import auths, constants, plugin_market, game_utils, utils
+from . import auths, constants, plugin_market, game_utils, utils, urlmethod
 from .cfg import Config
 from .color_print import Print
 from .constants import PacketIDS, SysStatus
@@ -94,7 +94,6 @@ class ToolDelta:
             lambda name, _, err: Print.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
         self.launcher: LAUNCHERS
-        self.is_mir: bool
         self.plugin_market_url: str
         self.link_game_ctrl: "GameCtrl"
         self.link_plugin_group: "PluginGroup"
@@ -106,7 +105,6 @@ class ToolDelta:
             # 读取配置文件
             cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
-            self.is_mir = cfgs["是否使用github镜像"]
             self.plugin_market_url = cfgs["插件市场源"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
@@ -123,6 +121,16 @@ class ToolDelta:
             else:
                 Print.print_err(f"ToolDelta 基本配置有误，需要更正：{err}")
             raise SystemExit from err
+        # 配置全局 GitHub 镜像 URL
+        if cfgs["全局GitHub镜像"] == "":
+            cfgs["全局GitHub镜像"] = urlmethod.get_fastest_github_mirror()
+            if cfgs["插件市场源"] == "":
+                cfgs["插件市场源"] = (
+                    cfgs["全局GitHub镜像"]
+                    + "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+                )
+            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+        urlmethod.set_global_github_src_url(cfgs["全局GitHub镜像"])
         # 每个启动器框架的单独启动配置之前
         if self.launchMode == 0:
             Print.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
@@ -306,7 +314,7 @@ class ToolDelta:
                 "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
                 "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
                 "混合启动模式 (同一个机器人同时启动 ToolDelta 和 NeOmega)",
-                "Eulogist 框架 (赞颂者和 ToolDelta 并行运行)"
+                "Eulogist 框架 (赞颂者和 ToolDelta 并行运行)",
             )
             Print.clean_print("§b现有配置项如下:")
             Print.clean_print(
@@ -361,14 +369,6 @@ class ToolDelta:
         old_cfg: dict = Config.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
-        if "NeOmega接入点启动模式" in old_cfg:
-            if isinstance(old_cfg["NeOmega接入点启动模式"]["密码"], int):
-                old_cfg["NeOmega接入点启动模式"]["密码"] = str(
-                    old_cfg["NeOmega接入点启动模式"]["密码"]
-                )
-                if old_cfg["NeOmega接入点启动模式"]["密码"] == "0":
-                    old_cfg["NeOmega接入点启动模式"]["密码"] = ""
-                need_upgrade_cfg = True
         for k, v in constants.LAUNCH_CFG.items():
             if k not in old_cfg_keys:
                 old_cfg[k] = v
@@ -778,7 +778,9 @@ class GameCtrl:
             pkt_type (int): 数据包类型
             pkt (dict): 数据包内容
         """
-        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(pkt_type, pkt, self.linked_frame.on_plugin_err)
+        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(
+            pkt_type, pkt, self.linked_frame.on_plugin_err
+        )
         if is_skiped:
             return
         if pkt_type == PacketIDS.IDPlayerList:

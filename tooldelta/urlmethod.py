@@ -19,15 +19,55 @@ from .constants import TDREPO_URL
 from .color_print import Print
 from .get_tool_delta_version import get_tool_delta_version
 
-# 使用方法 mirror_github[value: int].format(url: str)
-mirror_github = [
-    "https://mirror.ghproxy.com/{}",
-    "https://hub.gitmirror.com/{}",
-    "https://gh.con.sh/{}",
-]
+GGithubSrcURL = ""
+GPluginMarketURL = ""
 
 # Initialize colorama
 init(autoreset=True)
+
+# def get_avali_github_url(self):
+#     """自动选择最佳镜像地址"""
+#     url_list = ["https://ghp.ci", "https://github.dqyt.online"]
+#     try:
+#         if not Config.get_cfg(
+#                 "ToolDelta基本配置.json", {"是否使用github镜像": bool}
+#             )["是否使用github镜像"]:
+#             self.url = "https://raw.githubusercontent.com"
+#             return self.url
+#         if url := Config.get_cfg(
+#                 "ToolDelta基本配置.json", {"插件市场源": str}
+#             )["插件市场源"]:
+#             self.url = f"{url}/https://raw.githubusercontent.com"
+#             return self.url
+#     except Exception:
+#         Print.clean_print("§c未发现配置文件，将选择内置镜像地址")
+#     for url in url_list:
+#         try:
+#             response = requests.get(url)
+#             if response.status_code == 200:
+#                 self.url = f"{url}/https://raw.githubusercontent.com"
+#                 return self.url
+#         except requests.RequestException:
+#             continue
+#     self.url = "https://github.dqyt.online/https://raw.githubusercontent.com"
+#     return self.url
+
+def set_global_github_src_url(url: str):
+    global GGithubSrcURL
+    GGithubSrcURL = url
+
+def get_global_github_src_url():
+    return GGithubSrcURL or "https://mirror.ghproxy.com"
+
+def get_fastest_github_mirror():
+    Print.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
+    res = test_site_latency([
+        "https://ghp.ci",
+        "https://mirror.ghproxy.com",
+        "https://github.dqyt.online",
+    ])
+    Print.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
+    return site
 
 
 async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
@@ -125,20 +165,6 @@ async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
         for progress_bar in progress_bars:
             progress_bar.close()
 
-
-def format_mirror_url(url: str) -> list:
-    """填充 url 到镜像 url 列表
-
-    Args:
-        url (str): 原始 URL
-
-    Returns:
-        list: 填充原始 url 后的镜像列表
-    """
-    mir_url: list = []
-    for mirror in mirror_github:
-        mir_url.append(mirror.format(url))
-    return mir_url
 
 
 def githubdownloadurl_to_rawurl(url: str) -> str:
@@ -336,17 +362,16 @@ def download_unknown_file(url: str, save_dir: str) -> None:
     download_file_singlethreaded(url, save_dir)
 
 
-def test_site_latency(Da: dict) -> list:
+def test_site_latency(urls: list[str]) -> list[tuple[str, float]]:
     """测试网站延迟
 
     Args:
-        Da (dict): 包含 URL 和镜像 URL 的字典
+        Da (dict): 包含 URL 和镜像 URL 的字典: {"url": ..., "m}
 
     Returns:
         list: 按延迟排序的 URL 和延迟时间的元组列表
     """
-    tmp_speed = {}
-    urls = [Da["url"]] + Da["mirror_url"]
+    tmp_speed: dict[str, float] = {}
 
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(measure_latencyt, url) for url in urls]
@@ -359,7 +384,7 @@ def test_site_latency(Da: dict) -> list:
             except Exception as e:
                 Print.print_war(f"Error measuring latency for {url}: {e}")
 
-    return sorted(tmp_speed.items(), key=lambda x: x[1], reverse=True)
+    return sorted(tmp_speed.items(), key=lambda x: x[1])
 
 
 def measure_latencyt(url: str) -> float:

@@ -14,15 +14,15 @@ TOOLDELTA_LOGO = \
 LAUNCH_CFG: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": 0,
     "是否记录日志": True,
-    "是否使用github镜像": True,
-    "插件市场源": '',
+    "全局GitHub镜像": "",
+    "插件市场源": "",
 }
 "默认登录配置"
 
 LAUNCH_CFG_STD: dict = {
     "启动器启动模式(请不要手动更改此项, 改为0可重置)": int,
     "是否记录日志": bool,
-    "是否使用github镜像": bool,
+    "全局GitHub镜像": str,
     "插件市场源": str,
 }
 "默认登录配置标准验证格式"
@@ -104,6 +104,8 @@ TDREPO_URL = (
     f"{TDSPECIFIC_MIRROR}/https://api.github.com/repos/ToolDelta-Basic/ToolDelta"
 )
 "ToolDelta镜像: github项目仓库"
+
+PLUGIN_MARKET_SOURCE_OFFICIAL = "https://ghp.ci/https://ToolDelta-Basic/PluginMarket"
 
 class SysStatus:
     """系统状态码

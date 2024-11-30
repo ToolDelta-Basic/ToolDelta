@@ -18,6 +18,7 @@ from .constants import (
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_CFG_DIR,
     TOOLDELTA_PLUGIN_DATA_DIR,
+    PLUGIN_MARKET_SOURCE_OFFICIAL
 )
 from .plugin_load import PluginRegData, PluginsPackage
 from .utils import Utils
@@ -79,13 +80,13 @@ class PluginMarket:
 
     def __init__(self):
         self._plugin_id_name_map: dict | None = None
-        self.plugins_download_url = f"{Cfg().geturl()}/ToolDelta-Basic/PluginMarket/main"
-        # try:
-        #     self.plugins_download_url = Cfg().get_cfg(
-        #         "ToolDelta基本配置.json", {"插件市场源": str}
-        #     )["插件市场源"]
-        # except Exception:
-        #     self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
+        #self.plugins_download_url = f"{Cfg().geturl()}/ToolDelta-Basic/PluginMarket/main"
+        try:
+            self.plugins_download_url = Cfg().get_cfg(
+                "ToolDelta基本配置.json", {"插件市场源": str}
+            )["插件市场源"]
+        except Exception:
+            self.plugins_download_url = PLUGIN_MARKET_SOURCE_OFFICIAL
 
     def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
         """
@@ -95,6 +96,8 @@ class PluginMarket:
             source_url (str | None, optional): 插件市场源
             in_game (bool, optional): 是否在游戏内调用的插件市场命令
         """
+        if source_url:
+            self.plugins_download_url = source_url
         Print.clean_print("§6正在连接到插件市场..")
         CONTENT_LENGTH = 12
 

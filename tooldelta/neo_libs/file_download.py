@@ -6,9 +6,9 @@ import brotli
 import requests
 
 from tooldelta import urlmethod
-from tooldelta.cfg import Config
 from tooldelta.color_print import Print
 from tooldelta.sys_args import sys_args_to_dict
+from tooldelta.urlmethod import get_global_github_src_url
 
 
 def download_libs() -> bool:
@@ -16,12 +16,16 @@ def download_libs() -> bool:
     if "no-download-libs" in sys_args_to_dict():
         Print.print_war("将不会进行依赖库的下载和检测更新。")
         return True
-    mirror_src, depen_url = get_github_content_url(Config.geturl())
+    mirror_src, depen_url = get_github_content_url(
+        get_global_github_src_url() + "/https://raw.githubusercontent.com"
+    )
     require_depen = get_required_dependencies(mirror_src)[0]
     sys_info_fmt = get_system_info()
     source_dict = require_depen.get(sys_info_fmt)
     if source_dict is None:
-        raise ValueError(f"未知的系统架构版本: {sys_info_fmt} (目前支持: {', '.join(require_depen.keys())})")
+        raise ValueError(
+            f"未知的系统架构版本: {sys_info_fmt} (目前支持: {', '.join(require_depen.keys())})"
+        )
     commit_remote = get_remote_commit(depen_url)
     commit_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "commit")
     replace_file = check_commit_file(commit_file_path, commit_remote)
@@ -41,7 +45,9 @@ def download_neomg() -> bool:
         Print.print_war("将不会进行NeOmega的下载和检测更新。")
         return True
     download_libs()
-    mirror_src, _ = get_github_content_url(Config.geturl())
+    mirror_src, _ = get_github_content_url(
+        get_global_github_src_url() + "/https://raw.githubusercontent.com"
+    )
     require_depen = get_required_dependencies(mirror_src)[1]
     sys_info_fmt = get_system_info()
     source_dict = require_depen[sys_info_fmt][0]
@@ -86,14 +92,8 @@ def download_neomg() -> bool:
 
 
 def get_github_content_url(url) -> tuple[str, str]:
-    mirror_src = (
-        url
-        + "/ToolDelta-Basic/ToolDelta/main"
-    )
-    depen_url = (
-        url
-        + "/ToolDelta-Basic/DependencyLibrary/main"
-    )
+    mirror_src = url + "/ToolDelta-Basic/ToolDelta/main"
+    depen_url = url + "/ToolDelta-Basic/DependencyLibrary/main"
     return mirror_src, depen_url
 
 
@@ -106,7 +106,7 @@ def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
         resp2.raise_for_status()
         require_neomega = resp2.json()
     except Exception as err:
-        Print.print_err(f"获取依赖库表出现问题：{err} (链接:{mirror_src})")
+        Print.print_err(f"获取依赖库表出现问题：{err} (镜像: {mirror_src})")
         raise
     return require_depen, require_neomega
 
