@@ -836,6 +836,7 @@ class GameCtrl:
                 plugin_group.execute_player_leave(
                     playername, self.linked_frame.on_plugin_err
                 )
+                del self.players_uuid[playername]
 
     def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
         """处理 9 号数据包的消息
