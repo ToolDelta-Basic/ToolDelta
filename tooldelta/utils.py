@@ -247,8 +247,9 @@ class Utils:
             Returns:
                 Any: 该虚拟路径的 JSON
             """
-            if path not in jsonUnloadPathTmp and path not in jsonPathTmp:
-                jsonUnloadPathTmp[path] = timeout + int(time.time())
+            if path not in jsonPathTmp.keys():
+                if path not in jsonUnloadPathTmp.keys():
+                    jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Utils.TMPJson.loadPathJson(path, needFileExists)
             return Utils.TMPJson.read(path) or (
                 default() if callable(default) else default
@@ -266,8 +267,9 @@ class Utils:
                 needFileExists (bool, optional): 默认为 True, 为 False 时，若文件路径不存在，就会自动创建一个文件，且写入默认值 null
                 timeout (int, optional): 多久没有再进行读取操作时卸载缓存
             """
-            if path not in jsonUnloadPathTmp and path not in jsonPathTmp:
-                jsonUnloadPathTmp[path] = timeout + int(time.time())
+            if path not in jsonPathTmp.keys():
+                if path not in jsonUnloadPathTmp.keys():
+                    jsonUnloadPathTmp[path] = timeout + int(time.time())
                 Utils.TMPJson.loadPathJson(path, needFileExists)
             Utils.TMPJson.write(path, obj)
 
