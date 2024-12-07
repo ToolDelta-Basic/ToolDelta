@@ -533,7 +533,9 @@ class Utils:
             def caller(*args, **kwargs):
                 func_name = name or f"简易方法:{func.__name__}"
                 timer_events_table.setdefault(t, [])
-                timer_events_table[t].append((func_name, func, args, kwargs, thread_priority))
+                timer_events_table[t].append(
+                    (func_name, func, args, kwargs, thread_priority)
+                )
 
             return caller
 
@@ -671,6 +673,7 @@ class Utils:
             str: 去除颜色代码后的名字
         """
         if name.startswith("§"):
+            # <<VIP名><玩家名>> -> 玩家名
             cleaned_name = "".join(
                 char
                 for i, char in enumerate(name)
@@ -691,6 +694,9 @@ class Utils:
                     temp_word.append(char)
 
             return "".join(last_word)
+        elif name.startswith("<") and name.endswith(">"):
+            # <玩家名> -> 玩家名
+            return name[1:-1]
         return name
 
     @staticmethod
@@ -862,7 +868,7 @@ def timer_event_boostrap():
         _timer_event_lock.acquire()
         for k, func_args in timer_events_table.items():
             if timer % k == 0:
-                for (_, caller, args, kwargs, _) in func_args:
+                for _, caller, args, kwargs, _ in func_args:
                     caller(*args, **kwargs)
         _timer_event_lock.release()
         evt.wait(1)
