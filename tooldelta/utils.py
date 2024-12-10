@@ -866,7 +866,7 @@ def timer_event_boostrap():
     Print.print_suc("已开始执行 ToolDelta定时任务 函数集.")
     while not evt.is_set():
         _timer_event_lock.acquire()
-        for k, func_args in timer_events_table.items():
+        for k, func_args in timer_events_table.copy().items():
             if timer % k == 0:
                 for _, caller, args, kwargs, _ in func_args:
                     caller(*args, **kwargs)

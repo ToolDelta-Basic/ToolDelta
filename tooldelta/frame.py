@@ -617,33 +617,37 @@ class ToolDelta:
 
     def system_exit(self, reason: str) -> None:
         """ToolDelta 系统退出"""
-        if self.launcher.status == SysStatus.RUNNING:
-            self.launcher.update_status(SysStatus.NORMAL_EXIT)
+        # 启动器框架是否被载入
+        has_launcher = hasattr(self, "launcher")
+        if has_launcher:
+            if self.launcher.status == SysStatus.RUNNING:
+                self.launcher.update_status(SysStatus.NORMAL_EXIT)
         self.link_plugin_group.execute_frame_exit(
             self.launcher.status, reason, self.on_plugin_err
         )
         asyncio.run(injected_plugin.safe_jump_repeat_tasks())
         # 先将启动框架 (进程) 关闭了
-        if self.launcher.status == SysStatus.NORMAL_EXIT:
-            # 运行中退出
-            if isinstance(self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher):
-                try:
-                    self.link_game_ctrl.sendwocmd(
-                        f'/kick "{self.link_game_ctrl.bot_name}" ToolDelta 退出中。'
-                    )
-                except Exception:
-                    pass
-                if not isinstance(self.launcher.neomg_proc, type(None)):
-                    if os.name == "nt":
-                        self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
-                    else:
-                        self.launcher.neomg_proc.send_signal(signal.SIGTERM)
-        else:
-            # 其他情况下退出 (例如启动失败)
-            pass
-        # 然后使得启动框架联络进程也退出
-        if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
-            self.launcher.exit_event.set()
+        if has_launcher:
+            if self.launcher.status == SysStatus.NORMAL_EXIT:
+                # 运行中退出
+                if isinstance(self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher):
+                    try:
+                        self.link_game_ctrl.sendwocmd(
+                            f'/kick "{self.link_game_ctrl.bot_name}" ToolDelta 退出中。'
+                        )
+                    except Exception:
+                        pass
+                    if not isinstance(self.launcher.neomg_proc, type(None)):
+                        if os.name == "nt":
+                            self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
+                        else:
+                            self.launcher.neomg_proc.send_signal(signal.SIGTERM)
+            else:
+                # 其他情况下退出 (例如启动失败)
+                pass
+            # 然后使得启动框架联络进程也退出
+            if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
+                self.launcher.exit_event.set()
         # 最后做善后工作
         self.actions_before_exited()
         # 到这里就基本上是退出完成了
