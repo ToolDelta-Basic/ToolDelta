@@ -100,7 +100,7 @@ class ToolDelta:
 
     def load_tooldelta_cfg(self) -> None:
         """加载配置文件"""
-        Config.default_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG)
+        Config.write_default_cfg_file("ToolDelta基本配置.json", constants.LAUNCH_CFG)
         try:
             # 读取配置文件
             cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
@@ -129,7 +129,7 @@ class ToolDelta:
                     cfgs["全局GitHub镜像"]
                     + "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
                 )
-            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+            Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
         urlmethod.set_global_github_src_url(cfgs["全局GitHub镜像"])
         # 每个启动器框架的单独启动配置之前
         if self.launchMode == 0:
@@ -145,7 +145,7 @@ class ToolDelta:
                     break
                 except ValueError:
                     Print.print_err("输入不合法，或者是不在范围内，请重新输入")
-            Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+            Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
         self.launcher = LAUNCHERS_SHOWN[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]()
@@ -219,7 +219,7 @@ class ToolDelta:
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
                         cfgs[launcher_config_key] = launch_data
-                        Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                        Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
                         Print.print_suc("登录配置设置成功")
                         break
                     except Exception:
@@ -244,7 +244,7 @@ class ToolDelta:
                         break
                     except ValueError:
                         Print.print_err("输入不合法，或者是不在范围内，请重新输入")
-                Config.default_cfg("ToolDelta基本配置.json", cfgs, True)
+                Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
             # 读取 token
             if not (fbtoken := sys_args_to_dict().get("user-token")):
                 if not os.path.isfile("fbtoken"):
@@ -324,7 +324,7 @@ class ToolDelta:
             Print.clean_print("    §a直接回车: 保存并退出")
             resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
-                Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
+                Config.write_default_cfg_file("ToolDelta基本配置.json", old_cfg, True)
                 Print.clean_print("§a配置已保存!")
                 return
             match resp:
@@ -374,7 +374,7 @@ class ToolDelta:
                 old_cfg[k] = v
                 need_upgrade_cfg = True
         if need_upgrade_cfg:
-            Config.default_cfg("ToolDelta基本配置.json", old_cfg, True)
+            Config.write_default_cfg_file("ToolDelta基本配置.json", old_cfg, True)
         return need_upgrade_cfg
 
     @staticmethod

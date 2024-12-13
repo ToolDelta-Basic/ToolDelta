@@ -3,8 +3,10 @@
 import os
 import json
 from typing import Any
+from .constants import TOOLDELTA_PLUGIN_CFG_DIR
 
 NoneType = type(None)
+VERSION = tuple[int, int, int]
 
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
@@ -45,7 +47,7 @@ def cfg_isinstance(obj: Any, typ: type | tuple[type]):
         raise ValueError(f"cfg_isinstance arg 2 can't be: {typ}")
 
 
-def _CfgShowType(typ: Any) -> str:
+def get_cfg_type_name(typ: Any) -> str:
     """转换类型为中文字符串
 
     Args:
@@ -150,61 +152,36 @@ class Cfg:
         self.check_dict(standard_type, obj)
         return obj
 
-    @staticmethod
-    def default_cfg(path: str, default: dict, force: bool = False) -> None:
-        """生成默认配置文件
-
-        Args:
-            path (str): 路径
-            default (dict): 默认配置
-            force (bool, optional): 是否强制生成
-        """
-        path = path if path.endswith(".json") else f"{path}.json"
-        if force or not os.path.isfile(path):
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(default, f, indent=4, ensure_ascii=False)
-
-    @staticmethod
-    def exists(path: str) -> bool:
-        """判断文件是否存在
-
-        Args:
-            path (str): 路径
-
-        Returns:
-            bool: 是否存在
-        """
-        return os.path.isfile(path if path.endswith(".json") else f"{path}.json")
-
     def get_plugin_config_and_version(
         self,
-        pluginName: str,
-        standardType: Any,
+        plugin_name: str,
+        standard_type: Any,
         default: dict,
-        default_vers: tuple[int, int, int] | list,
-    ) -> tuple[dict[str, Any], tuple[int, int, int]]:
-        """获取插件配置文件及版本
+        default_vers: VERSION,
+    ) -> tuple[dict[str, Any], VERSION]:
+        """
+        获取插件配置文件及版本
 
         Args:
-            pluginName (str): 插件名
-            standardType (dict): 标准类型
+            plugin_name (str): 插件名
+            standard_type (dict): 标准类型
             default (dict): 默认配置
             default_vers (tuple[int, int, int]): 默认版本
 
         Returns:
-             tuple[dict[str, Any], tuple[int, ...]]: 配置文件及版本
+             tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
         """
         # 详情见 插件编写指南.md
-        assert isinstance(standardType, dict)
-        p = f"插件配置文件/{pluginName}"
-        if not self.exists(p) and default:
+        assert isinstance(standard_type, dict)
+        p = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, plugin_name)
+        if not self._jsonfile_exists(p) and default:
             defaultCfg = PLUGINCFG_DEFAULT.copy()
             defaultCfg["配置项"] = default
             defaultCfg["配置版本"] = ".".join([str(n) for n in default_vers])
-            self.check_auto(standardType, default)
+            self.check_auto(standard_type, default)
             self.default_cfg(f"{p}.json", defaultCfg, force=True)
         cfg_stdtyp = PLUGINCFG_STANDARD_TYPE.copy()
-        cfg_stdtyp["配置项"] = standardType
+        cfg_stdtyp["配置项"] = standard_type
         cfgGet = self.get_cfg(p, cfg_stdtyp)
         cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
         VERSION_LENGTH = 3  # 版本长度
@@ -214,6 +191,26 @@ class Cfg:
 
     getPluginConfigAndVersion = get_plugin_config_and_version
 
+    def upgrade_plugin_config(
+        self,
+        plugin_name: str,
+        configs: dict,
+        version: VERSION,
+    ):
+        """
+        获取插件配置文件及版本
+
+        Args:
+            plugin_name (str): 插件名
+            configs (dict): 配置内容
+            default_vers (tuple[int, int, int]): 版本
+        """
+        p = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, plugin_name)
+        defaultCfg = PLUGINCFG_DEFAULT.copy()
+        defaultCfg["配置项"] = configs
+        defaultCfg["配置版本"] = ".".join([str(n) for n in version])
+        self.write_default_cfg_file(f"{p}.json", defaultCfg, force=True)
+
     def check_auto(
         self,
         standard: Any,
@@ -221,7 +218,7 @@ class Cfg:
         fromkey: str = "?",
     ):
         """
-        检测任意类型的json类型是否合法
+        检测任意类型的 json 类型是否合法
 
         Args:
             standard (type, dict, list): 标准模版
@@ -238,11 +235,11 @@ class Cfg:
             if not cfg_isinstance(val, standard):
                 if isinstance(val, dict):
                     raise self.ConfigValueError(
-                        f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, '
+                        f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {get_cfg_type_name(standard)}, '
                         f"实际上为 json 对象：{json.dumps(val, ensure_ascii=False)}"
                     )
                 raise self.ConfigValueError(
-                    f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {_CfgShowType(standard)}, 实际上为 {_CfgShowType(val)}'
+                    f'JSON 键"{fromkey}" 对应值的类型不正确：需要 {get_cfg_type_name(standard)}, 实际上为 {get_cfg_type_name(val)}'
                 )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
@@ -266,71 +263,16 @@ class Cfg:
                 f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard}'
             )
 
-    def check_dict(self, pattern: Any, jsondict: Any, from_key="?"):
-        """
-        按照给定的标准配置样式比对传入的配置文件 jsondict, 对不上则引发相应异常
-
-        参数:
-            pattern: 标准模版 dict
-            jsondict: 待检测的配置文件 dict
-        """
-        if not isinstance(jsondict, dict):
-            raise ValueError(
-                f'json 键"{from_key}" 需要 json 对象，而不是 {_CfgShowType(jsondict)}'
-            )
-        if isinstance(pattern, Cfg.AnyKeyValue):
-            for key, val in jsondict.items():
-                self.check_auto(pattern.type, val, key)
-        else:
-            for key, std_val in pattern.items():
-                if isinstance(key, self.KeyGroup):
-                    for k, v in jsondict.items():
-                        if k in key.keys:
-                            self.check_auto(std_val, v, k)
-                elif isinstance(key, str):
-                    val_get = jsondict.get(key, Cfg.FindNone)
-                    if val_get == Cfg.FindNone:
-                        raise self.ConfigKeyError(f"不存在的 JSON 键：{key}")
-                    self.check_auto(std_val, val_get, key)
-                else:
-                    raise ValueError(f"Invalid key type: {key.__class__.__name__}")
-
-    def check_list(self, pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
-        """
-        检查json列表是否合法
-
-        Args:
-            pattern (list): 标准模版
-            value (Any): 待检测值
-            fromkey (Any, optional): 从哪个json键向下检索而来
-
-        Raises:
-            ValueError: 不是合法的标准列表检测样式
-            ValueError: 标准检测列表的长度不能为 0
-            ConfigValueError: json 键值错误
-        """
-        if not isinstance(pattern, Cfg.JsonList):
-            raise ValueError("不是合法的标准列表检测样式")
-        if not isinstance(value, list):
-            raise self.ConfigValueError(
-                f'JSON 键 "{fromkey}" 需要列表 而不是 {_CfgShowType(value)}'
-            )
-        if pattern.len_limit != -1 and len(value) != pattern.len_limit:
-            raise self.ConfigValueError(
-                f'JSON 键 "{fromkey}" 所对应的值列表有误：需要 {pattern.len_limit} 项，实际上为 {len(value)} 项'
-            )
-        for val in value:
-            self.check_auto(pattern.patt, val, fromkey)
-
     def auto_to_std(self, cfg):
         """
-        从默认配置文件自动生成配置文件检测模版
-        注意: 无法自动检测 AnyKeyValue
+        从默认的配置文件内容的字典自动生成检测模版
+        注意: 无法自动检测 AnyKeyValue, KeyGroup
 
         Args:
-            cfg: 默认的 CFG 配置文件
+            cfg: 默认的配置文件内容的字典
+
         Returns:
-            标准 cfg 样式，用于 check_dict
+            标准检测模版样式, 用于 check_dict
         """
         if isinstance(cfg, dict):
             res = {}
@@ -351,7 +293,86 @@ class Cfg:
             return Cfg.JsonList(tuple(setting_types))
         raise ValueError("auto_to_std() 仅接受 dict 与 list 参数")
 
+    def check_dict(self, pattern: Any, jsondict: Any, from_key="?"):
+        """
+        按照给定的标准配置样式比对传入的字典, 键值对不上模版则引发相应异常
+        请改为使用 check_auto
+
+        参数:
+            pattern: 标准模版 dict
+            jsondict: 待检测的配置文件 dict
+        """
+        if not isinstance(jsondict, dict):
+            raise ValueError(
+                f'json 键"{from_key}" 需要 json 对象，而不是 {get_cfg_type_name(jsondict)}'
+            )
+        if isinstance(pattern, Cfg.AnyKeyValue):
+            for key, val in jsondict.items():
+                self.check_auto(pattern.type, val, key)
+        else:
+            for key, std_val in pattern.items():
+                if isinstance(key, self.KeyGroup):
+                    for k, v in jsondict.items():
+                        if k in key.keys:
+                            self.check_auto(std_val, v, k)
+                elif isinstance(key, str):
+                    val_get = jsondict.get(key, Cfg.FindNone)
+                    if val_get == Cfg.FindNone:
+                        raise self.ConfigKeyError(f"不存在的 JSON 键：{key}")
+                    self.check_auto(std_val, val_get, key)
+                else:
+                    raise ValueError(f"Invalid key type: {key.__class__.__name__}")
+
+    def check_list(self, pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
+        """
+        检查列表是否合法
+        请改为使用 check_auto
+
+        Args:
+            pattern (list): 标准模版
+            value (Any): 待检测值
+            fromkey (Any, optional): 从哪个字典键向下检索而来
+
+        Raises:
+            ValueError: 不是合法的标准列表检测样式
+            ValueError: 标准检测列表的长度不能为 0
+            ConfigValueError: 值错误
+        """
+        if not isinstance(pattern, Cfg.JsonList):
+            raise ValueError("不是合法的标准列表检测样式")
+        if not isinstance(value, list):
+            raise self.ConfigValueError(
+                f'JSON 键 "{fromkey}" 需要列表 而不是 {get_cfg_type_name(value)}'
+            )
+        if pattern.len_limit != -1 and len(value) != pattern.len_limit:
+            raise self.ConfigValueError(
+                f'JSON 键 "{fromkey}" 所对应的值列表有误：需要 {pattern.len_limit} 项，实际上为 {len(value)} 项'
+            )
+        for val in value:
+            self.check_auto(pattern.patt, val, fromkey)
+
     checkDict = check_dict
+
+    @staticmethod
+    def write_default_cfg_file(path: str, default: dict, force: bool = False) -> None:
+        """
+        生成默认配置文件
+
+        Args:
+            path (str): 路径
+            default (dict): 默认配置
+            force (bool, optional): 是否即使是配置文件存在时, 也强制覆盖内容.
+        """
+        path = path if path.endswith(".json") else f"{path}.json"
+        if force or not os.path.isfile(path):
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(default, f, indent=4, ensure_ascii=False)
+
+    default_cfg = write_default_cfg_file
+
+    @staticmethod
+    def _jsonfile_exists(path: str) -> bool:
+        return os.path.isfile(path if path.endswith(".json") else f"{path}.json")
 
 
 Config = Cfg()
