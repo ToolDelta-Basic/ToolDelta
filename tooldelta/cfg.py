@@ -266,7 +266,7 @@ class Cfg:
     def auto_to_std(self, cfg):
         """
         从默认的配置文件内容的字典自动生成检测模版
-        注意: 无法自动检测 AnyKeyValue, KeyGroup
+        注意: 无法自动检测 AnyKeyValue, KeyGroup, PInt, PFloat 等
 
         Args:
             cfg: 默认的配置文件内容的字典
