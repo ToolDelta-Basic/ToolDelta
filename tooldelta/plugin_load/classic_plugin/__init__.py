@@ -205,7 +205,6 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
         plugin: Plugin = plugin_or_none
         if plugin.name is None or plugin.name == "":
             raise ValueError(f"插件主类 {plugin.__class__.__name__} 需要作者名")
-        plugin_group.plugins.append(plugin)
         _v0, _v1, _v2 = plugin.version
 
         # 收集事件监听函数

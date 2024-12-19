@@ -47,7 +47,6 @@ _SUPER_CLS = TypeVar("_SUPER_CLS")
 class PluginGroup:
     "插件组类, 存放插件代码有关数据"
 
-    plugins: ClassVar[list[Plugin]] = []
     Agree_bot_patrol: ClassVar["list[bool]"] = []
 
     def __init__(self):
