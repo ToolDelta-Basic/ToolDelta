@@ -59,7 +59,7 @@ class Utils:
             self.func = func
             self.daemon = True
             self.all_args = [args, kwargs]
-            self.usage = usage
+            self.usage = usage or f"fn:{func.__name__}"
             self.start()
             self.stopping = False
             self._thread_level = thread_level
@@ -87,6 +87,7 @@ class Utils:
                 )
             finally:
                 threads_list.remove(self)
+                del self.all_args
 
         def stop(self) -> bool:
             """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
@@ -764,17 +765,6 @@ def safe_close():
     jsonUnloadPathTmp.clear()
 
 
-def force_stop_common_threads():
-    for i in threads_list:
-        if i._thread_level != i.SYSTEM:
-            Print.print_suc(f"正在终止线程 {i.usage}  ", end="\r")
-            res = i.stop()
-            if res:
-                Print.print_suc(f"已终止线程 {i.usage}    ")
-            else:
-                Print.print_suc(f"无法终止线程 {i.usage}  ")
-
-
 def if_token() -> None:
     """检查路径下是否有 fbtoken，没有就提示输入
 
@@ -855,6 +845,17 @@ def timer_event_clear():
         if timer_events_table[k] == []:
             del timer_events_table[k]
     _timer_event_lock.release()
+
+
+def force_stop_common_threads():
+    for i in threads_list:
+        if i._thread_level != i.SYSTEM:
+            Print.print_suc(f"正在终止线程 {i.usage}  ", end="\r")
+            res = i.stop()
+            if res:
+                Print.print_suc(f"已终止线程 <{i.usage}>    ")
+            else:
+                Print.print_suc(f"无法终止线程 <{i.usage}>  ")
 
 
 @Utils.thread_func("ToolDelta 定时任务", Utils.ToolDeltaThread.SYSTEM)

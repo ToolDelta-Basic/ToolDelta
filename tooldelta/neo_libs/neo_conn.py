@@ -463,8 +463,8 @@ class ConnectType(enum.Enum):
     Local = "Local"  # 在内部启动一个单独的 neOmega Core
 
 
-GOMEGA_HAD_LISTENED_PACKETS = False
-GOMEGA_HAD_LISTENED_PLAYER_CHANGE = False
+# GOMEGA_HAD_LISTENED_PACKETS = False
+# GOMEGA_HAD_LISTENED_PLAYER_CHANGE = False
 
 
 class ThreadOmega:

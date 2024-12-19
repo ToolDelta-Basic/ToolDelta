@@ -45,6 +45,7 @@ plugins_funcs: dict[str, list[tuple[str, Callable]]] = {
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
 loaded_plugin_modules = []
+# TODO: 会存储已删除的插件模块, 可能导致内存泄漏
 
 
 class Plugin:

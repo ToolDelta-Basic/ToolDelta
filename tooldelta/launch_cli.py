@@ -770,9 +770,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                         Print.print_inf(f"{buffer}, 已自动选择为 y")
                 # 其他处理, 先独占输入通道, 等待用户输入
                 elif (
-                    "请输入 y" in buffer
+                    ("请输入 y" in buffer
                     and "请输入 n:" in buffer
-                    and char != "\n"
+                    and char != "\n")
                     or ("请输入" in buffer and ":" in buffer and char != "\n")
                 ):
                     msg_orig = buffer.strip()

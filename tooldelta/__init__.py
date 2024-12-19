@@ -33,6 +33,7 @@ __all__ = [
     "Plugin",
     "Print",
     "ToolDelta",
+    "ToolDelta",
     "client_title",
     "plugins",
     "start_tool_delta",

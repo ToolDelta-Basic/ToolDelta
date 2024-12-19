@@ -52,6 +52,7 @@ class PluginGroup:
 
     def __init__(self):
         "初始化"
+        # loaded_plugin_ids: 供给插件调用
         self._cached_broadcast_evts: dict[str, list[Callable]] = {}
         self._cached_packet_cbs: list[tuple[int, Callable]] = []
         self._cached_all_packets_listener: Callable | None = None

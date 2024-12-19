@@ -20,7 +20,9 @@ def NON_FUNC(*_) -> None:
     """空函数"""
     return None
 
+
 _ON_ERROR_CB = Callable[[str, Exception, str], None]
+
 
 class PluginSkip(EOFError):
     """跳过插件加载"""
@@ -132,14 +134,11 @@ class PluginRegData:
             "unknown": "未知类型",
         }.get(self.plugin_type, "未知类型")
 
+
 class PluginsPackage:
     """插件整合包"""
 
-    def __init__(
-        self,
-        name: str,
-        pack_datas: dict
-    ):
+    def __init__(self, name: str, pack_datas: dict):
         self.name = name
         self.author: str = pack_datas["author"]
         self.version: str = pack_datas["version"]
