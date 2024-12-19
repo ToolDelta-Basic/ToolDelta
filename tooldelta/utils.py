@@ -114,7 +114,7 @@ class Utils:
     #         return True
 
     class ToolDeltaThread:
-        """使用 start_new_thread """
+        """使用 start_new_thread"""
 
         SYSTEM = 0
         PLUGIN = 1
@@ -147,8 +147,9 @@ class Utils:
 
         def run(self) -> None:
             """线程运行方法"""
+            actives_dic = threading._active  # type: ignore
             threads_list.append(self)
-            this_thread = threading._active[self._thread_id] # type: ignore
+            this_thread = actives_dic[self._thread_id]
             this_thread.name = f"ToolDelta 线程: {self.usage}"
             self.start_event.set()
             try:
@@ -170,7 +171,10 @@ class Utils:
                 )
             finally:
                 threads_list.remove(self)
-                del threading._active[self._thread_id] # type: ignore
+                if self._thread_id not in actives_dic.keys():
+                    Print.print_war(f"无法从线程池移除线程: {self._thread_id}")
+                else:
+                    del actives_dic[self._thread_id]  # type: ignore
 
         def stop(self) -> bool:
             """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
