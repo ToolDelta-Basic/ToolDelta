@@ -140,12 +140,17 @@ class Utils:
             self.func = func
             self.args = args
             self.usage = usage
+            self.start_event = threading.Event()
             self._thread_level = thread_level
             self._thread_id = _thread.start_new_thread(self.run, (), kwargs)
+            self.start_event.wait()
 
         def run(self) -> None:
             """线程运行方法"""
             threads_list.append(self)
+            this_thread = threading._active[self._thread_id] # type: ignore
+            this_thread.name = f"ToolDelta 线程: {self.usage}"
+            self.start_event.set()
             try:
                 self.func(*self.args)
             except (SystemExit, Utils.ThreadExit):
