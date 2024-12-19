@@ -126,6 +126,7 @@ class Utils:
             args: tuple = (),
             usage="",
             thread_level=PLUGIN,
+            **kwargs,
         ):
             """新建一个 ToolDelta 子线程
 
@@ -140,7 +141,7 @@ class Utils:
             self.args = args
             self.usage = usage
             self._thread_level = thread_level
-            self._thread_id = _thread.start_new_thread(func, args)
+            self._thread_id = _thread.start_new_thread(self.run, (), kwargs)
 
         def run(self) -> None:
             """线程运行方法"""
@@ -148,7 +149,6 @@ class Utils:
             try:
                 self.func(*self.args)
             except (SystemExit, Utils.ThreadExit):
-                print("DEAD========================")
                 pass
             except ValueError as e:
                 if str(e) != "未连接到游戏":
@@ -165,6 +165,7 @@ class Utils:
                 )
             finally:
                 threads_list.remove(self)
+                del threading._active[self._thread_id] # type: ignore
 
         def stop(self) -> bool:
             """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
