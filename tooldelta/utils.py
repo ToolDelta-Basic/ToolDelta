@@ -25,6 +25,8 @@ _timer_event_lock = threading.Lock()
 VT = TypeVar("VT")
 FACTORY_TYPE = TypeVar("FACTORY_TYPE")
 
+threading.Thread
+
 
 class Utils:
     """提供了一些实用方法的类"""
@@ -32,89 +34,8 @@ class Utils:
     class ThreadExit(SystemExit):
         """线程退出."""
 
-    # class ToolDeltaThread(threading.Thread):
-    #     """简化 ToolDelta 子线程创建的 threading.Thread 的子类."""
-
-    #     SYSTEM = 0
-    #     PLUGIN = 1
-    #     PLUGIN_LOADER = 2
-
-    #     def __init__(
-    #         self,
-    #         func: Callable,
-    #         args: tuple = (),
-    #         usage="",
-    #         thread_level=PLUGIN,
-    #         **kwargs,
-    #     ):
-    #         """新建一个 ToolDelta 子线程
-
-    #         Args:
-    #             func (Callable): 线程方法
-    #             args (tuple, optional): 方法的参数项
-    #             usage (str, optional): 线程的用途说明
-    #             thread_level: 线程权限等级
-    #             kwargs (dict, optional): 方法的关键词参数项
-    #         """
-    #         super().__init__(target=func)
-    #         self.func = func
-    #         self.daemon = True
-    #         self.all_args = [args, kwargs]
-    #         self.usage = usage or f"fn:{func.__name__}"
-    #         self.start()
-    #         self.stopping = False
-    #         self._thread_level = thread_level
-    #         self._thread_id = None
-
-    #     def run(self) -> None:
-    #         """线程运行方法"""
-    #         threads_list.append(self)
-    #         try:
-    #             self.func(*self.all_args[0], **self.all_args[1])
-    #         except (SystemExit, Utils.ThreadExit):
-    #             pass
-    #         except ValueError as e:
-    #             if str(e) != "未连接到游戏":
-    #                 Print.print_err(
-    #                     f"线程 {self.usage or self.func.__name__} 出错:\n"
-    #                     + traceback.format_exc()
-    #                 )
-    #             else:
-    #                 Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
-    #         except Exception:
-    #             Print.print_err(
-    #                 f"线程 {self.usage or self.func.__name__} 出错:\n"
-    #                 + traceback.format_exc()
-    #             )
-    #         finally:
-    #             threads_list.remove(self)
-    #             del self.all_args
-
-    #     def stop(self) -> bool:
-    #         """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
-    #         self.stopping = True
-    #         thread_id = self.ident
-    #         if thread_id is None:
-    #             return True
-    #         if not self.is_alive():
-    #             return True
-    #         # 也许不会出现问题了吧
-    #         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-    #             ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
-    #         )
-    #         if res == 0:
-    #             Print.print_err(f"§c线程ID {thread_id} 不存在")
-    #             return False
-    #         elif res > 1:
-    #             # 线程修改出问题了? 终止了奇怪的线程?
-    #             # 回退修改
-    #             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
-    #             Print.print_err(f"§c终止线程 {self.name} 失败")
-    #             return False
-    #         return True
-
-    class ToolDeltaThread:
-        """使用 start_new_thread"""
+    class ToolDeltaThread(threading.Thread):
+        """简化 ToolDelta 子线程创建的 threading.Thread 的子类."""
 
         SYSTEM = 0
         PLUGIN = 1
@@ -137,23 +58,20 @@ class Utils:
                 thread_level: 线程权限等级
                 kwargs (dict, optional): 方法的关键词参数项
             """
+            super().__init__(target=func)
             self.func = func
-            self.args = args
-            self.usage = usage
-            self.start_event = threading.Event()
+            self.daemon = True
+            self.all_args = [args, kwargs]
+            self.usage = usage or f"fn:{func.__name__}"
+            self.start()
+            self.stopping = False
             self._thread_level = thread_level
-            self._thread_id = _thread.start_new_thread(self.run, (), kwargs)
-            self.start_event.wait()
 
         def run(self) -> None:
             """线程运行方法"""
-            actives_dic = threading._active  # type: ignore
             threads_list.append(self)
-            this_thread = actives_dic[self._thread_id]
-            this_thread.name = f"ToolDelta 线程: {self.usage}"
-            self.start_event.set()
             try:
-                self.func(*self.args)
+                self.func(*self.all_args[0], **self.all_args[1])
             except (SystemExit, Utils.ThreadExit):
                 pass
             except ValueError as e:
@@ -171,15 +89,16 @@ class Utils:
                 )
             finally:
                 threads_list.remove(self)
-                if self._thread_id not in actives_dic.keys():
-                    Print.print_war(f"无法从线程池移除线程: {self._thread_id}")
-                else:
-                    del actives_dic[self._thread_id]  # type: ignore
+                del self.all_args
 
         def stop(self) -> bool:
             """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
             self.stopping = True
-            thread_id = self._thread_id or _thread.get_ident()
+            thread_id = self.ident
+            if thread_id is None:
+                return True
+            if not self.is_alive():
+                return True
             # 也许不会出现问题了吧
             res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
                 ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
@@ -191,9 +110,91 @@ class Utils:
                 # 线程修改出问题了? 终止了奇怪的线程?
                 # 回退修改
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
-                Print.print_err(f"§c终止线程 {self.func.__name__} 失败")
+                Print.print_err(f"§c终止线程 {self.name} 失败")
                 return False
             return True
+
+    # class ToolDeltaThread:
+    #     """使用 start_new_thread"""
+
+    #     SYSTEM = 0
+    #     PLUGIN = 1
+    #     PLUGIN_LOADER = 2
+
+    #     def __init__(
+    #         self,
+    #         func: Callable,
+    #         args: tuple = (),
+    #         usage="",
+    #         thread_level=PLUGIN,
+    #         **kwargs,
+    #     ):
+    #         """新建一个 ToolDelta 子线程
+
+    #         Args:
+    #             func (Callable): 线程方法
+    #             args (tuple, optional): 方法的参数项
+    #             usage (str, optional): 线程的用途说明
+    #             thread_level: 线程权限等级
+    #             kwargs (dict, optional): 方法的关键词参数项
+    #         """
+    #         self.func = func
+    #         self.args = args
+    #         self.usage = usage
+    #         self.start_event = threading.Event()
+    #         self._thread_level = thread_level
+    #         self._thread_id = _thread.start_new_thread(self.run, (), kwargs)
+    #         self.start_event.wait()
+
+    #     def run(self) -> None:
+    #         """线程运行方法"""
+    #         actives_dic = threading._active  # type: ignore
+    #         threads_list.append(self)
+    #         this_thread = actives_dic[self._thread_id]
+    #         this_thread.name = f"ToolDelta 线程: {self.usage}"
+    #         self.start_event.set()
+    #         try:
+    #             self.func(*self.args)
+    #         except (SystemExit, Utils.ThreadExit):
+    #             pass
+    #         except ValueError as e:
+    #             if str(e) != "未连接到游戏":
+    #                 Print.print_err(
+    #                     f"线程 {self.usage or self.func.__name__} 出错:\n"
+    #                     + traceback.format_exc()
+    #                 )
+    #             else:
+    #                 Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
+    #         except Exception:
+    #             Print.print_err(
+    #                 f"线程 {self.usage or self.func.__name__} 出错:\n"
+    #                 + traceback.format_exc()
+    #             )
+    #         finally:
+    #             threads_list.remove(self)
+    #             if self._thread_id not in actives_dic.keys():
+    #                 Print.print_war(f"无法从线程池移除线程: {self._thread_id}")
+    #             else:
+    #                 del actives_dic[self._thread_id]  # type: ignore
+
+    #     def stop(self) -> bool:
+    #         """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
+    #         self.stopping = True
+    #         thread_id = self._thread_id or _thread.get_ident()
+    #         # 也许不会出现问题了吧
+    #         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+    #             ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
+    #         )
+    #         if res == 0:
+    #             Print.print_err(f"§c线程ID {thread_id} 不存在")
+    #             return False
+    #         elif res > 1:
+    #             # 线程修改出问题了? 终止了奇怪的线程?
+    #             # 回退修改
+    #             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
+    #             Print.print_err(f"§c终止线程 {self.func.__name__} 失败")
+    #             return False
+    #         return True
 
     createThread = ClassicThread = ToolDeltaThread
 
