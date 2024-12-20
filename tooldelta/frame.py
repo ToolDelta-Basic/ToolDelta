@@ -875,6 +875,11 @@ class GameCtrl:
                         )
             case 1 | 7:
                 original_playername, msg = pkt["SourceName"], pkt["Message"]
+                if original_playername == "" and msg.startswith("* "):
+                    # /me 消息
+                    original_playername = msg.split()[1]
+                    msg = " ".join(msg[2:])
+                    return
                 playername = Utils.to_plain_name(original_playername)
                 # game_utils.waitMsg 需要监听玩家信息
                 # 监听后, 消息仍被处理
