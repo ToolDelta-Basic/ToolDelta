@@ -196,7 +196,7 @@ class Utils:
     #             return False
     #         return True
 
-    createThread = ClassicThread = ToolDeltaThread
+    createThread = ToolDeltaThread
 
     class DB:
         @staticmethod
