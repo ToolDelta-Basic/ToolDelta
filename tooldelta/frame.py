@@ -564,22 +564,15 @@ class ToolDelta:
         def _console_cmd_thread() -> None:
             """控制台线程"""
             while 1:
-                rsp = ""
                 try:
-                    while True:
-                        if (
-                            self.link_game_ctrl.linked_frame.launcher.status
-                            != SysStatus.RUNNING
-                        ):
-                            continue
-                        res = sys.stdin.read(1)
-                        if res == "\n":  # 如果是换行符，则输出当前输入并清空输入
-                            break
-                        if res in ("", "^C", "^D"):
-                            Print.print_inf("按退出键退出中...")
-                            self.launcher.update_status(SysStatus.NORMAL_EXIT)
-                            return
-                        rsp += res
+                    try:
+                        rsp = input()
+                        if rsp in ("^C", "^D"):
+                            raise KeyboardInterrupt
+                    except (KeyboardInterrupt, EOFError):
+                        Print.print_inf("按退出键退出中...")
+                        self.launcher.update_status(SysStatus.NORMAL_EXIT)
+                        return
                     for _, _, func, triggers in self.consoleMenu:
                         if not rsp.strip():
                             continue
