@@ -573,6 +573,7 @@ class ToolDelta:
                         Print.print_inf("按退出键退出中...")
                         self.launcher.update_status(SysStatus.NORMAL_EXIT)
                         return
+                    res = 0
                     for _, _, func, triggers in self.consoleMenu:
                         if not rsp.strip():
                             continue
