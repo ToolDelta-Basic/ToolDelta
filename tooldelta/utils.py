@@ -4,7 +4,6 @@ import copy
 import ctypes
 import json as rjson
 import os
-import _thread
 import threading
 import time
 import traceback
@@ -24,8 +23,6 @@ _timer_event_lock = threading.Lock()
 
 VT = TypeVar("VT")
 FACTORY_TYPE = TypeVar("FACTORY_TYPE")
-
-threading.Thread
 
 
 class Utils:

@@ -374,6 +374,107 @@ def getTickingAreaList() -> dict:
     return result
 
 
+
+def __set_effect_while__(
+    player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True
+) -> None:
+    """
+    内部方法: 设置玩家状态效果
+    Args:
+        player_name: 玩家名称 (String)
+        effect: 效果 ID (String) 参考 EffectIDS 中内容
+        level: 效果等级 (int) Max: 255
+        particle: 是否显示粒子 (Boolean)
+        icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
+    Returns:
+        None
+    """
+    game_ctrl = _get_game_ctrl()
+    command_prefix = f"/effect {player_name} {effect} "
+    duration = "2" if icon_flicker else "1000000"
+    command = f"{command_prefix}{duration} {level} {particle!s}"
+
+    while True:
+        result = game_ctrl.sendcmd_with_resp(command)
+        if result.OutputMessages[0].Message == "commands.effect.success":
+            time.sleep(1)
+        else:
+            break
+
+
+def set_player_effect(
+    player_name: str,
+    effect: str,
+    duration: int,
+    level: int,
+    particle: bool,
+    icon_flicker: bool = True,
+    timeout: float = 1.5,
+) -> bool | ValueError:
+    """
+    设置玩家的状态效果
+
+    Args:
+        player_name: 玩家名称 (String) 或是选择器 (String)
+        effect: 效果 ID (String) 参考 EffectIDS 中内容
+        duration: 持续时间 (int) [为0代表永久(仅限ToolDelta运行时)] Max: 1000000
+        level: 效果等级 (int) Max: 255
+        particle: 是否显示粒子 (Boolean)
+        icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
+        timeout: 超时时间 (float) [可选]
+
+    Returns:
+        Bool | ValueError: 是否设置成功
+    """
+    if level > 255:
+        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。")
+    if duration > 1000000:
+        return ValueError(
+            f"你提供的持续时间 ({duration}) 太大了，它最高只能是 1000000。"
+        )  # type: ignore
+
+    game_ctrl = _get_game_ctrl()
+    command = f"/effect {player_name} {effect} {duration} {level} {particle!s}"
+
+    if duration == 0:
+        Utils.createThread(
+            func=__set_effect_while__,
+            args=(player_name, effect, level, particle, icon_flicker),
+            usage=f"Set_Effect_Thread_{player_name}",
+        )
+        return True
+
+    result = game_ctrl.sendcmd_with_resp(command, timeout=timeout)
+    match result.OutputMessages[0].Message:
+        case "commands.generic.noTargetMatch":
+            return ValueError(
+                f"没有与选择器匹配的目标! 玩家 {player_name} 可能并不存在。"
+            )
+        case "commands.effect.success":
+            return True
+        case _:
+            return ValueError(f"未知错误: {result.OutputMessages[0].Message}")
+
+def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
+    """
+    从物品展示框取出物品
+    Args:
+        position: 物品展示框的坐标 (x, y, z)
+    Returns:
+        None
+    """
+    game_ctrl = _get_game_ctrl()
+    BotPos: tuple[float, float, float] = getPosXYZ(game_ctrl.bot_name)
+    game_ctrl.sendwocmd(
+        f"tp {game_ctrl.bot_name} {int(pos[0])} {int(pos[1])} {int(pos[2])}"
+    )
+    game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
+    game_ctrl.sendwocmd(
+        f"tp {game_ctrl.bot_name} {int(BotPos[0])} {int(BotPos[1])} {int(BotPos[2])}"
+    )
+
+# 适配原 DotCS 方法
+
 def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
 ) -> None | Packet_CommandOutput:
@@ -468,6 +569,7 @@ def get_robotname() -> str:
     return game_ctrl.bot_name
 
 
+
 def countdown(delay: float, msg: str | None = None) -> None:
     """
     倒计时函数
@@ -488,103 +590,3 @@ def countdown(delay: float, msg: str | None = None) -> None:
         Print.print_inf(f"{msg}: {delay:.2f}s", end="\r")
         time.sleep(0.01)
     print("", end="\n")
-
-
-def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
-    """
-    从物品展示框取出物品
-    Args:
-        position: 物品展示框的坐标 (x, y, z)
-    Returns:
-        None
-    """
-    game_ctrl = _get_game_ctrl()
-    BotPos: tuple[float, float, float] = getPosXYZ(game_ctrl.bot_name)
-    game_ctrl.sendwocmd(
-        f"tp {game_ctrl.bot_name} {int(pos[0])} {int(pos[1])} {int(pos[2])}"
-    )
-    game_ctrl.sendPacket(PacketIDS.IDItemFrameDropItem, {"Position": pos})
-    game_ctrl.sendwocmd(
-        f"tp {game_ctrl.bot_name} {int(BotPos[0])} {int(BotPos[1])} {int(BotPos[2])}"
-    )
-
-
-def __set_effect_while__(
-    player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True
-) -> None:
-    """
-    内部方法: 设置玩家状态效果
-    Args:
-        player_name: 玩家名称 (String)
-        effect: 效果 ID (String) 参考 EffectIDS 中内容
-        level: 效果等级 (int) Max: 255
-        particle: 是否显示粒子 (Boolean)
-        icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
-    Returns:
-        None
-    """
-    game_ctrl = _get_game_ctrl()
-    command_prefix = f"/effect {player_name} {effect} "
-    duration = "2" if icon_flicker else "1000000"
-    command = f"{command_prefix}{duration} {level} {particle!s}"
-
-    while True:
-        result = game_ctrl.sendcmd_with_resp(command)
-        if result.OutputMessages[0].Message == "commands.effect.success":
-            time.sleep(1)
-        else:
-            break
-
-
-def set_player_effect(
-    player_name: str,
-    effect: str,
-    duration: int,
-    level: int,
-    particle: bool,
-    icon_flicker: bool = True,
-    timeout: float = 1.5,
-) -> bool | ValueError:
-    """
-    设置玩家的状态效果
-
-    Args:
-        player_name: 玩家名称 (String) 或是选择器 (String)
-        effect: 效果 ID (String) 参考 EffectIDS 中内容
-        duration: 持续时间 (int) [为0代表永久(仅限ToolDelta运行时)] Max: 1000000
-        level: 效果等级 (int) Max: 255
-        particle: 是否显示粒子 (Boolean)
-        icon_flicker: 是否使图标闪烁 (Boolean) [仅限ToolDelta运行时]
-        timeout: 超时时间 (float) [可选]
-
-    Returns:
-        Bool | ValueError: 是否设置成功
-    """
-    if level > 255:
-        return ValueError(f"你提供的等级 ({level}) 太大了，它最高只能是 255。")
-    if duration > 1000000:
-        return ValueError(
-            f"你提供的持续时间 ({duration}) 太大了，它最高只能是 1000000。"
-        )  # type: ignore
-
-    game_ctrl = _get_game_ctrl()
-    command = f"/effect {player_name} {effect} {duration} {level} {particle!s}"
-
-    if duration == 0:
-        Utils.createThread(
-            func=__set_effect_while__,
-            args=(player_name, effect, level, particle, icon_flicker),
-            usage=f"Set_Effect_Thread_{player_name}",
-        )
-        return True
-
-    result = game_ctrl.sendcmd_with_resp(command, timeout=timeout)
-    match result.OutputMessages[0].Message:
-        case "commands.generic.noTargetMatch":
-            return ValueError(
-                f"没有与选择器匹配的目标! 玩家 {player_name} 可能并不存在。"
-            )
-        case "commands.effect.success":
-            return True
-        case _:
-            return ValueError(f"未知错误: {result.OutputMessages[0].Message}")

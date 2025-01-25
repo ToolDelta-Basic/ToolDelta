@@ -1,6 +1,5 @@
 "数据包类构建器"
 
-
 class SubPacket_CmdOutputMsg:
     """命令输出消息子包构建"""
 
