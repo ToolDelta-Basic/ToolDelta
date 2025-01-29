@@ -27,9 +27,6 @@ from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
 from .launch_cli import (
     FrameNeOmgAccessPoint,
-    FrameNeOmgAccessPointRemote,
-    FrameNeOmegaLauncher,
-    FrameEulogistLauncher,
 )
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
@@ -45,26 +42,11 @@ if TYPE_CHECKING:
 sys_args_dict = sys_args_to_dict(sys.argv)
 VERSION = get_tool_delta_version()
 FB_LIKE_LAUNCHERS = (
-    FrameNeOmegaLauncher
-    | FrameNeOmgAccessPoint
-    | FrameNeOmgAccessPointRemote
-    | FrameEulogistLauncher
+    FrameNeOmgAccessPoint
 )
 "类FastBuilder启动器框架"
 LAUNCHERS = FB_LIKE_LAUNCHERS
 "所有启动器框架类型"
-LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
-    ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
-    (
-        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
-        FrameNeOmgAccessPointRemote,
-    ),
-    (
-        "NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
-        FrameNeOmegaLauncher,
-    ),
-    ("Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
-]
 
 ###### FRAME DEFINE
 
@@ -87,7 +69,6 @@ class ToolDelta:
         """初始化"""
         self.createThread = Utils.createThread
         self.sys_data = self.FrameBasic()
-        self.launchMode: int = 0
         self.consoleMenu = []
         self.is_docker: bool = os.path.exists("/.dockerenv")
         self.on_plugin_err = staticmethod(
@@ -104,15 +85,8 @@ class ToolDelta:
         try:
             # 读取配置文件
             cfgs = Config.get_cfg("ToolDelta基本配置.json", constants.LAUNCH_CFG_STD)
-            self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.plugin_market_url = cfgs["插件市场源"]
             publicLogger.switch_logger(cfgs["是否记录日志"])
-            if self.launchMode != 0 and self.launchMode not in range(
-                1, len(LAUNCHERS_SHOWN) + 1
-            ):
-                raise Config.ConfigError(
-                    "你不该随意修改启动器模式，现在赶紧把它改回 0 吧"
-                )
         except Config.ConfigError as err:
             # 配置文件有误
             r = self.upgrade_cfg()
@@ -132,23 +106,8 @@ class ToolDelta:
             Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
         urlmethod.set_global_github_src_url(cfgs["全局GitHub镜像"])
         # 每个启动器框架的单独启动配置之前
-        if self.launchMode == 0:
-            Print.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
-            for i, (launcher_name, _) in enumerate(LAUNCHERS_SHOWN):
-                Print.print_inf(f" {i + 1} - {launcher_name}")
-            while 1:
-                try:
-                    ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
-                    if ch not in range(1, len(LAUNCHERS_SHOWN) + 1):
-                        raise ValueError
-                    cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] = ch
-                    break
-                except ValueError:
-                    Print.print_err("输入不合法，或者是不在范围内，请重新输入")
-            Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
-        self.launcher = LAUNCHERS_SHOWN[
-            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
-        ][1]()
+        AUTH_SERVER = ""
+        self.launcher = FrameNeOmgAccessPoint()
         # 每个启动器框架的单独启动配置
         launcher_config_key = ""
         # 这是 普通 NeOmega 接入点
@@ -168,39 +127,12 @@ class ToolDelta:
                         f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
-        # 这是 NeOmega 和 ToolDelta 并行启动
-        elif type(self.launcher) is FrameNeOmegaLauncher:
-            launch_data = cfgs.get(
-                "NeOmega并行ToolDelta启动模式",
-                constants.LAUNCHER_NEOMG2TD_DEFAULT,
-            )
-            launcher_config_key = "NeOmega并行ToolDelta启动模式"
-            try:
-                Config.check_auto(constants.LAUNCHER_NEOMG2TD_STD, launch_data)
-            except Config.ConfigError as err:
-                r = self.upgrade_cfg()
-                if r:
-                    Print.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
-                else:
-                    Print.print_err(
-                        f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
-                    )
-                raise SystemExit from err
-        elif type(self.launcher) is FrameNeOmgAccessPointRemote:
-            # 不需要任何配置文件
-            ...
-        elif type(self.launcher) is FrameEulogistLauncher:
-            # 不需要任何配置文件
-            ...
         else:
             raise ValueError("LAUNCHER Error")
         # 对 类FastBuilder启动器 通用的配置文件设置 (除了远程接入模式)
-        if isinstance(self.launcher, FrameNeOmgAccessPoint) and not isinstance(
-            self.launcher, FrameNeOmgAccessPointRemote
-        ):
+        if isinstance(self.launcher, FrameNeOmgAccessPoint):
             serverNumber = launch_data["服务器号"]
             serverPasswd: str = launch_data["密码"]
-            auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
             if serverNumber == 0:
                 while 1:
                     try:
@@ -224,27 +156,6 @@ class ToolDelta:
                         break
                     except Exception:
                         Print.print_err("输入有误，租赁服号和密码应当是纯数字")
-            auth_servers = constants.AUTH_SERVERS
-            if auth_server == "":
-                Print.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
-                for i, (auth_server_name, _) in enumerate(auth_servers):
-                    Print.print_inf(f" {i + 1} - {auth_server_name}")
-                Print.print_inf(
-                    "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
-                )
-                while 1:
-                    try:
-                        ch = int(input(Print.fmt_info("请选择：", "§f 输入 ")))
-                        if ch not in range(1, len(auth_servers) + 1):
-                            raise ValueError
-                        auth_server = auth_servers[ch - 1][1]
-                        cfgs[launcher_config_key][
-                            "验证服务器地址(更换时记得更改fbtoken)"
-                        ] = auth_server
-                        break
-                    except ValueError:
-                        Print.print_err("输入不合法，或者是不在范围内，请重新输入")
-                Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
             # 读取 token
             if not (fbtoken := sys_args_to_dict().get("user-token")):
                 if not os.path.isfile("fbtoken"):
@@ -282,13 +193,9 @@ class ToolDelta:
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
                     fbtoken = f.read()
-            if isinstance(self.launcher, FrameNeOmgAccessPoint) and not isinstance(
-                self.launcher, FrameNeOmgAccessPointRemote
-            ):
-                # 如果是类NeOmega启动框架
-                self.launcher.set_launch_data(
-                    serverNumber, serverPasswd, fbtoken, auth_server
-                )
+            self.launcher.set_launch_data(
+                serverNumber, serverPasswd, fbtoken, AUTH_SERVER
+            )
         Print.print_suc("配置文件读取完成")
 
     @staticmethod
@@ -317,10 +224,7 @@ class ToolDelta:
                 "Eulogist 框架 (赞颂者和 ToolDelta 并行运行)",
             )
             Print.clean_print("§b现有配置项如下:")
-            Print.clean_print(
-                f" 1. 启动器启动模式：{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}"
-            )
-            Print.clean_print(f" 2. 是否记录日志：{old_cfg['是否记录日志']}")
+            Print.clean_print(f" 1. 是否记录日志：{old_cfg['是否记录日志']}")
             Print.clean_print("    §a直接回车: 保存并退出")
             resp = input(Print.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
@@ -329,29 +233,6 @@ class ToolDelta:
                 return
             match resp:
                 case "1":
-                    Print.print_inf(
-                        "选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):"
-                    )
-                    for i, (launcher_name, _) in enumerate(LAUNCHERS_SHOWN):
-                        Print.print_inf(f" {i + 1} - {launcher_name}")
-                    while 1:
-                        try:
-                            ch = int(input(Print.clean_fmt("请选择：")))
-                            if ch not in range(1, len(LAUNCHERS_SHOWN) + 1):
-                                raise ValueError
-                            old_cfg[
-                                "启动器启动模式(请不要手动更改此项, 改为0可重置)"
-                            ] = ch
-                            break
-                        except ValueError:
-                            Print.print_err("输入不合法，或者是不在范围内，请重新输入")
-                            continue
-                    input(
-                        Print.clean_fmt(
-                            f"§a已选择启动器启动模式：§f{md[old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)'] - 1]}, 回车键继续"
-                        )
-                    )
-                case "2":
                     old_cfg["是否记录日志"] = [True, False][old_cfg["是否记录日志"]]
                     input(
                         Print.clean_fmt(
@@ -536,10 +417,6 @@ class ToolDelta:
             "重载插件 (可能有部分特殊插件无法重载)",
             lambda _: self.reload() or 1,
         )
-        if isinstance(self.launcher, FrameNeOmegaLauncher):
-            self.add_console_cmd_trigger(
-                ["o"], "neomega命令", "执行neomega控制台命令", _send_to_neomega
-            )
 
     def comsole_cmd_active(self) -> None:
         """激活控制台命令输入"""
@@ -624,18 +501,17 @@ class ToolDelta:
         if has_launcher:
             if self.launcher.status == SysStatus.NORMAL_EXIT:
                 # 运行中退出
-                if isinstance(self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher):
-                    try:
-                        self.link_game_ctrl.sendwocmd(
-                            f'/kick "{self.link_game_ctrl.bot_name}" ToolDelta 退出中。'
-                        )
-                    except Exception:
-                        pass
-                    if not isinstance(self.launcher.neomg_proc, type(None)):
-                        if os.name == "nt":
-                            self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
-                        else:
-                            self.launcher.neomg_proc.send_signal(signal.SIGTERM)
+                try:
+                    self.link_game_ctrl.sendwocmd(
+                        f'/kick "{self.link_game_ctrl.bot_name}" ToolDelta 退出中。'
+                    )
+                except Exception:
+                    pass
+                if not isinstance(self.launcher.neomg_proc, type(None)):
+                    if os.name == "nt":
+                        self.launcher.neomg_proc.send_signal(signal.CTRL_BREAK_EVENT)
+                    else:
+                        self.launcher.neomg_proc.send_signal(signal.SIGTERM)
             else:
                 # 其他情况下退出 (例如启动失败)
                 pass
@@ -953,8 +829,6 @@ class GameCtrl:
             "在控制台输入 §b插件市场§r 以§a一键获取§rToolDelta官方和第三方的插件"
         )
         Print.print_suc("在控制台输入 §fhelp / ?§r§a 可查看控制台命令")
-        if isinstance(self.launcher, FrameNeOmegaLauncher):
-            Print.print_suc("在控制台输入 o <neomega指令> 可执行NeOmega的控制台指令")
 
     @property
     def bot_name(self) -> str:
