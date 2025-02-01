@@ -597,7 +597,7 @@ class ToolDelta:
                                         break
                                     elif res == -1:
                                         return
-                    if cmd_is_executed and rsp:
+                    if not cmd_is_executed and rsp:
                         self.link_game_ctrl.say_to("@a", f"[§b控制台§r] §3{rsp}§r")
                 except Exception:
                     Print.print_err(f"控制台指令执行出现问题: {traceback.format_exc()}")
