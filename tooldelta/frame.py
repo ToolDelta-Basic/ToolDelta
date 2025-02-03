@@ -151,7 +151,9 @@ class ToolDelta:
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
                         cfgs[launcher_config_key] = launch_data
-                        Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
+                        Config.write_default_cfg_file(
+                            "ToolDelta基本配置.json", cfgs, True
+                        )
                         Print.print_suc("登录配置设置成功")
                         break
                     except Exception:
@@ -782,6 +784,7 @@ class GameCtrl:
                     )
                     print(self.players_uuid)
             case 9:
+                # /tellraw 消息
                 msg = pkt["Message"]
                 try:
                     msg_text = json.loads(msg)["rawtext"]

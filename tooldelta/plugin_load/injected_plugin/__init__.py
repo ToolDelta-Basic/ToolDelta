@@ -26,7 +26,6 @@ player_prejoin_funcs: dict[Callable, int | None] = {}
 player_join_funcs: dict[Callable, int | None] = {}
 player_left_funcs: dict[Callable, int | None] = {}
 player_death_funcs: dict[Callable, int | None] = {}
-commmand_message_funcs: dict[Callable, int | None] = {}
 repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
@@ -42,7 +41,6 @@ def reload():
     player_join_funcs.clear()
     player_left_funcs.clear()
     player_death_funcs.clear()
-    commmand_message_funcs.clear()
     repeat_funcs.clear()
     init_plugin_funcs.clear()
     frame_exit_funcs.clear()
@@ -168,6 +166,7 @@ def frame_exit(priority: int | None = None) -> Callable:
 
     return decorator
 
+
 def reloaded(priority: int | None = None) -> Callable:
     """载入处理插件重载事件的方法
 
@@ -217,22 +216,6 @@ def listen_packet(packet_id: list[int] | int, priority: int | None = None):
             if i not in packet_funcs.keys():
                 packet_funcs[i] = {}
             packet_funcs[i][func] = priority
-        return func
-
-    return decorator
-
-
-async def command_say(priority: int | None = None) -> Callable:
-    # TODO: name 是未传入和使用的变量
-    """载入处理命令消息
-
-    Args:
-        name (str): 命令名
-        priority (int | None, optional): 插件优先级
-    """
-
-    def decorator(func):
-        commmand_message_funcs[func] = priority
         return func
 
     return decorator
@@ -302,14 +285,6 @@ async def safe_jump_repeat_tasks():
 
 
 main_task: asyncio.Task
-
-
-@dataclass(order=True)
-class command_message_info:
-    """命令消息信息"""
-
-    name: str
-    message: str
 
 
 @dataclass(order=True)
@@ -412,20 +387,10 @@ async def execute_packet_funcs(pkt_id: int, pkt: dict):
         await execute_asyncio_task(packet_funcs_spec, pkt)
 
 
-async def execute_command_say(name: str, message: str) -> None:
-    """执行命令消息处理函数
-
-    Args:
-        message (str): 消息 say
-    """
-    await execute_asyncio_task(
-        commmand_message_funcs, command_message_info(name=name, message=message)
-    )
-
-
 async def execute_frame_exit() -> None:
     """执行框架退出处理函数"""
     await execute_asyncio_task(frame_exit_funcs)
+
 
 async def execute_reloaded() -> None:
     """执行重载插件处理函数"""

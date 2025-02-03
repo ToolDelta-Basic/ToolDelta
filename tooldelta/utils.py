@@ -2,8 +2,9 @@
 
 import copy
 import ctypes
-import json as rjson
+import json
 import os
+import re
 import threading
 import time
 import traceback
@@ -23,6 +24,8 @@ _timer_event_lock = threading.Lock()
 
 VT = TypeVar("VT")
 FACTORY_TYPE = TypeVar("FACTORY_TYPE")
+
+MC_COLOR_CODE_REG = re.compile("§.")
 
 
 class Utils:
@@ -446,7 +449,7 @@ class Utils:
                 with open(filepath, encoding="utf-8") as f:
                     res = Utils.JsonIO.SafeJsonLoad(f)
                 return res
-            except rjson.JSONDecodeError as err:
+            except json.JSONDecodeError as err:
                 # 判断是否有 msg.doc.pos 属性
                 raise Utils.JsonIO.DataReadError(err.msg, err.doc, err.pos)
             except Exception as err:
@@ -743,6 +746,10 @@ class Utils:
             lst.extend(default[len(lst) :])
 
     @staticmethod
+    def remove_mc_color_code(string: str):
+        return MC_COLOR_CODE_REG.sub("", string)
+
+    @staticmethod
     def to_plain_name(name: str) -> str:
         """
         去除 网易版 Minecraft 的名字中的颜色代码
@@ -754,28 +761,21 @@ class Utils:
         Returns:
             str: 去除颜色代码后的名字
         """
-        if name.startswith("§"):
+        if name.count("<") > 1:
             # <<VIP名><玩家名>> -> 玩家名
-            cleaned_name = "".join(
-                char
-                for i, char in enumerate(name)
-                if char != "§" and (i == 0 or name[i - 1] != "§")
-            )
-
-            last_word, temp_word = [], []
-            in_brackets = False
+            cleaned_name = Utils.remove_mc_color_code(name)
+            cached_str = ""
+            words = []
 
             for char in cleaned_name:
                 if char == "<":
-                    in_brackets = True
-                    temp_word = []
+                    cached_str = ""
                 elif char == ">":
-                    in_brackets = False
-                    last_word = temp_word[:]
-                elif in_brackets:
-                    temp_word.append(char)
+                    words.append(cached_str)
+                else:
+                    cached_str += char
 
-            return "".join(last_word)
+            return words[-1]
         elif name.startswith("<") and name.endswith(">"):
             # <玩家名> -> 玩家名
             return name[1:-1]
