@@ -139,8 +139,8 @@ class PluginGroup:
 
     def add_any_packet_listener(self, func: Callable[[_SUPER_CLS, int, dict], bool]):
         """
-        添加数据包监听器
-        将下面的方法作为一个 MC 数据包接收器
+        添加任意数据包监听器, 供插件开发 Debug 使用
+        注意: 由于 Python JSON 解析速度过慢, 此方法很有可能降低整体运行速度!
         Tips: 只能在插件主类里的函数使用此装饰器!
 
         Returns:

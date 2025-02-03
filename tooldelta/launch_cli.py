@@ -591,10 +591,12 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             self.update_status(SysStatus.RUNNING)
             self.wait_omega_disconn_thread()
             Print.print_suc("已与接入点进程建立通信网络")
-            pcks = [
-                self.omega.get_packet_id_to_name_mapping(i)
-                for i in self.need_listen_packets
-            ]
+            pcks = []
+            for i in self.need_listen_packets:
+                try:
+                    pcks.append(self.omega.get_packet_id_to_name_mapping(i))
+                except KeyError:
+                    Print.print_war(f"无法监听数据包: {i}")
             self.omega.listen_packets(pcks, self.packet_handler_parent)
             self._launcher_listener()
             Print.print_suc("ToolDelta 待命中")

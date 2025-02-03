@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from threading import Thread
 from typing import Any, ClassVar, Optional
 
-import json
+import ujson as json
 
 from tooldelta.color_print import Print
 from tooldelta.packets import Packet_CommandOutput
