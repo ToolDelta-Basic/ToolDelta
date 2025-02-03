@@ -105,7 +105,7 @@ TDREPO_URL = (
 )
 "ToolDelta镜像: github项目仓库"
 
-PLUGIN_MARKET_SOURCE_OFFICIAL = "https://ghp.ci/https://ToolDelta-Basic/PluginMarket"
+PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.dqyt.online/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 
 class SysStatus:
     """系统状态码
