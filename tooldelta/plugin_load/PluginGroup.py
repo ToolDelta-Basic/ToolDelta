@@ -12,14 +12,14 @@ from ..constants import (
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
     PacketIDS,
-    SysStatus
+    SysStatus,
 )
 from ..game_utils import _set_frame
 from ..plugin_load import (
     NON_FUNC,
     PluginAPINotFoundError,
     PluginAPIVersionError,
-    auto_move_plugin_dir
+    auto_move_plugin_dir,
 )
 from ..utils import Utils
 from .classic_plugin import (
@@ -353,9 +353,7 @@ class PluginGroup:
         """
         self._update_player_attributes_funcs.append(func)
 
-    def execute_def(
-        self, onerr: _ON_ERROR_CB = NON_FUNC
-    ) -> None:
+    def execute_def(self, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
         """执行插件的二次初始化方法
 
         Args:
@@ -367,9 +365,7 @@ class PluginGroup:
         """
         classic_plugin.execute_def(onerr)
 
-    def execute_init(
-        self, onerr: _ON_ERROR_CB = NON_FUNC
-    ) -> None:
+    def execute_init(self, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
         """执行插件的连接游戏后初始化方法
 
         Args:
@@ -377,11 +373,11 @@ class PluginGroup:
         """
         classic_plugin.execute_init(onerr)
         asyncio.run(injected_plugin.execute_init())
-        Utils.createThread(asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务")
+        Utils.createThread(
+            asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务"
+        )
 
-    def execute_player_prejoin(
-        self, player, onerr: _ON_ERROR_CB = NON_FUNC
-    ) -> None:
+    def execute_player_prejoin(self, player, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
         """执行玩家加入前的方法
 
         Args:
@@ -391,9 +387,7 @@ class PluginGroup:
         classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
-    def execute_player_join(
-        self, player: str, onerr: _ON_ERROR_CB = NON_FUNC
-    ) -> None:
+    def execute_player_join(self, player: str, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
         """执行玩家加入的方法
 
         Args:
@@ -422,9 +416,7 @@ class PluginGroup:
         classic_plugin.execute_player_message(player, msg, onerr)
         asyncio.run(injected_plugin.execute_player_message(player, msg))
 
-    def execute_player_leave(
-        self, player: str, onerr: _ON_ERROR_CB = NON_FUNC
-    ) -> None:
+    def execute_player_leave(self, player: str, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
         """执行玩家离开的方法
 
         Args:
@@ -452,22 +444,6 @@ class PluginGroup:
         classic_plugin.execute_player_death(player, killer, msg, onerr)
         asyncio.run(injected_plugin.execute_death_message(player, killer, msg))
 
-    def execute_command(
-        self,
-        name: str,
-        msg: str,
-        onerr: _ON_ERROR_CB = NON_FUNC,
-    ) -> None:
-        """执行命令 say 的方法
-
-        Args:
-            player (str): 玩家
-            cmd (str): 命令
-            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
-        """
-        classic_plugin.execute_command(name, msg, onerr)
-        asyncio.run(injected_plugin.execute_command_say(name, msg))
-
     def execute_frame_exit(
         self, signal: int, reason: str, onerr: _ON_ERROR_CB = NON_FUNC
     ):
@@ -488,7 +464,9 @@ class PluginGroup:
         classic_plugin.execute_reloaded(onerr)
         asyncio.run(injected_plugin.execute_reloaded())
 
-    def processPacketFunc(self, pktID: int, pkt: dict, onerr: _ON_ERROR_CB = NON_FUNC) -> bool:
+    def processPacketFunc(
+        self, pktID: int, pkt: dict, onerr: _ON_ERROR_CB = NON_FUNC
+    ) -> bool:
         """处理数据包监听器
 
         Args:

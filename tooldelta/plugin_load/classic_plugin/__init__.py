@@ -38,9 +38,8 @@ plugins_funcs: dict[str, list[tuple[str, Callable]]] = {
     "on_player_message": [],
     "on_player_death": [],
     "on_player_leave": [],
-    "on_command": [],
     "on_frame_exit": [],
-    "on_reload": []
+    "on_reload": [],
 }
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
@@ -456,25 +455,6 @@ def execute_reloaded(onerr: _ON_ERROR_CB):
             func()
         except Exception as err:
             onerr(name, err, traceback.format_exc())
-
-
-def execute_command(
-    name: str,
-    msg: str,
-    onerr: _ON_ERROR_CB,
-) -> None:
-    """执行命令 say 的方法
-
-    Args:
-        player (str): 玩家
-        cmd (str): 命令
-        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
-    """
-    for plugin_name, func in plugins_funcs["on_command"]:
-        try:
-            func(plugin_name, msg)
-        except Exception as err:
-            onerr(plugin_name, err, traceback.format_exc())
 
 
 def execute_packet_funcs(pktID: int, pkt: dict, onerr: _ON_ERROR_CB) -> bool:
