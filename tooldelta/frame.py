@@ -211,20 +211,7 @@ class ToolDelta:
         except Config.ConfigError as err:
             Print.print_err(f"配置文件损坏：{err}")
             return
-        if (
-            old_cfg["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
-        ) not in range(0, 2):
-            Print.print_err(
-                f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)']}"
-            )
-            return
         while 1:
-            md = (
-                "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
-                "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
-                "混合启动模式 (同一个机器人同时启动 ToolDelta 和 NeOmega)",
-                "Eulogist 框架 (赞颂者和 ToolDelta 并行运行)",
-            )
             Print.clean_print("§b现有配置项如下:")
             Print.clean_print(f" 1. 是否记录日志：{old_cfg['是否记录日志']}")
             Print.clean_print("    §a直接回车: 保存并退出")
