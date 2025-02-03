@@ -746,13 +746,17 @@ class GameCtrl:
                             self.linked_frame.on_plugin_err,
                         )
             case 1 | 7:
-                original_playername, msg = pkt["SourceName"], pkt["Message"]
-                if original_playername == "" and msg.startswith("* "):
+                src_name = pkt["SourceName"]
+                msg = pkt["Message"]
+                playername = Utils.to_plain_name(src_name)
+                if src_name == "":
                     # /me 消息
-                    original_playername = msg.split()[1]
-                    msg = " ".join(msg[2:])
-                    return
-                playername = Utils.to_plain_name(original_playername)
+                    msg_list = msg.split(" ")
+                    if len(msg_list) >= 3:
+                        src_name = msg_list[1]
+                        msg = " ".join(msg_list[2:])
+                    else:
+                        return
                 # game_utils.waitMsg 需要监听玩家信息
                 # 监听后, 消息仍被处理
                 if playername in game_utils.player_waitmsg_cb.keys():
@@ -762,14 +766,21 @@ class GameCtrl:
                 )
                 Print.print_inf(f"<{playername}> {msg}")
             case 8:
-                original_playername, msg = pkt["SourceName"], pkt["Message"]
-                playername = Utils.to_plain_name(original_playername)
-                Print.print_inf(
-                    f"{playername} 使用 say 说：{msg.strip(f'[{playername}]')}"
-                )
-                plugin_grp.execute_command(
-                    playername, msg, self.linked_frame.on_plugin_err
-                )
+                # /say 消息
+                src_name = pkt["SourceName"]
+                msg = pkt["Message"].removeprefix(f"[{src_name}] ")
+                uuid = "00000000-0000-4000-8000-0000" + pkt["XUID"]
+                if uuid in self.players_uuid.values():
+                    cmd_executor = {v: k for k, v in self.players_uuid.items()}[uuid]
+                    Print.print_inf(f"{src_name}({cmd_executor}) 使用 say 说：{msg}")
+                    plugin_grp.execute_player_message(
+                        cmd_executor, msg, self.linked_frame.on_plugin_err
+                    )
+                else:
+                    Print.print_inf(
+                        f"{src_name} 使用 say 说：{msg.removeprefix(f'[{src_name}] ')}"
+                    )
+                    print(self.players_uuid)
             case 9:
                 msg = pkt["Message"]
                 try:
