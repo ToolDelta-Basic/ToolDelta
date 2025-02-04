@@ -81,7 +81,7 @@ class PluginGroup:
         self.execute_reloaded(self.linked_frame.on_plugin_err)
         Print.print_inf("开始执行插件游戏初始化方法")
         self.execute_init()
-        Print.print_suc("重载插件完成！")
+        Print.print_suc("重载插件已完成")
 
     @staticmethod
     def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:

@@ -34,9 +34,10 @@ packet_funcs: dict[int, dict[Callable, int | None]] = {}
 loaded_plugin_modules = []
 
 
+
 def reload():
     """系统调用, 重置所有处理函数"""
-    player_death_funcs.clear()
+    player_message_funcs.clear()
     player_prejoin_funcs.clear()
     player_join_funcs.clear()
     player_left_funcs.clear()
