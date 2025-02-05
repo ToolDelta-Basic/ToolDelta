@@ -192,6 +192,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.serverPassword: str | None = None
         self.fbToken: str | None = None
         self.auth_server: str | None = None
+        self.exit_reason = ""
 
     def init(self):
         if "no-download-libs" not in sys_args_to_dict().keys():
@@ -539,7 +540,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
 
     @Utils.thread_func("检测 Omega 断开连接线程", Utils.ToolDeltaThread.SYSTEM)
     def wait_omega_disconn_thread(self):
-        self.omega.wait_disconnect()
+        self.exit_reason = self.omega.wait_disconnect()
         if self.status == SysStatus.RUNNING:
             self.update_status(SysStatus.CRASHED_EXIT)
 
@@ -606,7 +607,7 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
         if self.status == SysStatus.CRASHED_EXIT:
-            return Exception("接入点已崩溃")
+            return Exception(f"接入点已崩溃: {self.exit_reason}")
         return SystemError("未知的退出状态")
 
 
