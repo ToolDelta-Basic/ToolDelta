@@ -364,7 +364,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
         if self.status == SysStatus.CRASHED_EXIT:
-            return Exception("接入点进程已崩溃")
+            return Exception(f"接入点进程已崩溃: {self.exit_reason}")
         return SystemError("未知的退出状态")
 
     def get_players_and_uuids(self):
