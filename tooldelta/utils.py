@@ -550,48 +550,30 @@ class Utils:
 
     @staticmethod
     def thread_func(
-        func_or_name: Callable | str, thread_level=ToolDeltaThread.PLUGIN
-    ) -> Any:
+        usage: str, thread_level=ToolDeltaThread.PLUGIN
+    ):
         """
         在事件方法可能执行较久会造成堵塞时使用，方便快捷地创建一个新线程，例如:
-
-        ```python
-        @Utils.thread_func
-        def on_inject(self):
-            ...
-        ```
-        或者:
         ```python
         @Utils.thread_func("一个会卡一分钟的线程")
         def on_inject(self):
             ...
         ```
         """
-        if isinstance(func_or_name, str):
 
-            def _recv_func(func: Callable):
-                def thread_fun(*args: tuple, **kwargs: Any) -> None:
-                    Utils.createThread(
-                        func,
-                        usage=func_or_name,
-                        thread_level=thread_level,
-                        args=args,
-                        **kwargs,
-                    )
+        def _recv_func(func: Callable):
+            def thread_fun(*args, **kwargs):
+                return Utils.createThread(
+                    func,
+                    usage=usage,
+                    thread_level=thread_level,
+                    args=args,
+                    **kwargs,
+                )
 
-                return thread_fun
+            return thread_fun
 
-            return _recv_func
-
-        def thread_fun(*args: tuple, **kwargs: Any) -> None:
-            Utils.createThread(
-                func_or_name,
-                usage="简易线程方法：" + func_or_name.__name__,
-                args=args,
-                **kwargs,
-            )
-
-        return thread_fun
+        return _recv_func
 
     @staticmethod
     def timer_event(
@@ -614,7 +596,7 @@ class Utils:
         ```
         """
 
-        def receiver(func: Callable[[], None] | Callable[[Any], None]):
+        def receiver(func: Callable[..., None]):
             def caller(*args, **kwargs):
                 func_name = name or f"简易方法:{func.__name__}"
                 timer_events_table.setdefault(t, [])
