@@ -224,7 +224,7 @@ class ToolDelta:
                         )
                         Print.print_suc("登录配置设置成功")
                         break
-                    except Exception:
+                    except ValueError:
                         Print.print_err("输入有误，租赁服号和密码应当是纯数字")
             auth_servers = constants.AUTH_SERVERS
             if auth_server == "":
