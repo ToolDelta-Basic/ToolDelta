@@ -743,20 +743,19 @@ class Utils:
         Returns:
             str: 去除颜色代码后的名字
         """
+        if "§" in name:
+            name = Utils.remove_mc_color_code(name)
         if name.count("<") > 1:
             # <<VIP名><玩家名>> -> 玩家名
-            cleaned_name = Utils.remove_mc_color_code(name)
             cached_str = ""
             words = []
-
-            for char in cleaned_name:
+            for char in name:
                 if char == "<":
                     cached_str = ""
                 elif char == ">":
                     words.append(cached_str)
                 else:
                     cached_str += char
-
             return words[-1]
         elif name.startswith("<") and name.endswith(">"):
             # <玩家名> -> 玩家名
