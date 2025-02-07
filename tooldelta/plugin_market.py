@@ -99,7 +99,7 @@ class PluginMarket:
         if source_url:
             self.plugins_download_url = source_url
         Print.clean_print("§6正在连接到插件市场..")
-        CONTENT_LENGTH = 12
+        CONTENT_LENGTH = 15
 
         def display_plugins_and_packages(start_index: int, total_pages: int):
             """
