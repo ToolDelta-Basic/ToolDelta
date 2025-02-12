@@ -7,7 +7,7 @@
 ToolDelta 是**为《我的世界：中国版》手机端租赁服**制作的、基于机器人的插件加载器，不同于其他类型的插件加载器，ToolDelta 可以运行在**多种游戏交互启动器核心**上。
 ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化租赁服的流畅度。
 
-加入我们：[维基和用户指南](https://td-wiki.dqyt.online/) | [交流群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ywf-Y9Sb7G3McLAN7TveI-qh-g1FEtLB&authKey=C0ZLK09UWRzWv9dpReVnZljSnZ15crGpNpdT5O%2BX%2B%2BQvZ%2Bsm2BWfN8qqdJ5OMnTq&noverify=0&group_code=194838530)
+加入我们：[维基和用户指南](https://td-wiki.dqyt.online/) | [交流群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ywf-Y9Sb7G3McLAN7TveI-qh-g1FEtLB&authKey=C0ZLK09UWRzWv9dpReVnZljSnZ15crGpNpdT5O%2BX%2B%2BQvZ%2Bsm2BWfN8qqdJ5OMnTq&noverify=0&group_code=1030755163)
 
 ## 目录
 - [目录](#目录)
