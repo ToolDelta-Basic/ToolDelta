@@ -467,7 +467,7 @@ class Utils:
             """
             os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
             with open(
-                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w"
+                f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w", encoding="utf-8"
             ) as f:
                 Utils.JsonIO.SafeJsonDump(obj, f, indent=indent)
 
