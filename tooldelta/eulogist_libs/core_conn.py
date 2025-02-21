@@ -8,7 +8,7 @@ from websocket import WebSocketApp, WebSocket
 from dataclasses import dataclass
 from tooldelta.utils import Utils
 from tooldelta.packets import Packet_CommandOutput
-from tooldelta import Print
+from tooldelta.color_print import Print
 
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"

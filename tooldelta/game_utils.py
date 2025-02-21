@@ -290,7 +290,7 @@ def isCmdSuccess(cmd: str, timeout: float = 30):
     return bool(res)
 
 
-def waitMsg(player: str, timeout: int = 30) -> str | None:
+def waitMsg(player: str, timeout: float = 30) -> str | None:
     """
     等待玩家在聊天栏发送消息, 并获取返回内容
 

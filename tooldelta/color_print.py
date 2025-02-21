@@ -26,7 +26,7 @@ def simple_fmt(kw: dict, arg: str) -> str:
     return arg
 
 
-class Print:
+class fmts:
     """生成多样彩色输出的类"""
 
     INFO_NORMAL = "§f 信息 "
@@ -83,7 +83,7 @@ class Print:
             str: 替换后的字符串
         """
         # 1 = bg_color
-        text = Print._strike(text)
+        text = fmts._strike(text)
         return (
             simple_fmt(
                 {
@@ -177,9 +177,9 @@ class Print:
         Raises:
             AssertionError: 无法找到对应的颜色代码
         """
-        with Print.lock:
+        with fmts.lock:
             if need_log:
-                Print.c_log(info, text)
+                fmts.c_log(info, text)
             set_next_color = "§r"
             if "\n" in text:
                 output_txts = []
@@ -195,17 +195,17 @@ class Print:
                             pass
                     output_txts.append(
                         datetime.datetime.now().strftime("[%H:%M] ")
-                        + Print.colormode_replace(info, 7)
+                        + fmts.colormode_replace(info, 7)
                         + " "
-                        + Print.colormode_replace(set_next_color + text_line)
+                        + fmts.colormode_replace(set_next_color + text_line)
                     )
                 print("\n".join(output_txts), **print_kwargs)
             else:
                 print(
                     datetime.datetime.now().strftime("[%H:%M] ")
-                    + Print.colormode_replace(info, 7)
+                    + fmts.colormode_replace(info, 7)
                     + " "
-                    + Print.colormode_replace(text),
+                    + fmts.colormode_replace(text),
                     **print_kwargs,
                 )
 
@@ -217,8 +217,8 @@ class Print:
             text (str): 输出的文本
             **print_kwargs: 原 print 函数的参数
         """
-        with Print.lock:
-            print(Print.colormode_replace(text), **print_kwargs)
+        with fmts.lock:
+            print(fmts.colormode_replace(text), **print_kwargs)
 
     @staticmethod
     def clean_fmt(text: str) -> str:
@@ -230,11 +230,11 @@ class Print:
         Returns:
             str: 格式化后的文本
         """
-        return Print.colormode_replace(text)
+        return fmts.colormode_replace(text)
 
     @staticmethod
     def print(*args):
-        Print.print_inf(" ".join(str(i) for i in args))
+        fmts.print_inf(" ".join(str(i) for i in args))
 
     @staticmethod
     def print_err(text: str, **print_kwargs) -> None:
@@ -243,7 +243,7 @@ class Print:
         Args:
             text (str): 输出的文本
         """
-        Print.print_with_info(f"§c{text}", Print.INFO_ERROR, **print_kwargs)
+        fmts.print_with_info(f"§c{text}", fmts.INFO_ERROR, **print_kwargs)
 
     @staticmethod
     def print_inf(text: str, **print_kwargs) -> None:
@@ -252,7 +252,7 @@ class Print:
         Args:
             text (str): 输出的文本
         """
-        Print.print_with_info(f"{text}", Print.INFO_NORMAL, **print_kwargs)
+        fmts.print_with_info(f"{text}", fmts.INFO_NORMAL, **print_kwargs)
 
     @staticmethod
     def print_suc(text: str, **print_kwargs) -> None:
@@ -261,7 +261,7 @@ class Print:
         Args:
             text (str): 输出的文本
         """
-        Print.print_with_info(f"§a{text}", Print.INFO_SUCC, **print_kwargs)
+        fmts.print_with_info(f"§a{text}", fmts.INFO_SUCC, **print_kwargs)
 
     @staticmethod
     def print_war(text: str, **print_kwargs) -> None:
@@ -270,7 +270,7 @@ class Print:
         Args:
             text (str): 输出的文本
         """
-        Print.print_with_info(f"§6{text}", Print.INFO_WARN, **print_kwargs)
+        fmts.print_with_info(f"§6{text}", fmts.INFO_WARN, **print_kwargs)
 
     @staticmethod
     def print_load(text: str, **print_kwargs) -> None:
@@ -279,8 +279,8 @@ class Print:
         Args:
             text (str): 输出的文本
         """
-        with Print.lock:
-            Print.print_with_info(f"§d{text}", Print.INFO_LOAD, **print_kwargs)
+        with fmts.lock:
+            fmts.print_with_info(f"§d{text}", fmts.INFO_LOAD, **print_kwargs)
 
     @staticmethod
     def fmt_info(text: str, info: str = "§f 信息 ") -> str:
@@ -296,7 +296,7 @@ class Print:
         Returns:
             str: 格式化后的信息
         """
-        with Print.lock:
+        with fmts.lock:
             nextcolor = "§r"
             if "\n" in text:
                 output_txts = []
@@ -312,16 +312,16 @@ class Print:
                             pass
                     output_txts.append(
                         datetime.datetime.now().strftime("[%H:%M] ")
-                        + Print.colormode_replace(info, 7)
+                        + fmts.colormode_replace(info, 7)
                         + " "
-                        + Print.colormode_replace(nextcolor + text_line)
+                        + fmts.colormode_replace(nextcolor + text_line)
                     )
                 return "\n".join(output_txts)
             return (
                 datetime.datetime.now().strftime("[%H:%M] ")
-                + Print.colormode_replace(info, 7)
+                + fmts.colormode_replace(info, 7)
                 + " "
-                + Print.colormode_replace(text)
+                + fmts.colormode_replace(text)
             )
 
     @staticmethod
@@ -332,7 +332,7 @@ class Print:
             inf (str): 信息
             msg (str): 记录的信息
         """
-        with Print.lock:
+        with fmts.lock:
             for _g, _s in [
                 ("§6 警告 ", "WARN"),
                 ("§a 成功 ", "INFO"),
@@ -343,11 +343,14 @@ class Print:
                 if inf == _g:
                     inf = _s
                     break
-            for col, _ in Print.STD_COLOR_LIST:
+            for col, _ in fmts.STD_COLOR_LIST:
                 color_code = "§" + col
                 msg = msg.replace(color_code, "")
-            for col, _ in Print.STD_COLOR_LIST:
+            for col, _ in fmts.STD_COLOR_LIST:
                 color_code = "§" + col
                 inf = inf.replace(color_code, "")
             inf = inf.replace(" ", "")
             publicLogger.log_in(msg, inf)
+
+
+Print = fmts

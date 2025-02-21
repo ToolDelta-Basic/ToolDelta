@@ -42,13 +42,14 @@ __all__ = [
 
 from typing import TYPE_CHECKING
 
-from .color_print import Print
+from .color_print import fmts
 from .frame import Config, GameCtrl, ToolDelta, Utils
 from .launch_options import client_title
-from .plugin_load.PluginGroup import Plugin
+from .plugin_load.classic_plugin.define import Plugin
 from .starter import plugin_group as plugins
 from .starter import start_tool_delta, tooldelta
 
 # 重定向
 Builtins = Utils
 Frame = ToolDelta
+Print = fmts

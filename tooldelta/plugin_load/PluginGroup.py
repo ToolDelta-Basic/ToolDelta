@@ -15,23 +15,22 @@ from ..constants import (
     SysStatus,
 )
 from ..game_utils import _set_frame
-from ..plugin_load import (
-    NON_FUNC,
+from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
-    auto_move_plugin_dir,
 )
 from ..utils import Utils
-from .classic_plugin import (
+from .classic_plugin.loader import (
     _PLUGIN_CLS_TYPE,
     Plugin,
     _init_frame,
     add_plugin,
     add_plugin_as_api,
 )
-from . import classic_plugin
-from . import injected_plugin
-from . import _ON_ERROR_CB
+from .classic_plugin import event_cb as classic_plugin
+from .classic_plugin import loader as classic_plugin_loader
+from .injected_plugin import loader as injected_plugin
+from .basic import _ON_ERROR_CB, auto_move_plugin_dir, non_func
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -285,7 +284,7 @@ class PluginGroup:
         self.injected_plugin_loaded_num = 0
         try:
             Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
-            classic_plugin.read_plugins(self)
+            classic_plugin_loader.read_plugins(self)
             asyncio.run(injected_plugin.load_plugin(self))
             # 主动读取类式插件监听的数据包
             for i in classic_plugin.packet_funcs.keys():
@@ -353,11 +352,11 @@ class PluginGroup:
         """
         self._update_player_attributes_funcs.append(func)
 
-    def execute_def(self, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
+    def execute_def(self, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行插件的二次初始化方法
 
         Args:
-            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法。Defaults to NON_FUNC.
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法。Defaults to non_func.
 
         Raises:
             SystemExit: 缺少前置
@@ -365,7 +364,7 @@ class PluginGroup:
         """
         classic_plugin.execute_def(onerr)
 
-    def execute_init(self, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
+    def execute_init(self, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行插件的连接游戏后初始化方法
 
         Args:
@@ -377,7 +376,7 @@ class PluginGroup:
             asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务"
         )
 
-    def execute_player_prejoin(self, player, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
+    def execute_player_prejoin(self, player, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行玩家加入前的方法
 
         Args:
@@ -387,7 +386,7 @@ class PluginGroup:
         classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
-    def execute_player_join(self, player: str, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
+    def execute_player_join(self, player: str, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行玩家加入的方法
 
         Args:
@@ -401,7 +400,7 @@ class PluginGroup:
         self,
         player: str,
         msg: str,
-        onerr: _ON_ERROR_CB = NON_FUNC,
+        onerr: _ON_ERROR_CB = non_func,
     ) -> None:
         """执行玩家消息的方法
 
@@ -416,7 +415,7 @@ class PluginGroup:
         classic_plugin.execute_player_message(player, msg, onerr)
         asyncio.run(injected_plugin.execute_player_message(player, msg))
 
-    def execute_player_leave(self, player: str, onerr: _ON_ERROR_CB = NON_FUNC) -> None:
+    def execute_player_leave(self, player: str, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行玩家离开的方法
 
         Args:
@@ -431,7 +430,7 @@ class PluginGroup:
         player: str,
         killer: str | None,
         msg: str,
-        onerr: _ON_ERROR_CB = NON_FUNC,
+        onerr: _ON_ERROR_CB = non_func,
     ):
         """执行玩家死亡的方法
 
@@ -445,7 +444,7 @@ class PluginGroup:
         asyncio.run(injected_plugin.execute_death_message(player, killer, msg))
 
     def execute_frame_exit(
-        self, signal: int, reason: str, onerr: _ON_ERROR_CB = NON_FUNC
+        self, signal: int, reason: str, onerr: _ON_ERROR_CB = non_func
     ):
         """执行框架退出的方法
 
@@ -455,7 +454,7 @@ class PluginGroup:
         classic_plugin.execute_frame_exit(signal, reason, onerr)
         asyncio.run(injected_plugin.execute_frame_exit())
 
-    def execute_reloaded(self, onerr: _ON_ERROR_CB = NON_FUNC):
+    def execute_reloaded(self, onerr: _ON_ERROR_CB = non_func):
         """执行插件重载的方法
 
         Args:
@@ -465,7 +464,7 @@ class PluginGroup:
         asyncio.run(injected_plugin.execute_reloaded())
 
     def processPacketFunc(
-        self, pktID: int, pkt: dict, onerr: _ON_ERROR_CB = NON_FUNC
+        self, pktID: int, pkt: dict, onerr: _ON_ERROR_CB = non_func
     ) -> bool:
         """处理数据包监听器
 
