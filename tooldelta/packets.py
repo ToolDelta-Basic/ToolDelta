@@ -1,5 +1,20 @@
 "数据包类构建器"
 
+from tooldelta.constants import PacketIDS
+from tooldelta.protocol.reader import Reader
+
+
+class Packet:
+    ID: int
+    raw: bytes
+
+    def __init__(self, raw: bytes):
+        self.raw = raw
+
+    def marshal(self):
+        raise NotImplementedError
+
+
 class SubPacket_CmdOutputMsg:
     """命令输出消息子包构建"""
 
@@ -45,3 +60,40 @@ class Packet_CommandOutput:
         ]
         self.SuccessCount = pkt["SuccessCount"]
         self.OutputType = pkt["OutputType"]
+
+
+class Text(Packet):
+    ID = PacketIDS.IDText
+    TextType: int
+    NeedsTranslation: bool
+    SourceName: str
+    Message: str
+    Parameters: list[str]
+    XUID: str
+    PlatformChatID: str
+    NeteaseExtraData: list[str]
+    Unknown: str
+
+    def marshal(self):
+        reader = Reader(self.raw)
+        self.TextType = reader.uint8()
+        self.NeedsTranslation = reader.bool()
+        match self.TextType:
+            case 1 | 7 | 8:
+                self.SourceName = reader.string()
+                self.Message = reader.string()
+                self.Parameters = []
+            case 0 | 5 | 6 | 9 | 10 | 11:
+                self.Message = reader.string()
+            case 2 | 3 | 4:
+                self.Message = reader.string()
+                self.Parameters = reader.list(reader.string)
+        self.XUID = reader.string()
+        self.PlatformChatID = reader.string()
+        # 网易
+        match self.TextType:
+            case 1:
+                self.NeteaseExtraData = reader.list(reader.string)
+            case 3:
+                self.Unknown = reader.string()
+
