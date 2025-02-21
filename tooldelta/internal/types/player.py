@@ -1,13 +1,22 @@
+from typing import TYPE_CHECKING
 from dataclasses import dataclass
-from tooldelta import tooldelta, game_utils
+from tooldelta import game_utils
+from .player_abilities import update_player_abilities
+
+if TYPE_CHECKING:
+    from ..maintainer import PlayerInfoMaintainer
 
 
 @dataclass
 class Player:
-    name: str
+    _parent: "PlayerInfoMaintainer"
     uuid: str
     unique_id: int
-    runtime_id: int
+    name: str
+    xuid: str
+    platform_chat_id: str
+    build_platform: int
+    online: bool = True
 
     def show(self, text: str):
         """
@@ -15,7 +24,7 @@ class Player:
         Args:
             text: 消息文本
         """
-        tooldelta.get_game_control().say_to(self.name, text)
+        self._parent.frame.get_game_control().say_to(self.name, text)
 
     def set_title(self, title: str, sub_title: str = ""):
         """
@@ -23,9 +32,9 @@ class Player:
         Args:
             text: 标题文本
         """
-        tooldelta.get_game_control().player_title(self.name, title)
+        self._parent.frame.get_game_control().player_title(self.name, title)
         if sub_title.strip():
-            tooldelta.get_game_control().player_subtitle(self.name, sub_title)
+            self._parent.frame.get_game_control().player_subtitle(self.name, sub_title)
 
     def set_actionbar(self, text: str):
         """
@@ -33,7 +42,7 @@ class Player:
         Args:
             text: 动作条文本
         """
-        tooldelta.get_game_control().player_actionbar(self.name, text)
+        self._parent.frame.get_game_control().player_actionbar(self.name, text)
 
     def get_selector(self):
         """
@@ -80,3 +89,26 @@ class Player:
         if prompt.strip():
             self.show(prompt)
         return game_utils.waitMsg(self.name, timeout)
+
+    @property
+    def abilities(self):
+        """
+        获取玩家能力
+        Returns:
+            Abilities: 玩家能力
+        """
+        return self._parent.player_abilities[self.unique_id]
+
+    def set_abilities(self, abilities):
+        """
+        设置玩家能力
+        Args:
+            abilities: 玩家能力
+        """
+        self._parent.player_abilities[self.unique_id] = abilities
+        update_player_abilities(
+            self._parent.frame.get_game_control(), self.unique_id, abilities
+        )
+
+    def is_op(self):
+        return self.abilities.command_permissions >= 3

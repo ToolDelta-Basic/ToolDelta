@@ -43,7 +43,8 @@ __all__ = [
 from typing import TYPE_CHECKING
 
 from .color_print import fmts
-from .frame import Config, GameCtrl, ToolDelta, Utils
+from .utils import Utils
+from .frame import Config, GameCtrl, ToolDelta
 from .launch_options import client_title
 from .plugin_load.classic_plugin.define import Plugin
 from .starter import plugin_group as plugins

@@ -1,4 +1,6 @@
-class SysStatus:
+from enum import IntEnum
+
+class SysStatus(IntEnum):
     """系统状态码
 
     LOADING: 启动器正在加载
@@ -17,7 +19,6 @@ class SysStatus:
     FB_LAUNCH_EXC = 104
     CRASHED_EXIT = 105
     NEED_RESTART = 106
-    launch_type = "None"
 
 TOOLDELTA_LOGO = """╔═════════════════════════════════════════════════════════════════════════╗
 ║§9████████╗ ██████╗  ██████╗ ██╗     §b██████╗ ███████╗██╗  ████████╗ █████╗ §r║
@@ -77,3 +78,9 @@ TDREPO_URL = (
 "ToolDelta镜像: github项目仓库"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.dqyt.online/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+
+class LaunchMode(IntEnum):
+    LAUNCH_MODE_NEOMG_ACCESS_POINT = 1
+    LAUNCH_MODE_NEOMG_ACCESS_POINT_REMOTE = 2
+    LAUNCH_MODE_NEOMG_LAUNCH = 3
+    LAUNCH_MODE_EULOGIST = 4

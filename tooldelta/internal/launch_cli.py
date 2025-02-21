@@ -11,18 +11,18 @@ import threading
 import time
 from collections.abc import Callable
 
-from .cfg import Cfg
-from .constants import SysStatus
-from .color_print import Print
-from .neo_libs import file_download as neo_fd
-from .neo_libs import neo_conn
-from .eulogist_libs import core_conn as eulogist_conn
-from .packets import Packet_CommandOutput
-from .sys_args import sys_args_to_dict
-from .urlmethod import get_free_port
-from .utils import Utils
+from ..cfg import Cfg
+from ..constants import SysStatus
+from ..color_print import Print
+from ..neo_libs import file_download as neo_fd, neo_conn
+from ..eulogist_libs import core_conn as eulogist_conn
+from ..packets import Packet_CommandOutput
+from ..sys_args import sys_args_to_dict
+from ..urlmethod import get_free_port
+from ..utils import Utils
 
 Config = Cfg()
+
 
 class StandardFrame:
     """提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口"""
@@ -773,11 +773,8 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                         Print.print_inf(f"{buffer}, 已自动选择为 y")
                 # 其他处理, 先独占输入通道, 等待用户输入
                 elif (
-                    ("请输入 y" in buffer
-                    and "请输入 n:" in buffer
-                    and char != "\n")
-                    or ("请输入" in buffer and ":" in buffer and char != "\n")
-                ):
+                    "请输入 y" in buffer and "请输入 n:" in buffer and char != "\n"
+                ) or ("请输入" in buffer and ":" in buffer and char != "\n"):
                     msg_orig = buffer.strip()
                     self.input_to_neomega(
                         input(Print.fmt_info("\b" + msg_orig, "§6 输入 §r"))
@@ -803,7 +800,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
         Print.print_load(
-            f'NeOmega 数据存放位置: {os.path.join(os.getcwd(), "tooldelta", "NeOmega数据")}'
+            f"NeOmega 数据存放位置: {os.path.join(os.getcwd(), 'tooldelta', 'NeOmega数据')}"
         )
         Utils.createThread(
             self._msg_handle_thread,
@@ -828,6 +825,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点进程已崩溃")
         return SystemError("未知的退出状态")
+
 
 class FrameEulogistLauncher(StandardFrame):
     # 启动器类型
@@ -869,7 +867,9 @@ class FrameEulogistLauncher(StandardFrame):
         """
         self.update_status(SysStatus.LAUNCHING)
         Print.print_inf("正在从 10132 端口连接到赞颂者...")
-        Utils.createThread(self.eulogist.start, thread_level=Utils.ToolDeltaThread.SYSTEM)
+        Utils.createThread(
+            self.eulogist.start, thread_level=Utils.ToolDeltaThread.SYSTEM
+        )
         self.eulogist.launch_event.wait()
         self.update_status(SysStatus.RUNNING)
         self.eulogist.packet_listener = self.packet_handler_parent
@@ -934,7 +934,7 @@ class FrameEulogistLauncher(StandardFrame):
         if not waitForResp:
             self.eulogist.sendcmd(cmd)
         else:
-            if (res := self.eulogist.sendcmd_with_resp(cmd, timeout)):
+            if res := self.eulogist.sendcmd_with_resp(cmd, timeout):
                 return res
             else:
                 raise TimeoutError("获取命令返回超时")
@@ -958,7 +958,7 @@ class FrameEulogistLauncher(StandardFrame):
         if not waitForResp:
             self.eulogist.sendwscmd(cmd)
         else:
-            if (res := self.eulogist.sendwscmd_with_resp(cmd, timeout)):
+            if res := self.eulogist.sendwscmd_with_resp(cmd, timeout):
                 return res
             else:
                 raise TimeoutError("获取命令返回超时")
@@ -1001,3 +1001,12 @@ class FrameEulogistLauncher(StandardFrame):
 FrameNeOmg = FrameNeOmgAccessPoint
 FrameNeOmgRemote = FrameNeOmgAccessPointRemote
 FrameEulogist = FrameEulogistLauncher
+
+FB_LIKE_LAUNCHERS = (
+    FrameNeOmegaLauncher
+    | FrameNeOmgAccessPoint
+    | FrameNeOmgAccessPointRemote
+    | FrameEulogistLauncher
+)
+"类FastBuilder启动器框架"
+LAUNCHERS = FB_LIKE_LAUNCHERS

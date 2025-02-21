@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
 from dataclasses import dataclass
 from enum import IntEnum
-from tooldelta import tooldelta
 from tooldelta.constants import PacketIDS
+
+if TYPE_CHECKING:
+    from tooldelta import GameCtrl
+    from ..maintainer import PlayerInfoMaintainer
+    from .player import Player
 
 
 class Ability(IntEnum):
@@ -44,6 +49,8 @@ class Abilities:
     # lightning: bool
     # fly_speed: float
     # walk_speed: float
+    player_permissions: int
+    command_permissions: int
 
     def auto_permission_level(self):
         level = 0
@@ -58,39 +65,57 @@ class Abilities:
         if self.operator_commands and self.teleport:
             level += 1
 
+    def marshal(self) -> int:
+        return (
+            (self.build << Ability.AbilityBuild)
+            | (self.mine << Ability.AbilityMine)
+            | (self.doors_and_switches << Ability.AbilityDoorsAndSwitches)
+            | (self.open_containers << Ability.AbilityOpenContainers)
+            | (self.attack_players << Ability.AbilityAttackPlayers)
+            | (self.attack_mobs << Ability.AbilityAttackMobs)
+            | (self.operator_commands << Ability.AbilityOperatorCommands)
+            | (self.teleport << Ability.AbilityTeleport)
+        )
 
-def marshal_abilities(abilities: Abilities) -> int:
-    return (
-        (abilities.build << Ability.AbilityBuild)
-        | (abilities.mine << Ability.AbilityMine)
-        | (abilities.doors_and_switches << Ability.AbilityDoorsAndSwitches)
-        | (abilities.open_containers << Ability.AbilityOpenContainers)
-        | (abilities.attack_players << Ability.AbilityAttackPlayers)
-        | (abilities.attack_mobs << Ability.AbilityAttackMobs)
-        | (abilities.operator_commands << Ability.AbilityOperatorCommands)
-        | (abilities.teleport << Ability.AbilityTeleport)
-    )
+    @classmethod
+    def unmarshal_abilities(
+        cls, abilities: int, player_permissions: int, command_permissions: int
+    ):
+        return cls(
+            build=bool(abilities & (1 << Ability.AbilityBuild)),
+            mine=bool(abilities & (1 << Ability.AbilityMine)),
+            doors_and_switches=bool(abilities & (1 << Ability.AbilityDoorsAndSwitches)),
+            open_containers=bool(abilities & (1 << Ability.AbilityOpenContainers)),
+            attack_players=bool(abilities & (1 << Ability.AbilityAttackPlayers)),
+            attack_mobs=bool(abilities & (1 << Ability.AbilityAttackMobs)),
+            operator_commands=bool(abilities & (1 << Ability.AbilityOperatorCommands)),
+            teleport=bool(abilities & (1 << Ability.AbilityTeleport)),
+            player_permissions=player_permissions,
+            command_permissions=command_permissions,
+        )
 
 
-def unmarshal_abilities(abilities: int) -> Abilities:
-    return Abilities(
-        build=bool(abilities & (1 << Ability.AbilityBuild)),
-        mine=bool(abilities & (1 << Ability.AbilityMine)),
-        doors_and_switches=bool(abilities & (1 << Ability.AbilityDoorsAndSwitches)),
-        open_containers=bool(abilities & (1 << Ability.AbilityOpenContainers)),
-        attack_players=bool(abilities & (1 << Ability.AbilityAttackPlayers)),
-        attack_mobs=bool(abilities & (1 << Ability.AbilityAttackMobs)),
-        operator_commands=bool(abilities & (1 << Ability.AbilityOperatorCommands)),
-        teleport=bool(abilities & (1 << Ability.AbilityTeleport)),
-    )
-
-
-def update_player_abilities(playerUniqueID: int, abilities: Abilities):
-    tooldelta.get_game_control().sendPacket(
+def update_player_abilities(pkt_sender: "GameCtrl", playerUniqueID: int, abilities: Abilities):
+    pkt_sender.sendPacket(
         PacketIDS.IDRequestAbility,
         {
             "EntityUniqueID": playerUniqueID,
             "PermissionLevel": abilities.auto_permission_level(),
-            "RequestedPermissions": marshal_abilities(abilities),
+            "RequestedPermissions": abilities.marshal(),
         },
     )
+
+
+def update_player_ability_from_server(
+    maintainer: "PlayerInfoMaintainer", player: "Player", packet: dict
+):
+    ab_data = packet["AbilityData"]
+    player_permissions = ab_data["PlayerPermissions"]
+    command_permissions = ab_data["CommandPermissions"]
+    for layer_data in ab_data["Layers"]:
+        if layer_data["Type"] == 1:
+            maintainer.player_abilities[player.unique_id] = (
+                Abilities.unmarshal_abilities(
+                    layer_data["Value"], player_permissions, command_permissions
+                )
+            )
