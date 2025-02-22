@@ -17,6 +17,7 @@ from ..game_utils import _set_frame
 from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
+    SystemVersionException
 )
 from ..utils import Utils
 from .classic_plugin.loader import (
@@ -26,12 +27,12 @@ from .classic_plugin.loader import (
     add_plugin,
     add_plugin_as_api,
 )
-from .classic_plugin import event_cb as classic_plugin
+from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
 from .injected_plugin import loader as injected_plugin
-from .basic import _ON_ERROR_CB, auto_move_plugin_dir, non_func
+from .basic import auto_move_plugin_dir, non_func, ON_ERROR_CB
 from tooldelta.internal.packet_handler import PacketHandler
-from tooldelta.internal.types import Player, Chat
+from tooldelta.internal.types import Player, Chat, InternalBroadcast
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -45,7 +46,7 @@ class PluginGroup:
         self.set_frame(frame)
         # loaded_plugin_ids: 供给插件调用
         # main_packet_handier(priority) -> plugin_packet_handler -> one_type_plugin_packet_handler(priority)
-        self._broadcast_listeners: dict[str, list[Callable]] = {}
+        self.broadcast_listeners: dict[str, list[Callable[[InternalBroadcast], Any]]] = {}
         self.plugin_listen_packets: set[int] = set()
         self.plugins_api: dict[str, Plugin] = {}
         self.normal_plugin_loaded_num = 0
@@ -60,7 +61,7 @@ class PluginGroup:
         可能会因为一些插件线程由于底层原因无法被停止, 或者有垃圾无法被回收, 导致内存泄露等问题
         """
         self.plugins_api = {}
-        self._broadcast_listeners = {}
+        self.broadcast_listeners = {}
         self.execute_frame_exit(SysStatus.NORMAL_EXIT, "normal")
         classic_plugin.reload()
         injected_plugin.reload()
@@ -76,7 +77,7 @@ class PluginGroup:
         for pkID in self.plugin_listen_packets:
             hdl.add_packet_listener(pkID, lambda pk: self.handle_packets(pkID, pk), 0)
 
-    def brocast_event(self, evt_name: str, data: Any = None) -> list[Any]:
+    def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
         """
         向全局广播一个特定事件，可以传入附加信息参数
         Args:
@@ -86,10 +87,10 @@ class PluginGroup:
              list[Any]: 收集到的数据的列表 (如果接收到广播的方法返回了数据的话)
         """
         callback_list = []
-        res = self._broadcast_listeners.get(evt_name)
+        res = self.broadcast_listeners.get(evt.evt_name)
         if res:
             for f in res:
-                res2 = f(data)
+                res2 = f(evt)
                 if res2:
                     callback_list.append(res2)
         return callback_list
@@ -107,7 +108,7 @@ class PluginGroup:
             self.linked_frame is not None
             and need_vers > self.linked_frame.sys_data.system_version
         ):
-            raise self.linked_frame.SystemVersionException(
+            raise SystemVersionException(
                 f"该插件需要ToolDelta为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
             )
         if self.linked_frame is None:
@@ -170,7 +171,7 @@ class PluginGroup:
             for i in classic_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
             # 主动读取类式插件监听的广播事件器
-            self._broadcast_listeners.update(classic_plugin.broadcast_evts_listener)
+            self.broadcast_listeners.update(classic_plugin.broadcast_listener)
             # 主动读取注入式插件监听的数据包
             for i in injected_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
@@ -223,7 +224,7 @@ class PluginGroup:
                 return v
         raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
 
-    def execute_def(self, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_def(self, onerr: ON_ERROR_CB = non_func) -> None:
         """执行插件的二次初始化方法
 
         Args:
@@ -235,7 +236,7 @@ class PluginGroup:
         """
         classic_plugin.execute_def(onerr)
 
-    def execute_init(self, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_init(self, onerr: ON_ERROR_CB = non_func) -> None:
         """执行插件的连接游戏后初始化方法
 
         Args:
@@ -247,7 +248,7 @@ class PluginGroup:
             asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务"
         )
 
-    def execute_player_prejoin(self, player, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_player_prejoin(self, player, onerr: ON_ERROR_CB = non_func) -> None:
         """执行玩家加入前的方法
 
         Args:
@@ -257,7 +258,7 @@ class PluginGroup:
         classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
-    def execute_player_join(self, player: Player, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_player_join(self, player: Player, onerr: ON_ERROR_CB = non_func) -> None:
         """执行玩家加入的方法
 
         Args:
@@ -270,7 +271,7 @@ class PluginGroup:
     def execute_chat(
         self,
         chat: Chat,
-        onerr: _ON_ERROR_CB = non_func,
+        onerr: ON_ERROR_CB = non_func,
     ) -> None:
         """执行玩家消息的方法
 
@@ -282,7 +283,7 @@ class PluginGroup:
         classic_plugin.execute_chat(chat, onerr)
         asyncio.run(injected_plugin.execute_player_message(chat.player.name, chat.msg))
 
-    def execute_player_leave(self, player: Player, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_player_leave(self, player: Player, onerr: ON_ERROR_CB = non_func) -> None:
         """执行玩家离开的方法
 
         Args:
@@ -293,7 +294,7 @@ class PluginGroup:
         asyncio.run(injected_plugin.execute_player_left(player.name))
 
     def execute_frame_exit(
-        self, signal: int, reason: str, onerr: _ON_ERROR_CB = non_func
+        self, signal: int, reason: str, onerr: ON_ERROR_CB = non_func
     ):
         """执行框架退出的方法
 
@@ -303,7 +304,7 @@ class PluginGroup:
         classic_plugin.execute_frame_exit(signal, reason, onerr)
         asyncio.run(injected_plugin.execute_frame_exit())
 
-    def execute_reloaded(self, onerr: _ON_ERROR_CB = non_func):
+    def execute_reloaded(self, onerr: ON_ERROR_CB = non_func):
         """执行插件重载的方法
 
         Args:
