@@ -18,14 +18,13 @@ from ..exceptions import (
 from ...utils import Utils
 
 if TYPE_CHECKING:
-    from tooldelta.plugin_load.PluginGroup import PluginGroup
+    from tooldelta.plugin_load.plugins import PluginGroup
 
 # 定义插件处理函数列表
 player_message_funcs: dict[Callable, int | None] = {}
 player_prejoin_funcs: dict[Callable, int | None] = {}
 player_join_funcs: dict[Callable, int | None] = {}
 player_left_funcs: dict[Callable, int | None] = {}
-player_death_funcs: dict[Callable, int | None] = {}
 repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
@@ -34,14 +33,12 @@ packet_funcs: dict[int, dict[Callable, int | None]] = {}
 loaded_plugin_modules = []
 
 
-
 def reload():
     """系统调用, 重置所有处理函数"""
     player_message_funcs.clear()
     player_prejoin_funcs.clear()
     player_join_funcs.clear()
     player_left_funcs.clear()
-    player_death_funcs.clear()
     repeat_funcs.clear()
     init_plugin_funcs.clear()
     frame_exit_funcs.clear()
@@ -112,23 +109,6 @@ def player_left(priority: int | None = None) -> Callable:
 
     def decorator(func):
         player_left_funcs[func] = priority
-        return func
-
-    return decorator
-
-
-def player_death(priority: int | None = None) -> Callable:
-    """载入处理玩家死亡事件方法
-
-    Args:
-        priority (int | None, optional): 插件优先级
-
-    Returns:
-        Callable: 插件处理函数
-    """
-
-    def decorator(func):
-        player_death_funcs[func] = priority
         return func
 
     return decorator
@@ -331,22 +311,6 @@ async def execute_player_message(playername: str, message: str) -> None:
     await execute_asyncio_task(
         player_message_funcs,
         player_message_info(playername=playername, message=message),
-    )
-
-
-async def execute_death_message(
-    playername: str, killer: str | None, message: str
-) -> None:
-    """执行玩家死亡处理函数
-
-    Args:
-        playername (str): 玩家名字
-        killer (str | None): 凶手
-        message (str): 消息
-    """
-    await execute_asyncio_task(
-        player_death_funcs,
-        player_death_info(playername=playername, killer=killer, message=message),
     )
 
 

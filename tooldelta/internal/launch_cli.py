@@ -39,7 +39,7 @@ class StandardFrame:
             fbToken (str): 验证服务器 Token
             auth_server_url (str): 验证服务器地址
         """
-        self.packet_handler: Callable = lambda pckType, pck: None
+        self.packet_handler = lambda pckType, pck: None
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launcher_listener: Callable
         self.exit_event = threading.Event()
@@ -56,6 +56,9 @@ class StandardFrame:
     def reload_listen_packets(self, listen_packets: set[int]) -> None:
         """重载需要监听的数据包ID"""
         self.need_listen_packets = {9, 79, 63} | listen_packets
+
+    def set_packet_listener(self, handler: Callable[[int, dict], None]):
+        self.packet_handler = handler
 
     def launch(self) -> None:
         """启动器启动
@@ -1008,5 +1011,7 @@ FB_LIKE_LAUNCHERS = (
     | FrameNeOmgAccessPointRemote
     | FrameEulogistLauncher
 )
+
 "类FastBuilder启动器框架"
 LAUNCHERS = FB_LIKE_LAUNCHERS
+"所有类型的启动器"

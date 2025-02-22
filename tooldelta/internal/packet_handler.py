@@ -20,7 +20,7 @@ class PacketHandler:
         self.frame = frame
         self.listen_packets = INTERNAL_LISTEN_PACKETS.copy()
         self.packet_listener_with_priority: dict[
-            int, dict[int, list[PacketListener]]
+            int, dict[int, set[PacketListener]]
         ] = {}
 
     def add_packet_listener(
@@ -28,8 +28,8 @@ class PacketHandler:
     ):
         self.listen_packets.add(packet_id)
         self.packet_listener_with_priority.setdefault(packet_id, {})
-        self.packet_listener_with_priority[packet_id].setdefault(priority, [])
-        self.packet_listener_with_priority[packet_id][priority].append(cb)
+        self.packet_listener_with_priority[packet_id].setdefault(priority, set())
+        self.packet_listener_with_priority[packet_id][priority].add(cb)
 
     def entrance(self, packetID: int, packet: dict):
         pkt_cbs = self.packet_listener_with_priority.get(packetID)

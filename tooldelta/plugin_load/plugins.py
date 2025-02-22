@@ -4,14 +4,13 @@ import asyncio
 import os
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from ..color_print import Print
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
-    PacketIDS,
     SysStatus,
 )
 from ..game_utils import _set_frame
@@ -31,36 +30,28 @@ from .classic_plugin import event_cb as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
 from .injected_plugin import loader as injected_plugin
 from .basic import _ON_ERROR_CB, auto_move_plugin_dir, non_func
+from tooldelta.internal.packet_handler import PacketHandler
+from tooldelta.internal.types import Player, Chat
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
-
-_TV = TypeVar("_TV")
-_SUPER_CLS = TypeVar("_SUPER_CLS")
-
-# add_plugin(): 类式插件调用, 插件框架会将其缓存到自身缓存区, 等待类式插件将插件类实例化
-# add_broadcast_listener(), add_packet_listener() 同理
-# 对于使用了 add_plugin_as_api() 的插件, 可以使用 get_plugin_api() 跨插件获取接口
 
 
 class PluginGroup:
     "插件组类, 存放插件代码有关数据"
 
-    Agree_bot_patrol: ClassVar["list[bool]"] = []
-
-    def __init__(self):
+    def __init__(self, frame: "ToolDelta"):
         "初始化"
+        self.set_frame(frame)
         # loaded_plugin_ids: 供给插件调用
-        self._cached_broadcast_evts: dict[str, list[Callable]] = {}
-        self._cached_packet_cbs: list[tuple[int, Callable]] = []
-        self._cached_all_packets_listener: Callable | None = None
-        self._update_player_attributes_funcs: list[Callable] = []
+        # main_packet_handier(priority) -> plugin_packet_handler -> one_type_plugin_packet_handler(priority)
         self._broadcast_listeners: dict[str, list[Callable]] = {}
+        self.plugin_listen_packets: set[int] = set()
         self.plugins_api: dict[str, Plugin] = {}
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         self.loaded_plugin_ids = []
-        self.linked_frame: "ToolDelta | None" = None
+        self.on_err_cb = self.linked_frame.on_plugin_err
 
     def reload(self):
         """
@@ -69,7 +60,6 @@ class PluginGroup:
         可能会因为一些插件线程由于底层原因无法被停止, 或者有垃圾无法被回收, 导致内存泄露等问题
         """
         self.plugins_api = {}
-        self._update_player_attributes_funcs = []
         self._broadcast_listeners = {}
         self.execute_frame_exit(SysStatus.NORMAL_EXIT, "normal")
         classic_plugin.reload()
@@ -82,104 +72,11 @@ class PluginGroup:
         self.execute_init()
         Print.print_suc("重载插件已完成")
 
-    @staticmethod
-    def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
-        """
-        添加ToolDelta类式插件的插件主类
+    def hook_packet_handler(self, hdl: "PacketHandler"):
+        for pkID in self.plugin_listen_packets:
+            hdl.add_packet_listener(pkID, lambda pk: self.handle_packets(pkID, pk), 0)
 
-        Args:
-            plugin (type[Plugin]): 插件主类
-
-        Raises:
-            NotValidPluginError: 插件主类必须继承 Plugin 类
-
-        Returns:
-            type[Plugin]: 插件主类
-        """
-        return add_plugin(plugin)
-
-    @staticmethod
-    def add_plugin_as_api(apiName: str):
-        """
-        添加 ToolDelta 类式插件主类，同时作为 API 插件提供接口供其他插件进行使用
-
-        Args:
-            apiName (str): API 名
-        """
-        return add_plugin_as_api(apiName)
-
-    def add_packet_listener(self, pktID: int | list[int]):
-        """
-        添加数据包监听器
-        将下面的方法作为一个 MC 数据包接收器
-        Tips: 只能在插件主类里的函数使用此装饰器!
-
-        Args:
-            pktID (int | list[int]): 数据包 ID 或多个 ID
-
-        Returns:
-            Callable[[Callable], Callable]: 添加数据包监听器
-        """
-
-        def deco(func: Callable[[_SUPER_CLS, dict], bool]):
-            # 存在缓存区, 等待 class_plugin 实例化
-            if pktID == -1:
-                for n, i in PacketIDS.__dict__.items():
-                    if n[0].isupper():
-                        self._cached_packet_cbs.append((i, func))
-            elif isinstance(pktID, int):
-                self._cached_packet_cbs.append((pktID, func))
-            else:
-                for i in pktID:
-                    self._cached_packet_cbs.append((i, func))
-            return func
-
-        return deco
-
-    def add_any_packet_listener(self, func: Callable[[_SUPER_CLS, int, dict], bool]):
-        """
-        添加任意数据包监听器, 供插件开发 Debug 使用
-        注意: 由于 Python JSON 解析速度过慢, 此方法很有可能降低整体运行速度!
-        Tips: 只能在插件主类里的函数使用此装饰器!
-
-        Returns:
-            Receiver ((pktID: int, pkt: dict) -> bool): 数据包监听器接收器, 传入 数据包ID, 数据包 返回 bool
-        """
-        self._cached_all_packets_listener = func
-        return func
-
-    def add_broadcast_listener(self, evt_name: str):
-        """
-        添加广播事件监听器
-        将下面的方法作为一个广播事件接收器
-        Tips: 只能在插件主类里的函数使用此装饰器!
-
-        Args:
-            evt_name (str): 事件名
-
-        Returns:
-            Callable[[Callable], Callable]: 添加广播事件监听器
-
-        原理:
-        方法 1 广播：hi, what's ur name? 附加参数=english_only
-            - 方法 2 接收到广播并被执行：方法 2(english_only) -> my name is Super. -> 收集表
-
-        事件 1 获取到 收集表 作为返回：["my name is Super."]
-        """
-
-        def deco(
-            func: Callable[[_SUPER_CLS, _TV], Any],
-        ) -> Callable[[_SUPER_CLS, _TV], Any]:
-            # 存在缓存区, 等待 class_plugin 实例化
-            if self._cached_broadcast_evts.get(evt_name):
-                self._cached_broadcast_evts[evt_name].append(func)
-            else:
-                self._cached_broadcast_evts[evt_name] = [func]
-            return func
-
-        return deco
-
-    def broadcastEvt(self, evt_name: str, data: Any = None) -> list[Any]:
+    def brocast_event(self, evt_name: str, data: Any = None) -> list[Any]:
         """
         向全局广播一个特定事件，可以传入附加信息参数
         Args:
@@ -197,24 +94,7 @@ class PluginGroup:
                     callback_list.append(res2)
         return callback_list
 
-    @staticmethod
-    def help(plugin: Plugin) -> None:
-        """
-        查看插件帮助.
-        常用于查看 get_plugin_api() 方法获取到的插件实例的帮助.
-        """
-        plugin_docs = "<plugins.help>: " + plugin.name + "开放的 API 接口说明:\n"
-        for attr_name, attr in plugin.__dict__.items():
-            if not attr_name.startswith("__") and attr.__doc__ is not None:
-                plugin_docs += (
-                    "\n §a"
-                    + attr_name
-                    + ":§f\n    "
-                    + attr.__doc__.replace("\n", "\n    ")
-                )
-        Print.clean_print(plugin_docs)
-
-    def checkSystemVersion(self, need_vers: tuple[int, int, int]):
+    def check_tooldelta_version(self, need_vers: tuple[int, int, int]):
         """检查 ToolDelta 系统的版本
 
         Args:
@@ -314,14 +194,13 @@ class PluginGroup:
         Raises:
             ValueError: 无法添加数据包监听，请确保已经加载了系统组件
         """
-        if self.linked_frame is None:
-            raise ValueError("无法添加数据包监听，请确保已经加载了系统组件")
-        self.linked_frame.link_game_ctrl.add_listen_packet(packetType)
+        self.plugin_listen_packets.add(packetType)
 
     def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
         """
         对外源导入 (import) 的 API 插件类进行类型实例化。
         可以使得你所使用的 IDE 对导入的插件 API 类进行识别和高亮其所含方法。
+        请尽量在 TYPE_CHECKING 的代码块下使用。
 
         Args:
             api_cls (type[_PLUGIN_CLS_TYPE]): 导入的 API 插件类
@@ -343,14 +222,6 @@ class PluginGroup:
             if isinstance(v, api_cls):
                 return v
         raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
-
-    def _add_listen_update_player_attributes_func(self, func: Callable) -> None:
-        """添加玩家属性更新监听器，仅在系统内部使用
-
-        Args:
-            func (Callable): 数据包监听器
-        """
-        self._update_player_attributes_funcs.append(func)
 
     def execute_def(self, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行插件的二次初始化方法
@@ -386,7 +257,7 @@ class PluginGroup:
         classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
-    def execute_player_join(self, player: str, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_player_join(self, player: Player, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行玩家加入的方法
 
         Args:
@@ -394,12 +265,11 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
         """
         classic_plugin.execute_player_join(player, onerr)
-        asyncio.run(injected_plugin.execute_player_join(player))
+        asyncio.run(injected_plugin.execute_player_join(player.name))
 
-    def execute_player_message(
+    def execute_chat(
         self,
-        player: str,
-        msg: str,
+        chat: Chat,
         onerr: _ON_ERROR_CB = non_func,
     ) -> None:
         """执行玩家消息的方法
@@ -409,13 +279,10 @@ class PluginGroup:
             msg (str): 消息
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        pat = f"[{player}] "
-        if msg.startswith(pat):
-            msg = msg.strip(pat)
-        classic_plugin.execute_player_message(player, msg, onerr)
-        asyncio.run(injected_plugin.execute_player_message(player, msg))
+        classic_plugin.execute_chat(chat, onerr)
+        asyncio.run(injected_plugin.execute_player_message(chat.player.name, chat.msg))
 
-    def execute_player_leave(self, player: str, onerr: _ON_ERROR_CB = non_func) -> None:
+    def execute_player_leave(self, player: Player, onerr: _ON_ERROR_CB = non_func) -> None:
         """执行玩家离开的方法
 
         Args:
@@ -423,25 +290,7 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_leave(player, onerr)
-        asyncio.run(injected_plugin.execute_player_left(player))
-
-    def execute_player_death(
-        self,
-        player: str,
-        killer: str | None,
-        msg: str,
-        onerr: _ON_ERROR_CB = non_func,
-    ):
-        """执行玩家死亡的方法
-
-        Args:
-            player (str): 玩家
-            killer (str | None): 击杀者
-            msg (str): 击杀消息
-            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
-        """
-        classic_plugin.execute_player_death(player, killer, msg, onerr)
-        asyncio.run(injected_plugin.execute_death_message(player, killer, msg))
+        asyncio.run(injected_plugin.execute_player_left(player.name))
 
     def execute_frame_exit(
         self, signal: int, reason: str, onerr: _ON_ERROR_CB = non_func
@@ -463,9 +312,7 @@ class PluginGroup:
         classic_plugin.execute_reloaded(onerr)
         asyncio.run(injected_plugin.execute_reloaded())
 
-    def processPacketFunc(
-        self, pktID: int, pkt: dict, onerr: _ON_ERROR_CB = non_func
-    ) -> bool:
+    def handle_packets(self, pktID: int, pkt: dict) -> bool:
         """处理数据包监听器
 
         Args:
@@ -475,9 +322,21 @@ class PluginGroup:
         Returns:
             bool: 是否处理成功
         """
-        blocking = classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
+        blocking = classic_plugin.execute_packet_funcs(pktID, pkt, self.on_err_cb)
         asyncio.run(injected_plugin.execute_packet_funcs(pktID, pkt))
         return blocking
 
+    def handle_text_packet(self, pkt: dict):
+        raw_name = pkt["SourceName"]
+        msg = pkt["Message"]
+        cleaned_name = Utils.to_plain_name(raw_name)
+        if player := self.linked_frame.players_maintainer.get_player_by_name(cleaned_name):
+            chat = Chat(player, msg)
+            self.execute_chat(chat)
 
-plugin_group = PluginGroup()
+    # 向下兼容
+    add_plugin = staticmethod(add_plugin)
+    add_plugin_as_api = staticmethod(add_plugin_as_api)
+    help = staticmethod(classic_plugin_loader.help)
+    checkSystemVersion = check_tooldelta_version
+    broadcastEvt = brocast_event

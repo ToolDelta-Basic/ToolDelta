@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from . import constants, game_utils, utils
 from .cfg import Config
 from .color_print import fmts
-from .constants import PacketIDS, SysStatus
+from .constants import SysStatus
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
@@ -36,11 +36,11 @@ from .internal.maintainer import PlayerInfoMaintainer
 from .internal.launch_cli import (
     FrameNeOmgAccessPoint,
     FrameNeOmegaLauncher,
-    FB_LIKE_LAUNCHERS
+    FB_LIKE_LAUNCHERS,
 )
 
 if TYPE_CHECKING:
-    from .plugin_load.PluginGroup import PluginGroup
+    from .plugin_load.plugins import PluginGroup
 
 ###### CONSTANT DEFINE
 
@@ -77,6 +77,7 @@ class ToolDelta:
         self.packet_handler = PacketHandler(self)
         self.cmd_manager = ConsoleCmdManager(self)
         self.players_maintainer = PlayerInfoMaintainer(self)
+        self.launcher.set_packet_listener(self.packet_handler.entrance)
         # 监听数据包
         # 向下兼容
         self.add_console_cmd_trigger = self.cmd_manager.add_console_cmd_trigger
@@ -85,16 +86,6 @@ class ToolDelta:
         self.welcome()
         self.init_dirs()
         self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
-
-    @staticmethod
-    def win_create_batch_file():
-        if not os.path.isfile("点我启动.bat"):
-            argv = sys.argv.copy()
-            if argv[0].endswith(".py"):
-                argv.insert(0, "python")
-            exec_cmd = " ".join(argv)
-            with open("点我启动.bat", "w") as f:
-                f.write(f"@echo off\n{exec_cmd}\npause")
 
     @staticmethod
     def welcome() -> None:
@@ -120,6 +111,15 @@ class ToolDelta:
         if sys.platform == "win32":
             self.win_create_batch_file()
 
+    @staticmethod
+    def win_create_batch_file():
+        if not os.path.isfile("点我启动.bat"):
+            argv = sys.argv.copy()
+            if argv[0].endswith(".py"):
+                argv.insert(0, "python")
+            exec_cmd = " ".join(argv)
+            with open("点我启动.bat", "w") as f:
+                f.write(f"@echo off\n{exec_cmd}\npause")
 
     def system_exit(self, reason: str) -> None:
         """ToolDelta 系统退出"""
@@ -161,6 +161,7 @@ class ToolDelta:
         # 最后做善后工作
         self.actions_before_exited()
         # 到这里就基本上是退出完成了
+
     def set_game_control(self, game_ctrl: "GameCtrl") -> None:
         """使用外源 GameControl
 
@@ -236,16 +237,8 @@ class GameCtrl:
         self.players_uuid: dict[str, str] = {}
         self.allplayers: list[str] = []
         self.all_players_data = {}
-        self.linked_frame: ToolDelta
         self.require_listen_packets = {9, 79, 63}
         self.launcher = self.linked_frame.launcher
-        if isinstance(self.launcher, LAUNCHERS):
-            self.launcher.packet_handler = lambda pckType, pck: Utils.createThread(
-                self.packet_handler,
-                (pckType, pck),
-                usage="数据包处理",
-                thread_level=Utils.ToolDeltaThread.SYSTEM,
-            )
         # 初始化基本函数
         self.sendcmd = self.launcher.sendcmd
         self.sendwscmd = self.launcher.sendwscmd
@@ -255,6 +248,12 @@ class GameCtrl:
             self.requireUUIDPacket = False
         else:
             self.requireUUIDPacket = True
+
+    def hook(self, hdl: "PacketHandler"):
+        hdl.add_packet_listener(
+            constants.PacketIDS.IDPlayerList, self.process_player_list
+        )
+        hdl.add_packet_listener(constants.PacketIDS.Text, self.process_text_packet)
 
     def set_listen_packets_to_launcher(self) -> None:
         """
@@ -273,25 +272,7 @@ class GameCtrl:
         """
         self.require_listen_packets.add(pkt)
 
-    @Utils.thread_func("数据包处理方法", Utils.ToolDeltaThread.SYSTEM)
-    def packet_handler(self, pkt_type: int, pkt: dict) -> None:
-        """数据包处理分发任务函数
-
-        Args:
-            pkt_type (int): 数据包类型
-            pkt (dict): 数据包内容
-        """
-        is_skiped = self.linked_frame.link_plugin_group.processPacketFunc(
-            pkt_type, pkt, self.linked_frame.on_plugin_err
-        )
-        if is_skiped:
-            return
-        if pkt_type == PacketIDS.IDPlayerList:
-            self.process_player_list(pkt, self.linked_frame.link_plugin_group)
-        elif pkt_type == PacketIDS.IDText:
-            self.process_text_packet(pkt, self.linked_frame.link_plugin_group)
-
-    def process_player_list(self, pkt: dict, plugin_group: "PluginGroup") -> None:
+    def process_player_list(self, pkt: dict):
         """处理玩家列表等数据包
 
         Args:
@@ -314,15 +295,10 @@ class GameCtrl:
                 if isinstance(self.launcher, FrameNeOmgAccessPoint):
                     self.all_players_data = self.launcher.omega.get_all_online_players()
             if isJoining:
-                fmts.print_inf(f"§e{playername} 加入了游戏")
                 if isinstance(self.launcher, FrameNeOmgAccessPoint):
                     self.all_players_data = self.launcher.omega.get_all_online_players()
                 if playername not in self.allplayers and not res:
                     self.allplayers.append(playername)
-                    return
-                plugin_group.execute_player_prejoin(
-                    playername, self.linked_frame.on_plugin_err
-                )
             else:
                 playername = next(
                     (k for k, v in self.players_uuid.items() if v == player["UUID"]),
@@ -333,16 +309,13 @@ class GameCtrl:
                     continue
                 if playername != "???" and not res:
                     self.allplayers.remove(playername)
-                fmts.print_inf(f"§e{playername} 退出了游戏")
                 if isinstance(self.launcher, FrameNeOmgAccessPoint):
                     self.all_players_data = self.launcher.omega.get_all_online_players()
-                plugin_group.execute_player_leave(
-                    playername, self.linked_frame.on_plugin_err
-                )
                 if self.players_uuid.get(playername):
                     del self.players_uuid[playername]
+        return False
 
-    def process_text_packet(self, pkt: dict, plugin_grp: "PluginGroup") -> None:
+    def process_text_packet(self, pkt: dict):
         """处理 9 号数据包的消息
 
         Args:
@@ -352,11 +325,13 @@ class GameCtrl:
         match pkt["TextType"]:
             case 2:
                 if pkt["Message"] == "§e%multiplayer.player.joined":
-                    player = pkt["Parameters"][0]
-                    plugin_grp.execute_player_join(
-                        player, self.linked_frame.on_plugin_err
-                    )
-                elif pkt["Message"] != "§e%multiplayer.player.left":
+                    playername = pkt["Parameters"][0]
+                    fmts.print_inf(f"§e{playername} 退出了游戏")
+                elif pkt["Message"] == "§e%multiplayer.player.left":
+                    playername = pkt["Parameters"][0]
+                    fmts.print_inf(f"§e{playername} 退出了游戏")
+                else:
+                    # TODO: another type of message
                     if self.game_data_handler is not None:
                         jon = self.game_data_handler.Handle_Text_Class1(pkt)
                         fmts.print_inf("§1" + " ".join(jon).strip('"'))
@@ -367,12 +342,6 @@ class GameCtrl:
                             killer = pkt["Parameters"][1]
                         else:
                             killer = None
-                        plugin_grp.execute_player_death(
-                            pkt["Parameters"][0],
-                            killer,
-                            pkt["Message"],
-                            self.linked_frame.on_plugin_err,
-                        )
             case 1 | 7:
                 src_name = pkt["SourceName"]
                 msg = pkt["Message"]
@@ -384,14 +353,11 @@ class GameCtrl:
                         src_name = msg_list[1]
                         msg = " ".join(msg_list[2:])
                     else:
-                        return
+                        return False
                 # game_utils.waitMsg 需要监听玩家信息
                 # 监听后, 消息仍被处理
                 if playername in game_utils.player_waitmsg_cb.keys():
                     game_utils.player_waitmsg_cb[playername](msg)
-                plugin_grp.execute_player_message(
-                    playername, msg, self.linked_frame.on_plugin_err
-                )
                 fmts.print_inf(f"<{playername}> {msg}")
             case 8:
                 # /say 消息
@@ -401,9 +367,6 @@ class GameCtrl:
                 if uuid in self.players_uuid.values():
                     cmd_executor = {v: k for k, v in self.players_uuid.items()}[uuid]
                     fmts.print_inf(f"{src_name}({cmd_executor}) 使用 say 说：{msg}")
-                    plugin_grp.execute_player_message(
-                        cmd_executor, msg, self.linked_frame.on_plugin_err
-                    )
                 else:
                     fmts.print_inf(
                         f"{src_name} 使用 say 说：{msg.removeprefix(f'[{src_name}] ')}"
@@ -416,11 +379,12 @@ class GameCtrl:
                     msg_text = json.loads(msg)["rawtext"]
                     if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
                         fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
-                        return
+                        return False
                     msg_text = "".join([i["text"] for i in msg_text])
                     fmts.print_with_info(msg_text, "§f 消息 ")
                 except Exception:
                     pass
+        return False
 
     def system_inject(self) -> None:
         """载入游戏时的初始化"""

@@ -2,6 +2,7 @@ import traceback
 from collections.abc import Callable
 
 from tooldelta.color_print import Print
+from tooldelta.internal.types import Player, Chat
 from ..exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
@@ -21,17 +22,12 @@ plugins_funcs: dict[str, list[tuple[str, Callable]]] = {
     "on_reload": [],
 }
 # 新版的 cbs
-event_cbs: dict[str, list[tuple[str, Callable]]] = {
-    "on_def": [],
-    "on_inject": [],
-    "on_player_prejoin": [],
-    "on_player_join": [],
-    "on_player_message": [],
-    "on_player_death": [],
-    "on_player_leave": [],
-    "on_frame_exit": [],
-    "on_reload": [],
-}
+on_preload_cbs: list[Callable[[], None]] = []
+on_active_cbs: list[Callable[[], None]] = []
+on_player_join_cbs: list[Callable[[Player], None]] = []
+on_player_leave_cbs: list[Callable[[Player], None]] = []
+on_player_message: list[Callable[[Chat], None]] = []
+
 packet_funcs: dict[int, list[Callable]] = {}
 broadcast_evts_listener: dict[str, list[Callable]] = {}
 loaded_plugin_modules = []
@@ -100,7 +96,7 @@ def execute_player_prejoin(player, onerr: ON_ERROR_CB) -> None:
             onerr(name, err, traceback.format_exc())
 
 
-def execute_player_join(player: str, onerr: ON_ERROR_CB) -> None:
+def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
     """执行玩家加入的方法
 
     Args:
@@ -109,14 +105,13 @@ def execute_player_join(player: str, onerr: ON_ERROR_CB) -> None:
     """
     for name, func in plugins_funcs["on_player_join"]:
         try:
-            func(player)
+            func(player.name)
         except Exception as err:
             onerr(name, err, traceback.format_exc())
 
 
-def execute_player_message(
-    player: str,
-    msg: str,
+def execute_chat(
+    chat: Chat,
     onerr: ON_ERROR_CB,
 ) -> None:
     """执行玩家消息的方法
@@ -126,17 +121,14 @@ def execute_player_message(
         msg (str): 消息
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    pat = f"[{player}] "
-    if msg.startswith(pat):
-        msg = msg.strip(pat)
     for name, func in plugins_funcs["on_player_message"]:
         try:
-            func(player, msg)
+            func(chat.player.name, chat.msg)
         except Exception as err:
             onerr(name, err, traceback.format_exc())
 
 
-def execute_player_leave(player: str, onerr: ON_ERROR_CB) -> None:
+def execute_player_leave(player: Player, onerr: ON_ERROR_CB) -> None:
     """执行玩家离开的方法
 
     Args:
@@ -145,28 +137,7 @@ def execute_player_leave(player: str, onerr: ON_ERROR_CB) -> None:
     """
     for name, func in plugins_funcs["on_player_leave"]:
         try:
-            func(player)
-        except Exception as err:
-            onerr(name, err, traceback.format_exc())
-
-
-def execute_player_death(
-    player: str,
-    killer: str | None,
-    msg: str,
-    onerr: ON_ERROR_CB,
-):
-    """执行玩家死亡的方法
-
-    Args:
-        player (str): 玩家
-        killer (str | None): 击杀者
-        msg (str): 消息
-        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
-    """
-    for name, func in plugins_funcs["on_player_death"]:
-        try:
-            func(player, killer, msg)
+            func(player.name)
         except Exception as err:
             onerr(name, err, traceback.format_exc())
 
@@ -217,4 +188,3 @@ def execute_packet_funcs(pktID: int, pkt: dict, onerr: ON_ERROR_CB) -> bool:
             except Exception as err:
                 onerr("插件方法:" + func.__name__, err, traceback.format_exc())
     return False
-

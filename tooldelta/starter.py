@@ -6,7 +6,7 @@ import traceback
 
 from .color_print import Print
 from .frame import GameCtrl, ToolDelta
-from .plugin_load.PluginGroup import plugin_group
+from .plugin_load.plugins import plugin_group
 from .sys_args import sys_args_to_dict
 from .urlmethod import check_update
 from .utils import timer_event_boostrap, tmpjson_save
@@ -22,9 +22,7 @@ def start_tool_delta() -> None:
             check_update()
         else:
             Print.print_war("将不会进行自动更新。")
-        tooldelta.basic_operation()
         tooldelta.set_plugin_group(plugin_group)
-        tooldelta.load_tooldelta_cfg()
         tooldelta.launcher.init()
         game_control = GameCtrl(tooldelta)
         tooldelta.set_game_control(game_control)
@@ -34,7 +32,6 @@ def start_tool_delta() -> None:
         tmpjson_save()
         tooldelta.launcher.listen_launched(game_control.system_inject)
         game_control.set_listen_packets_to_launcher()
-        tooldelta.comsole_cmd_active()
         while 1:
             Print.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
             # 主进程
