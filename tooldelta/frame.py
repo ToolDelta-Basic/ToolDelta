@@ -59,11 +59,6 @@ class ToolDelta:
         system_version = VERSION
         data_path = "插件数据文件/"
 
-    class SystemVersionException(SystemError):
-        """系统版本异常"""
-
-        msg: str
-
     def __init__(self) -> None:
         """初始化"""
         self.sys_data = self.FrameBasic()

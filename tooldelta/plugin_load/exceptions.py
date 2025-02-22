@@ -1,3 +1,7 @@
+class SystemVersionException(SystemError):
+    """系统版本异常"""
+
+
 class PluginSkip(EOFError):
     """跳过插件加载"""
 
