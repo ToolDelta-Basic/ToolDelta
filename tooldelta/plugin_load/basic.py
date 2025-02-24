@@ -20,7 +20,7 @@ def non_func(*_) -> None:
     return None
 
 
-_ON_ERROR_CB = Callable[[str, Exception, str], None]
+ON_ERROR_CB = Callable[[str, Exception], None]
 
 
 class PluginRegData:

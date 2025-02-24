@@ -78,7 +78,7 @@ class Abilities:
         )
 
     @classmethod
-    def unmarshal_abilities(
+    def unmarshal(
         cls, abilities: int, player_permissions: int, command_permissions: int
     ):
         return cls(
@@ -115,7 +115,7 @@ def update_player_ability_from_server(
     for layer_data in ab_data["Layers"]:
         if layer_data["Type"] == 1:
             maintainer.player_abilities[player.unique_id] = (
-                Abilities.unmarshal_abilities(
+                Abilities.unmarshal(
                     layer_data["Value"], player_permissions, command_permissions
                 )
             )

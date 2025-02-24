@@ -13,6 +13,11 @@ class Chat(BasicEvent):
     msg: str
 
 @dataclass
-class InternalBroadcast:
+class InternalBroadcast(BasicEvent):
     evt_name: str
     data: Any
+
+@dataclass
+class FrameExit(BasicEvent):
+    signal: int
+    reason: str

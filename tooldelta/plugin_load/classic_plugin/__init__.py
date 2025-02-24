@@ -1,6 +1,6 @@
 "ToolDelta 类式插件"
 
-from .define import Plugin
+from .plugin_cls import Plugin
 
 
 __all__ = ["Plugin"]

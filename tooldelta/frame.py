@@ -14,8 +14,6 @@ import signal
 import sys
 import traceback
 import json
-from typing import TYPE_CHECKING
-
 from . import constants, game_utils, utils
 from .cfg import Config
 from .color_print import fmts
@@ -29,18 +27,20 @@ from .plugin_load import injected_plugin
 from .utils import Utils
 from .sys_args import sys_args_to_dict
 
-from .internal.config_loader import ConfigLoader, LAUNCHERS
+from .plugin_load.plugins import PluginGroup
+from .internal.config_loader import ConfigLoader
 from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
 from .internal.maintainer import PlayerInfoMaintainer
+from .internal.types import FrameExit
 from .internal.launch_cli import (
     FrameNeOmgAccessPoint,
     FrameNeOmegaLauncher,
     FB_LIKE_LAUNCHERS,
 )
 
-if TYPE_CHECKING:
-    from .plugin_load.plugins import PluginGroup
+
+
 
 ###### CONSTANT DEFINE
 
@@ -64,23 +64,23 @@ class ToolDelta:
         self.sys_data = self.FrameBasic()
         self.launchMode: int = 0
         self.on_plugin_err = staticmethod(
-            lambda name, _, err: fmts.print_err(f"插件 <{name}> 出现问题：\n{err}")
+            lambda name, err: fmts.print_err(f"插件 <{name}> 出现问题：\n{err}")
         )
-        #
-        self.launcher: LAUNCHERS
+
+    def bootstrap(self):
         self.cfg_loader = ConfigLoader(self)
+        # 监听数据包
+        # 向下兼容
+        self.welcome()
+        self.init_dirs()
         self.packet_handler = PacketHandler(self)
         self.cmd_manager = ConsoleCmdManager(self)
         self.players_maintainer = PlayerInfoMaintainer(self)
-        self.launcher.set_packet_listener(self.packet_handler.entrance)
-        # 监听数据包
-        # 向下兼容
+        self.plugin_group = PluginGroup(self)
         self.add_console_cmd_trigger = self.cmd_manager.add_console_cmd_trigger
-
-    def bootstrap(self):
-        self.welcome()
-        self.init_dirs()
-        self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
+        self.launcher = self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
+        self.launcher.set_packet_listener(self.packet_handler.entrance)
+        self.plugin_group.hook_packet_handler(self.packet_handler)
 
     @staticmethod
     def welcome() -> None:
@@ -123,8 +123,8 @@ class ToolDelta:
         if has_launcher:
             if self.launcher.status == SysStatus.RUNNING:
                 self.launcher.update_status(SysStatus.NORMAL_EXIT)
-        self.link_plugin_group.execute_frame_exit(
-            self.launcher.status, reason, self.on_plugin_err
+        self.plugin_group.execute_frame_exit(
+            FrameExit(self.launcher.status, reason), self.on_plugin_err
         )
         asyncio.run(injected_plugin.safe_jump_repeat_tasks())
         # 先将启动框架 (进程) 关闭了
@@ -165,14 +165,6 @@ class ToolDelta:
         """
         self.link_game_ctrl = game_ctrl
 
-    def set_plugin_group(self, plug_grp) -> None:
-        """使用外源 PluginGroup
-
-        Args:
-            plug_grp (_type_): PluginGroup 对象
-        """
-        self.link_plugin_group: "PluginGroup" = plug_grp
-
     def get_game_control(self) -> "GameCtrl":
         """获取 GameControl 对象
 
@@ -196,7 +188,7 @@ class ToolDelta:
             utils.safe_close()
             self.cmd_manager.reset_cmds()
             fmts.print_inf("重载插件: 正在重新载入插件..")
-            self.link_plugin_group.reload()
+            self.plugin_group.reload()
             self.launcher.reload_listen_packets(
                 self.link_game_ctrl.require_listen_packets
             )
@@ -282,13 +274,6 @@ class GameCtrl:
         for player in pkt["Entries"]:
             isJoining = bool(player["Skin"]["SkinData"])
             playername = player["Username"]
-            if isJoining and "§" in playername:
-                self.say_to(
-                    "@a",
-                    "§l§7<§6§o!§r§l§7> §6此玩家名字中含特殊字符, 可能导致插件运行异常！",
-                )
-                if isinstance(self.launcher, FrameNeOmgAccessPoint):
-                    self.all_players_data = self.launcher.omega.get_all_online_players()
             if isJoining:
                 if isinstance(self.launcher, FrameNeOmgAccessPoint):
                     self.all_players_data = self.launcher.omega.get_all_online_players()
@@ -412,7 +397,7 @@ class GameCtrl:
                     break
                 except (TimeoutError, ValueError):
                     fmts.print_war("获取全局玩家失败..重试")
-        self.linked_frame.link_plugin_group.execute_init(
+        self.linked_frame.plugin_group.execute_init(
             self.linked_frame.on_plugin_err
         )
         self.inject_welcome()

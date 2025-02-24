@@ -1,7 +1,23 @@
 "ToolDelta 常量定义"
 
+from enum import IntEnum
 
-class ContainerType:
+class TextType(IntEnum):
+    TextTypeRaw = 0
+    TextTypeChat = 1
+    TextTypeTranslation = 2
+    TextTypePopup = 3
+    TextTypeJukeboxPopup = 4
+    TextTypeTip = 5
+    TextTypeSystem = 6
+    TextTypeWhisper = 7
+    TextTypeAnnouncement = 8
+    TextTypeObjectWhisper = 9
+    TextTypeObject = 10
+    TextTypeObjectAnnouncement = 11
+
+
+class ContainerType(IntEnum):
     ContainerTypeInventory = -1  # 物品栏
     ContainerTypeContainer = 0  # 容器
     ContainerTypeWorkbench = 1  # 工作台
@@ -42,7 +58,7 @@ class ContainerType:
     ContainerTypeCrafter = 36  # 工匠
 
 
-class PlayerActionType:
+class PlayerActionType(IntEnum):
     PlayerActionStartBreak = 0
     PlayerActionAbortBreak = 1
     PlayerActionStopBreak = 2

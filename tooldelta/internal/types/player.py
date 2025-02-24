@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 from tooldelta import game_utils
-from .player_abilities import update_player_abilities
+from .player_abilities import Abilities, update_player_abilities
 
 if TYPE_CHECKING:
     from ..maintainer import PlayerInfoMaintainer
@@ -50,7 +50,7 @@ class Player:
         Returns:
             str: 选择器
         """
-        return f'"{self.name}"'
+        return f'@a[name="{self.name}"]'
 
     def get_pos(self, timeout: float = 5) -> tuple[int, float, float, float]:
         """
@@ -77,6 +77,16 @@ class Player:
         """
         return game_utils.getItem(self.name, item_id, item_data)
 
+    def get_score(self, scoreboard_name: str):
+        """
+        获取玩家计分板分数
+        Args:
+            scoreboard_name: 计分板名称
+        Returns:
+            int: 计分板分数
+        """
+        return game_utils.getScore(scoreboard_name, self.get_selector())
+
     def input(self, prompt: str = "", timeout: float = 30):
         """
         获取玩家输入
@@ -99,7 +109,7 @@ class Player:
         """
         return self._parent.player_abilities[self.unique_id]
 
-    def set_abilities(self, abilities):
+    def set_abilities(self, abilities: Abilities):
         """
         设置玩家能力
         Args:

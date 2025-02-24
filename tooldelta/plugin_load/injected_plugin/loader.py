@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...color_print import Print
-from ...constants import TOOLDELTA_INJECTED_PLUGIN, TOOLDELTA_PLUGIN_DIR
+from ...constants import TOOLDELTA_INJECTED_PLUGIN, TOOLDELTA_PLUGIN_DIR, PacketIDS
 from ..basic import plugin_is_enabled
 from ..exceptions import (
     PluginAPINotFoundError,
@@ -29,7 +29,7 @@ repeat_funcs: dict[Callable, int | float] = {}
 init_plugin_funcs: dict[Callable, int | None] = {}
 frame_exit_funcs: dict[Callable, int | None] = {}
 frame_reloaded_funcs: dict[Callable, int | None] = {}
-packet_funcs: dict[int, dict[Callable, int | None]] = {}
+packet_funcs: dict[PacketIDS, dict[Callable, int | None]] = {}
 loaded_plugin_modules = []
 
 
@@ -182,7 +182,7 @@ def repeat(retime: float = 5) -> Callable:
     return decorator
 
 
-def listen_packet(packet_id: list[int] | int, priority: int | None = None):
+def listen_packet(packet_id: list[PacketIDS] | PacketIDS, priority: int | None = None):
     """监听数据包
 
     Args:
@@ -341,7 +341,7 @@ async def execute_player_left(playername: str) -> None:
     await execute_asyncio_task(player_left_funcs, player_name(playername=playername))
 
 
-async def execute_packet_funcs(pkt_id: int, pkt: dict):
+async def execute_packet_funcs(pkt_id: PacketIDS, pkt: dict):
     """执行数据包处理函数
 
     Args:

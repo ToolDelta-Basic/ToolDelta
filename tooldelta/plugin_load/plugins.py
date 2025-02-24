@@ -6,24 +6,26 @@ import traceback
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from ..color_print import Print
+from ..color_print import fmts
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
     SysStatus,
 )
-from ..game_utils import _set_frame
 from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
-    SystemVersionException
+    SystemVersionException,
 )
+from ..constants import TextType, PacketIDS
+from ..internal.packet_handler import PacketHandler
+from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ..game_utils import _set_frame
 from ..utils import Utils
 from .classic_plugin.loader import (
     _PLUGIN_CLS_TYPE,
     Plugin,
-    _init_frame,
     add_plugin,
     add_plugin_as_api,
 )
@@ -31,8 +33,6 @@ from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
 from .injected_plugin import loader as injected_plugin
 from .basic import auto_move_plugin_dir, non_func, ON_ERROR_CB
-from tooldelta.internal.packet_handler import PacketHandler
-from tooldelta.internal.types import Player, Chat, InternalBroadcast
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -46,8 +46,10 @@ class PluginGroup:
         self.set_frame(frame)
         # loaded_plugin_ids: 供给插件调用
         # main_packet_handier(priority) -> plugin_packet_handler -> one_type_plugin_packet_handler(priority)
-        self.broadcast_listeners: dict[str, list[Callable[[InternalBroadcast], Any]]] = {}
-        self.plugin_listen_packets: set[int] = set()
+        self.broadcast_listeners: dict[
+            str, list[Callable[[InternalBroadcast], Any]]
+        ] = {}
+        self.plugin_listen_packets: set[PacketIDS] = set()
         self.plugins_api: dict[str, Plugin] = {}
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
@@ -62,20 +64,20 @@ class PluginGroup:
         """
         self.plugins_api = {}
         self.broadcast_listeners = {}
-        self.execute_frame_exit(SysStatus.NORMAL_EXIT, "normal")
+        self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"))
         classic_plugin.reload()
         injected_plugin.reload()
-        Print.print_inf("正在重新读取所有插件")
-        self.read_all_plugins()
-        assert self.linked_frame is not None
+        fmts.print_inf("正在重新读取所有插件")
+        self.load_plugins()
         self.execute_reloaded(self.linked_frame.on_plugin_err)
-        Print.print_inf("开始执行插件游戏初始化方法")
+        fmts.print_inf("开始执行插件游戏初始化方法")
         self.execute_init()
-        Print.print_suc("重载插件已完成")
+        fmts.print_suc("重载插件已完成")
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
         for pkID in self.plugin_listen_packets:
             hdl.add_packet_listener(pkID, lambda pk: self.handle_packets(pkID, pk), 0)
+        hdl.add_packet_listener(PacketIDS.Text, self.handle_text_packet)
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
         """
@@ -146,9 +148,8 @@ class PluginGroup:
         """为各个框架分发关联的系统框架"""
         self.linked_frame = frame
         _set_frame(frame)
-        _init_frame(frame)
 
-    def read_all_plugins(self) -> None:
+    def load_plugins(self) -> None:
         """
         读取所有插件/重载所有插件 并对插件进行预初始化
 
@@ -164,7 +165,7 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         self.injected_plugin_loaded_num = 0
         try:
-            Print.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
+            fmts.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin_loader.read_plugins(self)
             asyncio.run(injected_plugin.load_plugin(self))
             # 主动读取类式插件监听的数据包
@@ -176,26 +177,15 @@ class PluginGroup:
             for i in injected_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
             # 因为注入式插件自带一个handler, 所以不用再注入方法
-            Print.print_suc("所有插件读取完毕, 将进行插件初始化")
-            self.execute_def(self.linked_frame.on_plugin_err)
-            Print.print_suc(
+            fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
+            self.execute_preload(self.linked_frame.on_plugin_err)
+            fmts.print_suc(
                 f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个类式插件, §f{self.injected_plugin_loaded_num}§a 个注入式插件"
             )
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
-            Print.print_err(f"加载插件出现问题：\n{err_str}")
+            fmts.print_err(f"加载插件出现问题：\n{err_str}")
             raise SystemExit from err
-
-    def __add_listen_packet_id(self, packetType: int) -> None:
-        """添加数据包监听，仅在系统内部使用
-
-        Args:
-            packetType (int): 数据包 ID
-
-        Raises:
-            ValueError: 无法添加数据包监听，请确保已经加载了系统组件
-        """
-        self.plugin_listen_packets.add(packetType)
 
     def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
         """
@@ -224,7 +214,7 @@ class PluginGroup:
                 return v
         raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
 
-    def execute_def(self, onerr: ON_ERROR_CB = non_func) -> None:
+    def execute_preload(self, onerr: ON_ERROR_CB = non_func) -> None:
         """执行插件的二次初始化方法
 
         Args:
@@ -234,7 +224,7 @@ class PluginGroup:
             SystemExit: 缺少前置
             SystemExit: 前置版本过低
         """
-        classic_plugin.execute_def(onerr)
+        classic_plugin.execute_preload(onerr)
 
     def execute_init(self, onerr: ON_ERROR_CB = non_func) -> None:
         """执行插件的连接游戏后初始化方法
@@ -242,13 +232,15 @@ class PluginGroup:
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        classic_plugin.execute_init(onerr)
+        classic_plugin.execute_active(onerr)
         asyncio.run(injected_plugin.execute_init())
         Utils.createThread(
             asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务"
         )
 
-    def execute_player_prejoin(self, player, onerr: ON_ERROR_CB = non_func) -> None:
+    def execute_player_prejoin(
+        self, player: str, onerr: ON_ERROR_CB = non_func
+    ) -> None:
         """执行玩家加入前的方法
 
         Args:
@@ -258,7 +250,9 @@ class PluginGroup:
         classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
-    def execute_player_join(self, player: Player, onerr: ON_ERROR_CB = non_func) -> None:
+    def execute_player_join(
+        self, player: Player, onerr: ON_ERROR_CB = non_func
+    ) -> None:
         """执行玩家加入的方法
 
         Args:
@@ -283,7 +277,9 @@ class PluginGroup:
         classic_plugin.execute_chat(chat, onerr)
         asyncio.run(injected_plugin.execute_player_message(chat.player.name, chat.msg))
 
-    def execute_player_leave(self, player: Player, onerr: ON_ERROR_CB = non_func) -> None:
+    def execute_player_leave(
+        self, player: Player, onerr: ON_ERROR_CB = non_func
+    ) -> None:
         """执行玩家离开的方法
 
         Args:
@@ -293,15 +289,13 @@ class PluginGroup:
         classic_plugin.execute_player_leave(player, onerr)
         asyncio.run(injected_plugin.execute_player_left(player.name))
 
-    def execute_frame_exit(
-        self, signal: int, reason: str, onerr: ON_ERROR_CB = non_func
-    ):
+    def execute_frame_exit(self, evt: FrameExit, onerr: ON_ERROR_CB = non_func):
         """执行框架退出的方法
 
         Args:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        classic_plugin.execute_frame_exit(signal, reason, onerr)
+        classic_plugin.execute_frame_exit(evt, onerr)
         asyncio.run(injected_plugin.execute_frame_exit())
 
     def execute_reloaded(self, onerr: ON_ERROR_CB = non_func):
@@ -313,7 +307,7 @@ class PluginGroup:
         classic_plugin.execute_reloaded(onerr)
         asyncio.run(injected_plugin.execute_reloaded())
 
-    def handle_packets(self, pktID: int, pkt: dict) -> bool:
+    def handle_packets(self, pktID: PacketIDS, pkt: dict) -> bool:
         """处理数据包监听器
 
         Args:
@@ -328,12 +322,42 @@ class PluginGroup:
         return blocking
 
     def handle_text_packet(self, pkt: dict):
-        raw_name = pkt["SourceName"]
-        msg = pkt["Message"]
-        cleaned_name = Utils.to_plain_name(raw_name)
-        if player := self.linked_frame.players_maintainer.get_player_by_name(cleaned_name):
-            chat = Chat(player, msg)
-            self.execute_chat(chat)
+        match pkt["TextType"]:
+            case TextType.TextTypeTranslation:
+                if pkt["Message"] == "§e%multiplayer.player.joined":
+                    playername = pkt["Parameters"][0]
+                    if (
+                        player
+                        := self.linked_frame.players_maintainer.get_player_by_name(
+                            playername
+                        )
+                    ):
+                        self.execute_player_join(player)
+                    else:
+                        fmts.print_war(f"玩家 {playername} 未找到")
+                elif pkt["Message"] == "§e%multiplayer.player.left":
+                    playername = pkt["Parameters"][0]
+                    if (
+                        player
+                        := self.linked_frame.players_maintainer.get_player_by_name(
+                            playername
+                        )
+                    ):
+                        self.execute_player_leave(player)
+                    else:
+                        fmts.print_war(f"玩家 {playername} 未找到")
+            case TextType.TextTypeChat:
+                raw_name = pkt["SourceName"]
+                msg = pkt["Message"]
+                cleaned_name = Utils.to_plain_name(raw_name)
+                if player := self.linked_frame.players_maintainer.get_player_by_name(
+                    cleaned_name
+                ):
+                    chat = Chat(player, msg)
+                    self.execute_chat(chat)
+                else:
+                    fmts.print_war(f"玩家 {cleaned_name} 未找到")
+        return False
 
     # 向下兼容
     add_plugin = staticmethod(add_plugin)
@@ -341,3 +365,14 @@ class PluginGroup:
     help = staticmethod(classic_plugin_loader.help)
     checkSystemVersion = check_tooldelta_version
     broadcastEvt = brocast_event
+
+    def __add_listen_packet_id(self, packetType: PacketIDS) -> None:
+        """添加数据包监听，仅在系统内部使用
+
+        Args:
+            packetType (int): 数据包 ID
+
+        Raises:
+            ValueError: 无法添加数据包监听，请确保已经加载了系统组件
+        """
+        self.plugin_listen_packets.add(packetType)

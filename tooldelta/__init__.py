@@ -46,7 +46,7 @@ from .color_print import fmts
 from .utils import Utils
 from .frame import Config, GameCtrl, ToolDelta
 from .launch_options import client_title
-from .plugin_load.classic_plugin.define import Plugin
+from .plugin_load.classic_plugin.plugin_cls import Plugin
 from .starter import plugin_group as plugins
 from .starter import start_tool_delta, tooldelta
 

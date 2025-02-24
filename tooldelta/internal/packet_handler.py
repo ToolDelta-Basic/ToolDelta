@@ -24,7 +24,7 @@ class PacketHandler:
         ] = {}
 
     def add_packet_listener(
-        self, packet_id: int, cb: PacketListener, priority: int = 0
+        self, packet_id: PacketIDS, cb: PacketListener, priority: int = 0
     ):
         self.listen_packets.add(packet_id)
         self.packet_listener_with_priority.setdefault(packet_id, {})
