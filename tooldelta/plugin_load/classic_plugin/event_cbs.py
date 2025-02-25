@@ -43,8 +43,6 @@ broadcast_listener: dict[str, list[Callable[[InternalBroadcast], None]]] = {}
 
 def reload():
     """系统调用, 重置所有处理函数"""
-    for v in plugins_funcs.values():
-        v.clear()
     for v in packet_funcs.values():
         v.clear()
     on_reloaded_cbs.clear()
@@ -55,6 +53,9 @@ def reload():
     on_frame_exit_cbs.clear()
     on_reloaded_cbs.clear()
     broadcast_listener.clear()
+    # 向下兼容
+    for v in plugins_funcs.values():
+        v.clear()
 
 
 def execute_preload(onerr: ON_ERROR_CB) -> None:

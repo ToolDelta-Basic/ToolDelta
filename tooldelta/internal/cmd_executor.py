@@ -158,6 +158,10 @@ class ConsoleCmdManager:
                         f" §e{' 或 '.join(cmd_trigger.triggers)}  §f->  {cmd_trigger.usage}"
                     )
 
+        def _exit(_):
+            fmts.print_inf("准备退出..")
+            self.frame.launcher.update_status(SysStatus.NORMAL_EXIT)
+
         self.add_console_cmd_trigger(
             ["?", "help", "帮助", "？"],
             None,
@@ -168,7 +172,7 @@ class ConsoleCmdManager:
             ["exit"],
             None,
             "退出并关闭ToolDelta",
-            lambda _: self.frame.system_exit("normal"),
+            _exit,
         )
         self.add_console_cmd_trigger(
             ["插件市场"],

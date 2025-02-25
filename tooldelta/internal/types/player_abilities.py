@@ -5,7 +5,7 @@ from tooldelta.constants import PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl
-    from ..maintainer import PlayerInfoMaintainer
+    from ..maintainers import PlayerInfoMaintainer
     from .player import Player
 
 

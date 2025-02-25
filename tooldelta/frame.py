@@ -17,9 +17,8 @@ import json
 from . import constants, game_utils, utils
 from .cfg import Config
 from .color_print import fmts
-from .constants import SysStatus
+from .constants import SysStatus, TextType
 from .game_texts import GameTextsHandle, GameTextsLoader
-from .game_utils import getPosXYZ
 from .get_tool_delta_version import get_tool_delta_version
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
@@ -31,7 +30,7 @@ from .plugin_load.plugins import PluginGroup
 from .internal.config_loader import ConfigLoader
 from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
-from .internal.maintainer import PlayerInfoMaintainer
+from .internal.maintainers import PlayerInfoMaintainer
 from .internal.types import FrameExit
 from .internal.launch_cli import (
     FrameNeOmgAccessPoint,
@@ -68,19 +67,46 @@ class ToolDelta:
         )
 
     def bootstrap(self):
-        self.cfg_loader = ConfigLoader(self)
-        # 监听数据包
-        # 向下兼容
-        self.welcome()
-        self.init_dirs()
-        self.packet_handler = PacketHandler(self)
-        self.cmd_manager = ConsoleCmdManager(self)
-        self.players_maintainer = PlayerInfoMaintainer(self)
-        self.plugin_group = PluginGroup(self)
-        self.add_console_cmd_trigger = self.cmd_manager.add_console_cmd_trigger
-        self.launcher = self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
-        self.launcher.set_packet_listener(self.packet_handler.entrance)
-        self.plugin_group.hook_packet_handler(self.packet_handler)
+        try:
+            self.cfg_loader = ConfigLoader(self)
+            self.welcome()
+            self.init_dirs()
+            self.packet_handler = PacketHandler(self)
+            self.cmd_manager = ConsoleCmdManager(self)
+            self.players_maintainer = PlayerInfoMaintainer(self)
+            self.plugin_group = PluginGroup(self)
+            self.game_ctrl = GameCtrl(self)
+            self.add_console_cmd_trigger = self.cmd_manager.add_console_cmd_trigger
+            self.launcher = self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
+            self.launcher.set_packet_listener(self.packet_handler.entrance)
+            self.game_ctrl.hook_packet_handler(self.packet_handler)
+            self.plugin_group.hook_packet_handler(self.packet_handler)
+            self.plugin_group.load_plugins()
+            utils.timer_event_boostrap()
+            utils.tmpjson_save()
+            self.launcher.listen_launched(self.game_ctrl.system_inject)
+            self.game_ctrl.set_listen_packets_to_launcher()
+            fmts.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
+            # 主进程
+            err = self.wait_closed()
+            # 主进程结束
+            if not isinstance(err, SystemExit):
+                fmts.print_err(f"启动器框架崩溃, 原因: {err}")
+                return -1
+            else:
+                return 0
+        except (KeyboardInterrupt, SystemExit, EOFError) as err:
+            if str(err):
+                fmts.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
+            else:
+                fmts.print_inf("ToolDelta 已关闭")
+        except Exception:
+            fmts.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
+        finally:
+            self.system_exit("normal")
+
+    def wait_closed(self):
+        return self.launcher.launch()
 
     @staticmethod
     def welcome() -> None:
@@ -236,11 +262,11 @@ class GameCtrl:
         else:
             self.requireUUIDPacket = True
 
-    def hook(self, hdl: "PacketHandler"):
+    def hook_packet_handler(self, hdl: "PacketHandler"):
         hdl.add_packet_listener(
             constants.PacketIDS.IDPlayerList, self.process_player_list
         )
-        hdl.add_packet_listener(constants.PacketIDS.Text, self.process_text_packet)
+        hdl.add_packet_listener(constants.PacketIDS.Text, self.handle_text_packet)
 
     def set_listen_packets_to_launcher(self) -> None:
         """
@@ -289,25 +315,24 @@ class GameCtrl:
                     continue
                 if playername != "???" and not res:
                     self.allplayers.remove(playername)
-                if isinstance(self.launcher, FrameNeOmgAccessPoint):
-                    self.all_players_data = self.launcher.omega.get_all_online_players()
                 if self.players_uuid.get(playername):
                     del self.players_uuid[playername]
         return False
 
-    def process_text_packet(self, pkt: dict):
-        """处理 9 号数据包的消息
+    def handle_text_packet(self, pkt: dict):
+        """处理 文本 数据包
 
         Args:
             pkt (dict): 数据包内容
             plugin_grp (PluginGroup): 插件组对象
         """
+        msg: str = pkt["Message"]
         match pkt["TextType"]:
-            case 2:
-                if pkt["Message"] == "§e%multiplayer.player.joined":
+            case TextType.TextTypeTranslation:
+                if msg == "§e%multiplayer.player.joined":
                     playername = pkt["Parameters"][0]
                     fmts.print_inf(f"§e{playername} 退出了游戏")
-                elif pkt["Message"] == "§e%multiplayer.player.left":
+                elif msg == "§e%multiplayer.player.left":
                     playername = pkt["Parameters"][0]
                     fmts.print_inf(f"§e{playername} 退出了游戏")
                 else:
@@ -316,15 +341,21 @@ class GameCtrl:
                         jon = self.game_data_handler.Handle_Text_Class1(pkt)
                         fmts.print_inf("§1" + " ".join(jon).strip('"'))
                     else:
-                        fmts.print_inf(pkt["Message"])
-                    if pkt["Message"].startswith("death."):
-                        if len(pkt["Parameters"]) >= 2:
-                            killer = pkt["Parameters"][1]
+                        fmts.print_inf(msg)
+                    if msg.startswith("death."):
+                        args = pkt["Parameters"]
+                        Utils.fill_list_index(args, ["", "", ""])
+                        who_died, killer, weapon_name = args
+                        if weapon_name:
+                            fmts.print_inf(
+                                f"§e{who_died} 被 {killer} 用 {weapon_name} §r杀死了"
+                            )
+                        elif killer:
+                            fmts.print_inf(f"§e{who_died} 被 {killer} 击败了")
                         else:
-                            killer = None
-            case 1 | 7:
+                            fmts.print_inf(f"§e{who_died} 死亡了")
+            case TextType.TextTypeChat | TextType.TextTypeWhisper:
                 src_name = pkt["SourceName"]
-                msg = pkt["Message"]
                 playername = Utils.to_plain_name(src_name)
                 if src_name == "":
                     # /me 消息
@@ -339,10 +370,10 @@ class GameCtrl:
                 if playername in game_utils.player_waitmsg_cb.keys():
                     game_utils.player_waitmsg_cb[playername](msg)
                 fmts.print_inf(f"<{playername}> {msg}")
-            case 8:
+            case TextType.TextTypeAnnouncement:
                 # /say 消息
                 src_name = pkt["SourceName"]
-                msg = pkt["Message"].removeprefix(f"[{src_name}] ")
+                msg = msg.removeprefix(f"[{src_name}] ")
                 uuid = "00000000-0000-4000-8000-0000" + pkt["XUID"]
                 if uuid in self.players_uuid.values():
                     cmd_executor = {v: k for k, v in self.players_uuid.items()}[uuid]
@@ -352,28 +383,22 @@ class GameCtrl:
                         f"{src_name} 使用 say 说：{msg.removeprefix(f'[{src_name}] ')}"
                     )
                     print(self.players_uuid)
-            case 9:
+            case TextType.TextTypeObjectWhisper:
                 # /tellraw 消息
                 msg = pkt["Message"]
-                try:
-                    msg_text = json.loads(msg)["rawtext"]
-                    if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
-                        fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
-                        return False
-                    msg_text = "".join([i["text"] for i in msg_text])
-                    fmts.print_with_info(msg_text, "§f 消息 ")
-                except Exception:
-                    pass
+                msg_text = json.loads(msg)["rawtext"]
+                if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
+                    fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
+                    return False
+                msg_text = "".join([i["text"] for i in msg_text])
+                fmts.print_with_info(msg_text, "§f 消息 ")
+            case default:
+                fmts.print_inf(f"[Text] [{default}] {msg}")
         return False
 
     def system_inject(self) -> None:
         """载入游戏时的初始化"""
-        # if hasattr(self.launcher, "bot_name"):
-        #    self.tmp_tp_all_players()
         res = self.launcher.get_players_and_uuids()
-        if isinstance(self.launcher, FrameNeOmgAccessPoint):
-            self.all_players_data = self.launcher.omega.get_all_online_players()
-        self.give_bot_effect_invisibility()
         if res:
             self.allplayers = list(res.keys())
             self.players_uuid.update(res)
@@ -488,53 +513,3 @@ class GameCtrl:
             raise ValueError("游戏翻译器字符串数据不可用")
         return self.game_texts_data
 
-    @Utils.timer_event(6400, "给予机器人隐身效果", Utils.ToolDeltaThread.SYSTEM)
-    def give_bot_effect_invisibility(self) -> None:
-        """给机器人添加隐身效果"""
-        self.sendwocmd(f"/effect {self.bot_name} invisibility 99999 255 true")
-
-    def tmp_tp_all_players(self) -> None:
-        """
-        内部调用：在 ToolDelta 连接到 NeOmega 后先 tp 所有玩家（防止玩家 entityruntimeid 为空）
-        外部调用：临时传送至所有玩家后回到原位
-        """
-        BotPos: tuple[float, float, float] = getPosXYZ(self.bot_name)
-        for player in self.allplayers:
-            if player == self.bot_name:
-                continue
-            self.sendwocmd(f"tp {self.bot_name} {player}")
-        self.sendwocmd(
-            f"tp {self.bot_name} {str(int(BotPos[0])) + ' ' + str(int(BotPos[1])) + ' ' + str(int(BotPos[2]))}"
-        )
-
-    def get_player_name_from_entity_runtime(self, runtimeid: int) -> str | None:
-        """根据实体 runtimeid 获取玩家名
-
-        Args:
-            runtimeid (int): 实体 RuntimeID
-
-        Returns:
-            str | None: 玩家名
-        """
-        if not self.all_players_data:
-            return None
-        for player in self.all_players_data:
-            if player.entity_runtime_id == runtimeid:
-                return player.name
-        return None
-
-    def get_player_entity_runtime_id_from_name(self, player_name: str) -> int | None:
-        """
-        根据玩家名获取实体 runtimeid
-
-        Args:
-            player_name (str): 玩家名
-
-        Returns:
-            int | None: 实体 runtimeid
-        """
-        if not self.all_players_data:
-            return None
-        for player in self.all_players_data:
-            if player.name == player_name:
-                return player.entity_runtime_id

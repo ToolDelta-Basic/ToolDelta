@@ -4,7 +4,7 @@ from tooldelta import game_utils
 from .player_abilities import Abilities, update_player_abilities
 
 if TYPE_CHECKING:
-    from ..maintainer import PlayerInfoMaintainer
+    from ..maintainers import PlayerInfoMaintainer
 
 
 @dataclass
