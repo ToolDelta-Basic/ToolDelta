@@ -30,7 +30,7 @@ PLUGIN_CLS = TypeVar("PLUGIN_CLS", bound=Plugin)
 def plugin_entry(
     plugin_cls: type[PLUGIN_CLS],
     api_name: str | list[str] = [],
-    api_version: VERSION = (0, 0, 0),
+    api_version: VERSION | None = None,
 ) -> PLUGIN_CLS:
     """
     实例化 ToolDelta 类式插件的主类
@@ -63,7 +63,10 @@ def plugin_entry(
             plugin_ins._api_names = [api_name]
         else:
             plugin_ins._api_names = api_name
-        plugin_ins._api_ver = api_version
+        if api_version:
+            plugin_ins._api_ver = api_version
+        else:
+            plugin_ins._api_ver = plugin_cls.version
     return plugin_ins
 
 
