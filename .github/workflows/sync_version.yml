@@ -22,7 +22,7 @@ jobs:
     - name: Get and Set Version
       run: |
         echo "VERSION=$(<version)" >> $GITHUB_ENV
-        sed -i "/return (/c\        return ($(sed -e 's/\./, /g' version))" tooldelta/get_tool_delta_version.py
+        sed -i "/return (/c\        return ($(sed -e 's/\./, /g' version))" tooldelta/version.py
 
     - name: Set Up Python
       uses: actions/setup-python@v5

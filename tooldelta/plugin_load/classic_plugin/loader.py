@@ -2,95 +2,72 @@ import importlib
 import os
 import sys
 import traceback
-from typing import TYPE_CHECKING, TypeVar, Any
-from collections.abc import Callable
+from typing import TYPE_CHECKING, TypeVar
 
-from tooldelta.cfg import Cfg
+from tooldelta.cfg import VERSION, Cfg
 from tooldelta.color_print import fmts
 from tooldelta.utils import Utils
 from tooldelta.constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
-    PacketIDS,
 )
+from tooldelta.version import SystemVersionException
 from ..basic import plugin_is_enabled
-from ..exceptions import NotValidPluginError, SystemVersionException
+from ..exceptions import NotValidPluginError
 from . import event_cbs
 from .plugin_cls import Plugin
 
 if TYPE_CHECKING:
+    from tooldelta import ToolDelta
     from tooldelta.plugin_load.plugins import PluginGroup
 
-_PLUGIN_CLS_TYPE = TypeVar("_PLUGIN_CLS_TYPE")
-_SUPER_CLS = TypeVar("_SUPER_CLS")
-_TV = TypeVar("_TV")
 loaded_plugin_modules = []
+__cached_frame: "ToolDelta | None" = None
 
-__caches__ = {"plugin": None, "api_name": "", "frame": None}
-_cached_broadcast_evts: dict[str, list[Callable]] = {}
-_cached_packet_cbs: list[tuple[int, Callable]] = []
-_cached_all_packets_listener: Callable | None = None
-
-
-# -------------------------- OLD -------------------------
-
+PLUGIN_CLS = TypeVar("PLUGIN_CLS", bound=Plugin)
 
 # TODO: 会存储已删除的插件模块, 可能导致内存泄漏
-def add_plugin(plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
+def plugin_entry(
+    plugin_cls: type[PLUGIN_CLS],
+    api_name: str | list[str] = [],
+    api_version: VERSION = (0, 0, 0),
+) -> PLUGIN_CLS:
     """
-    添加ToolDelta类式插件的插件主类
+    实例化 ToolDelta 类式插件的主类
 
     Args:
-        plugin (type[Plugin]): 插件主类
+        plugin_cls (type[Plugin]): 插件主类
+        api_name (str | list[str], optional): 如果将插件作为 API 插件, 该参数为 API 名, 可以有多个
+        api_version (VERSION, optional): 插件的 API 版本
 
     Raises:
         NotValidPluginError: 插件主类必须继承 Plugin 类
 
     Returns:
-        type[Plugin]: 插件主类
+        Plugin: 插件主类
     """
+    global __cached_frame
     try:
-        if not Plugin.__subclasscheck__(plugin):
-            raise NotValidPluginError(f"插件主类必须继承 Plugin 类 而不是 {plugin}")
+        if not Plugin.__subclasscheck__(plugin_cls):
+            raise NotValidPluginError(f"插件主类必须继承 Plugin 类 而不是 {plugin_cls}")
     except TypeError as exc:
         raise NotValidPluginError(
-            f"插件主类必须继承 Plugin 类 而不是 {plugin.__class__}"
+            f"插件主类必须继承 Plugin 类 而不是 {plugin_cls.__class__}"
         ) from exc
-    if __caches__["plugin"] is not None:
-        raise NotValidPluginError("调用了多次 @add_plugin")
-    if __caches__["frame"] is None:
-        fmts.clean_print("§d正在以直接运行模式运行插件..")
-        return plugin
-    plugin_ins = plugin(__caches__["frame"])  # type: ignore
-    __caches__["plugin"] = plugin_ins
-    return plugin
+    if __cached_frame is None:
+        help(plugin_cls)
+        exit()
+    plugin_ins = plugin_cls(__cached_frame)
+    if api_name:
+        if isinstance(api_name, str):
+            plugin_ins._api_names = [api_name]
+        else:
+            plugin_ins._api_names = api_name
+        plugin_ins._api_ver = api_version
+    return plugin_ins
 
 
-def add_plugin_as_api(apiName: str):
-    """
-    添加 ToolDelta 类式插件主类，同时作为 API 插件提供接口供其他插件进行使用
-
-    Args:
-        apiName (str): API 名
-    """
-
-    def _add_plugin_2_api(api_plugin: type[_PLUGIN_CLS_TYPE]) -> type[_PLUGIN_CLS_TYPE]:
-        if not Plugin.__subclasscheck__(api_plugin):
-            raise NotValidPluginError("API 插件主类必须继承 Plugin 类")
-        if __caches__["plugin"] is not None:
-            raise NotValidPluginError("调用了多次 @add_plugin")
-        if __caches__["frame"] is None:
-            fmts.clean_print("§d正在以直接运行模式运行插件..")
-            return api_plugin
-        plugin_ins = api_plugin(__caches__["frame"])  # type: ignore
-        __caches__["plugin"] = plugin_ins
-        __caches__["api_name"] = apiName
-        return api_plugin
-
-    return _add_plugin_2_api
-
-
-def help(plugin: Plugin) -> None:
+def help(plugin: type[Plugin]) -> None:
     """
     查看插件帮助.
     常用于查看 get_plugin_api() 方法获取到的插件实例的帮助.
@@ -104,9 +81,6 @@ def help(plugin: Plugin) -> None:
     fmts.clean_print(plugin_docs)
 
 
-# Plugin get and execute
-
-
 def read_plugins(plugin_grp: "PluginGroup") -> None:
     """
     读取插件
@@ -114,7 +88,6 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
     Args:
         plugin_grp (PluginGroup): 插件组
     """
-    global _cached_all_packets_listener
     PLUGIN_PATH = os.path.join(TOOLDELTA_PLUGIN_DIR, TOOLDELTA_CLASSIC_PLUGIN)
     if PLUGIN_PATH not in sys.path:
         sys.path.append(PLUGIN_PATH)
@@ -156,14 +129,12 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
     Returns:
         Union[None, Plugin]: 插件实例
     """
-    global _cached_all_packets_listener
+    global __cached_frame
     if isinstance(plugin_group, type(None)):
         raise ValueError("插件组未初始化读取")
     if isinstance(plugin_group.linked_frame, type(None)):
         raise ValueError("插件组未绑定框架")
-    __caches__["frame"] = plugin_group.linked_frame
-    __caches__["plugin"] = None
-    __caches__["api_name"] = ""
+    __cached_frame = plugin_group.linked_frame
     try:
         if os.path.isfile(
             os.path.join(
@@ -180,77 +151,25 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
         else:
             fmts.print_war(f"{plugin_dirname} 文件夹 未发现插件文件，跳过加载")
             return None
-        plugin_or_none: Plugin | None = __caches__.get("plugin")
-        if plugin_or_none is None:
+        plugin: Plugin | None = plugin_module.__dict__.get("entry")
+        if not isinstance(plugin, Plugin):
             raise NotValidPluginError(
-                "需要调用 1 次 @plugins.add_plugin 以注册插件主类，然而没有调用"
+                "没有在最外层代码使用 entry = plugin_entry(YourPlugin) 语句注册插件"
             )
-        plugin: Plugin = plugin_or_none
         if plugin.name is None or plugin.name == "":
-            raise ValueError(f"插件主类 {plugin.__class__.__name__} 需要作者名")
-        _v0, _v1, _v2 = plugin.version
-
-        # 收集事件监听函数
-        for evt_name in event_cbs.plugins_funcs.keys():
-            if hasattr(plugin, evt_name):
-                event_cbs.plugins_funcs.setdefault(evt_name, [])
-                event_cbs.plugins_funcs[evt_name].append(
-                    (plugin.name, getattr(plugin, evt_name))
-                )
-
-        # 收集到了需要监听的数据包
-        if _cached_packet_cbs != []:
-            for pktType, func in _cached_packet_cbs:
-                ins_func = getattr(plugin, func.__name__)
-                if ins_func is None:
-                    raise NotValidPluginError("数据包监听不能在主插件类以外定义")
-                if pktType not in event_cbs.packet_funcs.keys():
-                    event_cbs.packet_funcs[pktType] = []
-                event_cbs.packet_funcs[pktType].append(ins_func)
-
-        # 监听全部数据包的监听器
-        # 实话实说, 这里写的乱糟糟的
-        if allpkt_func := _cached_all_packets_listener:
-            allpkt_func = getattr(plugin, allpkt_func.__name__)
-            if allpkt_func is None:
-                raise NotValidPluginError("数据包监听不能在主插件类以外定义")
-
-            def make_cached_func(name, pktID_1):
-                def _allpkt_listener(pkt):
-                    allpkt_func(pktID_1, pkt)
-                    return False
-
-                _allpkt_listener.__name__ = name
-                return _allpkt_listener
-
-            for pktID in range(304):
-                if pktID in PacketIDS.__dict__.values():
-                    if pktID in (PacketIDS.IDPyRpc, 304):
-                        continue
-
-                    if pktID not in event_cbs.packet_funcs.keys():
-                        event_cbs.packet_funcs[pktID] = []
-                    event_cbs.packet_funcs[pktID].append(
-                        make_cached_func(allpkt_func.__name__, pktID)
-                    )
-
-        # 收集到了作为API的插件
-        if __caches__["api_name"] != "":
-            plugin_group.plugins_api[__caches__["api_name"]] = plugin
-
-        # 收集到了广播监听器
-        if _cached_broadcast_evts != {}:
-            for evt, funcs in _cached_broadcast_evts.items():
-                for func in funcs:
-                    ins_func = getattr(plugin, func.__name__)
-                    if ins_func is None:
-                        raise NotValidPluginError("广播事件监听不能在主插件类以外定义")
-                    if event_cbs.broadcast_listener.get(evt) is None:
-                        event_cbs.broadcast_listener[evt] = []
-                    event_cbs.broadcast_listener[evt].append(ins_func)
-
+            raise ValueError(f"插件主类 {plugin.__class__.__name__} 需要插件名")
+        if len(plugin.version) != 3:
+            raise NotValidPluginError(
+                f"插件主类 {plugin.__class__.__name__} 的 version 属性需要是长度为 3 的元组, 如 (0, 0, 1)"
+            )
+        if plugin._api_names:
+            # 此插件应该作为 API 插件
+            for api_name in plugin._api_names:
+                plugin_group.plugins_api[api_name] = plugin
+        version_str = ".".join(map(str, plugin.version))
+        plugin._plugin_group = plugin_group
         fmts.print_suc(
-            f"已{mode_str}插件 §f{plugin.name}§b@{_v0}.{_v1}.{_v2} §a作者: §r{plugin.author}"
+            f"已{mode_str}插件 §f{plugin.name}§b@{version_str} §a作者: §r{plugin.author}"
         )
         plugin_group.normal_plugin_loaded_num += 1
         return plugin
@@ -263,7 +182,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
             "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"
         )
         raise SystemExit from err
-    except Utils.SimpleJsonDataReader.DataReadError as err:
+    except Utils.JsonIO.DataReadError as err:
         fmts.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
     except SystemVersionException as err:
         fmts.print_err(f"插件 {plugin_dirname} 需要更高版本的 ToolDelta 加载：{err}")
@@ -272,49 +191,4 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
         fmts.print_err(f"加载插件 {plugin_dirname} 出现问题，报错如下：")
         fmts.print_err("§c" + traceback.format_exc())
         raise SystemExit from err
-    finally:
-        _cached_broadcast_evts.clear()
-        _cached_packet_cbs.clear()
-        _cached_all_packets_listener = None
     return None
-
-
-# 向下兼容
-# 已经废弃
-
-
-def add_packet_listener(pktID: int | list[int]):
-    def deco(func: Callable[[_SUPER_CLS, dict], bool]):
-        # 存在缓存区, 等待 class_plugin 实例化
-        if pktID == -1:
-            for n, i in PacketIDS.__dict__.items():
-                if n[0].isupper():
-                    _cached_packet_cbs.append((i, func))
-        elif isinstance(pktID, int):
-            _cached_packet_cbs.append((pktID, func))
-        else:
-            for i in pktID:
-                _cached_packet_cbs.append((i, func))
-        return func
-
-    return deco
-
-
-def add_any_packet_listener(func: Callable[[_SUPER_CLS, int, dict], bool]):
-    global _cached_all_packets_listener
-    _cached_all_packets_listener = func
-    return func
-
-
-def add_broadcast_listener(evt_name: str):
-    def deco(
-        func: Callable[[_SUPER_CLS, _TV], Any],
-    ) -> Callable[[_SUPER_CLS, _TV], Any]:
-        # 存在缓存区, 等待 class_plugin 实例化
-        if _cached_broadcast_evts.get(evt_name):
-            _cached_broadcast_evts[evt_name].append(func)
-        else:
-            _cached_broadcast_evts[evt_name] = [func]
-        return func
-
-    return deco

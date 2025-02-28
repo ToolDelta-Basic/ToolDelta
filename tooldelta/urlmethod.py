@@ -17,7 +17,7 @@ from tqdm.asyncio import tqdm
 
 from .constants import TDREPO_URL
 from .color_print import Print
-from .get_tool_delta_version import get_tool_delta_version
+from .version import get_tool_delta_version
 
 GGithubSrcURL = ""
 GPluginMarketURL = ""

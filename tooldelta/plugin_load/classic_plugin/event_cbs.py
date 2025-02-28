@@ -12,23 +12,12 @@ from ..exceptions import (
 
 if TYPE_CHECKING:
     from .plugin_cls import Plugin
+    from tooldelta.internal.packet_handler import PacketListener
 
 T = TypeVar("T")
 PluginEvent = tuple["Plugin", T]
 
 
-plugins_funcs: dict[str, list[tuple[str, Callable]]] = {
-    "on_def": [],
-    "on_inject": [],
-    "on_player_prejoin": [],
-    "on_player_join": [],
-    "on_player_message": [],
-    "on_player_death": [],
-    "on_player_leave": [],
-    "on_frame_exit": [],
-    "on_reload": [],
-}
-# 新版的 cbs
 on_preload_cbs: list[PluginEvent[Callable[[], None]]] = []
 on_active_cbs: list[PluginEvent[Callable[[], None]]] = []
 on_player_join_cbs: list[PluginEvent[Callable[[Player], None]]] = []
@@ -36,26 +25,21 @@ on_player_leave_cbs: list[PluginEvent[Callable[[Player], None]]] = []
 on_chat_cbs: list[PluginEvent[Callable[[Chat], None]]] = []
 on_frame_exit_cbs: list[PluginEvent[Callable[[FrameExit], None]]] = []
 on_reloaded_cbs: list[PluginEvent[Callable[[], None]]] = []
-
-packet_funcs: dict[PacketIDS, list[Callable[[dict], bool]]] = {}
+packet_funcs: dict[PacketIDS, list["PacketListener"]] = {}
 broadcast_listener: dict[str, list[Callable[[InternalBroadcast], None]]] = {}
 
 
 def reload():
     """系统调用, 重置所有处理函数"""
-    for v in packet_funcs.values():
-        v.clear()
-    on_reloaded_cbs.clear()
+    on_preload_cbs.clear()
     on_active_cbs.clear()
     on_player_join_cbs.clear()
     on_player_leave_cbs.clear()
     on_chat_cbs.clear()
     on_frame_exit_cbs.clear()
     on_reloaded_cbs.clear()
+    packet_funcs.clear()
     broadcast_listener.clear()
-    # 向下兼容
-    for v in plugins_funcs.values():
-        v.clear()
 
 
 def execute_preload(onerr: ON_ERROR_CB) -> None:
@@ -69,8 +53,6 @@ def execute_preload(onerr: ON_ERROR_CB) -> None:
         SystemExit: 前置版本过低
     """
     try:
-        for name, func in plugins_funcs["on_def"]:
-            func()
         for p, func in on_preload_cbs:
             name = p.name
             func()
@@ -94,25 +76,9 @@ def execute_active(onerr: ON_ERROR_CB) -> None:
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     try:
-        for name, func in plugins_funcs["on_inject"]:
-            func()
         for p, func in on_active_cbs:
             name = p.name
             func()
-    except Exception as err:
-        onerr(name, err)
-
-
-def execute_player_prejoin(player: str, onerr: ON_ERROR_CB) -> None:
-    """执行玩家加入前的方法
-
-    Args:
-        player (_type_): 玩家
-        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
-    """
-    try:
-        for name, func in plugins_funcs["on_player_prejoin"]:
-            func(player)
     except Exception as err:
         onerr(name, err)
 
@@ -125,8 +91,6 @@ def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
         onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
     """
     try:
-        for name, func in plugins_funcs["on_player_join"]:
-            func(player.name)
         for p, func in on_player_join_cbs:
             name = p.name
             func(player)
@@ -146,8 +110,6 @@ def execute_chat(
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     try:
-        for name, func in plugins_funcs["on_player_message"]:
-            func(chat.player.name, chat.msg)
         for p, func in on_chat_cbs:
             name = p.name
             func(chat)
@@ -163,8 +125,6 @@ def execute_player_leave(player: Player, onerr: ON_ERROR_CB) -> None:
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     try:
-        for name, func in plugins_funcs["on_player_leave"]:
-            func(player.name)
         for p, func in on_player_leave_cbs:
             name = p.name
             func(player)
@@ -179,8 +139,6 @@ def execute_frame_exit(evt: FrameExit, onerr: ON_ERROR_CB):
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     try:
-        for name, func in plugins_funcs["on_frame_exit"]:
-            func(evt.signal, evt.reason)
         for p, func in on_frame_exit_cbs:
             name = p.name
             func(evt)
@@ -195,8 +153,6 @@ def execute_reloaded(onerr: ON_ERROR_CB):
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     try:
-        for name, func in plugins_funcs["on_reload"]:
-            func()
         for p, func in on_reloaded_cbs:
             name = p.name
             func()

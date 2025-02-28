@@ -4,7 +4,7 @@ import asyncio
 import os
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ..color_print import fmts
 from ..constants import (
@@ -16,19 +16,13 @@ from ..constants import (
 from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
-    SystemVersionException,
 )
 from ..constants import TextType, PacketIDS
 from ..internal.packet_handler import PacketHandler
 from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..game_utils import _set_frame
 from ..utils import Utils
-from .classic_plugin.loader import (
-    _PLUGIN_CLS_TYPE,
-    Plugin,
-    add_plugin,
-    add_plugin_as_api,
-)
+from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
 from .injected_plugin import loader as injected_plugin
@@ -37,15 +31,14 @@ from .basic import auto_move_plugin_dir, non_func, ON_ERROR_CB
 if TYPE_CHECKING:
     from ..frame import ToolDelta
 
+VT = TypeVar("VT")
+
 
 class PluginGroup:
     "插件组类, 存放插件代码有关数据"
 
     def __init__(self, frame: "ToolDelta"):
-        "初始化"
         self.set_frame(frame)
-        # loaded_plugin_ids: 供给插件调用
-        # main_packet_handier(priority) -> plugin_packet_handler -> one_type_plugin_packet_handler(priority)
         self.broadcast_listeners: dict[
             str, list[Callable[[InternalBroadcast], Any]]
         ] = {}
@@ -80,14 +73,6 @@ class PluginGroup:
         hdl.add_packet_listener(PacketIDS.Text, self.handle_text_packet)
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
-        """
-        向全局广播一个特定事件，可以传入附加信息参数
-        Args:
-            evt_name (str): 事件名
-            data (Any, optional): 附加信息参数
-        Returns:
-             list[Any]: 收集到的数据的列表 (如果接收到广播的方法返回了数据的话)
-        """
         callback_list = []
         res = self.broadcast_listeners.get(evt.evt_name)
         if res:
@@ -97,44 +82,9 @@ class PluginGroup:
                     callback_list.append(res2)
         return callback_list
 
-    def check_tooldelta_version(self, need_vers: tuple[int, int, int]):
-        """检查 ToolDelta 系统的版本
-
-        Args:
-            need_vers (tuple[int, int, int]): 需要的版本
-
-        Raises:
-            self.linked_frame.SystemVersionException: 该组件需要的 ToolDelta 系统版本
-        """
-        if (
-            self.linked_frame is not None
-            and need_vers > self.linked_frame.sys_data.system_version
-        ):
-            raise SystemVersionException(
-                f"该插件需要ToolDelta为最低 {'.'.join([str(i) for i in self.linked_frame.sys_data.system_version])} 版本，请及时更新"
-            )
-        if self.linked_frame is None:
-            raise ValueError(
-                "无法检查 ToolDelta 系统版本，请确保已经加载了 ToolDelta 系统组件"
-            )
-
     def get_plugin_api(
         self, apiName: str, min_version: tuple | None = None, force=True
     ) -> Any:
-        """获取插件 API
-
-        Args:
-            apiName (str): 插件 API 名
-            min_version (tuple | None, optional): API 最低版本 (若不填则默认不检查最低版本)
-            force: 若为 False, 则在找不到插件 API 时不报错而是返回 None
-
-        Raises:
-            PluginAPIVersionError: 插件 API 版本错误
-            PluginAPINotFoundError: 无法找到 API 插件
-
-        Returns:
-            Plugin: 插件 API
-        """
         api = self.plugins_api.get(apiName)
         if api:
             if min_version and api.version < min_version:
@@ -187,33 +137,6 @@ class PluginGroup:
             fmts.print_err(f"加载插件出现问题：\n{err_str}")
             raise SystemExit from err
 
-    def instant_plugin_api(self, api_cls: type[_PLUGIN_CLS_TYPE]) -> _PLUGIN_CLS_TYPE:
-        """
-        对外源导入 (import) 的 API 插件类进行类型实例化。
-        可以使得你所使用的 IDE 对导入的插件 API 类进行识别和高亮其所含方法。
-        请尽量在 TYPE_CHECKING 的代码块下使用。
-
-        Args:
-            api_cls (type[_PLUGIN_CLS_TYPE]): 导入的 API 插件类
-
-        Raises:
-            ValueError: API 插件类未被注册
-
-        Returns:
-            _PLUGIN_CLS_TYPE: API 插件实例
-
-        使用方法如下:
-        ```python
-            p_api = plugins.get_plugin_api("...")
-            from outer_api import api_cls_xx
-            p_api = plugins.instant_plugin_api(api_cls_xx)
-        ```
-        """
-        for v in self.plugins_api.values():
-            if isinstance(v, api_cls):
-                return v
-        raise ValueError(f"无法找到 API 插件类 {api_cls.__name__}, 有可能是还没有注册")
-
     def execute_preload(self, onerr: ON_ERROR_CB = non_func) -> None:
         """执行插件的二次初始化方法
 
@@ -247,7 +170,6 @@ class PluginGroup:
             player (_type_): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
-        classic_plugin.execute_player_prejoin(player, onerr)
         asyncio.run(injected_plugin.execute_player_prejoin(player))
 
     def execute_player_join(
@@ -326,22 +248,16 @@ class PluginGroup:
             case TextType.TextTypeTranslation:
                 if pkt["Message"] == "§e%multiplayer.player.joined":
                     playername = pkt["Parameters"][0]
-                    if (
-                        player
-                        := self.linked_frame.players_maintainer.get_player_by_name(
-                            playername
-                        )
+                    if player := self.linked_frame.players_maintainer.getPlayerByName(
+                        playername
                     ):
                         self.execute_player_join(player)
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
                 elif pkt["Message"] == "§e%multiplayer.player.left":
                     playername = pkt["Parameters"][0]
-                    if (
-                        player
-                        := self.linked_frame.players_maintainer.get_player_by_name(
-                            playername
-                        )
+                    if player := self.linked_frame.players_maintainer.getPlayerByName(
+                        playername
                     ):
                         self.execute_player_leave(player)
                     else:
@@ -350,7 +266,7 @@ class PluginGroup:
                 raw_name = pkt["SourceName"]
                 msg = pkt["Message"]
                 cleaned_name = Utils.to_plain_name(raw_name)
-                if player := self.linked_frame.players_maintainer.get_player_by_name(
+                if player := self.linked_frame.players_maintainer.getPlayerByName(
                     cleaned_name
                 ):
                     chat = Chat(player, msg)
@@ -359,12 +275,7 @@ class PluginGroup:
                     fmts.print_war(f"玩家 {cleaned_name} 未找到")
         return False
 
-    # 向下兼容
-    add_plugin = staticmethod(add_plugin)
-    add_plugin_as_api = staticmethod(add_plugin_as_api)
     help = staticmethod(classic_plugin_loader.help)
-    checkSystemVersion = check_tooldelta_version
-    broadcastEvt = brocast_event
 
     def __add_listen_packet_id(self, packetType: PacketIDS) -> None:
         """添加数据包监听，仅在系统内部使用

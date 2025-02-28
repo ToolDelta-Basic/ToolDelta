@@ -8,6 +8,29 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class UnreadyPlayer:
+    uuid: str
+    unique_id: int
+    name: str
+    xuid: str
+    platform_chat_id: str
+    build_platform: int
+    online: bool = True
+
+    def ready(self, _parent: "PlayerInfoMaintainer"):
+        return Player(
+            _parent,
+            self.uuid,
+            self.unique_id,
+            self.name,
+            self.xuid,
+            self.platform_chat_id,
+            self.build_platform,
+            self.online,
+        )
+
+
+@dataclass
 class Player:
     _parent: "PlayerInfoMaintainer"
     uuid: str
@@ -107,7 +130,10 @@ class Player:
         Returns:
             Abilities: 玩家能力
         """
-        return self._parent.player_abilities[self.unique_id]
+        ab = self._parent.player_abilities.get(self.unique_id)
+        if ab is None:
+            raise ValueError(f"玩家 {self.name} 的能力还没有初始化")
+        return ab
 
     def set_abilities(self, abilities: Abilities):
         """

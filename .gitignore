@@ -145,16 +145,17 @@ status/
 _Plugin_Data/
 tests/
 py_tests/
+.vscode
 fbtoken
-ToolDelta基本配置.json
 本地开发数据文件夹
 
+
+ToolDelta基本配置.json
 tooldelta/neo_libs/*.exe
 NeOmega数据
 tooldelta/neo_libs/commit
 *.tmp
 tempCodeRunnerFile.python
-.vscode/*.json
 .autocorrectignore
 .autocorrectrc
 *.bat

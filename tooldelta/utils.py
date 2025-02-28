@@ -12,9 +12,8 @@ import shelve
 from io import TextIOWrapper
 from typing import Any, TypeVar, Callable  # noqa: UP035
 
-import json
 
-from .color_print import Print
+from .color_print import fmts
 from .constants import TOOLDELTA_PLUGIN_DATA_DIR
 
 event_pool: dict[str, threading.Event] = {}
@@ -76,14 +75,14 @@ class Utils:
                 pass
             except ValueError as e:
                 if str(e) != "未连接到游戏":
-                    Print.print_err(
+                    fmts.print_err(
                         f"线程 {self.usage or self.func.__name__} 出错:\n"
                         + traceback.format_exc()
                     )
                 else:
-                    Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
+                    fmts.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
             except Exception:
-                Print.print_err(
+                fmts.print_err(
                     f"线程 {self.usage or self.func.__name__} 出错:\n"
                     + traceback.format_exc()
                 )
@@ -104,97 +103,15 @@ class Utils:
                 ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
             )
             if res == 0:
-                Print.print_err(f"§c线程ID {thread_id} 不存在")
+                fmts.print_err(f"§c线程ID {thread_id} 不存在")
                 return False
             elif res > 1:
                 # 线程修改出问题了? 终止了奇怪的线程?
                 # 回退修改
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
-                Print.print_err(f"§c终止线程 {self.name} 失败")
+                fmts.print_err(f"§c终止线程 {self.name} 失败")
                 return False
             return True
-
-    # class ToolDeltaThread:
-    #     """使用 start_new_thread"""
-
-    #     SYSTEM = 0
-    #     PLUGIN = 1
-    #     PLUGIN_LOADER = 2
-
-    #     def __init__(
-    #         self,
-    #         func: Callable,
-    #         args: tuple = (),
-    #         usage="",
-    #         thread_level=PLUGIN,
-    #         **kwargs,
-    #     ):
-    #         """新建一个 ToolDelta 子线程
-
-    #         Args:
-    #             func (Callable): 线程方法
-    #             args (tuple, optional): 方法的参数项
-    #             usage (str, optional): 线程的用途说明
-    #             thread_level: 线程权限等级
-    #             kwargs (dict, optional): 方法的关键词参数项
-    #         """
-    #         self.func = func
-    #         self.args = args
-    #         self.usage = usage
-    #         self.start_event = threading.Event()
-    #         self._thread_level = thread_level
-    #         self._thread_id = _thread.start_new_thread(self.run, (), kwargs)
-    #         self.start_event.wait()
-
-    #     def run(self) -> None:
-    #         """线程运行方法"""
-    #         actives_dic = threading._active  # type: ignore
-    #         threads_list.append(self)
-    #         this_thread = actives_dic[self._thread_id]
-    #         this_thread.name = f"ToolDelta 线程: {self.usage}"
-    #         self.start_event.set()
-    #         try:
-    #             self.func(*self.args)
-    #         except (SystemExit, Utils.ThreadExit):
-    #             pass
-    #         except ValueError as e:
-    #             if str(e) != "未连接到游戏":
-    #                 Print.print_err(
-    #                     f"线程 {self.usage or self.func.__name__} 出错:\n"
-    #                     + traceback.format_exc()
-    #                 )
-    #             else:
-    #                 Print.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
-    #         except Exception:
-    #             Print.print_err(
-    #                 f"线程 {self.usage or self.func.__name__} 出错:\n"
-    #                 + traceback.format_exc()
-    #             )
-    #         finally:
-    #             threads_list.remove(self)
-    #             if self._thread_id not in actives_dic.keys():
-    #                 Print.print_war(f"无法从线程池移除线程: {self._thread_id}")
-    #             else:
-    #                 del actives_dic[self._thread_id]  # type: ignore
-
-    #     def stop(self) -> bool:
-    #         """终止线程 注意: 不适合在有长时间sleep的线程内调用"""
-    #         self.stopping = True
-    #         thread_id = self._thread_id or _thread.get_ident()
-    #         # 也许不会出现问题了吧
-    #         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-    #             ctypes.c_long(thread_id), ctypes.py_object(Utils.ThreadExit)
-    #         )
-    #         if res == 0:
-    #             Print.print_err(f"§c线程ID {thread_id} 不存在")
-    #             return False
-    #         elif res > 1:
-    #             # 线程修改出问题了? 终止了奇怪的线程?
-    #             # 回退修改
-    #             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, None)
-    #             Print.print_err(f"§c终止线程 {self.func.__name__} 失败")
-    #             return False
-    #         return True
 
     createThread = ToolDeltaThread
 
@@ -238,7 +155,7 @@ class Utils:
                 else:
                     raise err from None
             except UnicodeDecodeError:
-                Print.print_err(path)
+                fmts.print_err(path)
                 raise
             jsonPathTmp[path] = [False, js]
 
@@ -453,7 +370,7 @@ class Utils:
                 # 判断是否有 msg.doc.pos 属性
                 raise Utils.JsonIO.DataReadError(err.msg, err.doc, err.pos)
             except Exception as err:
-                Print.print_err(f"读文件路径 {filepath} 发生错误")
+                fmts.print_err(f"读文件路径 {filepath} 发生错误")
                 raise err
 
         @staticmethod
@@ -505,7 +422,7 @@ class Utils:
         def __enter__(self):
             if self.player in chatbar_lock_list:
                 self.oth_cb(self.player)
-                Print.print_war(f"玩家 {self.player} 的线程锁正在锁定状态")
+                fmts.print_war(f"玩家 {self.player} 的线程锁正在锁定状态")
                 raise SystemExit
             if self.player not in chatbar_lock_list:
                 chatbar_lock_list.append(self.player)
@@ -820,7 +737,9 @@ def safe_close():
     """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
     if event_pool.get("timer_events"):
         event_pool["timer_events"].set()
+    fmts.print_inf("正在强制中断 ToolDeltThread..")
     force_stop_common_threads()
+    fmts.print_inf("正在保存数据文件..")
     _tmpjson_save()
     timer_event_clear()
     jsonPathTmp.clear()
@@ -834,15 +753,15 @@ def if_token() -> None:
         SystemExit: 未输入 fbtoken
     """
     if not os.path.isfile("fbtoken"):
-        Print.print_inf(
+        fmts.print_inf(
             "请到对应的验证服务器官网下载 FBToken，并放在本目录中，或者在下面输入 fbtoken"
         )
-        fbtoken = input(Print.fmt_info("请输入 fbtoken: ", "§b 输入 "))
+        fbtoken = input(fmts.fmt_info("请输入 fbtoken: ", "§b 输入 "))
         if fbtoken:
             with open("fbtoken", "w", encoding="utf-8") as f:
                 f.write(fbtoken)
         else:
-            Print.print_err("未输入 fbtoken, 无法继续")
+            fmts.print_err("未输入 fbtoken, 无法继续")
             raise SystemExit
 
 
@@ -851,7 +770,7 @@ def fbtokenFix():
     with open("fbtoken", encoding="utf-8") as file:
         token = file.read()
         if "\n" in token:
-            Print.print_war("fbtoken 里有换行符，会造成 fb 登录失败，已自动修复")
+            fmts.print_war("fbtoken 里有换行符，会造成 fb 登录失败，已自动修复")
             with open("fbtoken", "w", encoding="utf-8") as file2:
                 file2.write(token.replace("\n", ""))
 
@@ -912,21 +831,21 @@ def timer_event_clear():
 def force_stop_common_threads():
     for i in threads_list:
         if i._thread_level != i.SYSTEM:
-            Print.print_suc(f"正在终止线程 {i.usage}  ", end="\r")
+            fmts.print_suc(f"正在终止线程 {i.usage}  ", end="\r")
             res = i.stop()
             if res:
-                Print.print_suc(f"已终止线程 <{i.usage}>    ")
+                fmts.print_suc(f"已终止线程 <{i.usage}>    ")
             else:
-                Print.print_suc(f"无法终止线程 <{i.usage}>  ")
+                fmts.print_suc(f"无法终止线程 <{i.usage}>  ")
 
 
 @Utils.thread_func("ToolDelta 定时任务", Utils.ToolDeltaThread.SYSTEM)
 def timer_event_boostrap():
-    "请不要在系统调用以外调用"
+    "启动定时任务, 请不要在系统调用以外调用"
     timer = 0
     evt = event_pool["timer_events"] = threading.Event()
     evt.clear()
-    Print.print_suc("已开始执行 ToolDelta定时任务 函数集.")
+    fmts.print_suc("已开始执行 ToolDelta定时任务 函数集.")
     while not evt.is_set():
         _timer_event_lock.acquire()
         for k, func_args in timer_events_table.copy().items():

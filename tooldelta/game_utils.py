@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
 
 game_ctrl: Optional["GameCtrl"] = None
-movent_frame: Optional["ToolDelta"] = None
+frame: Optional["ToolDelta"] = None
 player_waitmsg_cb: dict[str, Callable[[str], None]] = {}
 
 
@@ -41,30 +41,30 @@ def _create_lock_and_result_setter():
     return result_setter, result_getter
 
 
-def _set_frame(my_Frame: "ToolDelta") -> None:
+def _set_frame(_frame: "ToolDelta") -> None:
     """
     全局初始化框架
 
     Args:
         my_Frame: 要设置的框架对象
     """
-    global movent_frame, game_ctrl  # pylint: disable=global-statement
-    movent_frame = my_Frame
-    game_ctrl = my_Frame.get_game_control()
+    global frame
+    frame = _frame
 
 
 def _get_game_ctrl() -> "GameCtrl":
     """检查 GameCtrl 是否可用"""
+    global game_ctrl
     if game_ctrl is None:
-        raise ValueError("游戏控制框架 不可用")
+        game_ctrl = _get_frame().get_game_control()
     return game_ctrl
 
 
 def _get_frame() -> "ToolDelta":
     """检查 GameCtrl 是否可用"""
-    if movent_frame is None:
-        raise ValueError("ToolDelta主框架 不可用")
-    return movent_frame
+    if frame is None:
+        raise ValueError("ToolDelta 主框架不可用")
+    return frame
 
 
 def getTarget(sth: str, timeout: float = 5) -> list[str]:
@@ -317,8 +317,10 @@ def is_op(playername: str) -> bool:
     Args:
         playername: 玩家名称
     """
-    frame = _get_frame()
-    return frame.launcher.is_op(playername)
+    p = _get_frame().players_maintainer.getPlayerByName(playername)
+    if p is None:
+        raise ValueError(f"玩家 {playername} 不存在")
+    return p.is_op()
 
 
 def getBlockTile(x: int, y: int, z: int) -> str:

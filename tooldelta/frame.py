@@ -19,7 +19,7 @@ from .cfg import Config
 from .color_print import fmts
 from .constants import SysStatus, TextType
 from .game_texts import GameTextsHandle, GameTextsLoader
-from .get_tool_delta_version import get_tool_delta_version
+from .version import get_tool_delta_version
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
 from .plugin_load import injected_plugin
@@ -36,9 +36,8 @@ from .internal.launch_cli import (
     FrameNeOmgAccessPoint,
     FrameNeOmegaLauncher,
     FB_LIKE_LAUNCHERS,
+    LAUNCHERS,
 )
-
-
 
 
 ###### CONSTANT DEFINE
@@ -63,7 +62,9 @@ class ToolDelta:
         self.sys_data = self.FrameBasic()
         self.launchMode: int = 0
         self.on_plugin_err = staticmethod(
-            lambda name, err: fmts.print_err(f"插件 <{name}> 出现问题：\n{err}")
+            lambda name, err: fmts.print_err(
+                f"插件 <{name}> 出现问题: {err}\n§c{traceback.format_exc()}"
+            )
         )
 
     def bootstrap(self):
@@ -79,17 +80,19 @@ class ToolDelta:
             self.add_console_cmd_trigger = self.cmd_manager.add_console_cmd_trigger
             self.launcher = self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
             self.launcher.set_packet_listener(self.packet_handler.entrance)
+            self.game_ctrl.hook_launcher(self.launcher)
             self.game_ctrl.hook_packet_handler(self.packet_handler)
             self.plugin_group.hook_packet_handler(self.packet_handler)
+            self.players_maintainer.hook_packet_handler(self.packet_handler)
             self.plugin_group.load_plugins()
             utils.timer_event_boostrap()
             utils.tmpjson_save()
-            self.launcher.listen_launched(self.game_ctrl.system_inject)
-            self.game_ctrl.set_listen_packets_to_launcher()
+            self.launcher.init()
+            self.launcher.listen_launched(
+                [self.game_ctrl.system_inject, self.cmd_manager.start_proc_thread]
+            )
             fmts.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
-            # 主进程
             err = self.wait_closed()
-            # 主进程结束
             if not isinstance(err, SystemExit):
                 fmts.print_err(f"启动器框架崩溃, 原因: {err}")
                 return -1
@@ -161,8 +164,8 @@ class ToolDelta:
                     self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher
                 ):
                     try:
-                        self.link_game_ctrl.sendwocmd(
-                            f'/kick "{self.link_game_ctrl.bot_name}" ToolDelta 退出中。'
+                        self.game_ctrl.sendwocmd(
+                            f'/kick "{self.game_ctrl.bot_name}" ToolDelta 退出中。'
                         )
                     except Exception:
                         pass
@@ -183,22 +186,13 @@ class ToolDelta:
         self.actions_before_exited()
         # 到这里就基本上是退出完成了
 
-    def set_game_control(self, game_ctrl: "GameCtrl") -> None:
-        """使用外源 GameControl
-
-        Args:help
-            game_ctrl (_type_): GameControl 对象
-        """
-        self.link_game_ctrl = game_ctrl
-
     def get_game_control(self) -> "GameCtrl":
         """获取 GameControl 对象
 
         Returns:
             GameCtrl: GameControl 对象
         """
-        gcl: "GameCtrl" = self.link_game_ctrl
-        return gcl
+        return self.game_ctrl
 
     @staticmethod
     def actions_before_exited() -> None:
@@ -210,14 +204,11 @@ class ToolDelta:
     def reload(self):
         """重载所有插件"""
         try:
-            fmts.print_inf("重载插件: 正在保存数据缓存文件..")
+            fmts.print_inf("重载: 正在保存数据缓存文件..")
             utils.safe_close()
             self.cmd_manager.reset_cmds()
-            fmts.print_inf("重载插件: 正在重新载入插件..")
+            fmts.print_inf("重载: 正在重新载入插件..")
             self.plugin_group.reload()
-            self.launcher.reload_listen_packets(
-                self.link_game_ctrl.require_listen_packets
-            )
             fmts.print_suc("重载插件: 全部插件重载成功！")
         except Config.ConfigError as err:
             fmts.print_err(f"重载插件时发现插件配置文件有误: {err}")
@@ -237,7 +228,7 @@ class GameCtrl:
         """初始化
 
         Args:
-            frame (Frame): 继承 Frame 的对象
+            frame (ToolDelta): 继承 Frame 的对象
         """
         try:
             self.game_texts_data = GameTextsLoader().game_texts_data
@@ -247,77 +238,16 @@ class GameCtrl:
             self.game_texts_data = None
             self.game_data_handler = None
         self.linked_frame = frame
-        self.players_uuid: dict[str, str] = {}
-        self.allplayers: list[str] = []
-        self.all_players_data = {}
-        self.require_listen_packets = {9, 79, 63}
-        self.launcher = self.linked_frame.launcher
-        # 初始化基本函数
-        self.sendcmd = self.launcher.sendcmd
-        self.sendwscmd = self.launcher.sendwscmd
-        self.sendwocmd = self.launcher.sendwocmd
-        self.sendPacket = self.launcher.sendPacket
-        if isinstance(self.linked_frame.launcher, FrameNeOmgAccessPoint):
-            self.requireUUIDPacket = False
-        else:
-            self.requireUUIDPacket = True
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
-        hdl.add_packet_listener(
-            constants.PacketIDS.IDPlayerList, self.process_player_list
-        )
-        hdl.add_packet_listener(constants.PacketIDS.Text, self.handle_text_packet)
+        hdl.add_packet_listener(constants.PacketIDS.Text, self.handle_text_packet, -1)
 
-    def set_listen_packets_to_launcher(self) -> None:
-        """
-        向启动器初始化监听的游戏数据包
-        仅限启动模块调用
-        """
-        self.launcher.add_listen_packets(*self.require_listen_packets)
-
-    def add_listen_packet(self, pkt: int) -> None:
-        """
-        添加监听的数据包
-        仅限内部与插件加载器调用
-
-        Args:
-            pkt (int): 数据包 ID
-        """
-        self.require_listen_packets.add(pkt)
-
-    def process_player_list(self, pkt: dict):
-        """处理玩家列表等数据包
-
-        Args:
-            pkt (dict): 数据包内容
-            plugin_group (PluginGroup): 插件组对象
-        """
-        # 处理玩家进出事件
-        res = self.launcher.get_players_and_uuids()
-        if res:
-            self.allplayers = list(res.keys())
-            self.players_uuid.update(res)
-        for player in pkt["Entries"]:
-            isJoining = bool(player["Skin"]["SkinData"])
-            playername = player["Username"]
-            if isJoining:
-                if isinstance(self.launcher, FrameNeOmgAccessPoint):
-                    self.all_players_data = self.launcher.omega.get_all_online_players()
-                if playername not in self.allplayers and not res:
-                    self.allplayers.append(playername)
-            else:
-                playername = next(
-                    (k for k, v in self.players_uuid.items() if v == player["UUID"]),
-                    None,
-                )
-                if playername is None:
-                    fmts.print_war("无法获取 PlayerList 中玩家名字")
-                    continue
-                if playername != "???" and not res:
-                    self.allplayers.remove(playername)
-                if self.players_uuid.get(playername):
-                    del self.players_uuid[playername]
-        return False
+    def hook_launcher(self, launcher: "LAUNCHERS"):
+        self.launcher = launcher
+        self.sendcmd = launcher.sendcmd
+        self.sendwscmd = launcher.sendwscmd
+        self.sendwocmd = launcher.sendwocmd
+        self.sendPacket = launcher.sendPacket
 
     def handle_text_packet(self, pkt: dict):
         """处理 文本 数据包
@@ -374,15 +304,9 @@ class GameCtrl:
                 # /say 消息
                 src_name = pkt["SourceName"]
                 msg = msg.removeprefix(f"[{src_name}] ")
-                uuid = "00000000-0000-4000-8000-0000" + pkt["XUID"]
-                if uuid in self.players_uuid.values():
-                    cmd_executor = {v: k for k, v in self.players_uuid.items()}[uuid]
-                    fmts.print_inf(f"{src_name}({cmd_executor}) 使用 say 说：{msg}")
-                else:
-                    fmts.print_inf(
-                        f"{src_name} 使用 say 说：{msg.removeprefix(f'[{src_name}] ')}"
-                    )
-                    print(self.players_uuid)
+                fmts.print_inf(
+                    f"{src_name} 使用 say 说：{msg.removeprefix(f'[{src_name}] ')}"
+                )
             case TextType.TextTypeObjectWhisper:
                 # /tellraw 消息
                 msg = pkt["Message"]
@@ -393,38 +317,12 @@ class GameCtrl:
                 msg_text = "".join([i["text"] for i in msg_text])
                 fmts.print_with_info(msg_text, "§f 消息 ")
             case default:
-                fmts.print_inf(f"[Text] [{default}] {msg}")
+                fmts.print_inf(f"[Text:{default}] {msg}")
         return False
 
-    def system_inject(self) -> None:
-        """载入游戏时的初始化"""
-        res = self.launcher.get_players_and_uuids()
-        if res:
-            self.allplayers = list(res.keys())
-            self.players_uuid.update(res)
-        else:
-            while 1:
-                try:
-                    cmd_result = self.sendcmd_with_resp("/list")
-                    if (
-                        cmd_result.OutputMessages is None
-                        or len(cmd_result.OutputMessages) < 2
-                    ):
-                        raise ValueError
-                    if (
-                        cmd_result.OutputMessages[1].Parameters is None
-                        or len(cmd_result.OutputMessages[1].Parameters) < 1
-                    ):
-                        raise ValueError
-                    self.allplayers = (
-                        cmd_result.OutputMessages[1].Parameters[0].split(", ")
-                    )
-                    break
-                except (TimeoutError, ValueError):
-                    fmts.print_war("获取全局玩家失败..重试")
-        self.linked_frame.plugin_group.execute_init(
-            self.linked_frame.on_plugin_err
-        )
+    def system_inject(self):
+        self.linked_frame.players_maintainer.block_init()
+        self.linked_frame.plugin_group.execute_init(self.linked_frame.on_plugin_err)
         self.inject_welcome()
 
     def inject_welcome(self) -> None:
@@ -443,6 +341,20 @@ class GameCtrl:
         if isinstance(self.launcher, FrameNeOmegaLauncher):
             fmts.print_suc("在控制台输入 o <neomega指令> 可执行NeOmega的控制台指令")
 
+    # 向下兼容
+    @property
+    def players_uuid(self):
+        return {
+            v.name: k
+            for k, v in self.linked_frame.players_maintainer.uuid_to_player.items()
+        }
+
+    # 向下兼容
+    @property
+    def allplayers(self):
+        return [i.name for i in self.linked_frame.players_maintainer.getAllPlayers()]
+
+    # 向下兼容
     @property
     def bot_name(self) -> str:
         if hasattr(self.launcher, "bot_name"):
@@ -512,4 +424,3 @@ class GameCtrl:
         if self.game_texts_data is None:
             raise ValueError("游戏翻译器字符串数据不可用")
         return self.game_texts_data
-

@@ -11,6 +11,7 @@ VERSION = tuple[int, int, int]
 PLUGINCFG_DEFAULT = {"配置版本": "0.0.1", "配置项": None}
 PLUGINCFG_STANDARD_TYPE = {"配置版本": str, "配置项": [type(None), dict]}
 
+
 def cfg_isinstance_single(obj: Any, typ: type) -> bool:
     if not isinstance(typ, type):
         raise TypeError(f"cfg_isinstance arg 1 must be a type, not {typ}")
@@ -21,7 +22,6 @@ def cfg_isinstance_single(obj: Any, typ: type) -> bool:
         Cfg.NNFloat: lambda: (isinstance(obj, float) or obj == 0) and obj >= 0,
         Cfg.PNumber: lambda: isinstance(obj, int | float) and obj > 0,
         Cfg.NNNumber: lambda: isinstance(obj, int | float) and obj >= 0,
-        int: lambda: type(obj) is int,
     }.get(typ, lambda: isinstance(obj, typ))()
 
 
@@ -75,7 +75,9 @@ def get_cfg_type_name(typ: Any) -> str:
 
 class Cfg:
     """配置文件模块"""
+
     url = None
+
     class ConfigError(Exception):
         """配置文件错误"""
 
@@ -129,6 +131,20 @@ class Cfg:
 
     class NNFloat(float):
         """配置文件的值限制：非负浮点小数"""
+
+    class IntRange:
+        """配置文件的值限制：整数域范围"""
+
+        def __init__(self, min: int, max: int):
+            self.min = min
+            self.max = max
+
+    class FloatRange:
+        """配置文件的值限制：浮点数域范围"""
+
+        def __init__(self, min: float, max: float):
+            self.min = min
+            self.max = max
 
     class PNumber:
         """配置文件的值限制：正数"""
@@ -243,6 +259,20 @@ class Cfg:
                 )
         elif isinstance(standard, Cfg.JsonList):
             self.check_list(standard, val, fromkey)
+        elif isinstance(standard, dict | Cfg.AnyKeyValue):
+            self.check_dict(standard, val, fromkey)
+        elif isinstance(standard, Cfg.IntRange):
+            self.check_auto(int, val, fromkey)
+            if not standard.min <= val <= standard.max:
+                raise self.ConfigValueError(
+                    f'JSON 键"{fromkey}" 对应值的范围不正确：需要 {standard.min} ~ {standard.max}, 实际上为 {val}'
+                )
+        elif isinstance(standard, Cfg.FloatRange):
+            self.check_auto(float, val, fromkey)
+            if not standard.min <= val <= standard.max:
+                raise self.ConfigValueError(
+                    f'JSON 键"{fromkey}" 对应值的范围不正确：需要 {standard.min} ~ {standard.max}, 实际上为 {val}'
+                )
         elif isinstance(standard, tuple | list):
             errs = []
             for single_type in standard:
@@ -256,8 +286,6 @@ class Cfg:
                 raise self.ConfigValueError(
                     f'JSON 键 对应的键"{fromkey}" 类型不正确，以下为可能的原因：\n{reason}'
                 )
-        elif isinstance(standard, dict | Cfg.AnyKeyValue):
-            self.check_dict(standard, val, fromkey)
         else:
             raise ValueError(
                 f'JSON 键 "{fromkey}" 自动检测的标准类型传入异常：{standard}'

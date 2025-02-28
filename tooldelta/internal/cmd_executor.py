@@ -21,6 +21,9 @@ class CommandTrigger:
     usage: str
     cb: Callable[[list[str]], None]
 
+    def __hash__(self):
+        return id(self)
+
 
 class ConsoleCmdManager:
     def __init__(self, frame: "ToolDelta") -> None:
@@ -42,23 +45,26 @@ class ConsoleCmdManager:
             usage (str): 命令说明
             func (Callable[[list[str]], None]): 菜单回调方法
         """
+        trig = CommandTrigger(triggers, arg_hint, usage, func)
         for trigger in triggers:
-            self.commands[trigger] = CommandTrigger(triggers, arg_hint, usage, func)
+            self.commands[trigger] = trig
 
     def get_cmd_triggers(self):
         return list(self.commands.values())
 
     def execute_cmd(self, cmd: str) -> bool:
-        cmds = cmd.strip().split()
-        if cmd == []:
+        cmd = cmd.strip()
+        if cmd == "":
             return False
-        trig = self.commands.get(cmds[0])
-        if trig is None:
-            fmts.print_war(f"命令 {cmds[0]} 不存在, 输入 ? 查看帮助")
-            return False
-        trig.cb(cmds[1:])
-        return True
+        for prefix, trig in self.commands.items():
+            if cmd.startswith(prefix):
+                cmds = cmd.removeprefix(prefix).split()
+                trig.cb(cmds)
+                return True
+        fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
+        return False
 
+    @Utils.thread_func("控制台执行命令", Utils.ToolDeltaThread.SYSTEM)
     def command_readline_proc(self):
         fmts.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
         while 1:
@@ -76,7 +82,7 @@ class ConsoleCmdManager:
                 fmts.print_err(f"控制台指令执行出现问题: {traceback.format_exc()}")
                 fmts.print_err("§6虽然出现了问题, 但是您仍然可以继续使用控制台菜单")
 
-    def prepare_tooldelta_cmds(self):
+    def prepare_internal_cmds(self):
         @Utils.thread_func("控制台执行指令并获取回调", Utils.ToolDeltaThread.SYSTEM)
         def _execute_mc_command_and_get_callback(cmds: list[str]) -> None:
             """执行 Minecraft 指令并获取回调结果。
@@ -148,7 +154,7 @@ class ConsoleCmdManager:
         def _basic_help(_):
             menu = self.get_cmd_triggers()
             fmts.print_inf("§a以下是可选的菜单指令项: ")
-            for cmd_trigger in menu:
+            for cmd_trigger in set(menu):
                 if cmd_trigger.argument_hint:
                     fmts.print_inf(
                         f" §e{' 或 '.join(cmd_trigger.triggers)} §b{cmd_trigger.argument_hint} §f->  {cmd_trigger.usage}"
@@ -205,4 +211,8 @@ class ConsoleCmdManager:
 
     def reset_cmds(self):
         self.commands.clear()
-        self.prepare_tooldelta_cmds()
+        self.prepare_internal_cmds()
+
+    def start_proc_thread(self):
+        self.prepare_internal_cmds()
+        self.command_readline_proc()

@@ -12,8 +12,9 @@ import time
 from collections.abc import Callable
 
 from ..cfg import Cfg
-from ..constants import SysStatus
+from ..constants import SysStatus, PacketIDS
 from ..color_print import Print
+from ..internal.types import UnreadyPlayer
 from ..neo_libs import file_download as neo_fd, neo_conn
 from ..eulogist_libs import core_conn as eulogist_conn
 from ..packets import Packet_CommandOutput
@@ -40,22 +41,32 @@ class StandardFrame:
             auth_server_url (str): 验证服务器地址
         """
         self.packet_handler = lambda pckType, pck: None
-        self.need_listen_packets: set[int] = {9, 63, 79}
-        self._launcher_listener: Callable
+        self.need_listen_packets: set[PacketIDS] = {
+            PacketIDS.Text,
+            PacketIDS.PlayerList,
+            PacketIDS.UpdateAbilities,
+            PacketIDS.CommandOutput,
+        }
         self.exit_event = threading.Event()
-        self.status: int = SysStatus.LOADING
+        self.status: SysStatus = SysStatus.LOADING
+        self._launcher_listeners: list[Callable[[], None]] = []
 
     def init(self):
         """初始化启动器框架"""
 
-    def add_listen_packets(self, *pcks: int) -> None:
+    def add_listen_packets(self, *pcks: PacketIDS) -> None:
         """添加需要监听的数据包"""
         for i in pcks:
             self.need_listen_packets.add(i)
 
-    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+    def reload_listen_packets(self, listen_packets: set[PacketIDS]) -> None:
         """重载需要监听的数据包ID"""
-        self.need_listen_packets = {9, 79, 63} | listen_packets
+        self.need_listen_packets = {
+            PacketIDS.Text,
+            PacketIDS.PlayerList,
+            PacketIDS.UpdateAbilities,
+            PacketIDS.CommandOutput,
+        } | listen_packets
 
     def set_packet_listener(self, handler: Callable[[int, dict], None]):
         self.packet_handler = handler
@@ -68,19 +79,26 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def listen_launched(self, cb: Callable) -> None:
+    def listen_launched(self, cbs: list[Callable[[], None]]) -> None:
         """设置监听启动器启动事件"""
-        self._launcher_listener = cb
+        self._launcher_listeners.extend(cbs)
 
-    def get_players_and_uuids(self) -> None:
-        """获取玩家名和 UUID"""
+    def _exec_launched_listen_cbs(self):
+        for cb in self._launcher_listeners:
+            cb()
+
+    def get_players_info(self) -> dict[str, UnreadyPlayer] | None:
+        """
+        获取启动器框架内存储的玩家信息
+        如果框架无法存储, 则返回 None
+        """
         raise NotImplementedError
 
-    def get_bot_name(self) -> str:
+    def get_bot_info(self) -> str:
         """获取机器人名字"""
         raise NotImplementedError
 
-    def update_status(self, new_status: int) -> None:
+    def update_status(self, new_status: SysStatus) -> None:
         """更新启动器状态
 
         Args:
@@ -151,20 +169,6 @@ class StandardFrame:
 
     sendPacketJson = sendPacket
 
-    def is_op(self, player: str) -> bool:
-        """检查玩家是否为 OP
-
-        Args:
-            player (str): 玩家名
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            bool: 是否为 OP
-        """
-        raise NotImplementedError
-
 
 class FrameNeOmgAccessPoint(StandardFrame):
     """使用 NeOmega接入点 框架连接到游戏"""
@@ -227,7 +231,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 ServerPassword=self.serverPassword,
             )
 
-    def set_omega_conn(self, openat_port: int) -> bool:
+    def set_omega_conn(self, openat_port: int) -> str:
         """设置 Omega 连接
 
         Args:
@@ -244,14 +248,17 @@ class FrameNeOmgAccessPoint(StandardFrame):
             try:
                 self.omega.connect()
                 retries = 1
-                return True
+                return ""
             except Exception as err:
+                if self.status != SysStatus.LAUNCHING:
+                    self.update_status(SysStatus.CRASHED_EXIT)
+                    return "接入点无法连接"
                 Print.print_war(f"OMEGA 连接失败: {err} (第{retries}次)")
                 time.sleep(5)
                 retries += 1
         Print.print_err("最大重试次数已超过")
         self.update_status(SysStatus.CRASHED_EXIT)
-        return False
+        return "连接超时"
 
     def start_neomega_proc(self) -> int:
         """启动 NeOmega 进程
@@ -318,10 +325,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 Print.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
-                    self.launch_event.set()
                 break
-            if "[neOmega 接入点]: 就绪" in msg_orig:
-                self.launch_event.set()
             Print.print_with_info(msg_orig, "§b NOMG ")
 
     def launch(self) -> SystemExit | Exception | SystemError:
@@ -333,7 +337,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             SystemError: 未知的退出状态
         """
         self.status = SysStatus.LAUNCHING
-        self.launch_event = threading.Event()
         self.exit_event = threading.Event()
         self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
@@ -346,23 +349,20 @@ class FrameNeOmgAccessPoint(StandardFrame):
             usage="显示来自 NeOmega接入点 的信息",
             thread_level=Utils.ToolDeltaThread.SYSTEM,
         )
-        # self.omega.reset_omega_status()
-        self.launch_event.wait()
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
-        if self.set_omega_conn(openat_port):
+        if (err_str := self.set_omega_conn(openat_port)) == "":
             self.update_status(SysStatus.RUNNING)
-            self.wait_omega_disconn_thread()
-            Print.print_suc("已获取游戏网络接入点最高权限")
+            self.start_wait_omega_disconn_thread()
+            Print.print_suc("接入点框架通信网络连接成功")
             pcks = [
                 self.omega.get_packet_id_to_name_mapping(i)
                 for i in self.need_listen_packets
             ]
             self.omega.listen_packets(pcks, self.packet_handler_parent)
-            self._launcher_listener()
-            Print.print_suc("接入点注入已就绪")
+            self._exec_launched_listen_cbs()
         else:
-            return SystemError("连接超时")
+            return SystemError(err_str)
         self.update_status(SysStatus.RUNNING)
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
@@ -371,16 +371,23 @@ class FrameNeOmgAccessPoint(StandardFrame):
             return Exception("接入点进程已崩溃")
         return SystemError("未知的退出状态")
 
-    def get_players_and_uuids(self):
-        players_uuid = {}
+    def get_players_info(self):
+        players_data: dict[str, UnreadyPlayer] = {}
         if self.status != SysStatus.RUNNING:
             raise ValueError("未连接到接入点")
         for i in self.omega.get_all_online_players():
             if i is not None:
-                players_uuid[i.name] = i.uuid
+                players_data[i.name] = UnreadyPlayer(
+                    i.uuid,
+                    i.entity_unique_id,
+                    i.name,
+                    i.uuid[-8:],
+                    i.platform_chat_id,
+                    i.build_platform,
+                )
             else:
                 raise ValueError("未能获取玩家名和 UUID")
-        return players_uuid
+        return players_data
 
     def get_bot_name(self) -> str:
         """获取机器人名字
@@ -390,7 +397,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.check_avaliable()
         if not self.bot_name:
-            self.bot_name = self.omega.get_bot_name()
+            self.bot_name = self.omega.get_bot_basic_info().BotName
         return self.bot_name
 
     def packet_handler_parent(self, pkt_type: str, pkt: dict) -> None:
@@ -478,32 +485,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.check_avaliable()
         self.omega.send_game_packet_in_json_as_is(pckID, pck)
 
-    def is_op(self, player: str) -> bool:
-        """检查玩家是否为 OP
-
-        Args:
-            player (str): 玩家名
-
-        Raises:
-            NotImplementedError: 未实现此方法
-
-        Returns:
-            bool: 是否为 OP
-        """
-        self.check_avaliable()
-        if player not in (
-            allplayers := [i.name for i in self.omega.get_all_online_players()]
-        ):
-            raise ValueError(
-                f"玩家 '{player}' 不处于全局玩家中 (全局玩家: "
-                + ", ".join(allplayers)
-                + ")"
-            )
-        player_obj = self.omega.get_player_by_name(player)
-        if isinstance(player_obj, type(None)) or isinstance(player_obj.op, type(None)):
-            raise ValueError("未能获取玩家对象")
-        return player_obj.op
-
     def place_command_block_with_nbt_data(
         self,
         block_name: str,
@@ -542,12 +523,12 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
 
     @Utils.thread_func("检测 Omega 断开连接线程", Utils.ToolDeltaThread.SYSTEM)
-    def wait_omega_disconn_thread(self):
+    def start_wait_omega_disconn_thread(self):
         self.exit_reason = self.omega.wait_disconnect()
         if self.status == SysStatus.RUNNING:
             self.update_status(SysStatus.CRASHED_EXIT)
 
-    def reload_listen_packets(self, listen_packets: set[int]) -> None:
+    def reload_listen_packets(self, listen_packets: set[PacketIDS]) -> None:
         super().reload_listen_packets(listen_packets)
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
@@ -591,9 +572,9 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             openat_port = 24015
             return SystemExit("未指定端口号")
         Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
-        if self.set_omega_conn(openat_port):
+        if (err_str := self.set_omega_conn(openat_port)) == "":
             self.update_status(SysStatus.RUNNING)
-            self.wait_omega_disconn_thread()
+            self.start_wait_omega_disconn_thread()
             Print.print_suc("已与接入点进程建立通信网络")
             pcks = []
             for i in self.need_listen_packets:
@@ -602,10 +583,10 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
                 except KeyError:
                     Print.print_war(f"无法监听数据包: {i}")
             self.omega.listen_packets(pcks, self.packet_handler_parent)
-            self._launcher_listener()
+            self._exec_launched_listen_cbs()
             Print.print_suc("ToolDelta 待命中")
         else:
-            return SystemError("连接超时")
+            return SystemError(err_str)
         self.exit_event.wait()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出。")
@@ -813,14 +794,14 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         self.launch_event.wait()
         self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
-        self.wait_omega_disconn_thread()
+        self.start_wait_omega_disconn_thread()
         Print.print_suc("已获取游戏网络接入点最高权限")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
-        self._launcher_listener()
+        self._exec_launched_listen_cbs()
         Print.print_suc("接入点注入已就绪")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
@@ -845,7 +826,7 @@ class FrameEulogistLauncher(StandardFrame):
         """
         self.eulogist = eulogist_conn.Eulogist()
         self.need_listen_packets: set[int] = {9, 63, 79}
-        self._launcher_listener: Callable
+        self._launch_listeners: list[Callable[[], None]]
         self.exit_event = threading.Event()
         self.status: int = SysStatus.LOADING
         self.bot_name: str = ""
@@ -857,10 +838,6 @@ class FrameEulogistLauncher(StandardFrame):
         """添加需要监听的数据包"""
         for i in pcks:
             self.need_listen_packets.add(i)
-
-    def reload_listen_packets(self, listen_packets: set[int]) -> None:
-        """重载需要监听的数据包ID"""
-        self.need_listen_packets = {9, 79, 63} | listen_packets
 
     def launch(self) -> SystemExit:
         """启动器启动
@@ -877,22 +854,23 @@ class FrameEulogistLauncher(StandardFrame):
         self.update_status(SysStatus.RUNNING)
         self.eulogist.packet_listener = self.packet_handler_parent
         self.eulogist.set_listen_server_packets(list(self.need_listen_packets))
-        self._launcher_listener()
+        self._exec_launched_listen_cbs()
         self.eulogist.exit_event.wait()
         self.update_status(SysStatus.NORMAL_EXIT)
         return SystemExit("赞颂者和 ToolDelta 断开连接")
 
-    def listen_launched(self, cb: Callable) -> None:
-        """设置监听启动器启动事件"""
-        self._launcher_listener = cb
-
-    def get_players_and_uuids(self) -> dict[str, str]:
-        """获取玩家名和 UUID"""
-        return {k: v.uuid for k, v in self.eulogist.uqs.items()}
+    def get_players_info(self) -> dict[str, UnreadyPlayer]:
+        # TODO: Can't get PlatformChatID and BuildPlatformID
+        return {
+            k: UnreadyPlayer(v.uuid, v.uniqueID, v.name, v.xuid, "", 0)
+            for k, v in self.eulogist.uqs.items()
+        }
 
     def get_bot_name(self) -> str:
         """获取机器人名字"""
-        return self.eulogist.bot_name
+        if self.bot_name == "":
+            self.bot_name = self.eulogist.bot_name
+        return self.bot_name
 
     def update_status(self, new_status: int) -> None:
         """更新启动器状态

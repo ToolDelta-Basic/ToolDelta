@@ -5,7 +5,7 @@ from ..constants.packets import PacketIDS
 if TYPE_CHECKING:
     from tooldelta.frame import ToolDelta
 
-INTERNAL_LISTEN_PACKETS: set[int] = {
+INTERNAL_LISTEN_PACKETS: set[PacketIDS] = {
     PacketIDS.Text,
     PacketIDS.PlayerList,
     PacketIDS.CommandOutput,
@@ -20,7 +20,7 @@ class PacketHandler:
         self.frame = frame
         self.listen_packets = INTERNAL_LISTEN_PACKETS.copy()
         self.packet_listener_with_priority: dict[
-            int, dict[int, set[PacketListener]]
+            int, dict[int, list[PacketListener]]
         ] = {}
 
     def add_packet_listener(
@@ -28,8 +28,10 @@ class PacketHandler:
     ):
         self.listen_packets.add(packet_id)
         self.packet_listener_with_priority.setdefault(packet_id, {})
-        self.packet_listener_with_priority[packet_id].setdefault(priority, set())
-        self.packet_listener_with_priority[packet_id][priority].add(cb)
+        self.packet_listener_with_priority[packet_id].setdefault(priority, [])
+        plist = self.packet_listener_with_priority[packet_id][priority]
+        if cb not in plist:
+            plist.append(cb)
 
     def entrance(self, packetID: int, packet: dict):
         pkt_cbs = self.packet_listener_with_priority.get(packetID)

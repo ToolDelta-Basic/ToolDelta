@@ -16,7 +16,7 @@ import urllib3
 from .utils import Utils
 from .color_print import Print
 from .constants import TDSPECIFIC_MIRROR
-from .get_tool_delta_version import get_tool_delta_version
+from .version import get_tool_delta_version
 from .sys_args import sys_args_to_dict
 from .urlmethod import download_file_singlethreaded
 

@@ -35,7 +35,6 @@ __all__ = [
     "ToolDelta",
     "ToolDelta",
     "client_title",
-    "plugins",
     "start_tool_delta",
     "tooldelta",
 ]
@@ -43,14 +42,38 @@ __all__ = [
 from typing import TYPE_CHECKING
 
 from .color_print import fmts
-from .utils import Utils
 from .frame import Config, GameCtrl, ToolDelta
+from .internal.types import Player, Chat, FrameExit, InternalBroadcast
 from .launch_options import client_title
-from .plugin_load.classic_plugin.plugin_cls import Plugin
-from .starter import plugin_group as plugins
+from .plugin_load.classic_plugin import Plugin, plugin_entry
 from .starter import start_tool_delta, tooldelta
+from .utils import Utils
+from .version import get_tool_delta_version, check_tooldelta_version
 
 # 重定向
 Builtins = Utils
 Frame = ToolDelta
 Print = fmts
+
+__all__ = [
+    "TYPE_CHECKING",
+    "Builtins",
+    "Chat",
+    "Config",
+    "Frame",
+    "FrameExit",
+    "GameCtrl",
+    "InternalBroadcast",
+    "Player",
+    "Plugin",
+    "Print",
+    "ToolDelta",
+    "ToolDelta",
+    "check_tooldelta_version",
+    "client_title",
+    "fmts",
+    "get_tool_delta_version",
+    "plugin_entry",
+    "start_tool_delta",
+    "tooldelta"
+]

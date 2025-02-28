@@ -116,6 +116,6 @@ def update_player_ability_from_server(
         if layer_data["Type"] == 1:
             maintainer.player_abilities[player.unique_id] = (
                 Abilities.unmarshal(
-                    layer_data["Value"], player_permissions, command_permissions
+                    layer_data["Values"], player_permissions, command_permissions
                 )
             )

@@ -5,13 +5,13 @@ import os
 import time
 import traceback
 
-from .color_print import Print
+from .color_print import fmts
 from .constants import TOOLDELTA_LOGO
-from .frame import ToolDelta
+from .internal.config_loader import ConfigLoader
 from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .starter import start_tool_delta, init_cfg_only
-from .get_tool_delta_version import get_tool_delta_version
+from .version import get_tool_delta_version
 from .sys_args import print_help, sys_args_to_dict, parse_addopt
 
 
@@ -43,27 +43,27 @@ def client_title() -> None:
                 raise ValueError("启动模式参数不合法")
             r = launch_args["l"]
         elif is_faststart:
-            Print.clean_print("§a快速启动功能已打开, 将跳过选择界面")
-            Print.clean_print("删除本地的 §f快速启动.sig§r 文件即可取消快速启动功能")
+            fmts.clean_print("§a快速启动功能已打开, 将跳过选择界面")
+            fmts.clean_print("删除本地的 §f快速启动.sig§r 文件即可取消快速启动功能")
             time.sleep(0.5)
             start_tool_delta()
             return
         else:
-            Print.clean_print(TOOLDELTA_LOGO)
+            fmts.clean_print(TOOLDELTA_LOGO)
             if "title" in sys_args_to_dict():
-                Print.clean_print(launch_args["title"] or "")
-            Print.clean_print(
+                fmts.clean_print(launch_args["title"] or "")
+            fmts.clean_print(
                 "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
             )
-            Print.clean_print("1 - §b启动 ToolDelta")
-            Print.clean_print("2 - §d打开插件管理器")
-            Print.clean_print("3 - §d打开插件市场")
-            Print.clean_print("4 - §6初始化所有插件配置")
-            Print.clean_print("5 - §a修改启动配置")
-            Print.clean_print("6 - §c开启直接启动模式")
+            fmts.clean_print("1 - §b启动 ToolDelta")
+            fmts.clean_print("2 - §d打开插件管理器")
+            fmts.clean_print("3 - §d打开插件市场")
+            fmts.clean_print("4 - §6初始化所有插件配置")
+            fmts.clean_print("5 - §a修改启动配置")
+            fmts.clean_print("6 - §c开启直接启动模式")
             for i, (opt_name, _) in enumerate(more_opts.values()):
-                Print.clean_print(f"{i+7} - {opt_name}")
-            Print.clean_print("q - §7退出")
+                fmts.clean_print(f"{i+7} - {opt_name}")
+            fmts.clean_print("q - §7退出")
             r = input("请选择：").strip()
         match r:
             case "1":
@@ -75,22 +75,22 @@ def client_title() -> None:
             case "4":
                 init_cfg_only()
             case "5":
-                ToolDelta.change_config()
+                ConfigLoader.change_config()
             case "6":
                 open("快速启动.sig", "wb").close()
-                Print.clean_print("§a快速启动模式已开启")
-                Print.clean_print(
+                fmts.clean_print("§a快速启动模式已开启")
+                fmts.clean_print(
                     "§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能"
                 )
             case "q":
-                Print.clean_print("§aToolDelta 已退出.")
+                fmts.clean_print("§aToolDelta 已退出.")
             case _:
                 if r in more_opts.keys():
                     os.system(more_opts[r][1])
                 else:
-                    Print.clean_print("§c不合法的启动模式: " + r)
+                    fmts.clean_print("§c不合法的启动模式: " + r)
     except (EOFError, SystemExit):
         pass
     except Exception:
-        Print.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
-        input(Print.fmt_info("按回车键退出..", "§c 报错 §r"))
+        fmts.print_err("ToolDelta 运行过程中出现问题：" + traceback.format_exc())
+        input(fmts.fmt_info("按回车键退出..", "§c 报错 §r"))
