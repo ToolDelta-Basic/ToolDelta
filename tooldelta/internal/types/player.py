@@ -16,9 +16,10 @@ class UnreadyPlayer:
     platform_chat_id: str
     build_platform: int
     online: bool = True
+    abilities: Abilities | None = None
 
     def ready(self, _parent: "PlayerInfoMaintainer"):
-        return Player(
+        p = Player(
             _parent,
             self.uuid,
             self.unique_id,
@@ -28,6 +29,9 @@ class UnreadyPlayer:
             self.build_platform,
             self.online,
         )
+        if self.abilities:
+            p.set_abilities(self.abilities)
+        return p
 
 
 @dataclass

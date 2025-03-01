@@ -14,7 +14,7 @@ from collections.abc import Callable
 from ..cfg import Cfg
 from ..constants import SysStatus, PacketIDS
 from ..color_print import Print
-from ..internal.types import UnreadyPlayer
+from ..internal.types import UnreadyPlayer, Abilities
 from ..neo_libs import file_download as neo_fd, neo_conn
 from ..eulogist_libs import core_conn as eulogist_conn
 from ..packets import Packet_CommandOutput
@@ -377,6 +377,18 @@ class FrameNeOmgAccessPoint(StandardFrame):
             raise ValueError("未连接到接入点")
         for i in self.omega.get_all_online_players():
             if i is not None:
+                ab = Abilities(
+                    i.can_build,
+                    i.can_mine,
+                    i.can_doors_and_switches,
+                    i.can_open_containers,
+                    i.can_attack_players,
+                    i.can_attack_mobs,
+                    i.can_operator_commands,
+                    i.can_teleport,
+                    0,  # TODO: player_permission 现在固定为 0
+                    3 if i.op else 1,  # TODO: 除非玩家为 OP, 否则命令等级恒为 1
+                )
                 players_data[i.name] = UnreadyPlayer(
                     i.uuid,
                     i.entity_unique_id,
@@ -384,6 +396,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                     i.uuid[-8:],
                     i.platform_chat_id,
                     i.build_platform,
+                    abilities=ab,
                 )
             else:
                 raise ValueError("未能获取玩家名和 UUID")
