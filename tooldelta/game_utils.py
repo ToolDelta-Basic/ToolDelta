@@ -12,7 +12,7 @@ from tooldelta.color_print import Print
 from tooldelta.constants import PacketIDS
 
 from .packets import Packet_CommandOutput
-from .utils import Utils
+from .utils import to_player_selector, createThread
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl, ToolDelta
@@ -111,7 +111,7 @@ def getPos(target: str, timeout: float = 5) -> dict:
         and target != game_ctrl.bot_name
     ):
         raise ValueError(f'玩家 "{target}" 不存在')
-    target = Utils.to_player_selector(target)
+    target = to_player_selector(target)
     resp = game_ctrl.sendwscmd_with_resp(f"/querytarget {target}", timeout)
     if not resp.OutputMessages[0].Success:
         raise ValueError(f"无法获取坐标信息：{resp.OutputMessages[0].Message}")
@@ -169,7 +169,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         and (not target.startswith("@a"))
     ):
         raise ValueError("未找到目标玩家")
-    target = Utils.to_player_selector(target)
+    target = to_player_selector(target)
     result: Packet_CommandOutput = game_ctrl.sendcmd_with_resp(
         f"/clear {target} {itemName} {itemSpecialID} 0"
     )
@@ -212,7 +212,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     result = {}
     result2 = {}
     if targetNameToGet.strip() != "*":
-        targetNameToGet = Utils.to_player_selector(targetNameToGet)
+        targetNameToGet = to_player_selector(targetNameToGet)
     for i in resultList:
         Message = i.Message
         if Message == r"commands.scoreboard.players.list.player.empty":
@@ -259,7 +259,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
     if target == "*" or scb_name == "*":
         raise ValueError("在此处无法使用 通配符 作为计分板分数获取目标")
     if target in game_ctrl.allplayers:
-        target = Utils.to_player_selector(target)
+        target = to_player_selector(target)
     resp = game_ctrl.sendcmd_with_resp(
         f"/scoreboard players test {target} {scb_name} 0 0", timeout
     ).OutputMessages[0]
@@ -439,7 +439,7 @@ def set_player_effect(
     command = f"/effect {player_name} {effect} {duration} {level} {particle!s}"
 
     if duration == 0:
-        Utils.createThread(
+        createThread(
             func=__set_effect_while__,
             args=(player_name, effect, level, particle, icon_flicker),
             usage=f"Set_Effect_Thread_{player_name}",

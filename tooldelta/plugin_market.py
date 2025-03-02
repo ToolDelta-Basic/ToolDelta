@@ -21,7 +21,7 @@ from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL
 )
 from .plugin_load import PluginRegData, PluginsPackage
-from .utils import Utils
+from .utils import try_int, thread_gather
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"
@@ -209,7 +209,7 @@ class PluginMarket:
                 elif last_operation == "q":  # 退出操作
                     break
                 else:
-                    res = Utils.try_int(last_operation)
+                    res = try_int(last_operation)
                     if res and 1 <= res <= all_indexes:  # 插件选择操作
                         result = show_list[res - 1]
                         if not result[0].startswith("[pkg]"):
@@ -480,7 +480,7 @@ class PluginMarket:
 
     def user_get_plugin_package(self, pack: PluginsPackage):
         Print.clean_print("§6获取插件数据中...", end="\r")
-        find_plugins = Utils.thread_gather(
+        find_plugins = thread_gather(
             [(self.get_plugin_data_from_market, (i,)) for i in pack.plugin_ids]
         )
         ftree = self.get_market_filetree()

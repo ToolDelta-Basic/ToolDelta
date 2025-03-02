@@ -6,6 +6,7 @@ import traceback
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from .. import utils
 from ..color_print import fmts
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
@@ -21,7 +22,6 @@ from ..constants import TextType, PacketIDS
 from ..internal.packet_handler import PacketHandler
 from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..game_utils import _set_frame
-from ..utils import Utils
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
@@ -157,7 +157,7 @@ class PluginGroup:
         """
         classic_plugin.execute_active(onerr)
         asyncio.run(injected_plugin.execute_init())
-        Utils.createThread(
+        utils.createThread(
             asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务"
         )
 
@@ -265,7 +265,7 @@ class PluginGroup:
             case TextType.TextTypeChat:
                 raw_name = pkt["SourceName"]
                 msg = pkt["Message"]
-                cleaned_name = Utils.to_plain_name(raw_name)
+                cleaned_name = utils.to_plain_name(raw_name)
                 if player := self.linked_frame.players_maintainer.getPlayerByName(
                     cleaned_name
                 ):

@@ -1,0 +1,78 @@
+from . import tempjson
+from .fbtoken import fbtokenFix, if_token
+from .locks import ChatbarLock, players_in_chatbar_lock
+from .safe_json import (
+    DataReadError,
+    safe_json_dump,
+    safe_json_load,
+    read_from_plugin,
+    write_to_plugin,
+)
+from .system_safe_close import safe_close
+from .timer_events import timer_event, timer_event_boostrap
+from .tooldelta_thread import ToolDeltaThread, createThread, thread_func, thread_gather
+from .basic import (
+    simple_fmt,
+    simple_assert,
+    try_int,
+    try_convert,
+    fuzzy_match,
+    split_list,
+    fill_list_index,
+    remove_mc_color_code,
+    to_plain_name,
+    to_player_selector,
+    create_result_cb,
+    create_func_class,
+)
+
+# ---------------- 向下兼容 ---------------
+
+TMPJson = create_func_class(
+    "TMPJson",
+    [
+        tempjson.read,
+        tempjson.write,
+        tempjson.flush,
+        tempjson.cancel_change,
+        tempjson.get,
+        tempjson.get_tmps,
+    ],
+)
+TMPJson.loadPathJson = tempjson.load_and_read
+TMPJson.unloadPathJson = tempjson.unload_to_path
+TMPJson.read_as_tmp = tempjson.load_and_read
+TMPJson.write_as_tmp = tempjson.load_and_write
+
+JsonIO = create_func_class("JsonIO", [])
+JsonIO.readFileFrom = read_from_plugin
+JsonIO.writeFileTo = write_to_plugin
+JsonIO.SafeJsonLoad = safe_json_load
+JsonIO.SafeJsonDump = safe_json_dump
+JsonIO.DataReadError = DataReadError
+
+Utils = create_func_class(
+    "Utils",
+    [
+        JsonIO,
+        TMPJson,
+        ChatbarLock,
+        ToolDeltaThread,
+        simple_fmt,
+        simple_assert,
+        try_int,
+        try_convert,
+        fuzzy_match,
+        split_list,
+        fill_list_index,
+        remove_mc_color_code,
+        to_plain_name,
+        to_player_selector,
+        create_result_cb,
+        thread_func,
+        thread_gather,
+        timer_event,
+    ],
+)
+Utils.createThread = createThread
+chatbar_lock_list = players_in_chatbar_lock

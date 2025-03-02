@@ -64,6 +64,7 @@ class Abilities:
             level += 1
         if self.operator_commands and self.teleport:
             level += 1
+        return level
 
     def marshal(self) -> int:
         return (
@@ -101,7 +102,7 @@ def update_player_abilities(pkt_sender: "GameCtrl", playerUniqueID: int, abiliti
         {
             "EntityUniqueID": playerUniqueID,
             "PermissionLevel": abilities.auto_permission_level(),
-            "RequestedPermissions": abilities.marshal(),
+            "Ability": abilities.marshal(),
         },
     )
 

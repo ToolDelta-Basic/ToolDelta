@@ -13,7 +13,7 @@ import requests
 import json
 import urllib3
 
-from .utils import Utils
+from .utils import thread_func
 from .color_print import Print
 from .constants import TDSPECIFIC_MIRROR
 from .version import get_tool_delta_version
@@ -73,7 +73,7 @@ class GameTextsLoader:
                 f.write(latest_version)
             self.download_and_extract(latest_version)
 
-    @Utils.thread_func("自动更新游戏文本翻译器内容")
+    @thread_func("自动更新游戏文本翻译器内容")
     def auto_update(self) -> None:
         "自动更新"
         version_file_path: str = os.path.join(self.base_path, "version")

@@ -4,22 +4,22 @@ import sys
 import traceback
 from typing import TYPE_CHECKING, TypeVar
 
-from tooldelta.cfg import VERSION, Cfg
-from tooldelta.color_print import fmts
-from tooldelta.utils import Utils
-from tooldelta.constants import (
+from ... import utils
+from ...cfg import VERSION, Cfg
+from ...color_print import fmts
+from ...constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
 )
-from tooldelta.version import SystemVersionException
+from ...version import SystemVersionException
 from ..basic import plugin_is_enabled
 from ..exceptions import NotValidPluginError
 from . import event_cbs
 from .plugin_cls import Plugin
 
 if TYPE_CHECKING:
-    from tooldelta import ToolDelta
-    from tooldelta.plugin_load.plugins import PluginGroup
+    from ... import ToolDelta
+    from ...plugin_load.plugins import PluginGroup
 
 loaded_plugin_modules = []
 __cached_frame: "ToolDelta | None" = None
@@ -107,7 +107,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
                     "插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "datas.json"
                 )
             ):
-                plugin_data = Utils.JsonIO.SafeJsonLoad(data_path)
+                plugin_data = utils.JsonIO.SafeJsonLoad(data_path)
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
 
@@ -185,7 +185,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
             "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"
         )
         raise SystemExit from err
-    except Utils.JsonIO.DataReadError as err:
+    except utils.JsonIO.DataReadError as err:
         fmts.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
     except SystemVersionException as err:
         fmts.print_err(f"插件 {plugin_dirname} 需要更高版本的 ToolDelta 加载：{err}")

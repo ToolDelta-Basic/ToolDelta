@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, TypeVar
 from collections.abc import Callable
 
-from tooldelta.color_print import fmts
-from tooldelta.constants import PacketIDS
-from tooldelta.internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ...color_print import fmts
+from ...constants import PacketIDS
+from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..basic import ON_ERROR_CB
 from ..exceptions import (
     PluginAPINotFoundError,

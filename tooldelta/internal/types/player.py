@@ -30,7 +30,7 @@ class UnreadyPlayer:
             self.online,
         )
         if self.abilities:
-            p.set_abilities(self.abilities)
+            p.setAbilities(self.abilities)
         return p
 
 
@@ -53,7 +53,7 @@ class Player:
         """
         self._parent.frame.get_game_control().say_to(self.name, text)
 
-    def set_title(self, title: str, sub_title: str = ""):
+    def setTitle(self, title: str, sub_title: str = ""):
         """
         设置玩家标题
         Args:
@@ -63,7 +63,7 @@ class Player:
         if sub_title.strip():
             self._parent.frame.get_game_control().player_subtitle(self.name, sub_title)
 
-    def set_actionbar(self, text: str):
+    def setActionbar(self, text: str):
         """
         设置玩家行动栏文本
         Args:
@@ -71,7 +71,7 @@ class Player:
         """
         self._parent.frame.get_game_control().player_actionbar(self.name, text)
 
-    def get_selector(self):
+    def getSelector(self):
         """
         获取玩家选择器
         Returns:
@@ -79,11 +79,11 @@ class Player:
         """
         return f'@a[name="{self.name}"]'
 
-    def get_pos(self, timeout: float = 5) -> tuple[int, float, float, float]:
+    def getPos(self, timeout: float = 5) -> tuple[int, float, float, float]:
         """
         获取玩家坐标
         Args:
-            timeout: 超时时间
+            timeout: 超时时间, 默认 5 秒
         Returns:
             tuple[int, float, float, float]: 维度ID, x, y, z
         """
@@ -93,33 +93,35 @@ class Player:
         x, y, z = pos["x"], pos["y"], pos["z"]
         return dim, x, y, z
 
-    def get_item_count(self, item_id: str, item_data: int = -1):
+    def getItemCount(self, item_id: str, item_data: int = -1, timeout: float = 5):
         """
         获取玩家物品数量
         Args:
             item_id: 物品ID
             item_data: 物品数据值
+            timeout: 超时时间, 默认 5 秒
         Returns:
             int: 物品数量
         """
         return game_utils.getItem(self.name, item_id, item_data)
 
-    def get_score(self, scoreboard_name: str):
+    def getScore(self, scoreboard_name: str, timeout: float = 5):
         """
         获取玩家计分板分数
         Args:
             scoreboard_name: 计分板名称
+            timeout: 超时时间, 默认 5 秒
         Returns:
             int: 计分板分数
         """
-        return game_utils.getScore(scoreboard_name, self.get_selector())
+        return game_utils.getScore(scoreboard_name, self.getSelector(), timeout)
 
     def input(self, prompt: str = "", timeout: float = 30):
         """
         获取玩家输入
         Args:
             prompt: 提示文本
-            timeout: 超时时间
+            timeout: 超时时间, 默认 30 秒
         Returns:
             str: 玩家输入
         """
@@ -139,7 +141,7 @@ class Player:
             raise ValueError(f"玩家 {self.name} 的能力还没有初始化")
         return ab
 
-    def set_abilities(self, abilities: Abilities):
+    def setAbilities(self, abilities: Abilities):
         """
         设置玩家能力
         Args:

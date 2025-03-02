@@ -16,9 +16,8 @@ from .constants import (
 )
 from .plugin_load import PluginRegData
 from .plugin_market import market
-from .utils import Utils
+from .utils import try_int, safe_json_dump, safe_json_load
 
-JsonIO = Utils.SimpleJsonDataReader
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"
@@ -232,7 +231,7 @@ class PluginManager:
             Print.clean_print("§a☑ §f关键词查找到的插件:")
             for i, plugin in enumerate(res):
                 Print.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
-            r = Utils.try_int(input(Print.clean_fmt("§f请选择序号: ")))
+            r = try_int(input(Print.clean_fmt("§f请选择序号: ")))
             if r is None or r not in range(1, len(res) + 1):
                 Print.clean_print("§c序号无效, 回车键继续")
                 return None
@@ -350,13 +349,13 @@ class PluginManager:
         if not os.path.isdir(f_dir):
             os.mkdir(f_dir)
         try:
-            old_dat: dict = JsonIO.SafeJsonLoad(
+            old_dat: dict = safe_json_load(
                 open(os.path.join(f_dir, "datas.json"), encoding="utf-8")
             )
         except Exception:
             old_dat = {}
         old_dat.update(plugin_data.dump())
-        JsonIO.SafeJsonDump(
+        safe_json_dump(
             old_dat,
             open(os.path.join(f_dir, "datas.json"), "w", encoding="utf-8"),
         )

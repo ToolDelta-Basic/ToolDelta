@@ -23,7 +23,6 @@ from .version import get_tool_delta_version
 from .logger import publicLogger
 from .packets import Packet_CommandOutput
 from .plugin_load import injected_plugin
-from .utils import Utils
 from .sys_args import sys_args_to_dict
 
 from .plugin_load.plugins import PluginGroup
@@ -86,7 +85,7 @@ class ToolDelta:
             self.players_maintainer.hook_packet_handler(self.packet_handler)
             self.plugin_group.load_plugins()
             utils.timer_event_boostrap()
-            utils.tmpjson_save()
+            utils.tempjson.jsonfile_auto_save()
             self.launcher.init()
             self.launcher.listen_launched(
                 [self.game_ctrl.system_inject, self.cmd_manager.start_proc_thread]
@@ -274,7 +273,7 @@ class GameCtrl:
                         fmts.print_inf(msg)
                     if msg.startswith("death."):
                         args = pkt["Parameters"]
-                        Utils.fill_list_index(args, ["", "", ""])
+                        utils.fill_list_index(args, ["", "", ""])
                         who_died, killer, weapon_name = args
                         if weapon_name:
                             fmts.print_inf(
@@ -286,7 +285,7 @@ class GameCtrl:
                             fmts.print_inf(f"§e{who_died} 死亡了")
             case TextType.TextTypeChat | TextType.TextTypeWhisper:
                 src_name = pkt["SourceName"]
-                playername = Utils.to_plain_name(src_name)
+                playername = utils.to_plain_name(src_name)
                 if src_name == "":
                     # /me 消息
                     msg_list = msg.split(" ")
@@ -379,7 +378,7 @@ class GameCtrl:
             msg (str): 消息
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
-        self.sendwocmd(f"tellraw {Utils.to_player_selector(target)} {text_json}")
+        self.sendwocmd(f"tellraw {utils.to_player_selector(target)} {text_json}")
 
     def player_title(self, target: str, text: str) -> None:
         """向玩家展示标题文本
@@ -389,7 +388,7 @@ class GameCtrl:
             text (str): 文本
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
-        self.sendwocmd(f"titleraw {Utils.to_player_selector(target)} title {text_json}")
+        self.sendwocmd(f"titleraw {utils.to_player_selector(target)} title {text_json}")
 
     def player_subtitle(self, target: str, text: str) -> None:
         """向玩家展示副标题文本
@@ -400,7 +399,7 @@ class GameCtrl:
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
         self.sendwocmd(
-            f"titleraw {Utils.to_player_selector(target)} subtitle {text_json}"
+            f"titleraw {utils.to_player_selector(target)} subtitle {text_json}"
         )
 
     def player_actionbar(self, target: str, text: str) -> None:
@@ -412,7 +411,7 @@ class GameCtrl:
         """
         text_json = json.dumps({"rawtext": [{"text": text}]}, ensure_ascii=False)
         self.sendwocmd(
-            f"titleraw {Utils.to_player_selector(target)} actionbar {text_json}"
+            f"titleraw {utils.to_player_selector(target)} actionbar {text_json}"
         )
 
     def get_game_data(self) -> dict:
