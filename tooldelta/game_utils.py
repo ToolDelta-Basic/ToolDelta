@@ -8,9 +8,9 @@ from collections.abc import Callable
 import json
 import threading
 
-from tooldelta.color_print import Print
-from tooldelta.constants import PacketIDS
-
+from . import utils
+from .constants import PacketIDS, TextType
+from .internal.packet_handler import PacketHandler
 from .packets import Packet_CommandOutput
 from .utils import to_player_selector, createThread
 
@@ -268,7 +268,7 @@ def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
     if resp.Message == "commands.scoreboard.players.list.player.empty":
         raise ValueError(f"计分板项或玩家 {scb_name}:{target} 未找到")
     if resp.Message == "commands.scoreboard.players.score.notFound":
-        raise ValueError(f"计分板项或玩家 {target} 在此计分板没有分数")
+        raise ValueError(f"计分板项不存在或 {target} 在此计分板没有分数")
     if len(resp.Parameters) < 1:
         raise ValueError(
             f"计分板分数获取的Parameters获取异常: {resp.Message}: {resp.Parameters}"
@@ -376,7 +376,6 @@ def getTickingAreaList() -> dict:
     return result
 
 
-
 def __set_effect_while__(
     player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True
 ) -> None:
@@ -457,6 +456,7 @@ def set_player_effect(
         case _:
             return ValueError(f"未知错误: {result.OutputMessages[0].Message}")
 
+
 def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
     """
     从物品展示框取出物品
@@ -475,7 +475,9 @@ def take_item_out_item_frame(pos: tuple[float, float, float]) -> None:
         f"tp {game_ctrl.bot_name} {int(BotPos[0])} {int(BotPos[1])} {int(BotPos[2])}"
     )
 
+
 # 适配原 DotCS 方法
+
 
 def sendcmd(
     cmd: str, waitForResp: bool = False, timeout: int = 30
@@ -571,24 +573,23 @@ def get_robotname() -> str:
     return game_ctrl.bot_name
 
 
+def hook_packet_handler(hdl: PacketHandler):
+    def handle_text_packet(pkt: dict) -> bool:
+        msg: str = pkt["Message"]
+        text_type = pkt["TextType"]
 
-def countdown(delay: float, msg: str | None = None) -> None:
-    """
-    倒计时函数
-
-    Args:
-        delay: 延迟时间，可以是整数或浮点数
-        msg: 倒计时消息，可选Args，默认为"Countdown"
-    """
-    if msg is None:
-        msg = "Countdown"
-    delayStart = time.time()
-    delayStop = delayStart + delay
-    while delay >= 0:
-        if delay >= 0:
-            delay = delayStop - time.time()
-        else:
-            delay = 0
-        Print.print_inf(f"{msg}: {delay:.2f}s", end="\r")
-        time.sleep(0.01)
-    print("", end="\n")
+        if text_type == TextType.TextTypeChat or text_type == TextType.TextTypeWhisper:
+            src_name = pkt["SourceName"]
+            playername = utils.to_plain_name(src_name)
+            if src_name == "":
+                # /me 消息
+                msg_list = msg.split(" ")
+                if len(msg_list) >= 3:
+                    src_name = msg_list[1]
+                    msg = " ".join(msg_list[2:])
+                else:
+                    return False
+            if playername in player_waitmsg_cb.keys():
+                player_waitmsg_cb[playername](msg)
+        return False
+    hdl.add_packet_listener(PacketIDS.IDText, handle_text_packet, 1)

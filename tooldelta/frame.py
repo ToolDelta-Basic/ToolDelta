@@ -86,6 +86,7 @@ class ToolDelta:
             self.plugin_group.load_plugins()
             utils.timer_event_boostrap()
             utils.tempjson.jsonfile_auto_save()
+            game_utils.hook_packet_handler(self.packet_handler)
             self.launcher.init()
             self.launcher.listen_launched(
                 [self.game_ctrl.system_inject, self.cmd_manager.start_proc_thread]
@@ -294,10 +295,6 @@ class GameCtrl:
                         msg = " ".join(msg_list[2:])
                     else:
                         return False
-                # game_utils.waitMsg 需要监听玩家信息
-                # 监听后, 消息仍被处理
-                if playername in game_utils.player_waitmsg_cb.keys():
-                    game_utils.player_waitmsg_cb[playername](msg)
                 fmts.print_inf(f"<{playername}> {msg}")
             case TextType.TextTypeAnnouncement:
                 # /say 消息
