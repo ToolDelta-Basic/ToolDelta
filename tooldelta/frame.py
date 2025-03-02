@@ -194,6 +194,14 @@ class ToolDelta:
         """
         return self.game_ctrl
 
+    def get_players(self) -> "PlayerInfoMaintainer":
+        """获取 GameControl 对象
+
+        Returns:
+            GameCtrl: GameControl 对象
+        """
+        return self.players_maintainer
+
     @staticmethod
     def actions_before_exited() -> None:
         """安全退出"""

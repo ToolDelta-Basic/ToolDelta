@@ -153,7 +153,7 @@ def write(path: str, obj: Any) -> None:
 
 def load_and_read(
     path: str,
-    needFileExists: bool = True,
+    need_file_exists: bool = True,
     timeout: int = 60,
     default: Callable[[], Any] | Any = None,
 ) -> Any:
@@ -171,7 +171,10 @@ def load_and_read(
     try:
         if path not in tempjson_paths.keys():
             load_from_path(
-                path, needFileExists, default() if callable(default) else default, timeout
+                path,
+                need_file_exists,
+                default() if callable(default) else default,
+                timeout,
             )
         return read(path)
     except Exception as e:
@@ -180,7 +183,7 @@ def load_and_read(
 
 
 def load_and_write(
-    path: str, obj: Any, needFileExists: bool = True, timeout: int = 60
+    path: str, obj: Any, need_file_exists: bool = True, timeout: int = 60
 ) -> None:
     """写入 json 文件并将其从磁盘加载到缓存区，以便一段时间内能快速读写.
 
@@ -192,7 +195,7 @@ def load_and_write(
     """
     try:
         if path not in tempjson_paths.keys():
-            load_from_path(path, needFileExists, obj, timeout)
+            load_from_path(path, need_file_exists, obj, timeout)
         write(path, obj)
     except Exception as e:
         e_new = type(e)(str(e))
