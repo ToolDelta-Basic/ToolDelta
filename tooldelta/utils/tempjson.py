@@ -26,7 +26,7 @@ class _jsonfile_status:
         self.unload_delay = unload_delay
         if not os.path.isdir(dp := os.path.dirname(path)):
             raise ValueError(dp + " 文件夹路径不存在")
-        if need_file_exists:
+        if not need_file_exists and not os.path.isfile(path):
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(default, f)
             self.content = default
@@ -168,11 +168,15 @@ def load_and_read(
     Returns:
         Any: 该虚拟路径的 JSON
     """
-    if path not in tempjson_paths.keys():
-        load_from_path(
-            path, needFileExists, default() if callable(default) else default, timeout
-        )
-    return read(path)
+    try:
+        if path not in tempjson_paths.keys():
+            load_from_path(
+                path, needFileExists, default() if callable(default) else default, timeout
+            )
+        return read(path)
+    except Exception as e:
+        e_new = type(e)(str(e))
+        raise e_new from None
 
 
 def load_and_write(
@@ -186,9 +190,13 @@ def load_and_write(
         needFileExists (bool, optional): 默认为 True, 为 False 时，若文件路径不存在，就会自动创建一个文件，且写入默认值 null
         timeout (int, optional): 多久没有再进行读取操作时卸载缓存
     """
-    if path not in tempjson_paths.keys():
-        load_from_path(path, needFileExists, obj, timeout)
-    write(path, obj)
+    try:
+        if path not in tempjson_paths.keys():
+            load_from_path(path, needFileExists, obj, timeout)
+        write(path, obj)
+    except Exception as e:
+        e_new = type(e)(str(e))
+        raise e_new from None
 
 
 def cancel_change(path: str):
