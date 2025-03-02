@@ -98,7 +98,7 @@ class Abilities:
 
 def update_player_abilities(pkt_sender: "GameCtrl", playerUniqueID: int, abilities: Abilities):
     pkt_sender.sendPacket(
-        PacketIDS.IDRequestAbility,
+        PacketIDS.RequestPermissions,
         {
             "EntityUniqueID": playerUniqueID,
             "PermissionLevel": abilities.auto_permission_level(),

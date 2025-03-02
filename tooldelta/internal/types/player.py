@@ -30,7 +30,7 @@ class UnreadyPlayer:
             self.online,
         )
         if self.abilities:
-            p.setAbilities(self.abilities)
+            p.setAbilities(self.abilities, upload=False)
         return p
 
 
@@ -141,16 +141,17 @@ class Player:
             raise ValueError(f"玩家 {self.name} 的能力还没有初始化")
         return ab
 
-    def setAbilities(self, abilities: Abilities):
+    def setAbilities(self, abilities: Abilities, upload=True):
         """
         设置玩家能力
         Args:
             abilities: 玩家能力
         """
         self._parent.player_abilities[self.unique_id] = abilities
-        update_player_abilities(
-            self._parent.frame.get_game_control(), self.unique_id, abilities
-        )
+        if upload:
+            update_player_abilities(
+                self._parent.frame.get_game_control(), self.unique_id, abilities
+            )
 
     def is_op(self):
         return self.abilities.command_permissions >= 3
