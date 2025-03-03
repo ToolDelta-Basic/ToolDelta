@@ -5,7 +5,7 @@ import os
 import time
 import traceback
 
-from .color_print import fmts
+from .utils import fmts
 from .constants import TOOLDELTA_LOGO
 from .internal.config_loader import ConfigLoader
 from .plugin_manager import plugin_manager

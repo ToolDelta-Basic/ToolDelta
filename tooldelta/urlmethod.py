@@ -16,7 +16,7 @@ from colorama import Fore, Style, init
 from tqdm.asyncio import tqdm
 
 from .constants import TDREPO_URL
-from .color_print import Print
+from .utils import fmts
 from .version import get_tool_delta_version
 
 GGithubSrcURL = ""
@@ -40,7 +40,7 @@ init(autoreset=True)
 #             self.url = f"{url}/https://raw.githubusercontent.com"
 #             return self.url
 #     except Exception:
-#         Print.clean_print("§c未发现配置文件，将选择内置镜像地址")
+#         fmts.clean_print("§c未发现配置文件，将选择内置镜像地址")
 #     for url in url_list:
 #         try:
 #             response = requests.get(url)
@@ -60,13 +60,13 @@ def get_global_github_src_url():
     return GGithubSrcURL or "https://mirror.ghproxy.com"
 
 def get_fastest_github_mirror():
-    Print.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
+    fmts.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
     res = test_site_latency([
         "https://ghp.ci",
         "https://mirror.ghproxy.com",
         "https://github.dqyt.online",
     ])
-    Print.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
+    fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
     return site
 
 
@@ -204,7 +204,7 @@ def progress_bar(
         str: 格式化后的进度条字符串
     """
     pc = round(min(1, current / total) * length)
-    return Print.colormode_replace(
+    return fmts.colormode_replace(
         color1 + " " * pc + color2 + " " * (20 - pc) + "§r ", 7
     )
 
@@ -223,8 +223,8 @@ def download_progress_bar(
     b = f"{progressBar} {pretty_kb(current_bytes)}B / {pretty_kb(total_bytes)}B"
     if speed != 0:
         b += f" ({pretty_kb(speed)}B/s)    "
-    with Print.lock:
-        Print.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
+    with fmts.lock:
+        fmts.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
 
 
 KB = 1024
@@ -382,7 +382,7 @@ def test_site_latency(urls: list[str]) -> list[tuple[str, float]]:
                 if latency != -1:
                     tmp_speed[url] = latency
             except Exception as e:
-                Print.print_war(f"Error measuring latency for {url}: {e}")
+                fmts.print_war(f"Error measuring latency for {url}: {e}")
 
     return sorted(tmp_speed.items(), key=lambda x: x[1])
 
@@ -408,7 +408,7 @@ def measure_latencyt(url: str) -> float:
         download_speed = st.download()
         return download_speed
     except Exception as e:
-        Print.print_war(f"Error measuring latency for {url}: {e}")
+        fmts.print_war(f"Error measuring latency for {url}: {e}")
     return -1.0  # 返回 -1 表示测速失败
 
 
@@ -431,7 +431,7 @@ def get_free_port(start: int = 2000, end: int = 65535) -> int:
                 s.bind(("localhost", port))
                 return port
             except OSError:
-                Print.print_war(f"端口 {port} 正被占用，跳过")
+                fmts.print_war(f"端口 {port} 正被占用，跳过")
     raise ValueError(f"未找到空闲端口 ({start}~{end})")
 
 
@@ -447,10 +447,10 @@ def check_update() -> None:
         current_version = ".".join(map(str, get_tool_delta_version()[:3]))
 
         if not latest_version.replace(".", "") <= current_version.replace(".", ""):
-            Print.print_load(
+            fmts.print_load(
                 f"检测到最新版本 {current_version} -> {latest_version}，请及时更新！"
             )
     except KeyError:
-        Print.print_war("获取最新版本失败，请检查网络连接")
+        fmts.print_war("获取最新版本失败，请检查网络连接")
     except Exception as err:
-        Print.print_war(f"无法获取最新版本: {err}, 已忽略")
+        fmts.print_war(f"无法获取最新版本: {err}, 已忽略")

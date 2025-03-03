@@ -3,7 +3,8 @@ import threading
 import traceback
 from typing import Any, TypeVar
 from collections.abc import Callable
-from ..color_print import fmts
+
+from . import fmts
 
 VT = TypeVar("VT")
 FACTORY_TYPE = TypeVar("FACTORY_TYPE")

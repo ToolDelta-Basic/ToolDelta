@@ -1,9 +1,8 @@
-from ..color_print import fmts
-
 from . import (
     tooldelta_thread,
     tempjson,
-    timer_events
+    timer_events,
+    fmts
 )
 
 def safe_close():

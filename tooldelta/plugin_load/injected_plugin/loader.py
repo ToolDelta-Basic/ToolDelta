@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...color_print import Print
+from ...utils import fmts
 from ...constants import TOOLDELTA_INJECTED_PLUGIN, TOOLDELTA_PLUGIN_DIR, PacketIDS
 from ..basic import plugin_is_enabled
 from ..exceptions import (
@@ -215,7 +215,7 @@ async def repeat_task(func: Callable, time: float) -> None:
         try:
             await func()
         except Exception as e:
-            Print.print_err(f"repeat_task error: {e}")
+            fmts.print_err(f"repeat_task error: {e}")
 
 
 async def execute_asyncio_task(func_dict: dict, *args, **kwargs) -> None:
@@ -298,7 +298,7 @@ async def execute_repeat() -> None:
     try:
         await main_task
     except asyncio.CancelledError:
-        Print.print_suc("重复任务 repeat_task 已退出！")
+        fmts.print_suc("重复任务 repeat_task 已退出！")
 
 
 async def execute_player_message(playername: str, message: str) -> None:
@@ -424,12 +424,12 @@ async def load_plugin_file(file: str) -> PluginMetadata:
         # 获取插件元数据
         return meta_data
     except PluginAPIVersionError as err:
-        Print.print_err(
+        fmts.print_err(
             f"插件 {file} 加载出现问题：需要 {err.name} 的 API 最低版本为 {err.m_ver}, 实际上只有 {err.n_ver}"
         )
         raise
     except PluginAPINotFoundError as err:
-        Print.print_err(f"插件 {file} 加载出现问题：需要前置插件 API {err.name}")
+        fmts.print_err(f"插件 {file} 加载出现问题：需要前置插件 API {err.name}")
         raise
 
 
@@ -466,6 +466,6 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
 
     # 打印所有插件的元数据
     for metadata in all_plugin_metadata:
-        Print.print_suc(
+        fmts.print_suc(
             f"已载入插件 §f{metadata.name}§b@{metadata.version} §a作者: §f{metadata.author}"
         )

@@ -1,7 +1,7 @@
 import threading
 from collections.abc import Callable
 
-from ..color_print import fmts
+from . import fmts
 from .tooldelta_thread import ToolDeltaThread, thread_func
 
 timer_event_stop = threading.Event()

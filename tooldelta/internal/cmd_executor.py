@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from collections.abc import Callable
 from tooldelta import plugin_market
 from tooldelta.constants import SysStatus
-from tooldelta.color_print import fmts
+from tooldelta.utils import fmts
 from tooldelta.internal.launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
 from tooldelta.utils import Utils
 

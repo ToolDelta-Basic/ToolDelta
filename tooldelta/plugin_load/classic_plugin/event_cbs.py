@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, TypeVar
 from collections.abc import Callable
 
-from ...color_print import fmts
+from ...utils import fmts
 from ...constants import PacketIDS
 from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..basic import ON_ERROR_CB

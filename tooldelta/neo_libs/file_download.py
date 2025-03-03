@@ -5,16 +5,16 @@ import platform
 import brotli
 import requests
 
-from tooldelta import urlmethod
-from tooldelta.color_print import Print
-from tooldelta.sys_args import sys_args_to_dict
-from tooldelta.urlmethod import get_global_github_src_url
+from .. import urlmethod
+from ..utils import fmts
+from ..sys_args import sys_args_to_dict
+from ..urlmethod import get_global_github_src_url
 
 
 def download_libs() -> bool:
     """根据系统架构和平台下载所需的库。"""
     if "no-download-libs" in sys_args_to_dict():
-        Print.print_war("将不会进行依赖库的下载和检测更新。")
+        fmts.print_war("将不会进行依赖库的下载和检测更新。")
         return True
     mirror_src, depen_url = get_github_content_url(
         get_global_github_src_url() + "/https://raw.githubusercontent.com"
@@ -35,14 +35,14 @@ def download_libs() -> bool:
     asyncio.run(urlmethod.download_file_urls(solve_dict))
     if replace_file:
         write_commit_file(commit_file_path, commit_remote)
-        Print.print_suc("已完成 NeOmega框架 的依赖更新！")
+        fmts.print_suc("已完成 NeOmega框架 的依赖更新！")
     return True
 
 
 def download_neomg() -> bool:
     """根据系统架构和平台下载所需的NeOmega。"""
     if "no-download-neomega" in sys_args_to_dict():
-        Print.print_war("将不会进行NeOmega的下载和检测更新。")
+        fmts.print_war("将不会进行NeOmega的下载和检测更新。")
         return True
     download_libs()
     mirror_src, _ = get_github_content_url(
@@ -87,7 +87,7 @@ def download_neomg() -> bool:
             os.path.join(os.getcwd(), "tooldelta", "neo_libs", "omega_launcher.brotli"),
             neomega_file_path,
         )
-        Print.print_suc("已完成 NeOmega框架 的依赖更新！")
+        fmts.print_suc("已完成 NeOmega框架 的依赖更新！")
     return True
 
 
@@ -106,7 +106,7 @@ def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
         resp2.raise_for_status()
         require_neomega = resp2.json()
     except Exception as err:
-        Print.print_err(f"获取依赖库表出现问题：{err} (镜像: {mirror_src})")
+        fmts.print_err(f"获取依赖库表出现问题：{err} (镜像: {mirror_src})")
         raise
     return require_depen, require_neomega
 
@@ -134,7 +134,7 @@ def check_commit_file(commit_file_path: str, commit_remote: str) -> bool:
         with open(commit_file_path, encoding="utf-8") as f:
             commit_local = f.read()
         if commit_local != commit_remote:
-            Print.print_war("依赖库版本过期，将重新下载")
+            fmts.print_war("依赖库版本过期，将重新下载")
             replace_file = True
     else:
         replace_file = True
@@ -174,7 +174,7 @@ def check_file_hash(file_hash: str, file_path: str) -> bool:
     if os.path.isfile(file_path):
         hash = calculate_file_hash(file_path)
         if file_hash != hash:
-            Print.print_war("NeOmega 版本过期，将重新下载")
+            fmts.print_war("NeOmega 版本过期，将重新下载")
             replace_file = True
     else:
         replace_file = True

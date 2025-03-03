@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from tooldelta import urlmethod
 from tooldelta.auths import fblike_sign_login
 from tooldelta.cfg import Config
-from tooldelta.color_print import fmts, publicLogger
+from tooldelta.utils import fmts
 from tooldelta.constants import tooldelta_cfg, tooldelta_cli
 from tooldelta.utils import fbtokenFix, if_token
 from tooldelta.sys_args import sys_args_to_dict
@@ -52,7 +52,7 @@ class ConfigLoader:
             )
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.plugin_market_url = cfgs["插件市场源"]
-            publicLogger.switch_logger(cfgs["是否记录日志"])
+            fmts.publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(LAUNCHERS_SHOWN) + 1
             ):

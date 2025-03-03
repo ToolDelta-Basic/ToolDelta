@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 from threading import Event
 
-from tooldelta.color_print import fmts
+from ..utils import fmts
 from .types.player import Player, UnreadyPlayer
 from .types import player_abilities
-from tooldelta.constants import PacketIDS
+from ..constants import PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import ToolDelta

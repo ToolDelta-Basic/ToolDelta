@@ -2,9 +2,9 @@ import os
 from typing import TYPE_CHECKING, TypeVar
 from collections.abc import Callable
 
-from tooldelta.constants import TOOLDELTA_PLUGIN_DATA_DIR, PacketIDS
-from tooldelta.color_print import Print
-from tooldelta.internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ...constants import TOOLDELTA_PLUGIN_DATA_DIR, PacketIDS
+from ...utils import fmts
+from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
 from . import event_cbs
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ class Plugin:
         self.__path_created__ = True
 
     def print(self, msg: str):
-        Print.print_inf(f"{self.name}: {msg}")
+        fmts.print_inf(f"{self.name}: {msg}")
 
     def format_data_path(self, *paths: str):
         return os.path.join(self.data_path, *paths)

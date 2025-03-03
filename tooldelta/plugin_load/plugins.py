@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from .. import utils
-from ..color_print import fmts
+from ..utils import fmts
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,

@@ -5,7 +5,7 @@ import hashlib
 import requests
 import json
 
-from .color_print import Print
+from .utils import fmts
 
 
 def fblike_sign_login(url: str, api_urls_fmt: list[str]) -> str:
@@ -17,9 +17,9 @@ def fblike_sign_login(url: str, api_urls_fmt: list[str]) -> str:
     login_api, new_api, main_api = (i % url for i in api_urls_fmt)
     while 1:
         hash_obj = hashlib.sha256()
-        username = input(Print.fmt_info("请输入账号: ", "§6 账号 "))
+        username = input(fmts.fmt_info("请输入账号: ", "§6 账号 "))
         hash_obj.update(
-            getpass.getpass(Print.fmt_info("请输入密码 (已隐藏):", "§6 密码 ")).encode()
+            getpass.getpass(fmts.fmt_info("请输入密码 (已隐藏):", "§6 密码 ")).encode()
         )
         password = hash_obj.hexdigest()
         auth_key = requests.get(url=new_api, timeout=5).text
@@ -43,7 +43,7 @@ def fblike_sign_login(url: str, api_urls_fmt: list[str]) -> str:
         )
         SUCCESS_CODE = 200
         if resp.status_code != SUCCESS_CODE:
-            Print.print_war(
+            fmts.print_war(
                 f"请求 Api 接口失败, 将自动使用 Token 登录 (状态码:{resp.status_code}, 返回值: {resp.text})"
             )
             raise requests.exceptions.RequestException("请求 Api 接口失败", resp)
@@ -51,7 +51,7 @@ def fblike_sign_login(url: str, api_urls_fmt: list[str]) -> str:
         resp_msg = resp["message"]
         auth_succ = resp["success"]
         if not auth_succ:
-            Print.print_war(f"登录失败: {resp_msg}")
+            fmts.print_war(f"登录失败: {resp_msg}")
             continue
         break
     return resp["token"]

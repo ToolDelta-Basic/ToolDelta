@@ -12,7 +12,7 @@ import json
 
 from . import urlmethod
 from .cfg import Cfg
-from .color_print import Print
+from .utils import fmts
 from .constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
@@ -98,7 +98,7 @@ class PluginMarket:
         """
         if source_url:
             self.plugins_download_url = source_url
-        Print.clean_print("§6正在连接到插件市场..")
+        fmts.clean_print("§6正在连接到插件市场..")
         CONTENT_LENGTH = 15
 
         def display_plugins_and_packages(start_index: int, total_pages: int):
@@ -110,13 +110,13 @@ class PluginMarket:
                 total_pages (int): 总页数
             """
             clear_screen()
-            Print.clean_print(
+            fmts.clean_print(
                 f"{market_datas['SourceName']}: {market_datas['Greetings']}"
             )
             for i in range(start_index, min(start_index + CONTENT_LENGTH, all_indexes)):
                 if show_list[i][0].startswith("[pkg]"):
                     pkg_name = show_list[i][0]
-                    Print.clean_print(f" {i + 1}. §c[整合包]§e{pkg_name[5:]}")
+                    fmts.clean_print(f" {i + 1}. §c[整合包]§e{pkg_name[5:]}")
                 else:
                     plugin_id = show_list[i][0]
                     plugin_name = plugin_ids_map[plugin_id]
@@ -125,14 +125,14 @@ class PluginMarket:
                         plugin_basic_datas.get("plugin-type", "unknown"),
                         plugin_basic_datas.get("plugin-type", "unknown"),
                     )
-                    Print.clean_print(
+                    fmts.clean_print(
                         f" {i + 1}. §e{plugin_name} §av{plugin_basic_datas['version']} "
                         f"§b@{plugin_basic_datas['author']} §d{plugin_type}插件"
                     )
-            Print.clean_print(
+            fmts.clean_print(
                 f"§f第§a{start_index // CONTENT_LENGTH + 1}§f/§a{total_pages}§f页, 输入§b+§f/§b-§f翻页"
             )
-            Print.clean_print("§f输入插件序号选中插件并查看其下载页")
+            fmts.clean_print("§f输入插件序号选中插件并查看其下载页")
 
         def handle_plugin_selection(plugin_data: PluginRegData):
             """处理插件选择
@@ -145,30 +145,30 @@ class PluginMarket:
             """
             ok, pres = self.skim_plugin(plugin_data)
             if ok:
-                Print.clean_print("可以输入 §breload§r 使这个插件生效哦")
+                fmts.clean_print("可以输入 §breload§r 使这个插件生效哦")
                 return (
                     input(
-                        Print.clean_fmt("输入 §cq §r退出, 其他则返回插件市场")
+                        fmts.clean_fmt("输入 §cq §r退出, 其他则返回插件市场")
                     ).lower()
                     == "q"
                 )
             else:
-                Print.clean_print("已取消。")
+                fmts.clean_print("已取消。")
                 time.sleep(1)
             return False
 
         def handle_package_selection(pack: PluginsPackage):
             ok = self.skim_package(pack)
             if ok:
-                Print.clean_print("可以输入 §breload§r 使这个整合包生效哦")
+                fmts.clean_print("可以输入 §breload§r 使这个整合包生效哦")
                 return (
                     input(
-                        Print.clean_fmt("§f输入 §cq §f退出, 其他则返回插件市场")
+                        fmts.clean_fmt("§f输入 §cq §f退出, 其他则返回插件市场")
                     ).lower()
                     == "q"
                 )
             else:
-                Print.clean_print("已取消。")
+                fmts.clean_print("已取消。")
                 time.sleep(1)
             return False
 
@@ -189,7 +189,7 @@ class PluginMarket:
 
                 last_operation = (
                     input(
-                        Print.clean_fmt(
+                        fmts.clean_fmt(
                             "§f回车键继续上次操作, §bq§f 退出，请输入: "
                         )
                     )
@@ -223,17 +223,17 @@ class PluginMarket:
                             if handle_package_selection(package_data):
                                 break
                     else:  # 超出序号范围
-                        Print.clean_print("§c超出序号范围")
+                        fmts.clean_print("§c超出序号范围")
 
         except (KeyError, requests.RequestException) as err:
-            Print.clean_print(f"§c获取插件市场插件出现问题({err.__class__.__name__}): {err}")
-            input(Print.clean_fmt("§6按回车键继续.."))
+            fmts.clean_print(f"§c获取插件市场插件出现问题({err.__class__.__name__}): {err}")
+            input(fmts.clean_fmt("§6按回车键继续.."))
         except Exception:
-            Print.clean_print("§c获取插件市场插件出现问题, 报错如下:")
-            Print.clean_print("§c" + traceback.format_exc().replace("\n", "\n§c"))
-            input(Print.clean_fmt("§6按回车键继续.."))
+            fmts.clean_print("§c获取插件市场插件出现问题, 报错如下:")
+            fmts.clean_print("§c" + traceback.format_exc().replace("\n", "\n§c"))
+            input(fmts.clean_fmt("§6按回车键继续.."))
         finally:
-            Print.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
+            fmts.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
 
     def get_market_datas(self) -> dict:
         """
@@ -309,20 +309,20 @@ class PluginMarket:
             or "无"
         )
         clear_screen()
-        Print.clean_print(f"{plugin_data.name} v{plugin_data.version_str}")
-        Print.clean_print(
+        fmts.clean_print(f"{plugin_data.name} v{plugin_data.version_str}")
+        fmts.clean_print(
             f"作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}"
         )
-        Print.clean_print(f"前置插件：§f{pre_plugins_str}")
-        Print.clean_print(f"介绍：{plugin_data.description}")
-        Print.clean_print("")
+        fmts.clean_print(f"前置插件：§f{pre_plugins_str}")
+        fmts.clean_print(f"介绍：{plugin_data.description}")
+        fmts.clean_print("")
         res = (
-            input(Print.clean_fmt("§f下载 = §aY§f, 取消 = §cN§f, 请输入："))
+            input(fmts.clean_fmt("§f下载 = §aY§f, 取消 = §cN§f, 请输入："))
             .lower()
             .strip()
         )
         if res == "y":
-            Print.clean_print(f"§6正在下载插件：§f{plugin_data.name}", end="\r")
+            fmts.clean_print(f"§6正在下载插件：§f{plugin_data.name}", end="\r")
             pres = self.download_plugin(plugin_data)
             pres.reverse()
             return True, pres
@@ -344,14 +344,14 @@ class PluginMarket:
             if pname := self.get_plugin_id_name_map().get(pid):
                 inc_plugins_name.append(pname)
             else:
-                Print.clean_print(f"§c无法通过ID {pid} 查找插件, 有可能是插件市场出错")
+                fmts.clean_print(f"§c无法通过ID {pid} 查找插件, 有可能是插件市场出错")
                 return True
-        Print.clean_print(f"§f整合包 §b{pack.name[5:]} §7(v{pack.version})§r:")
-        Print.clean_print(f"作者: §b{pack.author}")
-        Print.clean_print("介绍: §f" + pack.description.replace("\n", "\n      "))
-        Print.clean_print("§d包含的插件的列表:")
+        fmts.clean_print(f"§f整合包 §b{pack.name[5:]} §7(v{pack.version})§r:")
+        fmts.clean_print(f"作者: §b{pack.author}")
+        fmts.clean_print("介绍: §f" + pack.description.replace("\n", "\n      "))
+        fmts.clean_print("§d包含的插件的列表:")
         for pname in inc_plugins_name:
-            Print.clean_print(f" §7- §r{pname}")
+            fmts.clean_print(f" §7- §r{pname}")
         # 显示其他文件数量
         ftree = self.get_market_filetree()
         dirdata = ftree.get(pack.name)
@@ -368,9 +368,9 @@ class PluginMarket:
                 continue
             if spliter[0] == pack.name and spliter[1] == "插件数据文件":
                 data_files_num += len(inc_files)
-        Print.clean_print(f"§2并包含§r{config_files_num}§2个插件配置文件, §r{data_files_num}§2个插件数据文件")
+        fmts.clean_print(f"§2并包含§r{config_files_num}§2个插件配置文件, §r{data_files_num}§2个插件数据文件")
         if (
-            input(Print.clean_fmt("§f下载安装 = §aY§f, 取消 = §cN§f, 请输入："))
+            input(fmts.clean_fmt("§f下载安装 = §aY§f, 取消 = §cN§f, 请输入："))
             .lower()
             .strip()
         ) == "y":
@@ -394,7 +394,7 @@ class PluginMarket:
                 res.raise_for_status()
                 res1: dict = json.loads(res.text)
             except Exception as err:
-                Print.clean_print(
+                fmts.clean_print(
                     f"§c从 {self.plugins_download_url} 获取插件信息遇到问题: {err}"
                 )
                 raise SystemExit
@@ -442,7 +442,7 @@ class PluginMarket:
             list[PluginRegData]: 本插件和其前置插件的注册数据列表
         """
         # 打印正在获取的插件下载树
-        Print.clean_print(
+        fmts.clean_print(
             f"§6正在获取 §f{plugin_data.name} §6插件的下载任务清单.." + " " * 15,
             end="\r",
         )
@@ -450,7 +450,7 @@ class PluginMarket:
         plugin_filepaths_dict = {}
         for k, v in plugin_list.items():
             plugin_filepaths_dict[k] = self.find_dirs(v)
-        Print.clean_print(f"§a已获取插件下载清单 §f{plugin_data.name}§a" + " " * 15)
+        fmts.clean_print(f"§a已获取插件下载清单 §f{plugin_data.name}§a" + " " * 15)
         plugins_url2dst_solve: list[tuple[str, str]] = []
         for plugin_name, pluginInfo in plugin_list.items():
             match pluginInfo.plugin_type:
@@ -471,15 +471,15 @@ class PluginMarket:
                         os.path.join(plugintype_path, path),
                     )
                 )
-        Print.clean_print(
+        fmts.clean_print(
             f"§bTD下载管理器: §7需要下载 §c{len(plugins_url2dst_solve)} §7个文件"
         )
         asyncio.run(urlmethod.download_file_urls(plugins_url2dst_solve))
-        Print.clean_print("§a• 插件安装已完成")
+        fmts.clean_print("§a• 插件安装已完成")
         return list(plugin_list.values())
 
     def user_get_plugin_package(self, pack: PluginsPackage):
-        Print.clean_print("§6获取插件数据中...", end="\r")
+        fmts.clean_print("§6获取插件数据中...", end="\r")
         find_plugins = thread_gather(
             [(self.get_plugin_data_from_market, (i,)) for i in pack.plugin_ids]
         )
@@ -501,7 +501,7 @@ class PluginMarket:
             f_local = os.path.join(mydir, cfgfile)
             if os.path.isfile(f_local) and (
                 input(
-                    Print.clean_fmt(
+                    fmts.clean_fmt(
                         f"§6配置文件 §r{cfgfile}§6 已存在, 是否替换§r(§a[默认]y§r/§cn§r)§6: "
                     )
                 )
@@ -525,7 +525,7 @@ class PluginMarket:
                     )
                     if not os.path.isfile(f_local) or (
                         input(
-                            Print.clean_fmt(
+                            fmts.clean_fmt(
                                 f"§6数据文件 §r{f_local}§6 已存在, 是否替换§r(§ay§r/§cn[默认]§r)§6: "
                             )
                         )
@@ -534,7 +534,7 @@ class PluginMarket:
                         == "y"
                     ):
                         download_url_dirs.append((f_url, f_local))
-        Print.clean_print(f"§6开始下载整合包 {pack.name.replace('[pkg]', '')}")
+        fmts.clean_print(f"§6开始下载整合包 {pack.name.replace('[pkg]', '')}")
         for _, fpath in download_url_dirs:
             # 初始化需要的文件夹路径
             os.makedirs(os.path.dirname(fpath), exist_ok=True)
@@ -542,7 +542,7 @@ class PluginMarket:
         # 下载插件主体
         for plugin in find_plugins:
             self.download_plugin(plugin)
-        Print.clean_print("整合包下载完成")
+        fmts.clean_print("整合包下载完成")
 
     def find_dirs(self, plugin_data: PluginRegData) -> list[str]:
         """
@@ -570,12 +570,12 @@ class PluginMarket:
                         data_list.append(folder + r"/" + file)
             return data_list
         except KeyError as err:
-            Print.clean_print(
+            fmts.clean_print(
                 f"§c获取插件市场插件目录结构出现问题：无法找到 {err}, 有可能是未来得及更新目录"
             )
             raise KeyError(f"无法找到 {err}, 有可能是未来得及更新目录") from err
         except Exception as err:
-            Print.clean_print(f"§c获取插件市场插件目录结构出现问题：{err}")
+            fmts.clean_print(f"§c获取插件市场插件目录结构出现问题：{err}")
             raise KeyError(f"获取插件市场插件目录结构出现问题：{err}") from err
 
     def get_latest_plugin_version(self, plugin_id: str) -> str:

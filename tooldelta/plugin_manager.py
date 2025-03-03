@@ -7,7 +7,7 @@ import shutil
 
 import json
 
-from .color_print import Print
+from .utils import fmts
 from .constants import (
     PLUGIN_TYPE_MAPPING,
     TOOLDELTA_CLASSIC_PLUGIN,
@@ -42,8 +42,8 @@ class PluginManager:
         clear_screen()
         while 1:
             plugins = self.list_plugins_list()
-            Print.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
-            r = input(Print.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
+            fmts.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
+            r = input(fmts.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))
             r1 = r.strip().lower()
             if r1 == "":
                 continue
@@ -69,11 +69,11 @@ class PluginManager:
         """
         description_fixed = plugin.description.replace("\n", "\n    ")
         clear_screen()
-        Print.clean_print(f"§d插件名: §f{plugin.name}")
-        Print.clean_print(f" - 版本：{plugin.version_str}")
-        Print.clean_print(f" - 作者：{plugin.author}")
-        Print.clean_print(f" 描述：{description_fixed}")
-        Print.clean_print(
+        fmts.clean_print(f"§d插件名: §f{plugin.name}")
+        fmts.clean_print(f" - 版本：{plugin.version_str}")
+        fmts.clean_print(f" - 作者：{plugin.author}")
+        fmts.clean_print(f" 描述：{description_fixed}")
+        fmts.clean_print(
             f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  4.查看手册  §c回车退出"
         )
         f_dirname = {
@@ -81,7 +81,7 @@ class PluginManager:
             "injected": TOOLDELTA_INJECTED_PLUGIN,
         }[plugin.plugin_type]
 
-        choice = input(Print.clean_fmt("§f请选择选项: "))
+        choice = input(fmts.clean_fmt("§f请选择选项: "))
         if choice == "1":
             self._delete_plugin(plugin, f_dirname)
         elif choice == "2":
@@ -92,7 +92,7 @@ class PluginManager:
             self._lookup_readme(plugin)
         else:
             return
-        input(Print.clean_fmt("§b按 [Enter键] 继续.."))
+        input(fmts.clean_fmt("§b按 [Enter键] 继续.."))
         self.push_plugin_reg_data(plugin)
 
     def _delete_plugin(self, plugin: PluginRegData, f_dirname: str) -> None:
@@ -103,14 +103,14 @@ class PluginManager:
             plugin (PluginRegData): 插件数据类
             f_dirname (str): 插件所属类别的文件夹名
         """
-        r = input(Print.clean_fmt("§c删除插件操作不可逆, 请输入 y, 其他取消：")).lower()
+        r = input(fmts.clean_fmt("§c删除插件操作不可逆, 请输入 y, 其他取消：")).lower()
         if r != "y":
             return
         plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
         dir_path = plugin_dir + ("+disabled" if not plugin.is_enabled else "")
         shutil.rmtree(dir_path)
         plugin.is_deleted = True
-        Print.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
+        fmts.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
 
     def _check_update(self, plugin: PluginRegData) -> None:
         """
@@ -121,21 +121,21 @@ class PluginManager:
         """
         latest_version = market.get_latest_plugin_version(plugin.plugin_id)
         if latest_version is None:
-            Print.clean_print("§6无法获取其的最新版本, 回车键继续")
+            fmts.clean_print("§6无法获取其的最新版本, 回车键继续")
         elif latest_version == plugin.version_str:
-            Print.clean_print("§a此插件已经为最新版本, 回车键继续")
+            fmts.clean_print("§a此插件已经为最新版本, 回车键继续")
         else:
-            Print.clean_print(
+            fmts.clean_print(
                 f"§a插件有新版本可用 ({plugin.version_str} => {latest_version})"
             )
-            r = input(Print.clean_fmt("输入§a1§f=立刻更新, §62§f=取消更新: ")).strip()
+            r = input(fmts.clean_fmt("输入§a1§f=立刻更新, §62§f=取消更新: ")).strip()
             if r == "1":
-                Print.clean_print("§a正在下载新版插件...", end="\r")
+                fmts.clean_print("§a正在下载新版插件...", end="\r")
                 market.download_plugin(plugin)
-                Print.clean_print("§a插件更新完成")
+                fmts.clean_print("§a插件更新完成")
                 plugin.version = tuple(int(i) for i in latest_version.split("."))
             else:
-                Print.clean_print("§6已取消操作")
+                fmts.clean_print("§6已取消操作")
 
     def _toggle_plugin(self, plugin: PluginRegData, f_dirname: str) -> None:
         """
@@ -156,7 +156,7 @@ class PluginManager:
                 os.path.join("插件文件", f_dirname, plugin.name),
             )
         plugin.is_enabled = not plugin.is_enabled
-        Print.clean_print(
+        fmts.clean_print(
             f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}§6"
         )
 
@@ -177,22 +177,22 @@ class PluginManager:
                 need_updates.append((i, s_data["version"]))
         if need_updates:
             clear_screen()
-            Print.clean_print("§f以下插件可进行更新:")
+            fmts.clean_print("§f以下插件可进行更新:")
             for plugin, v in need_updates:
-                Print.clean_print(f" - {plugin.name} §6{plugin.version_str}§f -> §a{v}")
+                fmts.clean_print(f" - {plugin.name} §6{plugin.version_str}§f -> §a{v}")
             r = (
-                input(Print.clean_fmt("§f输入§a y §f开始更新, §c n §f取消: "))
+                input(fmts.clean_fmt("§f输入§a y §f开始更新, §c n §f取消: "))
                 .strip()
                 .lower()
             )
             if r == "y":
                 for plugin, v in need_updates:
                     self.update_plugin_from_market(plugin)
-                Print.clean_print("§a全部插件已更新完成")
+                fmts.clean_print("§a全部插件已更新完成")
             else:
-                Print.clean_print("§6已取消插件更新.")
+                fmts.clean_print("§6已取消插件更新.")
         else:
-            Print.clean_print("§a无可更新的插件.")
+            fmts.clean_print("§a无可更新的插件.")
 
     def update_plugin_from_market(self, plugin: PluginRegData):
         """
@@ -201,7 +201,7 @@ class PluginManager:
         Args:
             plugin (PluginRegData): 插件注册信息，新旧皆可
         """
-        Print.clean_print(
+        fmts.clean_print(
             f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r"
         )
         old_plugins = self.get_all_plugin_datas()
@@ -225,15 +225,15 @@ class PluginManager:
         """
         res = self.search_plugin_by_kw(resp.split(), plugins)
         if not res:
-            Print.clean_print("§c没有任何已安装插件匹配得上关键词")
+            fmts.clean_print("§c没有任何已安装插件匹配得上关键词")
             return None
         if len(res) > 1:
-            Print.clean_print("§a☑ §f关键词查找到的插件:")
+            fmts.clean_print("§a☑ §f关键词查找到的插件:")
             for i, plugin in enumerate(res):
-                Print.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
-            r = try_int(input(Print.clean_fmt("§f请选择序号: ")))
+                fmts.clean_print(str(i + 1) + ". " + self.make_plugin_icon(plugin))
+            r = try_int(input(fmts.clean_fmt("§f请选择序号: ")))
             if r is None or r not in range(1, len(res) + 1):
-                Print.clean_print("§c序号无效, 回车键继续")
+                fmts.clean_print("§c序号无效, 回车键继续")
                 return None
             return res[r - 1]
         return res[0]
@@ -252,17 +252,17 @@ class PluginManager:
                 lns = f.read().split("\n")
             counter = 0
             clear_screen()
-            Print.clean_print(f"§b文档正文 ({readme_path}):")
+            fmts.clean_print(f"§b文档正文 ({readme_path}):")
             for ln in lns:
-                Print.clean_print("  " + ln)
+                fmts.clean_print("  " + ln)
                 counter += 1
                 MAX_LINES = 15
                 if counter > MAX_LINES:
                     counter = 0
-                    input(Print.clean_fmt("§a[按回车键继续阅读..]"))
-            Print.clean_print("§a已经读完正文了")
+                    input(fmts.clean_fmt("§a[按回车键继续阅读..]"))
+            fmts.clean_print("§a已经读完正文了")
         else:
-            Print.clean_print("§6此插件没有手册文档..")
+            fmts.clean_print("§6此插件没有手册文档..")
 
     @staticmethod
     def search_plugin_by_kw(
@@ -396,11 +396,11 @@ class PluginManager:
                 rgts.append(t)
         for i, t in enumerate(lfts):
             if i in range(len(rgts)):
-                Print.clean_print(
-                    "§f" + Print.align(t, 35) + "§f" + Print.align(rgts[i])
+                fmts.clean_print(
+                    "§f" + fmts.align(t, 35) + "§f" + fmts.align(rgts[i])
                 )
             else:
-                Print.clean_print("§f" + Print.align(t, 35))
+                fmts.clean_print("§f" + fmts.align(t, 35))
 
     def list_plugins_list(self) -> list[PluginRegData]:
         """列出插件列表
@@ -408,10 +408,10 @@ class PluginManager:
         Returns:
             list[PluginRegData]: 插件注册信息列表
         """
-        Print.clean_print("§a☑ §f目前已安装的插件列表:")
+        fmts.clean_print("§a☑ §f目前已安装的插件列表:")
         all_plugins = self.get_all_plugin_datas()
         if all_plugins == []:
-            Print.clean_print(" §7空空如也哦...")
+            fmts.clean_print(" §7空空如也哦...")
         else:
             self.make_printable_list(all_plugins)
         return all_plugins

@@ -1,6 +1,6 @@
 import os
 
-from tooldelta.color_print import fmts
+from . import fmts
 
 def if_token() -> None:
     """检查路径下是否有 fbtoken，没有就提示输入

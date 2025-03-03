@@ -6,7 +6,7 @@ import shutil
 from typing import Any
 from collections.abc import Callable
 
-from tooldelta.color_print import Print
+from tooldelta.utils import fmts
 from tooldelta.constants import (
     PLUGIN_TYPE_MAPPING,
     TOOLDELTA_CLASSIC_PLUGIN,
@@ -149,14 +149,14 @@ def auto_move_plugin_dir(fdname: str):
                 plugin_data_json = json.load(f)
                 p_type = plugin_data_json["plugin-type"]
                 if p_type not in PLUGIN_TYPE_MAPPING:
-                    Print.print_war(f"无法识别插件 {fdname} 的类型，跳过")
+                    fmts.print_war(f"无法识别插件 {fdname} 的类型，跳过")
                     return
             shutil.move(
                 os.path.join(TOOLDELTA_PLUGIN_DIR, fdname),
                 os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[p_type]),
             )
-            Print.print_suc(
+            fmts.print_suc(
                 f"已将插件 {fdname} 智能移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内"
             )
         except Exception as err:
-            Print.print_err(f"智能移动插件文件夹 {fdname} 出错：{err}")
+            fmts.print_err(f"智能移动插件文件夹 {fdname} 出错：{err}")

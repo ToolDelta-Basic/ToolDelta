@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from ... import utils
 from ...cfg import VERSION, Cfg
-from ...color_print import fmts
+from ...utils import fmts
 from ...constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,

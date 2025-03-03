@@ -13,7 +13,7 @@ from collections.abc import Callable
 
 from ..cfg import Cfg
 from ..constants import SysStatus, PacketIDS
-from ..color_print import Print
+from ..utils import fmts
 from ..internal.types import UnreadyPlayer, Abilities
 from ..neo_libs import file_download as neo_fd, neo_conn
 from ..eulogist_libs import core_conn as eulogist_conn
@@ -203,14 +203,14 @@ class FrameNeOmgAccessPoint(StandardFrame):
 
     def init(self):
         if "no-download-libs" not in sys_args_to_dict().keys():
-            Print.print_inf("检测接入点和依赖库的最新版本..", end="\r")
+            fmts.print_inf("检测接入点和依赖库的最新版本..", end="\r")
             try:
                 neo_fd.download_libs()
             except Exception as err:
                 raise SystemExit(f"ToolDelta 因下载库异常而退出: {err}") from err
-            Print.print_inf("检测接入点和依赖库的最新版本..完成")
+            fmts.print_inf("检测接入点和依赖库的最新版本..完成")
         else:
-            Print.print_war("将不会自动检测接入点依赖库的最新版本")
+            fmts.print_war("将不会自动检测接入点依赖库的最新版本")
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
@@ -253,10 +253,10 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 if self.status != SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                     return "接入点无法连接"
-                Print.print_war(f"OMEGA 连接失败: {err} (第{retries}次)")
+                fmts.print_war(f"OMEGA 连接失败: {err} (第{retries}次)")
                 time.sleep(5)
                 retries += 1
-        Print.print_err("最大重试次数已超过")
+        fmts.print_err("最大重试次数已超过")
         self.update_status(SysStatus.CRASHED_EXIT)
         return "连接超时"
 
@@ -292,7 +292,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             or self.auth_server is None
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
-        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
+        fmts.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
         self.neomg_proc = subprocess.Popen(
             [
                 exe_file_path,
@@ -322,11 +322,11 @@ class FrameNeOmgAccessPoint(StandardFrame):
         while True:
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
             if msg_orig in ("", "SIGNAL: exit"):
-                Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                fmts.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
-            Print.print_with_info(msg_orig, "§b NOMG ")
+            fmts.print_with_info(msg_orig, "§b NOMG ")
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
@@ -354,7 +354,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if (err_str := self.set_omega_conn(openat_port)) == "":
             self.update_status(SysStatus.RUNNING)
             self.start_wait_omega_disconn_thread()
-            Print.print_suc("接入点框架通信网络连接成功")
+            fmts.print_suc("接入点框架通信网络连接成功")
             pcks = [
                 self.omega.get_packet_id_to_name_mapping(i)
                 for i in self.need_listen_packets
@@ -575,29 +575,29 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):
-            Print.print_err("启动参数 -access-point-port 错误：不是 1~65535 的整数")
+            fmts.print_err("启动参数 -access-point-port 错误：不是 1~65535 的整数")
             raise SystemExit("端口参数错误")
         if openat_port == 0:
-            Print.print_war(
+            fmts.print_war(
                 "未用启动参数指定链接 neOmega 接入点开放端口，尝试使用默认端口 24015"
             )
-            Print.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口。")
+            fmts.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口。")
             openat_port = 24015
             return SystemExit("未指定端口号")
-        Print.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
+        fmts.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
         if (err_str := self.set_omega_conn(openat_port)) == "":
             self.update_status(SysStatus.RUNNING)
             self.start_wait_omega_disconn_thread()
-            Print.print_suc("已与接入点进程建立通信网络")
+            fmts.print_suc("已与接入点进程建立通信网络")
             pcks = []
             for i in self.need_listen_packets:
                 try:
                     pcks.append(self.omega.get_packet_id_to_name_mapping(i))
                 except KeyError:
-                    Print.print_war(f"无法监听数据包: {i}")
+                    fmts.print_war(f"无法监听数据包: {i}")
             self.omega.listen_packets(pcks, self.packet_handler_parent)
             self._exec_launched_listen_cbs()
-            Print.print_suc("ToolDelta 待命中")
+            fmts.print_suc("ToolDelta 待命中")
         else:
             return SystemError(err_str)
         self.exit_event.wait()
@@ -642,14 +642,14 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
     def init(self):
         os.makedirs("NeOmega数据", exist_ok=True)
         if "no-download-neomega" not in sys_args_to_dict().keys():
-            Print.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
+            fmts.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
             try:
                 neo_fd.download_neomg()
             except Exception as err:
                 raise SystemExit(f"ToolDelta 因下载库异常而退出: {err}") from err
-            Print.print_inf("检测依赖库和NeOmega的最新版本..完成")
+            fmts.print_inf("检测依赖库和NeOmega的最新版本..完成")
         else:
-            Print.print_war("将不会自动检测依赖库和NeOmega的最新版本")
+            fmts.print_war("将不会自动检测依赖库和NeOmega的最新版本")
         neo_conn.load_lib()
         self.status = SysStatus.LAUNCHING
 
@@ -659,7 +659,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         Returns:
             int: 端口号
         """
-        Print.print_inf("正在获取空闲端口用于通信..", end="\n")
+        fmts.print_inf("正在获取空闲端口用于通信..", end="\n")
         free_port = get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
@@ -686,8 +686,8 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             or isinstance(self.auth_server, type(None))
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
-        Print.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
-        Print.print_suc(f"NeOmega 可执行文件路径: {exe_file_path}")
+        fmts.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
+        fmts.print_suc(f"NeOmega 可执行文件路径: {exe_file_path}")
         self.neomg_proc = subprocess.Popen(
             [
                 exe_file_path,
@@ -722,9 +722,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             char = self.neomg_proc.stdout.read(1)
             if self.neomg_proc.stderr is not None:
                 err = self.neomg_proc.stderr.readlines()
-                Print.print_err("\n".join(err))
+                fmts.print_err("\n".join(err))
             if char == "":
-                Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                fmts.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
@@ -732,7 +732,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                 msg_orig = buffer
                 buffer = ""
                 if msg_orig == "SIGNAL: exit":
-                    Print.print_with_info("接入点进程已结束", "§b NOMG ")
+                    fmts.print_with_info("接入点进程已结束", "§b NOMG ")
                     if self.status == SysStatus.LAUNCHING:
                         self.update_status(SysStatus.CRASHED_EXIT)
                     break
@@ -757,9 +757,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                         .replace("  INFO  ", " 消息 ")
                         .strip(" ")
                     )
-                    Print.print_with_info("\b" + msg_orig, "")
+                    fmts.print_with_info("\b" + msg_orig, "")
                 else:
-                    Print.print_with_info(msg_orig, "§b OMGL ")
+                    fmts.print_with_info(msg_orig, "§b OMGL ")
             else:
                 buffer += char
                 # 自动通过相同配置文件启动
@@ -767,14 +767,14 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
                     if not auto_pass:
                         auto_pass = True
                         self.input_to_neomega("")
-                        Print.print_inf(f"{buffer}, 已自动选择为 y")
+                        fmts.print_inf(f"{buffer}, 已自动选择为 y")
                 # 其他处理, 先独占输入通道, 等待用户输入
                 elif (
                     "请输入 y" in buffer and "请输入 n:" in buffer and char != "\n"
                 ) or ("请输入" in buffer and ":" in buffer and char != "\n"):
                     msg_orig = buffer.strip()
                     self.input_to_neomega(
-                        input(Print.fmt_info("\b" + msg_orig, "§6 输入 §r"))
+                        input(fmts.fmt_info("\b" + msg_orig, "§6 输入 §r"))
                     )
                     buffer = ""
 
@@ -796,7 +796,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         """
         self.status = SysStatus.LAUNCHING
         openat_port = self.start_neomega_proc()
-        Print.print_load(
+        fmts.print_load(
             f"NeOmega 数据存放位置: {os.path.join(os.getcwd(), 'tooldelta', 'NeOmega数据')}"
         )
         Utils.createThread(
@@ -808,14 +808,14 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         self.set_omega_conn(openat_port)
         self.update_status(SysStatus.RUNNING)
         self.start_wait_omega_disconn_thread()
-        Print.print_suc("已获取游戏网络接入点最高权限")
+        fmts.print_suc("已获取游戏网络接入点最高权限")
         pcks = [
             self.omega.get_packet_id_to_name_mapping(i)
             for i in self.need_listen_packets
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
         self._exec_launched_listen_cbs()
-        Print.print_suc("接入点注入已就绪")
+        fmts.print_suc("接入点注入已就绪")
         self.exit_event.wait()  # 等待事件的触发
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
@@ -859,7 +859,7 @@ class FrameEulogistLauncher(StandardFrame):
             SystemError: 无法启动此启动器
         """
         self.update_status(SysStatus.LAUNCHING)
-        Print.print_inf("正在从 10132 端口连接到赞颂者...")
+        fmts.print_inf("正在从 10132 端口连接到赞颂者...")
         Utils.createThread(
             self.eulogist.start, thread_level=Utils.ToolDeltaThread.SYSTEM
         )

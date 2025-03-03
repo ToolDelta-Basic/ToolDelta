@@ -16,7 +16,7 @@ import traceback
 import json
 from . import constants, game_utils, utils
 from .cfg import Config
-from .color_print import fmts
+from .utils import fmts
 from .constants import SysStatus, TextType
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .version import get_tool_delta_version

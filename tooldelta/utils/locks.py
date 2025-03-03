@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from tooldelta.color_print import fmts
+from . import fmts
 from .tooldelta_thread import ThreadExit
 
 

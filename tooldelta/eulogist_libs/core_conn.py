@@ -8,7 +8,7 @@ from websocket import WebSocketApp, WebSocket
 from dataclasses import dataclass
 from tooldelta.utils import Utils
 from tooldelta.packets import Packet_CommandOutput
-from tooldelta.color_print import Print
+from tooldelta.utils import fmts
 
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"
@@ -80,9 +80,9 @@ class Eulogist:
     @Utils.thread_func("等待赞颂者连接初始化")
     def on_wait(self):
         # 需要一些时间
-        Print.print_inf("正在接收机器人基本信息...")
+        fmts.print_inf("正在接收机器人基本信息...")
         self.bot_data_ready_event.wait()
-        Print.print_inf("正在接收在线玩家权限能力信息...")
+        fmts.print_inf("正在接收在线玩家权限能力信息...")
         self.uq_data_ready_event.wait()
         self.launch_event.set()
 
@@ -92,7 +92,7 @@ class Eulogist:
 
     def on_clos(self, ws: WebSocket, _, _2):
         self.connected = False
-        Print.print_inf("赞颂者和 ToolDelta 断开连接")
+        fmts.print_inf("赞颂者和 ToolDelta 断开连接")
         self.exit_event.set()
 
     def set_listen_server_packets(self, pkIDs: list[int]):
@@ -203,16 +203,16 @@ class Eulogist:
                         if pkUUID in self.command_cbs.keys():
                             self.command_cbs[pkUUID](pk)
                         #else:
-                        #    Print.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
+                        #    fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
                     if self.packet_listener:
                         self.packet_listener(pkID, pk)
                 case MessageType.MSG_CLIENT_PKT:
                     self.client_packet_handler(msg.content["ID"], msg.content["Content"])
                 case _:
-                    Print.print_war(f"未知数据传输类型: {msg.type}")
+                    fmts.print_war(f"未知数据传输类型: {msg.type}")
         except Exception as err:
-            Print.print_err(f"处理赞颂者通信出错: {err}")
-            Print.print_err(traceback.format_exc())
+            fmts.print_err(f"处理赞颂者通信出错: {err}")
+            fmts.print_err(traceback.format_exc())
 
 
     def send(self, msg: Message):

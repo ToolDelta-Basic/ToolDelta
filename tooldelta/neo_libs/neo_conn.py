@@ -10,7 +10,7 @@ from typing import Any, ClassVar, Optional
 
 import json
 
-from tooldelta.color_print import Print
+from tooldelta.utils import fmts
 from tooldelta.packets import Packet_CommandOutput
 from tooldelta.utils import Utils
 
@@ -490,7 +490,7 @@ class ThreadOmega:
     def connect(self):
         if self.connect_type == ConnectType.Local:
             StartOmega(self.address, self.accountOption)
-            Print.print_inf(f"Omega 接入点已启动，在 {self.address} 开放接口")
+            fmts.print_inf(f"Omega 接入点已启动，在 {self.address} 开放接口")
         elif self.connect_type == ConnectType.Remote:
             ConnectOmega(self.address)
 
@@ -562,7 +562,7 @@ class ThreadOmega:
         if callback_event := self._omega_cmd_callback_events.get(retriever):
             callback_event(cmdResp)
         else:
-            Print.print_war(
+            fmts.print_war(
                 f"接入点核心进程：指令返回 {retriever} 没有对应的回调，已忽略"
             )
 
@@ -572,7 +572,7 @@ class ThreadOmega:
         elif listeners := self._packet_listeners.get(packetTypeName, []):
             ret = LIB.ConsumeMCPacket()
             if convertError := toPyString(ret.convertError):
-                Print.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
+                fmts.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
                 return
             jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
             for listener in listeners:

@@ -2,7 +2,7 @@
 
 import traceback
 
-from .color_print import Print
+from .utils import fmts
 from .frame import GameCtrl, ToolDelta
 
 from .plugin_load.plugins import PluginGroup
@@ -21,7 +21,7 @@ def start_tool_delta() -> None:
 
 
 def init_cfg_only() -> None:
-    Print.print_load("ToolDelta 正在以仅初始插件模式启动")
+    fmts.print_load("ToolDelta 正在以仅初始插件模式启动")
     try:
         tooldelta.cfg_loader = ConfigLoader(tooldelta)
         tooldelta.welcome()
@@ -38,13 +38,13 @@ def init_cfg_only() -> None:
         tooldelta.game_ctrl.hook_packet_handler(tooldelta.packet_handler)
         tooldelta.plugin_group.hook_packet_handler(tooldelta.packet_handler)
         tooldelta.plugin_group.load_plugins()
-        Print.print_suc("ToolDelta 已初始化所有配置文件。")
+        fmts.print_suc("ToolDelta 已初始化所有配置文件。")
     except (KeyboardInterrupt, SystemExit, EOFError) as err:
         if str(err):
-            Print.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
+            fmts.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
         else:
-            Print.print_inf("ToolDelta 已关闭")
+            fmts.print_inf("ToolDelta 已关闭")
     except Exception:
-        Print.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
+        fmts.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
 
 

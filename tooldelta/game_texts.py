@@ -14,7 +14,7 @@ import json
 import urllib3
 
 from .utils import thread_func
-from .color_print import Print
+from .utils import fmts
 from .constants import TDSPECIFIC_MIRROR
 from .version import get_tool_delta_version
 from .sys_args import sys_args_to_dict
@@ -114,7 +114,7 @@ class GameTextsLoader:
                 module_name: str = os.path.basename(file_path).replace(".py", "")
                 spec = util.spec_from_file_location(module_name, file_path)
                 if isinstance(spec, type(None)) or isinstance(spec.loader, type(None)):
-                    Print.print_war(f"Failed to load module from {file_path}")
+                    fmts.print_war(f"Failed to load module from {file_path}")
                     continue
                 module = util.module_from_spec(spec)
                 spec.loader.exec_module(module)
@@ -152,7 +152,7 @@ class GameTextsLoader:
                     json.dump(tar.getnames(), f)
                 return True
         except Exception as err:
-            Print.print_war(f"Error extracting data archive: {err}")
+            fmts.print_war(f"Error extracting data archive: {err}")
             return False
 
 
