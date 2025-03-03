@@ -5,30 +5,25 @@ import threading
 from typing import Any, TypeVar
 from collections.abc import Callable
 
+from .fmts import simple_fmt
 
+__all__ = [
+    "create_func_class",
+    "create_result_cb",
+    "fill_list_index",
+    "fuzzy_match",
+    "remove_mc_color_code",
+    "simple_assert",
+    "simple_fmt",
+    "split_list",
+    "to_plain_name",
+    "to_player_selector",
+    "try_convert",
+    "try_int",
+]
 MC_COLOR_CODE_REG = re.compile("§.")
 FACTORY_TYPE = TypeVar("FACTORY_TYPE")
 VT = TypeVar("VT")
-
-
-def simple_fmt(kw: dict[str, Any], sub: str) -> str:
-    """
-    快速将字符串内按照给出的 dict 的键值对替换掉内容.
-
-    参数:
-        kw: Dict[str, Any], 键值对应替换的内容
-        *args: str, 需要被替换的字符串
-
-    示例:
-        >>> my_color = "red"; my_item = "apple"
-        >>> kw = {"[颜色]": my_color, "[物品]": my_item}
-        >>> SimpleFmt(kw, "I like [颜色] [物品].")
-        I like red apple.
-    """
-    for k, v in kw.items():
-        if k in sub:
-            sub = sub.replace(k, str(v))
-    return sub
 
 
 def simple_assert(cond: Any, exc: Any) -> None:

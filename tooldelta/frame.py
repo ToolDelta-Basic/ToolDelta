@@ -14,17 +14,17 @@ import signal
 import sys
 import traceback
 import json
+
 from . import constants, game_utils, utils
 from .cfg import Config
 from .utils import fmts
 from .constants import SysStatus, TextType
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .version import get_tool_delta_version
-from .logger import publicLogger
+from .utils.logger import publicLogger
 from .packets import Packet_CommandOutput
 from .plugin_load import injected_plugin
 from .sys_args import sys_args_to_dict
-
 from .plugin_load.plugins import PluginGroup
 from .internal.config_loader import ConfigLoader
 from .internal.packet_handler import PacketHandler

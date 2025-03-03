@@ -4,8 +4,9 @@ import datetime
 import threading
 import re
 import colorama
+from typing import Any
 
-from ..logger import publicLogger
+from .logger import publicLogger
 
 colorama.init(autoreset=True)
 MC_COLOR_CODE_REG = re.compile("§.")
@@ -18,18 +19,26 @@ INFO_SUCC = "§a 成功 "
 INFO_LOAD = "§d 加载 "
 print_lock = threading.RLock()
 
+_original_print = print
 
-def simple_fmt(kw: dict, arg: str) -> str:
-    """简单的字符串格式化
-
-    Args:
-        kw (dict): 颜色列表（key 为颜色代码，value 为颜色代码对应的颜色）
-        arg (str): 需要格式化的字符串
-
-    Returns:
-        str: 格式化后的字符串
+def simple_fmt(kw: dict[str, Any], sub: str) -> str:
     """
-    return simple_fmt(kw, arg)
+    快速将字符串内按照给出的 dict 的键值对替换掉内容.
+
+    参数:
+        kw: Dict[str, Any], 键值对应替换的内容
+        *args: str, 需要被替换的字符串
+
+    示例:
+        >>> my_color = "red"; my_item = "apple"
+        >>> kw = {"[颜色]": my_color, "[物品]": my_item}
+        >>> SimpleFmt(kw, "I like [颜色] [物品].")
+        I like red apple.
+    """
+    for k, v in kw.items():
+        if k in sub:
+            sub = sub.replace(k, str(v))
+    return sub
 
 
 def colormode_replace(text: str, showmode=0) -> str:
@@ -159,9 +168,9 @@ def print_with_info(
                     + " "
                     + colormode_replace(set_next_color + text_line)
                 )
-            print("\n".join(output_txts), **print_kwargs)
+            _original_print("\n".join(output_txts), **print_kwargs)
         else:
-            print(
+            _original_print(
                 datetime.datetime.now().strftime("[%H:%M] ")
                 + colormode_replace(info, 7)
                 + " "

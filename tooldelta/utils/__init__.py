@@ -39,12 +39,22 @@ TMPJson = create_func_class(
         tempjson.get_tmps,
     ],
 )
+r"""
+:class:`TMPJson` 已弃用。
+如果想使用其中的函数，请改为使用 `from tooldelta.utils import tempjson`。
+"""
+
 TMPJson.loadPathJson = tempjson.load_and_read
 TMPJson.unloadPathJson = tempjson.unload_to_path
 TMPJson.read_as_tmp = tempjson.load_and_read
 TMPJson.write_as_tmp = tempjson.load_and_write
 
 JsonIO = create_func_class("JsonIO", [])
+r"""
+:class:`JsonIO` 已弃用。
+如果想使用其中的函数，请改为使用 `from tooldelta.utils import safe_json`。
+"""
+
 JsonIO.readFileFrom = read_from_plugin
 JsonIO.writeFileTo = write_to_plugin
 JsonIO.SafeJsonLoad = safe_json_load
@@ -74,5 +84,12 @@ Utils = create_func_class(
         timer_event,
     ],
 )
+r"""
+:class:`Utils` 已弃用。
+如果想使用其中的函数，请改为使用 `from tooldelta import utils`。
+"""
+
 Utils.createThread = createThread
 chatbar_lock_list = players_in_chatbar_lock
+
+# ruff: noqa: F401
