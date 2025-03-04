@@ -10,9 +10,8 @@ from typing import Any, ClassVar, Optional
 
 import json
 
-from tooldelta.utils import fmts
-from tooldelta.packets import Packet_CommandOutput
-from tooldelta.utils import Utils
+from ..utils import fmts, ToolDeltaThread
+from ..packets import Packet_CommandOutput
 
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
@@ -527,10 +526,10 @@ class ThreadOmega:
         )
 
         # start routine
-        return Utils.createThread(
+        return ToolDeltaThread(
             self._react,
             usage="接入点反应核心",
-            thread_level=Utils.ToolDeltaThread.SYSTEM,
+            thread_level=ToolDeltaThread.SYSTEM,
         )
 
     def _react(self):
@@ -576,7 +575,7 @@ class ThreadOmega:
                 return
             jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
             for listener in listeners:
-                Utils.createThread(
+                ToolDeltaThread(
                     listener, (packetTypeName, jsonPkt), usage="Packet Callback Thread"
                 )
 
@@ -589,7 +588,7 @@ class ThreadOmega:
         else:
             action = toPyString(LIB.ConsumePlayerChange())
             for callback in self._player_change_listeners:
-                Utils.createThread(
+                ToolDeltaThread(
                     callback,
                     (self._get_bind_player(playerUUID), action),
                     usage="Player Change Callback Thread",

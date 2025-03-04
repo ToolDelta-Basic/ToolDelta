@@ -3,11 +3,10 @@ import traceback
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from collections.abc import Callable
-from tooldelta import plugin_market
-from tooldelta.constants import SysStatus
-from tooldelta.utils import fmts
-from tooldelta.internal.launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
-from tooldelta.utils import Utils
+from .. import plugin_market
+from ..constants import SysStatus
+from ..utils import fmts, thread_func, ToolDeltaThread
+from ..internal.launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
 
 
 if TYPE_CHECKING:
@@ -64,7 +63,7 @@ class ConsoleCmdManager:
         fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
         return False
 
-    @Utils.thread_func("控制台执行命令", Utils.ToolDeltaThread.SYSTEM)
+    @thread_func("控制台执行命令", ToolDeltaThread.SYSTEM)
     def command_readline_proc(self):
         fmts.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
         while 1:
@@ -83,7 +82,7 @@ class ConsoleCmdManager:
                 fmts.print_err("§6虽然出现了问题, 但是您仍然可以继续使用控制台菜单")
 
     def prepare_internal_cmds(self):
-        @Utils.thread_func("控制台执行指令并获取回调", Utils.ToolDeltaThread.SYSTEM)
+        @thread_func("控制台执行指令并获取回调", ToolDeltaThread.SYSTEM)
         def _execute_mc_command_and_get_callback(cmds: list[str]) -> None:
             """执行 Minecraft 指令并获取回调结果。
 

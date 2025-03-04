@@ -107,7 +107,7 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
                     "插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "datas.json"
                 )
             ):
-                plugin_data = utils.JsonIO.SafeJsonLoad(data_path)
+                plugin_data = utils.safe_json.safe_json_load(data_path)
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
 
@@ -185,7 +185,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
             "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"
         )
         raise SystemExit from err
-    except utils.JsonIO.DataReadError as err:
+    except utils.safe_json.DataReadError as err:
         fmts.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
     except SystemVersionException as err:
         fmts.print_err(f"插件 {plugin_dirname} 需要更高版本的 ToolDelta 加载：{err}")

@@ -455,7 +455,7 @@ async def load_plugin(plugin_grp: "PluginGroup") -> None:
             if os.path.isfile(
                 data_path := os.path.join(PLUGIN_PATH, file, "datas.json")
             ):
-                plugin_data = utils.JsonIO.SafeJsonLoad(data_path)
+                plugin_data = utils.safe_json.safe_json_load(data_path)
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
     # 顺序加载插件并收集插件元数据

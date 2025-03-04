@@ -1,4 +1,4 @@
-from . import tempjson, fmts
+from . import tempjson
 from .fbtoken import fbtokenFix, if_token
 from .locks import ChatbarLock, players_in_chatbar_lock
 from .safe_json import (
@@ -23,7 +23,7 @@ from .basic import (
     to_plain_name,
     to_player_selector,
     create_result_cb,
-    create_func_class,
+    create_desperate_attr_class,
 )
 
 # ---------------- 向下兼容 ---------------
@@ -55,7 +55,7 @@ def write_as_tmp(
     tempjson.load_and_write(path, obj, needFileExists, timeout)
 
 
-TMPJson = create_func_class(
+TMPJson = create_desperate_attr_class(
     "TMPJson",
     [
         loadPathJson,
@@ -76,7 +76,7 @@ r"""
 
 TMPJson.unloadPathJson = tempjson.unload_to_path
 
-JsonIO = create_func_class("JsonIO", [])
+JsonIO = create_desperate_attr_class("JsonIO", [])
 r"""
 :class:`JsonIO` 已弃用。
 如果想使用其中的函数，请改为使用 `from tooldelta.utils import safe_json`。
@@ -88,7 +88,7 @@ JsonIO.SafeJsonLoad = safe_json_load
 JsonIO.SafeJsonDump = safe_json_dump
 JsonIO.DataReadError = DataReadError
 
-Utils = create_func_class(
+Utils = create_desperate_attr_class(
     "Utils",
     [
         JsonIO,

@@ -1,14 +1,15 @@
 """提供了一些实用方法的类"""
 
+import time
 import re
 import threading
 from typing import Any, TypeVar
 from collections.abc import Callable
 
-from .fmts import simple_fmt
+from .fmts import simple_fmt, print_war
 
 __all__ = [
-    "create_func_class",
+    "create_desperate_attr_class",
     "create_result_cb",
     "fill_list_index",
     "fuzzy_match",
@@ -195,6 +196,27 @@ def create_result_cb():
     return getter, setter
 
 
-def create_func_class(class_name, funcs: list[Callable]):
-    new_class = type(class_name, (object,), {f.__name__: f for f in funcs})
-    return new_class
+class DesperateFuncClass:
+    def __init__(self):
+        self._desperate_warn = False
+
+    def __getattribute__(self, attr):
+        if not object.__getattribute__(self, "_desperate_warn"):
+            self._desperate_warn = True
+            print_war(f"{type(self).__name__} 已被弃用。请查看文档以使用新方法。")
+            time.sleep(3)
+        return object.__getattribute__(self, attr)
+
+
+def create_desperate_attr_class(class_name, attrs: list[Callable | DesperateFuncClass]):
+    new_class = type(
+        class_name,
+        (DesperateFuncClass,),
+        {
+            (f.__name__ if callable(f) else type(f).__name__): (
+                staticmethod(f) if callable(f) else f
+            )
+            for f in attrs
+        },
+    )
+    return new_class()

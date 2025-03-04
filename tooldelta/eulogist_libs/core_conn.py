@@ -6,9 +6,9 @@ from collections.abc import Callable
 from typing import Any
 from websocket import WebSocketApp, WebSocket
 from dataclasses import dataclass
-from tooldelta.utils import Utils
-from tooldelta.packets import Packet_CommandOutput
-from tooldelta.utils import fmts
+from .. import utils
+from ..packets import Packet_CommandOutput
+from ..utils import fmts
 
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"
@@ -77,7 +77,7 @@ class Eulogist:
         self.connected = True
         self.on_wait()
 
-    @Utils.thread_func("等待赞颂者连接初始化")
+    @utils.thread_func("等待赞颂者连接初始化")
     def on_wait(self):
         # 需要一些时间
         fmts.print_inf("正在接收机器人基本信息...")
@@ -153,7 +153,7 @@ class Eulogist:
 
     def sendcmd_with_resp(self, cmd: str, timeout: float = 5) -> Packet_CommandOutput | None:
         ud = self.sendcmd(cmd)
-        getter, setter = Utils.create_result_cb()
+        getter, setter = utils.create_result_cb()
         self.command_cbs[ud] = setter
         res = getter(timeout)
         del self.command_cbs[ud]
@@ -164,7 +164,7 @@ class Eulogist:
 
     def sendwscmd_with_resp(self, cmd: str, timeout: float = 5) -> Packet_CommandOutput | None:
         ud = self.sendwscmd(cmd)
-        getter, setter = Utils.create_result_cb()
+        getter, setter = utils.create_result_cb()
         self.command_cbs[ud] = setter
         res = getter(timeout)
         del self.command_cbs[ud]
@@ -182,8 +182,8 @@ class Eulogist:
             },
         )
 
-    @Utils.thread_func("赞颂者消息处理", Utils.ToolDeltaThread.SYSTEM)
-    def handler(self, msg: Message):
+    @utils.thread_func("赞颂者消息处理", utils.ToolDeltaThread.SYSTEM)
+    def handler(self, msg: Message) -> None:
         try:
             match msg.type:
                 case MessageType.MSG_SET_BOT_BASIC_INFO:
