@@ -5,14 +5,13 @@ import os
 import time
 import traceback
 
-from .utils import fmts
+from .utils import fmts, sys_args
 from .constants import TOOLDELTA_LOGO
 from .internal.config_loader import ConfigLoader
 from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .starter import start_tool_delta, init_cfg_only
 from .version import get_tool_delta_version
-from .sys_args import print_help, sys_args_to_dict, parse_addopt
 
 
 def signal_handler(*_) -> None:
@@ -26,13 +25,16 @@ signal.signal(signal.SIGINT, signal_handler)
 def client_title() -> None:
     """选择启动模式"""
     try:
-        launch_args = sys_args_to_dict()
+        launch_args = sys_args.sys_args_to_dict()
         if opt_str := launch_args.get("optadd"):
-            more_opts = {str(i+7): (k, v) for (i, (k, v)) in enumerate(parse_addopt(opt_str).items())}
+            more_opts = {
+                str(i + 7): (k, v)
+                for (i, (k, v)) in enumerate(sys_args.parse_addopt(opt_str).items())
+            }
         else:
             more_opts = {}
         if "h" in launch_args or "help" in launch_args:
-            print_help()
+            sys_args.print_help()
             return
         elif "v" in launch_args or "version" in launch_args:
             print(".".join(str(i) for i in get_tool_delta_version()))
@@ -50,7 +52,7 @@ def client_title() -> None:
             return
         else:
             fmts.clean_print(TOOLDELTA_LOGO)
-            if "title" in sys_args_to_dict():
+            if "title" in sys_args.sys_args_to_dict():
                 fmts.clean_print(launch_args["title"] or "")
             fmts.clean_print(
                 "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
@@ -62,7 +64,7 @@ def client_title() -> None:
             fmts.clean_print("5 - §a修改启动配置")
             fmts.clean_print("6 - §c开启直接启动模式")
             for i, (opt_name, _) in enumerate(more_opts.values()):
-                fmts.clean_print(f"{i+7} - {opt_name}")
+                fmts.clean_print(f"{i + 7} - {opt_name}")
             fmts.clean_print("q - §7退出")
             r = input("请选择：").strip()
         match r:

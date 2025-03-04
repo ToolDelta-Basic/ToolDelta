@@ -2,7 +2,8 @@ from . import (
     tooldelta_thread,
     tempjson,
     timer_events,
-    fmts
+    fmts,
+    logger
 )
 
 def safe_close():
@@ -12,3 +13,4 @@ def safe_close():
     tooldelta_thread.force_stop_normal_threads()
     fmts.print_inf("正在保存数据文件..")
     tempjson.save_all()
+    logger.publicLogger.exit()

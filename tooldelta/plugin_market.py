@@ -6,11 +6,9 @@ import platform
 import shlex
 import time
 import traceback
-
 import requests
 import json
 
-from . import urlmethod
 from .cfg import Cfg
 from .utils import fmts
 from .constants import (
@@ -21,7 +19,7 @@ from .constants import (
     PLUGIN_MARKET_SOURCE_OFFICIAL
 )
 from .plugin_load import PluginRegData, PluginsPackage
-from .utils import try_int, thread_gather
+from .utils import try_int, thread_gather, urlmethod
 
 if platform.system().lower() == "windows":
     CLS_CMD = "cls"

@@ -2,14 +2,11 @@ import os
 import getpass
 import requests
 from typing import TYPE_CHECKING
-from tooldelta import urlmethod
-from tooldelta.auths import fblike_sign_login
-from tooldelta.cfg import Config
-from tooldelta.utils import fmts
-from tooldelta.constants import tooldelta_cfg, tooldelta_cli
-from tooldelta.utils import fbtokenFix, if_token
-from tooldelta.sys_args import sys_args_to_dict
-from tooldelta.internal.launch_cli import (
+from ..auths import fblike_sign_login
+from ..cfg import Config
+from ..constants import tooldelta_cfg, tooldelta_cli
+from ..utils import urlmethod, sys_args, fbtokenFix, if_token, fmts
+from ..internal.launch_cli import (
     FrameNeOmegaLauncher,
     FrameNeOmgAccessPoint,
     FrameNeOmgAccessPointRemote,
@@ -196,7 +193,7 @@ class ConfigLoader:
                         fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
                 Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
             # 读取 token
-            if not (fbtoken := sys_args_to_dict().get("user-token")):
+            if not (fbtoken := sys_args.sys_args_to_dict().get("user-token")):
                 if not os.path.isfile("fbtoken"):
                     fmts.print_inf(
                         "请选择登录方法:\n 1 - 使用账号密码获取 fbtoken\n 2 - 手动输入 fbtoken\r"

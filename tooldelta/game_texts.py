@@ -13,12 +13,10 @@ import requests
 import json
 import urllib3
 
-from .utils import thread_func
+from .utils import thread_func, sys_args, urlmethod
 from .utils import fmts
 from .constants import TDSPECIFIC_MIRROR
 from .version import get_tool_delta_version
-from .sys_args import sys_args_to_dict
-from .urlmethod import download_file_singlethreaded
 
 # 关闭警告
 urllib3.disable_warnings()
@@ -32,7 +30,7 @@ class GameTextsLoader:
         "初始化"
         self.base_path = os.path.join(os.getcwd(), "插件数据文件", "game_texts")
         self.check_initial_run()
-        if "no-download-libs" not in sys_args_to_dict():
+        if "no-download-libs" not in sys_args.sys_args_to_dict():
             # 暂时不用开自动更新线程
             self.auto_update()
         self.game_texts_data: dict[str, str] = self.load_data()
@@ -45,8 +43,8 @@ class GameTextsLoader:
             str: 版本号
         """
         if (
-            "no-download-libs" in sys_args_to_dict()
-            or "no-update-check" in sys_args_to_dict()
+            "no-download-libs" in sys_args.sys_args_to_dict()
+            or "no-update-check" in sys_args.sys_args_to_dict()
         ):
             return ".".join(map(str, get_tool_delta_version()))
         try:
@@ -96,7 +94,7 @@ class GameTextsLoader:
             "ToolDelta_Game_Texts.tar.gz"
         )
         archive_path = os.path.join(self.base_path, "ToolDelta_Game_Texts.tar.gz")
-        download_file_singlethreaded(packets_url, archive_path)
+        urlmethod.download_file_singlethreaded(packets_url, archive_path)
         self.extract_data_archive(archive_path)
 
     def load_data(self) -> dict[str, str]:

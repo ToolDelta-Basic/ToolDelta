@@ -11,16 +11,14 @@ import threading
 import time
 from collections.abc import Callable
 
+from .. import utils
 from ..cfg import Cfg
 from ..constants import SysStatus, PacketIDS
-from ..utils import fmts
+from ..eulogist_libs import core_conn as eulogist_conn
 from ..internal.types import UnreadyPlayer, Abilities
 from ..neo_libs import file_download as neo_fd, neo_conn
-from ..eulogist_libs import core_conn as eulogist_conn
 from ..packets import Packet_CommandOutput
-from ..sys_args import sys_args_to_dict
-from ..urlmethod import get_free_port
-from ..utils import Utils
+from ..utils import fmts, sys_args, urlmethod
 
 Config = Cfg()
 
@@ -202,7 +200,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.exit_reason = ""
 
     def init(self):
-        if "no-download-libs" not in sys_args_to_dict().keys():
+        if "no-download-libs" not in sys_args.sys_args_to_dict().keys():
             fmts.print_inf("检测接入点和依赖库的最新版本..", end="\r")
             try:
                 neo_fd.download_libs()
@@ -266,7 +264,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         Returns:
             int: 端口号
         """
-        free_port = get_free_port(24013)
+        free_port = urlmethod.get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
             sys_machine = "amd64"
@@ -344,10 +342,10 @@ class FrameNeOmgAccessPoint(StandardFrame):
             accountOption=self.neomega_account_opt,
         )
         openat_port = self.start_neomega_proc()
-        Utils.createThread(
+        utils.createThread(
             self._msg_show_thread,
             usage="显示来自 NeOmega接入点 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM,
+            thread_level=utils.ToolDeltaThread.SYSTEM,
         )
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
@@ -535,7 +533,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             )
         )
 
-    @Utils.thread_func("检测 Omega 断开连接线程", Utils.ToolDeltaThread.SYSTEM)
+    @utils.thread_func("检测 Omega 断开连接线程", utils.ToolDeltaThread.SYSTEM)
     def start_wait_omega_disconn_thread(self):
         self.exit_reason = self.omega.wait_disconnect()
         if self.status == SysStatus.RUNNING:
@@ -571,7 +569,7 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             SystemExit | Exception | SystemError: 退出状态
         """
         try:
-            openat_port = int(sys_args_to_dict().get("access-point-port") or "24020")
+            openat_port = int(sys_args.sys_args_to_dict().get("access-point-port") or "24020")
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):
@@ -641,7 +639,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
 
     def init(self):
         os.makedirs("NeOmega数据", exist_ok=True)
-        if "no-download-neomega" not in sys_args_to_dict().keys():
+        if "no-download-neomega" not in sys_args.sys_args_to_dict().keys():
             fmts.print_inf("检测依赖库和NeOmega的最新版本..", end="\r")
             try:
                 neo_fd.download_neomg()
@@ -660,7 +658,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             int: 端口号
         """
         fmts.print_inf("正在获取空闲端口用于通信..", end="\n")
-        free_port = get_free_port(24013)
+        free_port = urlmethod.get_free_port(24013)
         sys_machine = platform.uname().machine
         if sys_machine == "x86_64":
             sys_machine = "amd64"
@@ -799,10 +797,10 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         fmts.print_load(
             f"NeOmega 数据存放位置: {os.path.join(os.getcwd(), 'tooldelta', 'NeOmega数据')}"
         )
-        Utils.createThread(
+        utils.createThread(
             self._msg_handle_thread,
             usage="处理来自 NeOmega启动器 的信息",
-            thread_level=Utils.ToolDeltaThread.SYSTEM,
+            thread_level=utils.ToolDeltaThread.SYSTEM,
         )
         self.launch_event.wait()
         self.set_omega_conn(openat_port)
@@ -860,8 +858,8 @@ class FrameEulogistLauncher(StandardFrame):
         """
         self.update_status(SysStatus.LAUNCHING)
         fmts.print_inf("正在从 10132 端口连接到赞颂者...")
-        Utils.createThread(
-            self.eulogist.start, thread_level=Utils.ToolDeltaThread.SYSTEM
+        utils.createThread(
+            self.eulogist.start, thread_level=utils.ToolDeltaThread.SYSTEM
         )
         self.eulogist.launch_event.wait()
         self.update_status(SysStatus.RUNNING)

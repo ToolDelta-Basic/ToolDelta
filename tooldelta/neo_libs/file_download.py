@@ -5,19 +5,16 @@ import platform
 import brotli
 import requests
 
-from .. import urlmethod
-from ..utils import fmts
-from ..sys_args import sys_args_to_dict
-from ..urlmethod import get_global_github_src_url
+from ..utils import fmts, urlmethod, sys_args
 
 
 def download_libs() -> bool:
     """根据系统架构和平台下载所需的库。"""
-    if "no-download-libs" in sys_args_to_dict():
+    if "no-download-libs" in sys_args.sys_args_to_dict():
         fmts.print_war("将不会进行依赖库的下载和检测更新。")
         return True
     mirror_src, depen_url = get_github_content_url(
-        get_global_github_src_url() + "/https://raw.githubusercontent.com"
+        urlmethod.get_global_github_src_url() + "/https://raw.githubusercontent.com"
     )
     require_depen = get_required_dependencies(mirror_src)[0]
     sys_info_fmt = get_system_info()
@@ -41,12 +38,12 @@ def download_libs() -> bool:
 
 def download_neomg() -> bool:
     """根据系统架构和平台下载所需的NeOmega。"""
-    if "no-download-neomega" in sys_args_to_dict():
+    if "no-download-neomega" in sys_args.sys_args_to_dict():
         fmts.print_war("将不会进行NeOmega的下载和检测更新。")
         return True
     download_libs()
     mirror_src, _ = get_github_content_url(
-        get_global_github_src_url() + "/https://raw.githubusercontent.com"
+        urlmethod.get_global_github_src_url() + "/https://raw.githubusercontent.com"
     )
     require_depen = get_required_dependencies(mirror_src)[1]
     sys_info_fmt = get_system_info()

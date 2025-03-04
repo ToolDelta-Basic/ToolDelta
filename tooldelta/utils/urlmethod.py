@@ -15,9 +15,9 @@ import requests
 from colorama import Fore, Style, init
 from tqdm.asyncio import tqdm
 
-from .constants import TDREPO_URL
-from .utils import fmts
-from .version import get_tool_delta_version
+from ..constants import TDREPO_URL
+from ..version import get_tool_delta_version
+from . import fmts
 
 GGithubSrcURL = ""
 GPluginMarketURL = ""
@@ -223,8 +223,7 @@ def download_progress_bar(
     b = f"{progressBar} {pretty_kb(current_bytes)}B / {pretty_kb(total_bytes)}B"
     if speed != 0:
         b += f" ({pretty_kb(speed)}B/s)    "
-    with fmts.lock:
-        fmts.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
+    fmts.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
 
 
 KB = 1024
