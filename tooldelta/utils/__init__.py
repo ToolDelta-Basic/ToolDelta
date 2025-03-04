@@ -28,9 +28,39 @@ from .basic import (
 
 # ---------------- 向下兼容 ---------------
 
+
+def loadPathJson(
+    path: str,
+    needFileExists: bool = True,
+    timeout: int = 60,
+    default=None,
+):
+    tempjson.load_from_path(path, needFileExists, timeout, default)
+
+def read_as_tmp(
+    path: str,
+    needFileExists: bool = True,
+    timeout: int = 60,
+    default=None,
+):
+    tempjson.load_and_read(path, needFileExists, timeout, default)
+
+def write_as_tmp(
+    path: str,
+    obj,
+    needFileExists: bool = True,
+    timeout: int = 60,
+    default=None,
+):
+    tempjson.load_and_write(path, obj, needFileExists, timeout)
+
+
 TMPJson = create_func_class(
     "TMPJson",
     [
+        loadPathJson,
+        read_as_tmp,
+        write_as_tmp,
         tempjson.read,
         tempjson.write,
         tempjson.flush,
@@ -44,10 +74,7 @@ r"""
 如果想使用其中的函数，请改为使用 `from tooldelta.utils import tempjson`。
 """
 
-TMPJson.loadPathJson = tempjson.load_and_read
 TMPJson.unloadPathJson = tempjson.unload_to_path
-TMPJson.read_as_tmp = tempjson.load_and_read
-TMPJson.write_as_tmp = tempjson.load_and_write
 
 JsonIO = create_func_class("JsonIO", [])
 r"""
