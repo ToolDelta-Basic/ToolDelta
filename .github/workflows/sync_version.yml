@@ -30,11 +30,11 @@ jobs:
           python-version: "3.11"
 
     - name: Check Modified Code
-      run: python tooldelta/get_tool_delta_version.py
+      run: python tooldelta/version.py
 
     - name: Submit Changes
       uses: EndBug/add-and-commit@v9
       with:
         default_author: github_actions
         message: '[AUTO] sync version to `${{ env.VERSION }}`'
-        add: 'tooldelta/get_tool_delta_version.py install.sh'
+        add: 'tooldelta/version.py install.sh'
