@@ -187,7 +187,7 @@ def clean_print(text: str, **print_kwargs) -> None:
         **print_kwargs: 原 print 函数的参数
     """
     with print_lock:
-        print(colormode_replace(text), **print_kwargs)
+        _original_print(colormode_replace(text), **print_kwargs)
 
 
 def clean_fmt(text: str) -> str:
