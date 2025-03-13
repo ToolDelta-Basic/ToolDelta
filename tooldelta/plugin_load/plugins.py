@@ -68,8 +68,14 @@ class PluginGroup:
         fmts.print_suc("重载插件已完成")
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
+        self.plugin_listen_packets = set(classic_plugin.packet_funcs.keys())
+        self.plugin_listen_packets |= set(injected_plugin.packet_funcs.keys())
         for pkID in self.plugin_listen_packets:
-            hdl.add_packet_listener(pkID, lambda pk: self.handle_packets(pkID, pk), 0)
+
+            def any_pk_handler(pkt: dict, pkID=pkID):
+                return self.handle_packets(pkID, pkt)
+
+            hdl.add_packet_listener(pkID, any_pk_handler, 0)
         hdl.add_packet_listener(PacketIDS.Text, self.handle_text_packet)
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
