@@ -35,7 +35,7 @@ def loadPathJson(
     timeout: int = 60,
     default=None,
 ):
-    tempjson.load_from_path(path, needFileExists, timeout, default)
+    tempjson.load_from_path(path, need_file_exists=needFileExists, unload_delay=timeout, default=default)
 
 
 def read_as_tmp(
