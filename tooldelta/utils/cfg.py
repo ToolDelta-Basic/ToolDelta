@@ -391,7 +391,6 @@ def check_list(pattern: JsonList, value: Any, fromkey: Any = "?") -> None:
         check_auto(pattern.patt, val, fromkey)
 
 
-@staticmethod
 def write_default_cfg_file(path: str, default: dict, force: bool = False) -> None:
     """
     生成默认配置文件
@@ -410,6 +409,5 @@ def write_default_cfg_file(path: str, default: dict, force: bool = False) -> Non
 default_cfg = write_default_cfg_file
 
 
-@staticmethod
 def _jsonfile_exists(path: str) -> bool:
     return os.path.isfile(path if path.endswith(".json") else f"{path}.json")
