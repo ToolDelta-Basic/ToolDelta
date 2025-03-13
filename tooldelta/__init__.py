@@ -41,6 +41,7 @@ __all__ = [
 
 from typing import TYPE_CHECKING
 
+from . import utils
 from .frame import GameCtrl, ToolDelta
 from .internal.types import Player, Chat, FrameExit, InternalBroadcast
 from .launch_options import client_title
