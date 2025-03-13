@@ -76,5 +76,6 @@ __all__ = [
     "get_tool_delta_version",
     "plugin_entry",
     "start_tool_delta",
-    "tooldelta"
+    "tooldelta",
+    "utils"
 ]
