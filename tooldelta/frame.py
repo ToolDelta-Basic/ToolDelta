@@ -262,7 +262,7 @@ class GameCtrl:
             case TextType.TextTypeTranslation:
                 if msg == "§e%multiplayer.player.joined":
                     playername = pkt["Parameters"][0]
-                    fmts.print_inf(f"§e{playername} 退出了游戏")
+                    fmts.print_inf(f"§e{playername} 加入了游戏")
                 elif msg == "§e%multiplayer.player.left":
                     playername = pkt["Parameters"][0]
                     fmts.print_inf(f"§e{playername} 退出了游戏")
