@@ -5,8 +5,7 @@ import traceback
 from typing import TYPE_CHECKING, TypeVar
 
 from ... import utils
-from ...cfg import VERSION, Cfg
-from ...utils import fmts
+from ...utils import cfg, fmts
 from ...constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
@@ -30,7 +29,7 @@ PLUGIN_CLS = TypeVar("PLUGIN_CLS", bound=Plugin)
 def plugin_entry(
     plugin_cls: type[PLUGIN_CLS],
     api_name: str | list[str] = [],
-    api_version: VERSION | None = None,
+    api_version: cfg.VERSION | None = None,
 ) -> PLUGIN_CLS:
     """
     实例化 ToolDelta 类式插件的主类
@@ -179,7 +178,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
     except NotValidPluginError as err:
         fmts.print_err(f"插件 {plugin_dirname} 不合法：{err.args[0]}")
         raise SystemExit from err
-    except Cfg.ConfigError as err:
+    except cfg.ConfigError as err:
         fmts.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
         fmts.print_err(
             "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"

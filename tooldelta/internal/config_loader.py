@@ -3,9 +3,8 @@ import getpass
 import requests
 from typing import TYPE_CHECKING
 from ..auths import fblike_sign_login
-from ..cfg import Config
 from ..constants import tooldelta_cfg, tooldelta_cli
-from ..utils import urlmethod, sys_args, fbtokenFix, if_token, fmts
+from ..utils import cfg, urlmethod, sys_args, fbtokenFix, if_token, fmts
 from ..internal.launch_cli import (
     FrameNeOmegaLauncher,
     FrameNeOmgAccessPoint,
@@ -39,12 +38,12 @@ class ConfigLoader:
 
     def load_tooldelta_cfg_and_get_launcher(self) -> LAUNCHERS:
         """加载配置文件"""
-        Config.write_default_cfg_file(
+        cfg.write_default_cfg_file(
             "ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG
         )
         try:
             # 读取配置文件
-            cfgs = Config.get_cfg(
+            cfgs = cfg.get_cfg(
                 "ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD
             )
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
@@ -53,10 +52,10 @@ class ConfigLoader:
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(LAUNCHERS_SHOWN) + 1
             ):
-                raise Config.ConfigError(
+                raise cfg.ConfigError(
                     "你不该随意修改启动器模式，现在赶紧把它改回 0 吧"
                 )
-        except Config.ConfigError as err:
+        except cfg.ConfigError as err:
             # 配置文件有误
             r = self.upgrade_cfg()
             if r:
@@ -72,7 +71,7 @@ class ConfigLoader:
                     cfgs["全局GitHub镜像"]
                     + "/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
                 )
-            Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
+            cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
         urlmethod.set_global_github_src_url(cfgs["全局GitHub镜像"])
 
         # 每个启动器框架的单独启动配置之前
@@ -89,7 +88,7 @@ class ConfigLoader:
                     break
                 except ValueError:
                     fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
-            Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
+            cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
         launcher = LAUNCHERS_SHOWN[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]()
@@ -102,8 +101,8 @@ class ConfigLoader:
             )
             launcher_config_key = "NeOmega接入点启动模式"
             try:
-                Config.check_auto(tooldelta_cfg.LAUNCHER_NEOMEGA_STD, launch_data)
-            except Config.ConfigError as err:
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMEGA_STD, launch_data)
+            except cfg.ConfigError as err:
                 r = self.upgrade_cfg()
                 if r:
                     fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
@@ -120,8 +119,8 @@ class ConfigLoader:
             )
             launcher_config_key = "NeOmega并行ToolDelta启动模式"
             try:
-                Config.check_auto(tooldelta_cfg.LAUNCHER_NEOMG2TD_STD, launch_data)
-            except Config.ConfigError as err:
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMG2TD_STD, launch_data)
+            except cfg.ConfigError as err:
                 r = self.upgrade_cfg()
                 if r:
                     fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
@@ -164,7 +163,7 @@ class ConfigLoader:
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
                         cfgs[launcher_config_key] = launch_data
-                        Config.write_default_cfg_file(
+                        cfg.write_default_cfg_file(
                             "ToolDelta基本配置.json", cfgs, True
                         )
                         fmts.print_suc("登录配置设置成功")
@@ -191,7 +190,7 @@ class ConfigLoader:
                         break
                     except ValueError:
                         fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
-                Config.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
+                cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
             # 读取 token
             if not (fbtoken := sys_args.sys_args_to_dict().get("user-token")):
                 if not os.path.isfile("fbtoken"):
@@ -246,7 +245,7 @@ class ConfigLoader:
         Returns:
             bool: 是否升级了配置文件
         """
-        old_cfg: dict = Config.get_cfg("ToolDelta基本配置.json", {})
+        old_cfg: dict = cfg.get_cfg("ToolDelta基本配置.json", {})
         old_cfg_keys = old_cfg.keys()
         need_upgrade_cfg = False
         for k, v in tooldelta_cfg.LAUNCH_CFG.items():
@@ -254,20 +253,20 @@ class ConfigLoader:
                 old_cfg[k] = v
                 need_upgrade_cfg = True
         if need_upgrade_cfg:
-            Config.write_default_cfg_file("ToolDelta基本配置.json", old_cfg, True)
+            cfg.write_default_cfg_file("ToolDelta基本配置.json", old_cfg, True)
         return need_upgrade_cfg
 
     @staticmethod
     def change_config():
         """修改配置文件"""
         try:
-            old_cfg = Config.get_cfg(
+            old_cfg = cfg.get_cfg(
                 "ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD
             )
         except FileNotFoundError:
             fmts.clean_print("§c未初始化配置文件, 无法进行修改")
             return
-        except Config.ConfigError as err:
+        except cfg.ConfigError as err:
             fmts.print_err(f"配置文件损坏：{err}")
             return
         if (
@@ -292,7 +291,7 @@ class ConfigLoader:
             fmts.clean_print("    §a直接回车: 保存并退出")
             resp = input(fmts.clean_fmt("§6输入序号可修改配置项(0~4): ")).strip()
             if resp == "":
-                Config.write_default_cfg_file("ToolDelta基本配置.json", old_cfg, True)
+                cfg.write_default_cfg_file("ToolDelta基本配置.json", old_cfg, True)
                 fmts.clean_print("§a配置已保存!")
                 return
             match resp:

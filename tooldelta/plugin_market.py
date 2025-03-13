@@ -9,8 +9,7 @@ import traceback
 import requests
 import json
 
-from .cfg import Cfg
-from .utils import fmts
+from .utils import cfg, fmts
 from .constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
@@ -80,7 +79,7 @@ class PluginMarket:
         self._plugin_id_name_map: dict | None = None
         #self.plugins_download_url = f"{Cfg().geturl()}/ToolDelta-Basic/PluginMarket/main"
         try:
-            self.plugins_download_url = Cfg().get_cfg(
+            self.plugins_download_url = cfg.get_cfg(
                 "ToolDelta基本配置.json", {"插件市场源": str}
             )["插件市场源"]
         except Exception:

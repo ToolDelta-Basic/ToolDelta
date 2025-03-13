@@ -12,15 +12,12 @@ import time
 from collections.abc import Callable
 
 from .. import utils
-from ..cfg import Cfg
 from ..constants import SysStatus, PacketIDS
 from ..eulogist_libs import core_conn as eulogist_conn
 from ..internal.types import UnreadyPlayer, Abilities
 from ..neo_libs import file_download as neo_fd, neo_conn
 from ..packets import Packet_CommandOutput
 from ..utils import fmts, sys_args, urlmethod
-
-Config = Cfg()
 
 
 class StandardFrame:
@@ -569,7 +566,9 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
             SystemExit | Exception | SystemError: 退出状态
         """
         try:
-            openat_port = int(sys_args.sys_args_to_dict().get("access-point-port") or "24020")
+            openat_port = int(
+                sys_args.sys_args_to_dict().get("access-point-port") or "24020"
+            )
             if openat_port not in range(65536):
                 raise AssertionError
         except (ValueError, AssertionError):

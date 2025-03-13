@@ -16,11 +16,10 @@ import traceback
 import json
 
 from . import constants, game_utils, utils
-from .cfg import Config
 from .constants import SysStatus, TextType
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .packets import Packet_CommandOutput
-from .utils import fmts
+from .utils import cfg, fmts
 from .version import get_tool_delta_version
 from .plugin_load import injected_plugin
 from .plugin_load.plugins import PluginGroup
@@ -212,7 +211,7 @@ class ToolDelta:
             fmts.print_inf("重载: 正在重新载入插件..")
             self.plugin_group.reload()
             fmts.print_suc("重载插件: 全部插件重载成功！")
-        except Config.ConfigError as err:
+        except cfg.ConfigError as err:
             fmts.print_err(f"重载插件时发现插件配置文件有误: {err}")
         except SystemExit:
             fmts.print_err("重载插件遇到问题")

@@ -41,16 +41,17 @@ __all__ = [
 
 from typing import TYPE_CHECKING
 
-from .frame import Config, GameCtrl, ToolDelta
+from .frame import GameCtrl, ToolDelta
 from .internal.types import Player, Chat, FrameExit, InternalBroadcast
 from .launch_options import client_title
 from .plugin_load.classic_plugin import Plugin, plugin_entry
 from .starter import start_tool_delta, tooldelta
-from .utils import fmts, Utils
+from .utils import cfg, fmts, Utils
 from .version import get_tool_delta_version, check_tooldelta_version
 
 # 重定向
 Builtins = Utils
+Config = cfg
 Frame = ToolDelta
 Print = fmts
 
