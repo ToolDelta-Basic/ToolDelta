@@ -63,7 +63,7 @@ class _jsonfile_status:
 
 def load_from_path(
     path: str,
-    needFileExists: bool = True,
+    need_file_exists: bool = True,
     default: Any = None,
     unload_delay: int | None = None,
 ) -> _jsonfile_status:
@@ -84,7 +84,7 @@ def load_from_path(
     if j := tempjson_paths.get(path):
         return j
     j = tempjson_paths[path] = _jsonfile_status(
-        path, needFileExists, default, unload_delay
+        path, need_file_exists=need_file_exists, default=default, unload_delay=unload_delay
     )
     return j
 
@@ -195,7 +195,7 @@ def load_and_write(
     """
     try:
         if path not in tempjson_paths.keys():
-            load_from_path(path, need_file_exists, obj, timeout)
+            load_from_path(path, need_file_exists, default=obj, unload_delay=timeout)
         write(path, obj)
     except Exception as e:
         e_new = type(e)(str(e))

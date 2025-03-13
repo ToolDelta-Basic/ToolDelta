@@ -37,13 +37,17 @@ def loadPathJson(
 ):
     tempjson.load_from_path(path, needFileExists, timeout, default)
 
+
 def read_as_tmp(
     path: str,
     needFileExists: bool = True,
     timeout: int = 60,
     default=None,
 ):
-    tempjson.load_and_read(path, needFileExists, timeout, default)
+    tempjson.load_and_read(
+        path, need_file_exists=needFileExists, timeout=timeout, default=default
+    )
+
 
 def write_as_tmp(
     path: str,
@@ -52,7 +56,7 @@ def write_as_tmp(
     timeout: int = 60,
     default=None,
 ):
-    tempjson.load_and_write(path, obj, needFileExists, timeout)
+    tempjson.load_and_write(path, obj, need_file_exists=needFileExists, timeout=timeout)
 
 
 TMPJson = create_desperate_attr_class(
