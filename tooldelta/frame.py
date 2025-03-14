@@ -72,12 +72,12 @@ class ToolDelta:
             self.game_ctrl = GameCtrl(self)
             self.add_console_cmd_trigger = self.cmd_manager.add_console_cmd_trigger
             self.launcher = self.cfg_loader.load_tooldelta_cfg_and_get_launcher()
-            self.launcher.set_packet_listener(self.packet_handler.entrance)
             self.game_ctrl.hook_launcher(self.launcher)
             self.game_ctrl.hook_packet_handler(self.packet_handler)
             self.players_maintainer.hook_packet_handler(self.packet_handler)
             self.plugin_group.load_plugins()
             self.plugin_group.hook_packet_handler(self.packet_handler)
+            self.launcher.set_packet_listener(self.packet_handler)
             utils.timer_event_boostrap()
             utils.tempjson.jsonfile_auto_save()
             game_utils.hook_packet_handler(self.packet_handler)

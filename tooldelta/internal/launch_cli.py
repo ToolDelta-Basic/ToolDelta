@@ -14,6 +14,7 @@ from collections.abc import Callable
 from .. import utils
 from ..constants import SysStatus, PacketIDS
 from ..eulogist_libs import core_conn as eulogist_conn
+from ..internal.packet_handler import PacketHandler
 from ..internal.types import UnreadyPlayer, Abilities
 from ..neo_libs import file_download as neo_fd, neo_conn
 from ..packets import Packet_CommandOutput
@@ -49,11 +50,6 @@ class StandardFrame:
     def init(self):
         """初始化启动器框架"""
 
-    def add_listen_packets(self, *pcks: PacketIDS) -> None:
-        """添加需要监听的数据包"""
-        for i in pcks:
-            self.need_listen_packets.add(i)
-
     def reload_listen_packets(self, listen_packets: set[PacketIDS]) -> None:
         """重载需要监听的数据包ID"""
         self.need_listen_packets = {
@@ -63,8 +59,9 @@ class StandardFrame:
             PacketIDS.CommandOutput,
         } | listen_packets
 
-    def set_packet_listener(self, handler: Callable[[int, dict], None]):
-        self.packet_handler = handler
+    def set_packet_listener(self, handler: PacketHandler):
+        self.packet_handler = handler.entrance
+        self.need_listen_packets |= handler.listen_packets
 
     def launch(self) -> None:
         """启动器启动
@@ -843,11 +840,6 @@ class FrameEulogistLauncher(StandardFrame):
 
     def init(self):
         """初始化启动器框架"""
-
-    def add_listen_packets(self, *pcks: int) -> None:
-        """添加需要监听的数据包"""
-        for i in pcks:
-            self.need_listen_packets.add(i)
 
     def launch(self) -> SystemExit:
         """启动器启动
