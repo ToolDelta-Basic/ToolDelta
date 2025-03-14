@@ -58,7 +58,7 @@ class _jsonfile_status:
     def save(self):
         if self.is_changed:
             with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(self.content, f)
+                json.dump(self.content, f, ensure_ascii=False)
 
 
 def load_from_path(
