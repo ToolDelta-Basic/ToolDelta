@@ -109,7 +109,7 @@ class ToolDelta:
     def welcome() -> None:
         """欢迎提示"""
         fmts.print_load("§dToolDelta Panel Embed By SuperScript")
-        fmts.print_load("§dToolDelta Wiki: https://td-wiki.dqyt.online/")
+        fmts.print_load("§dToolDelta Wiki: https://wiki.tooldelta.top/")
         fmts.print_load("§dToolDelta 交流群: 1030755163")
         fmts.print_load("§dToolDelta 项目地址: https://github.com/ToolDelta-Basic")
         fmts.print_load(f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}")
