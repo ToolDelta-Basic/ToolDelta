@@ -33,9 +33,7 @@ class PlayerInfoMaintainer:
         )
 
     def block_init(self):
-        """
-        载入初始玩家数据
-        """
+        # 载入初始玩家数据
         if not self.name_to_player:
             playerinfs = self.frame.launcher.get_players_info()
             if playerinfs:
@@ -49,16 +47,63 @@ class PlayerInfoMaintainer:
             else:
                 self._block_until_inited()
 
+    def getBotInfo(self) -> Player:
+        """
+        获取机器人本身的玩家对象。
+
+        Raises:
+            ValueError: 无法通过机器人名称获取信息
+
+        Returns:
+            Player: 玩家对象
+        """
+        bot_inf = self.name_to_player.get(self.frame.launcher.bot_name)
+        if bot_inf is None:
+            raise ValueError("无法获取机器人信息")
+        return bot_inf
+
     def getPlayerByName(self, name: str) -> Player | None:
+        """
+        通过玩家名称获取玩家对象。
+
+        Args:
+            name (str): 玩家名
+
+        Returns:
+            Player | None: 玩家对象
+        """
         return self.name_to_player.get(name)
 
     def getPlayerByUniqueID(self, uqID: int) -> Player | None:
+        """
+        通过玩家uniqueID获取玩家对象。
+
+        Args:
+            uqID (int): uniqueID
+
+        Returns:
+            Player | None: 玩家对象
+        """
         return self.uq_to_player.get(uqID)
 
     def getPlayerByUUID(self, uuid: str) -> Player | None:
+        """
+        通过玩家UUID获取玩家对象。
+        Args:
+            uuid (str): UUID
+
+        Returns:
+            Player | None: 玩家对象
+        """
         return self.uuid_to_player.get(uuid)
 
-    def getAllPlayers(self):
+    def getAllPlayers(self) -> list[Player]:
+        """
+        获取所有当前在线的玩家的玩家对象列表。
+
+        Returns:
+            list[Player]: 玩家对象列表
+        """
         return list(self.name_to_player.values())
 
     def add_player(self, player: UnreadyPlayer):
@@ -75,9 +120,7 @@ class PlayerInfoMaintainer:
         player.online = False
 
     def _block_until_inited(self):
-        """
-        阻塞直到获取到包含全局玩家身份的 PlayerList 数据包
-        """
+        # 阻塞直到获取到包含全局玩家身份的 PlayerList 数据包
         fmts.print_inf("正在等待获取全局玩家数据..")
         ok = self.inited_event.wait(30)
         if ok:
@@ -91,7 +134,7 @@ class PlayerInfoMaintainer:
         player = self.getPlayerByUniqueID(uqID)
         if player is None:
             fmts.print_war(
-                f"[internal] PlayerInfoMaintainer: hook_update_abilities: playerUQ not found: {uqID}"
+                f"[internal] PlayerInfoMaintainer: hook_update_abilities: 找不到玩家的 uniqueUD: {uqID}"
             )
             return False
         player_abilities.update_player_ability_from_server(self, player, packet)
@@ -127,5 +170,5 @@ class PlayerInfoMaintainer:
             self.remove_player(player)
         else:
             fmts.print_war(
-                f"[internal] PlayerInfoMaintainer: remove_player: player uuid not found: {entry['UUID']}"
+                f"[internal] PlayerInfoMaintainer: remove_player: 找不到玩家的 UUID: {entry['UUID']}"
             )

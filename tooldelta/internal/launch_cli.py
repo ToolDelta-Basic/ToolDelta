@@ -89,7 +89,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def get_bot_info(self) -> str:
+    def get_bot_name(self) -> str:
         """获取机器人名字"""
         raise NotImplementedError
 
