@@ -64,7 +64,7 @@ PLUGIN_TYPE_MAPPING = {
 }
 "插件属性名映射"
 
-TDSPECIFIC_MIRROR = "https://github.dqyt.online"
+TDSPECIFIC_MIRROR = "https://github.tooldelta.top"
 "ToolDelta的github镜像"
 
 TDSPECIFIC_GITHUB_DOWNLOAD_URL = (
@@ -77,7 +77,7 @@ TDREPO_URL = (
 )
 "ToolDelta镜像: github项目仓库"
 
-PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.dqyt.online/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.tooldelta.top/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 
 class LaunchMode(IntEnum):
     LAUNCH_MODE_NEOMG_ACCESS_POINT = 1

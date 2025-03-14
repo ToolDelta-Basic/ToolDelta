@@ -27,7 +27,7 @@ init(autoreset=True)
 
 # def get_avali_github_url(self):
 #     """自动选择最佳镜像地址"""
-#     url_list = ["https://ghp.ci", "https://github.dqyt.online"]
+#     url_list = ["https://ghp.ci", "https://github.tooldelta.top"]
 #     try:
 #         if not Config.get_cfg(
 #                 "ToolDelta基本配置.json", {"是否使用github镜像": bool}
@@ -49,7 +49,7 @@ init(autoreset=True)
 #                 return self.url
 #         except requests.RequestException:
 #             continue
-#     self.url = "https://github.dqyt.online/https://raw.githubusercontent.com"
+#     self.url = "https://github.tooldelta.top/https://raw.githubusercontent.com"
 #     return self.url
 
 def set_global_github_src_url(url: str):
