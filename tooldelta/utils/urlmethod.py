@@ -63,8 +63,10 @@ def get_fastest_github_mirror():
     fmts.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
     res = test_site_latency([
         "https://ghp.ci",
+        "https://ghfast.top",
+        "https://gh-proxy.com/",
         "https://mirror.ghproxy.com",
-        "https://github.dqyt.online",
+        "https://github.tooldelta.top",
     ])
     fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
     return site
