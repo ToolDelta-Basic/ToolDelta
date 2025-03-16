@@ -204,7 +204,7 @@ class DesperateFuncClass:
         if not object.__getattribute__(self, "_desperate_warn"):
             self._desperate_warn = True
             print_war(f"{type(self).__name__} 已被弃用。请查看文档以使用新方法。")
-            time.sleep(3)
+            #time.sleep(3)
         return object.__getattribute__(self, attr)
 
 

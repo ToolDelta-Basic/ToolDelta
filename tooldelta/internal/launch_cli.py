@@ -245,9 +245,13 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 if self.status != SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                     return "接入点无法连接"
-                fmts.print_war(f"OMEGA 连接失败: {err} (第{retries}次)")
-                time.sleep(5)
-                retries += 1
+                if "api not exist" in str(err):
+                    fmts.print_inf("等待接入点连接中..", end="\r")
+                    time.sleep(5)
+                else:
+                    fmts.print_war(f"OMEGA 连接失败: {err} (第{retries}次)")
+                    time.sleep(5)
+                    retries += 1
         fmts.print_err("最大重试次数已超过")
         self.update_status(SysStatus.CRASHED_EXIT)
         return "连接超时"
