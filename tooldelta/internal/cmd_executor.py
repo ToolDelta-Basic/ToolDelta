@@ -6,7 +6,7 @@ from collections.abc import Callable
 from .. import plugin_market
 from ..constants import SysStatus
 from ..utils import fmts, thread_func, ToolDeltaThread
-from ..internal.launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
+from .launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
 
 
 if TYPE_CHECKING:

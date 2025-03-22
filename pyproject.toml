@@ -29,6 +29,8 @@ anyio = "^4.4.0"
 requests = "^2.32.3"
 sqlite-easy-ctrl = "0.1.2"
 numpy = "^2.1.0"
+protobuf = "^6.30.1"
+grpcio = "^1.71.0"
 
 [[tool.poetry.source]]
 name = "mirrors"

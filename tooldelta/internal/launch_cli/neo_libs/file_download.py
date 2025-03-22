@@ -5,7 +5,7 @@ import platform
 import brotli
 import requests
 
-from ..utils import fmts, urlmethod, sys_args
+from ....utils import fmts, urlmethod, sys_args
 
 
 def download_libs() -> bool:
@@ -24,7 +24,7 @@ def download_libs() -> bool:
             f"未知的系统架构版本: {sys_info_fmt} (目前支持: {', '.join(require_depen.keys())})"
         )
     commit_remote = get_remote_commit(depen_url)
-    commit_file_path = os.path.join(os.getcwd(), "tooldelta", "neo_libs", "commit")
+    commit_file_path = os.path.join(os.getcwd(), "tooldelta", "bin", "neomega_commit")
     replace_file = check_commit_file(commit_file_path, commit_remote)
     solve_dict = get_required_dependencies_solve_dict(
         source_dict, depen_url, replace_file
@@ -53,14 +53,14 @@ def download_neomg() -> bool:
         neomega_file_path = os.path.join(
             os.getcwd(),
             "tooldelta",
-            "neo_libs",
+            "bin",
             f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}.exe",
         )
     else:
         neomega_file_path = os.path.join(
             os.getcwd(),
             "tooldelta",
-            "neo_libs",
+            "bin",
             f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}",
         )
     replace_file = check_file_hash(neomega_file_hash, neomega_file_path)
@@ -73,7 +73,7 @@ def download_neomg() -> bool:
                         os.path.join(
                             os.getcwd(),
                             "tooldelta",
-                            "neo_libs",
+                            "bin",
                             "omega_launcher.brotli",
                         ),
                     )
@@ -81,7 +81,7 @@ def download_neomg() -> bool:
             )
         )
         unzip_brotli_file(
-            os.path.join(os.getcwd(), "tooldelta", "neo_libs", "omega_launcher.brotli"),
+            os.path.join(os.getcwd(), "tooldelta", "bin", "omega_launcher.brotli"),
             neomega_file_path,
         )
         fmts.print_suc("已完成 NeOmega框架 的依赖更新！")
@@ -143,7 +143,7 @@ def get_required_dependencies_solve_dict(
 ) -> list[tuple[str, str]]:
     solve_dict = []
     for v in source_dict:
-        pathdir = os.path.join(os.getcwd(), "tooldelta", "neo_libs", v)
+        pathdir = os.path.join(os.getcwd(), "tooldelta", "bin", v)
         if not os.path.isfile(pathdir) or replace_file:
             solve_dict.append((depen_url + "/" + v, pathdir))
     return solve_dict

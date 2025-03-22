@@ -6,9 +6,9 @@ from collections.abc import Callable
 from typing import Any
 from websocket import WebSocketApp, WebSocket
 from dataclasses import dataclass
-from .. import utils
-from ..packets import Packet_CommandOutput
-from ..utils import fmts
+from .... import utils
+from ....packets import Packet_CommandOutput
+from ....utils import fmts
 
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"

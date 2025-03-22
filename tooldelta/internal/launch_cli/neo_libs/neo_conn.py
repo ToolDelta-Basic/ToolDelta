@@ -10,8 +10,8 @@ from typing import Any, ClassVar, Optional
 
 import json
 
-from ..utils import fmts, ToolDeltaThread
-from ..packets import Packet_CommandOutput
+from ....utils import fmts, ToolDeltaThread
+from ....packets import Packet_CommandOutput
 
 CInt = ctypes.c_longlong
 CString = ctypes.c_char_p
@@ -808,7 +808,7 @@ def load_lib():
     else:
         lib_path = f"neomega_macos_{sys_machine}.dylib"
 
-    lib_path = os.path.join(sys_fn, "neo_libs", lib_path)
+    lib_path = os.path.join(sys_fn, "bin", lib_path)
     LIB = (
         ctypes.CDLL(lib_path)
         if sys_type != "Windows"

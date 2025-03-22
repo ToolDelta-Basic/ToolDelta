@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 from ..auths import fblike_sign_login
 from ..constants import tooldelta_cfg, tooldelta_cli
 from ..utils import cfg, urlmethod, sys_args, fbtokenFix, if_token, fmts
-from ..internal.launch_cli import (
+from .launch_cli import (
     FrameNeOmegaLauncher,
     FrameNeOmgAccessPoint,
     FrameNeOmgAccessPointRemote,
     FrameEulogistLauncher,
-    LAUNCHERS
+    FrameFateArk,
+    LAUNCHERS,
+    ACCESS_POINT_LAUNCHERS,
 )
 
 if TYPE_CHECKING:
@@ -29,6 +31,7 @@ LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
         FrameNeOmegaLauncher,
     ),
     ("Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
+    ("FateArk 框架", FrameFateArk),
 ]
 
 
@@ -38,23 +41,17 @@ class ConfigLoader:
 
     def load_tooldelta_cfg_and_get_launcher(self) -> LAUNCHERS:
         """加载配置文件"""
-        cfg.write_default_cfg_file(
-            "ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG
-        )
+        cfg.write_default_cfg_file("ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG)
         try:
             # 读取配置文件
-            cfgs = cfg.get_cfg(
-                "ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD
-            )
+            cfgs = cfg.get_cfg("ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD)
             self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.plugin_market_url = cfgs["插件市场源"]
             fmts.publicLogger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
                 1, len(LAUNCHERS_SHOWN) + 1
             ):
-                raise cfg.ConfigError(
-                    "你不该随意修改启动器模式，现在赶紧把它改回 0 吧"
-                )
+                raise cfg.ConfigError("你不该随意修改启动器模式，现在赶紧把它改回 0 吧")
         except cfg.ConfigError as err:
             # 配置文件有误
             r = self.upgrade_cfg()
@@ -129,6 +126,22 @@ class ConfigLoader:
                         f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
+        elif type(launcher) is FrameFateArk:
+            launch_data = cfgs.get(
+                "FateArk接入点启动模式", tooldelta_cfg.LAUNCHER_FATEARK_DEFAULT
+            )
+            launcher_config_key = "FateArk接入点启动模式"
+            try:
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_FATEARK_STD, launch_data)
+            except cfg.ConfigError as err:
+                r = self.upgrade_cfg()
+                if r:
+                    fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    fmts.print_err(
+                        f"ToolDelta 基本配置-FateArk 启动配置有误，需要更正：{err}"
+                    )
+                raise SystemExit from err
         elif type(launcher) is FrameNeOmgAccessPointRemote:
             # 不需要任何配置文件
             ...
@@ -138,10 +151,7 @@ class ConfigLoader:
         else:
             raise ValueError("LAUNCHER Error")
 
-        # 对 类FastBuilder启动器 通用的配置文件设置 (除了远程接入模式)
-        if isinstance(launcher, FrameNeOmgAccessPoint) and not isinstance(
-            launcher, FrameNeOmgAccessPointRemote
-        ):
+        if type(launcher) in ACCESS_POINT_LAUNCHERS:
             serverNumber = launch_data["服务器号"]
             serverPasswd: str = launch_data["密码"]
             auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
@@ -163,9 +173,7 @@ class ConfigLoader:
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
                         cfgs[launcher_config_key] = launch_data
-                        cfg.write_default_cfg_file(
-                            "ToolDelta基本配置.json", cfgs, True
-                        )
+                        cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
                         fmts.print_suc("登录配置设置成功")
                         break
                     except ValueError:
@@ -173,21 +181,33 @@ class ConfigLoader:
             auth_servers = tooldelta_cli.AUTH_SERVERS
             if auth_server == "":
                 fmts.print_inf("选择 ToolDelta 机器人账号 使用的验证服务器：")
+                i = 0
                 for i, (auth_server_name, _) in enumerate(auth_servers):
                     fmts.print_inf(f" {i + 1} - {auth_server_name}")
+                fmts.print_inf(f" {i + 2} - 手动输入")
                 fmts.print_inf(
                     "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
                 )
                 while 1:
                     try:
-                        ch = int(input(fmts.fmt_info("请选择：", "§f 输入 ")))
+                        ch = int(input(fmts.fmt_info("请选择: ", "§f 输入 ")))
                         if ch not in range(1, len(auth_servers) + 1):
-                            raise ValueError
-                        auth_server = auth_servers[ch - 1][1]
-                        cfgs[launcher_config_key][
-                            "验证服务器地址(更换时记得更改fbtoken)"
-                        ] = auth_server
-                        break
+                            if ch == len(auth_servers) + 1:
+                                auth_server = input(
+                                    fmts.fmt_info(
+                                        "请手动输入验证服务器地址: ", "§f 输入 "
+                                    )
+                                )
+                                cfgs[launcher_config_key][
+                                    "验证服务器地址(更换时记得更改fbtoken)"
+                                ] = auth_server
+                                break
+                        else:
+                            auth_server = auth_servers[ch - 1][1]
+                            cfgs[launcher_config_key][
+                                "验证服务器地址(更换时记得更改fbtoken)"
+                            ] = auth_server
+                            break
                     except ValueError:
                         fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
                 cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
@@ -228,10 +248,7 @@ class ConfigLoader:
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
                     fbtoken = f.read()
-            if isinstance(launcher, FrameNeOmgAccessPoint) and not isinstance(
-                launcher, FrameNeOmgAccessPointRemote
-            ):
-                # 如果是类NeOmega启动框架
+            if isinstance(launcher, ACCESS_POINT_LAUNCHERS):
                 launcher.set_launch_data(
                     serverNumber, serverPasswd, fbtoken, auth_server
                 )

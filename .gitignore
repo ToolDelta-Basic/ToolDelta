@@ -151,9 +151,7 @@ fbtoken
 
 test*
 ToolDelta基本配置.json
-tooldelta/neo_libs/*.exe
 NeOmega数据
-tooldelta/neo_libs/commit
 *.tmp
 tempCodeRunnerFile.python
 .autocorrectignore
@@ -166,4 +164,6 @@ tempCodeRunnerFile.python
 *.dll
 *.dylib
 *.cmd
+*.exe
+commit
 快速启动.sig
