@@ -24,8 +24,9 @@ class _jsonfile_status:
         self.is_changed = False
         self.load_time = time.time()
         self.unload_delay = unload_delay
-        if not os.path.isdir(dp := os.path.dirname(path)):
-            raise ValueError(dp + " 文件夹路径不存在")
+        parent_dir = os.path.dirname(path)
+        if parent_dir and not os.path.isdir(dp := os.path.dirname(path)):
+            raise ValueError("文件夹: " + dp + " 路径不存在")
         if not need_file_exists and not os.path.isfile(path):
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(default, f)
