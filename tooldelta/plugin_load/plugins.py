@@ -268,7 +268,7 @@ class PluginGroup:
                         self.execute_player_leave(player)
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
-            case TextType.TextTypeChat:
+            case TextType.TextTypeChat | TextType.TextTypeWhisper:
                 raw_name = pkt["SourceName"]
                 msg = pkt["Message"]
                 cleaned_name = utils.to_plain_name(raw_name)
