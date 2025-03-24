@@ -33,7 +33,7 @@ def init_cfg_only() -> None:
         tooldelta.game_ctrl = GameCtrl(tooldelta)
         tooldelta.add_console_cmd_trigger = tooldelta.cmd_manager.add_console_cmd_trigger
         tooldelta.launcher = tooldelta.cfg_loader.load_tooldelta_cfg_and_get_launcher()
-        tooldelta.launcher.set_packet_listener(tooldelta.packet_handler.entrance)
+        tooldelta.launcher.set_packet_listener(tooldelta.packet_handler)
         tooldelta.game_ctrl.hook_launcher(tooldelta.launcher)
         tooldelta.game_ctrl.hook_packet_handler(tooldelta.packet_handler)
         tooldelta.plugin_group.hook_packet_handler(tooldelta.packet_handler)

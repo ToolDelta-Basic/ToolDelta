@@ -28,6 +28,7 @@ class FrameEulogistLauncher(StandardFrame):
             fbToken (str): 验证服务器 Token
             auth_server_url (str): 验证服务器地址
         """
+        super().__init__()
         self.eulogist = eulogist_conn.Eulogist()
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launch_listeners: list[Callable[[], None]]
