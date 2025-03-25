@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 from tooldelta import game_utils
-from .player_abilities import Abilities, update_player_abilities
+from .player_abilities import Abilities, upload_player_abilities
 
 if TYPE_CHECKING:
     from ..maintainers import PlayerInfoMaintainer
@@ -138,6 +138,10 @@ class Player:
         """
         return self._parent.get_player_ability(self)
 
+    @abilities.setter
+    def abilities(self, abilities: Abilities):
+        self.setAbilities(abilities)
+
     def setAbilities(self, abilities: Abilities, upload=True):
         """
         设置玩家能力
@@ -146,7 +150,7 @@ class Player:
         """
         self._parent.player_abilities[self.unique_id] = abilities
         if upload:
-            update_player_abilities(
+            upload_player_abilities(
                 self._parent.frame.get_game_control(), self.unique_id, abilities
             )
 

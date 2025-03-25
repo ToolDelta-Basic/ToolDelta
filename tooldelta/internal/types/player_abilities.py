@@ -96,7 +96,7 @@ class Abilities:
         )
 
 
-def update_player_abilities(pkt_sender: "GameCtrl", playerUniqueID: int, abilities: Abilities):
+def upload_player_abilities(pkt_sender: "GameCtrl", playerUniqueID: int, abilities: Abilities):
     pkt_sender.sendPacket(
         PacketIDS.RequestPermissions,
         {
