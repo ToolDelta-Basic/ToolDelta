@@ -1,9 +1,10 @@
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 from threading import Event
 
-from ..utils import fmts
+from ..utils import fmts, create_result_cb
 from .types.player import Player, UnreadyPlayer
-from .types import player_abilities
+from .types.player_abilities import Abilities, update_player_ability_from_server
 from ..constants import PacketIDS
 
 if TYPE_CHECKING:
@@ -17,19 +18,18 @@ class PlayerInfoMaintainer:
         self.name_to_player: dict[str, Player] = {}
         self.uq_to_player: dict[int, Player] = {}
         self.uuid_to_player: dict[str, Player] = {}
-        self.player_abilities: dict[int, player_abilities.Abilities] = {}
+        self.player_abilities: dict[int, Abilities] = {}
+        self.player_abilities_getter_callback: dict[int, Callable[[bool], None]] = {}
         self.inited_event = Event()
 
     def hook_packet_handler(self, packet_handler: "PacketHandler"):
         packet_handler.add_packet_listener(
-            packet_id=PacketIDS.PlayerList,
-            cb=self._hook_playerlist,
-            priority=100
+            packet_id=PacketIDS.PlayerList, cb=self._hook_playerlist, priority=100
         )
         packet_handler.add_packet_listener(
             packet_id=PacketIDS.UpdateAbilities,
             cb=self._hook_update_abilities,
-            priority=100
+            priority=100,
         )
 
     def block_init(self):
@@ -137,7 +137,9 @@ class PlayerInfoMaintainer:
                 f"[internal] PlayerInfoMaintainer: hook_update_abilities: 找不到玩家的 uniqueUD: {uqID}"
             )
             return False
-        player_abilities.update_player_ability_from_server(self, player, packet)
+        update_player_ability_from_server(self, player, packet)
+        if uqID in self.player_abilities_getter_callback:
+            self.player_abilities_getter_callback[uqID](True)
         return False
 
     def _hook_playerlist(self, packet: dict):
@@ -172,3 +174,16 @@ class PlayerInfoMaintainer:
             fmts.print_war(
                 f"[internal] PlayerInfoMaintainer: remove_player: 找不到玩家的 UUID: {entry['UUID']}"
             )
+
+    def get_player_ability(self, player: Player) -> Abilities:
+        ab = self.player_abilities.get(player.unique_id)
+        if ab is None:
+            getter, setter = create_result_cb()
+            self.player_abilities_getter_callback[player.unique_id] = setter
+            res = getter(20)
+            del self.player_abilities_getter_callback[player.unique_id]
+            if res is None:
+                raise ValueError("[internal] 获取玩家能力超时")
+            return self.player_abilities[player.unique_id]
+        else:
+            return ab

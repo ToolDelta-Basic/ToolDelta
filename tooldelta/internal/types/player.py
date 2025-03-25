@@ -136,10 +136,7 @@ class Player:
         Returns:
             Abilities: 玩家能力
         """
-        ab = self._parent.player_abilities.get(self.unique_id)
-        if ab is None:
-            raise ValueError(f"玩家 {self.name} 的能力还没有初始化")
-        return ab
+        return self._parent.get_player_ability(self)
 
     def setAbilities(self, abilities: Abilities, upload=True):
         """
