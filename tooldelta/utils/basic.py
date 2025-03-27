@@ -164,9 +164,11 @@ def to_player_selector(playername: str) -> str:
         return playername
 
 
-def create_result_cb():
+def create_result_cb(typechecker: type[VT] = type[object]):
     """
     获取一对回调锁
+    Args:
+        typechecker (type[VT], optional): 设置类型检测时回调函数返回值的类型, 无实际作用, Defaults to type[object].
 
     ```
     getter, setter = create_result_cb()
@@ -181,15 +183,15 @@ def create_result_cb():
 
     ```
     """
-    ret = [None]
+    ret: list[VT | None] = [None]
     lock = threading.Lock()
     lock.acquire()
 
-    def getter(timeout=60.0) -> Any:
+    def getter(timeout=60.0) -> VT | None:
         lock.acquire(timeout=timeout)
         return ret[0]
 
-    def setter(s):
+    def setter(s: VT | None):
         ret[0] = s
         lock.release()
 
