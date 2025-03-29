@@ -1,7 +1,10 @@
 from enum import IntEnum
 
-class PacketIDS(IntEnum):
+
+class PacketIDs(IntEnum):
     "数据包 ID 常量表"
+
+    # https://prismarinejs.github.io/minecraft-data/protocol/bedrock/1.21.42/#Action
 
     IDLogin = Login = 1  # 客户端登录（本地）
     IDPlayStatus = PlayStatus = 2  # 玩家状态
@@ -324,3 +327,6 @@ class PacketIDS(IntEnum):
     IDTrimData = TrimData = 302  # 修剪数据（服务端 -> 客户端）
     IDOpenSign = OpenSign = 303  # 打开标志（服务端 -> 客户端）
     IDAgentAnimation = AgentAnimation = 304  # 代理动画（服务端 -> 客户端）
+
+
+PacketIDS = PacketIDs
