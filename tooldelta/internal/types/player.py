@@ -38,10 +38,8 @@ class UnreadyPlayer:
 class Player:
     __slots__ = (
         "_parent",
-        "abilities",
         "build_platform",
         "name",
-        "online",
         "platform_chat_id",
         "unique_id",
         "uuid",
