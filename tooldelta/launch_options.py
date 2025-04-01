@@ -5,8 +5,9 @@ import os
 import time
 import traceback
 
+from random import choice
 from .utils import fmts, sys_args
-from .constants import TOOLDELTA_LOGO
+from .constants import TOOLDELTA_LOGO_mode
 from .internal.config_loader import ConfigLoader
 from .plugin_manager import plugin_manager
 from .plugin_market import market
@@ -51,7 +52,11 @@ def client_title() -> None:
             start_tool_delta()
             return
         else:
-            fmts.clean_print(TOOLDELTA_LOGO)
+            text=choice(TOOLDELTA_LOGO_mode)
+            if text[0]==0:
+                print(fmts.clean_fmt(text[1]))
+            elif text[0]==1:
+                print(fmts.print_gradient(text[1],text[2],text[3]))
             if "title" in sys_args.sys_args_to_dict():
                 fmts.clean_print(launch_args["title"] or "")
             fmts.clean_print(
