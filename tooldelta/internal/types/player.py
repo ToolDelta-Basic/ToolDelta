@@ -36,16 +36,6 @@ class UnreadyPlayer:
 
 @dataclass
 class Player:
-    __slots__ = (
-        "_parent",
-        "build_platform",
-        "name",
-        "platform_chat_id",
-        "unique_id",
-        "uuid",
-        "xuid",
-    )
-
     _parent: "PlayerInfoMaintainer"
     uuid: str
     unique_id: int
