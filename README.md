@@ -4,6 +4,8 @@
   <img src="https://img.shields.io/github/stars/ToolDelta/ToolDelta.svg?style=falt" alt="Stars">
 </p>
 
+# ToolDelta 于 2025/4/1 被 《我的世界：中国版》 租赁服模组加载系统取代， 我们将不再进行后续维护与更新。
+
 🍓ToolDelta🍓 是**为《我的世界：中国版》手机端租赁服**制作的、基于机器人的插件加载器，不同于其他类型的插件加载器，ToolDelta 可以运行在**多种游戏交互启动器核心**上。
 ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化租赁服的流畅度。
 
