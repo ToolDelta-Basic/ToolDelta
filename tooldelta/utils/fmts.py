@@ -131,6 +131,19 @@ def _strike(text: str) -> str:
         i += 1
     return text_ok
 
+def print_gradient(text, start_rgb, end_rgb):
+    """使用ANSI转义码打印渐变文字"""
+    result = []
+    length = len(text)
+    
+    for i in range(length):
+        ratio = i / (length - 1) if length > 1 else 0
+        r = int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * ratio)
+        g = int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * ratio)
+        b = int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * ratio)
+        result.append(f"\033[38;2;{r};{g};{b}m{text[i]}")
+    
+    return ''.join(result) + '\033[0m'
 
 def print_with_info(
     text: str, info: str = INFO_NORMAL, need_log: bool = True, **print_kwargs

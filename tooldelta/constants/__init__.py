@@ -5,6 +5,7 @@ from .minecraft import (
     PlayerActionType
 )
 from .tooldelta_cli import (
+    TOOLDELTA_LOGO_mode,
     TOOLDELTA_LOGO,
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
@@ -46,6 +47,7 @@ __all__ = [
     "TOOLDELTA_CLASSIC_PLUGIN",
     "TOOLDELTA_INJECTED_PLUGIN",
     "TOOLDELTA_LOGO",
+    "TOOLDELTA_LOGO_mode",
     "TOOLDELTA_PLUGIN_CFG_DIR",
     "TOOLDELTA_PLUGIN_DATA_DIR",
     "TOOLDELTA_PLUGIN_DIR",
