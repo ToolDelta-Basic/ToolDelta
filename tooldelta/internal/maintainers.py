@@ -38,12 +38,8 @@ class PlayerInfoMaintainer:
         if not self.name_to_player:
             playerinfs = self.frame.launcher.get_players_info()
             if playerinfs:
-                for playername, unready_player in playerinfs.items():
-                    self.uq_to_player[unready_player.unique_id] = self.name_to_player[
-                        playername
-                    ] = self.uuid_to_player[unready_player.uuid] = unready_player.ready(
-                        self
-                    )
+                for unready_player in playerinfs.values():
+                    self.add_player(unready_player)
                 fmts.print_suc("已从接入点获取全局玩家数据")
             else:
                 self._block_until_inited()
@@ -119,11 +115,11 @@ class PlayerInfoMaintainer:
         return list(self.name_to_player.values())
 
     def add_player(self, player: UnreadyPlayer):
-        self.name_to_player[
-            player.name
-        ] = self.uq_to_player[player.unique_id] = self.uuid_to_player[player.uuid] = self.xuid_to_player[player.xuid] = (
-            player.ready(self)
-        )
+        ready_player = player.ready(self)
+        self.name_to_player[player.name] = ready_player
+        self.uq_to_player[player.unique_id] = ready_player
+        self.uuid_to_player[player.uuid] = ready_player
+        self.xuid_to_player[player.xuid] = ready_player
 
     def remove_player(self, player: Player):
         del self.name_to_player[player.name]
