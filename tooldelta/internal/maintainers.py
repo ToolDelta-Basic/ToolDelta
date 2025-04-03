@@ -18,6 +18,7 @@ class PlayerInfoMaintainer:
         self.name_to_player: dict[str, Player] = {}
         self.uq_to_player: dict[int, Player] = {}
         self.uuid_to_player: dict[str, Player] = {}
+        self.xuid_to_player: dict[str, Player] = {}
         self.player_abilities: dict[int, Abilities] = {}
         self.player_abilities_getter_callback: dict[int, Callable[[bool], None]] = {}
         self.inited_event = Event()
@@ -97,6 +98,17 @@ class PlayerInfoMaintainer:
         """
         return self.uuid_to_player.get(uuid)
 
+    def getPlayerByXUID(self, uuid: str) -> Player | None:
+        """
+        通过玩家XUID获取玩家对象。
+        Args:
+            uuid (str): XUID
+
+        Returns:
+            Player | None: 玩家对象
+        """
+        return self.xuid_to_player.get(uuid)
+
     def getAllPlayers(self) -> list[Player]:
         """
         获取所有当前在线的玩家的玩家对象列表。
@@ -107,14 +119,17 @@ class PlayerInfoMaintainer:
         return list(self.name_to_player.values())
 
     def add_player(self, player: UnreadyPlayer):
-        self.uq_to_player[player.unique_id] = self.name_to_player[
+        self.name_to_player[
             player.name
-        ] = self.uuid_to_player[player.uuid] = player.ready(self)
+        ] = self.uq_to_player[player.unique_id] = self.uuid_to_player[player.uuid] = self.xuid_to_player[player.xuid] = (
+            player.ready(self)
+        )
 
     def remove_player(self, player: Player):
         del self.name_to_player[player.name]
         del self.uq_to_player[player.unique_id]
         del self.uuid_to_player[player.uuid]
+        del self.xuid_to_player[player.xuid]
         if player.unique_id in self.player_abilities:
             del self.player_abilities[player.unique_id]
         player.online = False
