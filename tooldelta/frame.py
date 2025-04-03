@@ -285,25 +285,13 @@ class GameCtrl:
                             fmts.print_inf(f"§e{who_died} 被 {killer} 击败了")
                         else:
                             fmts.print_inf(f"§e{who_died} 死亡了")
-            case TextType.TextTypeChat | TextType.TextTypeWhisper:
-                src_name = pkt["SourceName"]
-                playername = utils.to_plain_name(src_name)
-                if src_name == "":
-                    # /me 消息
-                    msg_list = msg.split(" ")
-                    if len(msg_list) >= 3:
-                        src_name = msg_list[1]
-                        msg = " ".join(msg_list[2:])
-                    else:
-                        return False
-                fmts.print_inf(f"<{playername}> {msg}")
-            case TextType.TextTypeAnnouncement:
-                # /say 消息
-                src_name = pkt["SourceName"]
-                msg = msg.removeprefix(f"[{src_name}] ")
-                fmts.print_inf(
-                    f"{src_name} 使用 say 说：{msg.removeprefix(f'[{src_name}] ')}"
+            case TextType.TextTypeChat | TextType.TextTypeWhisper | TextType.TextTypeAnnouncement:
+                playername, message = utils.get_playername_and_msg_from_text_packet(
+                    self.linked_frame, pkt
                 )
+                if playername is None or msg is None:
+                    return False
+                fmts.print_inf(f"<{playername}> {message}")
             case TextType.TextTypeObjectWhisper:
                 # /tellraw 消息
                 msg = pkt["Message"]
@@ -313,8 +301,6 @@ class GameCtrl:
                     return False
                 msg_text = "".join([i["text"] for i in msg_text])
                 fmts.print_with_info(msg_text, "§f 消息 ")
-            case default:
-                fmts.print_inf(f"[Text:{default}] {msg}")
         return False
 
     def system_inject(self):

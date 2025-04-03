@@ -268,17 +268,14 @@ class PluginGroup:
                         self.execute_player_leave(player)
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
-            case TextType.TextTypeChat | TextType.TextTypeWhisper:
-                raw_name = pkt["SourceName"]
-                msg = pkt["Message"]
-                cleaned_name = utils.to_plain_name(raw_name)
-                if player := self.linked_frame.players_maintainer.getPlayerByName(
-                    cleaned_name
-                ):
-                    chat = Chat(player, msg)
-                    self.execute_chat(chat)
-                else:
-                    fmts.print_war(f"玩家 {cleaned_name} 未找到")
+            case _:
+                playername, message = utils.get_playername_and_msg_from_text_packet(self.linked_frame, pkt)
+                if playername is not None and message is not None:
+                    if player := self.linked_frame.players_maintainer.getPlayerByName(
+                        playername
+                    ):
+                        chat = Chat(player, message)
+                        self.execute_chat(chat)
         return False
 
     help = staticmethod(classic_plugin_loader.help)

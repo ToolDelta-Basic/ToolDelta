@@ -1,6 +1,7 @@
 from . import tempjson
 from .fbtoken import fbtokenFix, if_token
 from .locks import ChatbarLock, players_in_chatbar_lock
+from .packet_transition import get_playername_and_msg_from_text_packet
 from .safe_json import (
     DataReadError,
     safe_json_dump,
