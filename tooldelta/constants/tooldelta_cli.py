@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 class SysStatus(IntEnum):
     """系统状态码
 
@@ -20,6 +21,7 @@ class SysStatus(IntEnum):
     CRASHED_EXIT = 105
     NEED_RESTART = 106
 
+
 TOOLDELTA_LOGO = """╔═════════════════════════════════════════════════════════════════════════╗
 ║§9████████╗ ██████╗  ██████╗ ██╗     §b██████╗ ███████╗██╗  ████████╗ █████╗ §r║
 ║§9╚══██╔══╝██╔═══██╗██╔═══██╗██║     §b██╔══██╗██╔════╝██║  ╚══██╔══╝██╔══██╗§r║
@@ -39,7 +41,13 @@ TOOLDELTA_LOGO_witout_colors = """╔══════════════�
 ║   ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝   ╚═╝  ╚═╝║
 ╚═════════════════════════════════════════════════════════════════════════╝"""
 "无颜色的ToolDelta标志"
-TOOLDELTA_LOGO_mode = [[0,TOOLDELTA_LOGO],[1,TOOLDELTA_LOGO_witout_colors,(0, 100, 255),(138, 43, 226)],[1,TOOLDELTA_LOGO_witout_colors,(34,139,34),(144,238,144)],[1,TOOLDELTA_LOGO_witout_colors,(255,165,0),(128,0,128)],[1,TOOLDELTA_LOGO_witout_colors,(255,182,193),(221,160,221)]]
+TOOLDELTA_LOGO_mode = [
+    [0, TOOLDELTA_LOGO],
+    [1, TOOLDELTA_LOGO_witout_colors, (0, 100, 255), (138, 43, 226)],
+    [1, TOOLDELTA_LOGO_witout_colors, (34, 139, 34), (144, 238, 144)],
+    [1, TOOLDELTA_LOGO_witout_colors, (255, 165, 0), (128, 0, 128)],
+    [1, TOOLDELTA_LOGO_witout_colors, (255, 182, 193), (221, 160, 221)],
+]
 FBLIKE_APIS = [
     "%s/api/phoenix/login",
     "%s/api/new",
@@ -88,6 +96,7 @@ TDREPO_URL = (
 "ToolDelta镜像: github项目仓库"
 
 PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.tooldelta.top/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+
 
 class LaunchMode(IntEnum):
     LAUNCH_MODE_NEOMG_ACCESS_POINT = 1
