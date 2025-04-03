@@ -134,7 +134,7 @@ class FrameFateArk(StandardFrame):
         self.check_avaliable()
         if waitForResp:
             ud = fateark_core.sendcmd_and_get_uuid(cmd)
-            getter, setter = utils.create_result_cb()
+            getter, setter = utils.create_result_cb(dict)
             self.command_output_cbs[ud] = setter
             res = getter(timeout)
             if res is None:
@@ -148,7 +148,7 @@ class FrameFateArk(StandardFrame):
         self.check_avaliable()
         if waitForResp:
             ud = fateark_core.sendwscmd_and_get_uuid(cmd)
-            getter, setter = utils.create_result_cb()
+            getter, setter = utils.create_result_cb(dict)
             self.command_output_cbs[ud] = setter
             res = getter(timeout)
             if res is None:
