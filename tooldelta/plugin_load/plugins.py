@@ -269,8 +269,8 @@ class PluginGroup:
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
             case _:
-                playername, message = utils.get_playername_and_msg_from_text_packet(self.linked_frame, pkt)
-                if playername is not None and message is not None:
+                playername, message, ensurePlayer = utils.get_playername_and_msg_from_text_packet(self.linked_frame, pkt)
+                if playername is not None and message is not None and ensurePlayer:
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):

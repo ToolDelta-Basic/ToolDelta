@@ -286,12 +286,15 @@ class GameCtrl:
                         else:
                             fmts.print_inf(f"§e{who_died} 死亡了")
             case TextType.TextTypeChat | TextType.TextTypeWhisper | TextType.TextTypeAnnouncement:
-                playername, message = utils.get_playername_and_msg_from_text_packet(
+                playername, message, ensurePlayer = utils.get_playername_and_msg_from_text_packet(
                     self.linked_frame, pkt
                 )
                 if playername is None or msg is None:
                     return False
-                fmts.print_inf(f"<{playername}> {message}")
+                if ensurePlayer:
+                    fmts.print_inf(f"<{playername}> {message}")
+                else:
+                    fmts.print_inf(f"<{playername}(伪造)> {message}")
             case TextType.TextTypeObjectWhisper:
                 # /tellraw 消息
                 msg = pkt["Message"]
