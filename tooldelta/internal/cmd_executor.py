@@ -186,7 +186,7 @@ class ConsoleCmdManager:
             lambda _: plugin_market.market.enter_plugin_market(in_game=True),
         )
         self.add_console_cmd_trigger(
-            ["/"], "[指令]", "执行 MC 指令", _execute_mc_command_and_get_callback
+            ["/"], "[指令]", "执行 MC 指令", lambda args: _execute_mc_command_and_get_callback(args) and None
         )
         self.add_console_cmd_trigger(
             ["list"],
