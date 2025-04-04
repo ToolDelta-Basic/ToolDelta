@@ -43,7 +43,6 @@ class PluginGroup:
         self.plugin_listen_packets: set[PacketIDS] = set()
         self.plugins_api: dict[str, Plugin] = {}
         self.normal_plugin_loaded_num = 0
-        self.injected_plugin_loaded_num = 0
         self.loaded_plugin_ids = []
         self.on_err_cb = self.linked_frame.on_plugin_err
 
@@ -115,7 +114,6 @@ class PluginGroup:
                 auto_move_plugin_dir(fdir)
         self.loaded_plugin_ids = []
         self.normal_plugin_loaded_num = 0
-        self.injected_plugin_loaded_num = 0
         try:
             fmts.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin_loader.read_plugins(self)
@@ -128,7 +126,7 @@ class PluginGroup:
             fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_preload(self.linked_frame.on_plugin_err)
             fmts.print_suc(
-                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个类式插件, §f{self.injected_plugin_loaded_num}§a 个注入式插件"
+                f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个类式插件"
             )
         except Exception as err:
             err_str = "\n".join(traceback.format_exc().split("\n")[1:])
