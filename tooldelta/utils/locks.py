@@ -20,13 +20,6 @@ class ChatbarLock:
                 # 则在上面就会直接引发 SystemExit
                 ...
     ```
-    示例(以注入式插件为例):
-    ```
-    @player_message()
-    async def onPlayerChat(info: player_message_info):
-        with ChatbarLock(info.playername):
-            ...
-    ```
     """
 
     def __init__(self, player: str, oth_cb: Callable[[str], None] = lambda _: None):

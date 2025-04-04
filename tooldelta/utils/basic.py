@@ -1,6 +1,5 @@
 """提供了一些实用方法的类"""
 
-import time
 import re
 import threading
 from typing import Any, TypeVar

@@ -1,6 +1,5 @@
 "插件加载器框架"
 
-import asyncio
 import os
 import traceback
 from collections.abc import Callable
@@ -25,7 +24,6 @@ from ..game_utils import _set_frame
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
-from .injected_plugin import loader as injected_plugin
 from .basic import auto_move_plugin_dir, non_func, ON_ERROR_CB
 
 if TYPE_CHECKING:
@@ -59,7 +57,6 @@ class PluginGroup:
         self.broadcast_listeners = {}
         self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"))
         classic_plugin.reload()
-        injected_plugin.reload()
         fmts.print_inf("正在重新读取所有插件")
         self.load_plugins()
         self.execute_reloaded(self.linked_frame.on_plugin_err)
@@ -69,7 +66,6 @@ class PluginGroup:
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
         self.plugin_listen_packets = set(classic_plugin.packet_funcs.keys())
-        self.plugin_listen_packets |= set(injected_plugin.packet_funcs.keys())
         for pkID in self.plugin_listen_packets:
 
             def any_pk_handler(pkt: dict, pkID=pkID):
@@ -123,15 +119,11 @@ class PluginGroup:
         try:
             fmts.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin_loader.read_plugins(self)
-            asyncio.run(injected_plugin.load_plugin(self))
             # 主动读取类式插件监听的数据包
             for i in classic_plugin.packet_funcs.keys():
                 self.__add_listen_packet_id(i)
             # 主动读取类式插件监听的广播事件器
             self.broadcast_listeners.update(classic_plugin.broadcast_listener)
-            # 主动读取注入式插件监听的数据包
-            for i in injected_plugin.packet_funcs.keys():
-                self.__add_listen_packet_id(i)
             # 因为注入式插件自带一个handler, 所以不用再注入方法
             fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_preload(self.linked_frame.on_plugin_err)
@@ -162,21 +154,6 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_active(onerr)
-        asyncio.run(injected_plugin.execute_init())
-        utils.createThread(
-            asyncio.run, (injected_plugin.execute_repeat(),), "注入式插件定时任务"
-        )
-
-    def execute_player_prejoin(
-        self, player: str, onerr: ON_ERROR_CB = non_func
-    ) -> None:
-        """执行玩家加入前的方法
-
-        Args:
-            player (_type_): 玩家
-            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
-        """
-        asyncio.run(injected_plugin.execute_player_prejoin(player))
 
     def execute_player_join(
         self, player: Player, onerr: ON_ERROR_CB = non_func
@@ -188,7 +165,6 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
         """
         classic_plugin.execute_player_join(player, onerr)
-        asyncio.run(injected_plugin.execute_player_join(player.name))
 
     def execute_chat(
         self,
@@ -203,7 +179,6 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_chat(chat, onerr)
-        asyncio.run(injected_plugin.execute_player_message(chat.player.name, chat.msg))
 
     def execute_player_leave(
         self, player: Player, onerr: ON_ERROR_CB = non_func
@@ -215,7 +190,6 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_leave(player, onerr)
-        asyncio.run(injected_plugin.execute_player_left(player.name))
 
     def execute_frame_exit(self, evt: FrameExit, onerr: ON_ERROR_CB = non_func):
         """执行框架退出的方法
@@ -224,7 +198,6 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_frame_exit(evt, onerr)
-        asyncio.run(injected_plugin.execute_frame_exit())
 
     def execute_reloaded(self, onerr: ON_ERROR_CB = non_func):
         """执行插件重载的方法
@@ -233,7 +206,6 @@ class PluginGroup:
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_reloaded(onerr)
-        asyncio.run(injected_plugin.execute_reloaded())
 
     def handle_packets(self, pktID: PacketIDS, pkt: dict) -> bool:
         """处理数据包监听器
@@ -246,7 +218,6 @@ class PluginGroup:
             bool: 是否处理成功
         """
         blocking = classic_plugin.execute_packet_funcs(pktID, pkt, self.on_err_cb)
-        asyncio.run(injected_plugin.execute_packet_funcs(pktID, pkt))
         return blocking
 
     def handle_text_packet(self, pkt: dict):

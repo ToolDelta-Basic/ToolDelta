@@ -8,7 +8,6 @@ ToolDelta 基本框架
     PluginGroup: 负责对插件进行统一管理
 """
 
-import asyncio
 import os
 import signal
 import sys
@@ -21,7 +20,6 @@ from .game_texts import GameTextsHandle, GameTextsLoader
 from .packets import Packet_CommandOutput
 from .utils import cfg, fmts
 from .version import get_tool_delta_version
-from .plugin_load import injected_plugin
 from .plugin_load.plugins import PluginGroup
 from .internal.config_loader import ConfigLoader
 from .internal.packet_handler import PacketHandler
@@ -149,7 +147,6 @@ class ToolDelta:
         self.plugin_group.execute_frame_exit(
             FrameExit(self.launcher.status, reason), self.on_plugin_err
         )
-        asyncio.run(injected_plugin.safe_jump_repeat_tasks())
         # 先将启动框架 (进程) 关闭了
         if has_launcher:
             if self.launcher.status == SysStatus.NORMAL_EXIT:
