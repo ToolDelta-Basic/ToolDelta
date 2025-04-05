@@ -1,4 +1,5 @@
 import ctypes
+import functools
 import threading
 import traceback
 from typing import Any, TypeVar
@@ -7,8 +8,6 @@ from collections.abc import Callable
 from . import fmts
 
 VT = TypeVar("VT")
-PARAMS = TypeVar("PARAMS")
-FACTORY_TYPE = TypeVar("FACTORY_TYPE")
 threads_list: list["ToolDeltaThread"] = []
 
 
@@ -115,7 +114,8 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(func: Callable[[PARAMS], Any]) -> Callable[[PARAMS], ToolDeltaThread]:
+    def _recv_func(func):
+        @functools.wraps(func)
         def thread_fun(*args: Any, **kwargs):
             return ToolDeltaThread(
                 func,
