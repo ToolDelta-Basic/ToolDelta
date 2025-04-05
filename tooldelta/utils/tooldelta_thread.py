@@ -1,5 +1,4 @@
 import ctypes
-import functools
 import threading
 import traceback
 from typing import Any, TypeVar
@@ -114,9 +113,8 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(func):
-        @functools.wraps(func)
-        def thread_fun(*args: Any, **kwargs):
+    def _recv_func(func: Callable):
+        def thread_fun(*args: Any, **kwargs) -> ToolDeltaThread:
             return ToolDeltaThread(
                 func,
                 usage=usage,
