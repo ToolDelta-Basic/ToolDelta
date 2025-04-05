@@ -24,7 +24,7 @@ from ..game_utils import _set_frame
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
-from .basic import auto_move_plugin_dir, non_func, ON_ERROR_CB
+from .basic import auto_move_plugin_dir, ON_ERROR_CB
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -54,13 +54,13 @@ class PluginGroup:
         """
         self.plugins_api = {}
         self.broadcast_listeners = {}
-        self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"))
+        self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"), self.linked_frame.on_plugin_err)
         classic_plugin.reload()
         fmts.print_inf("正在重新读取所有插件")
         self.load_plugins()
         self.execute_reloaded(self.linked_frame.on_plugin_err)
         fmts.print_inf("开始执行插件游戏初始化方法")
-        self.execute_init()
+        self.execute_init(self.linked_frame.on_plugin_err)
         fmts.print_suc("重载插件已完成")
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
@@ -68,7 +68,7 @@ class PluginGroup:
         for pkID in self.plugin_listen_packets:
 
             def any_pk_handler(pkt: dict, pkID=pkID):
-                return self.handle_packets(pkID, pkt)
+                return self.handle_packets(pkID, pkt, self.linked_frame.on_plugin_err)
 
             hdl.add_packet_listener(pkID, any_pk_handler, 0)
         hdl.add_packet_listener(PacketIDS.Text, self.handle_text_packet)
@@ -133,7 +133,7 @@ class PluginGroup:
             fmts.print_err(f"加载插件出现问题：\n{err_str}")
             raise SystemExit from err
 
-    def execute_preload(self, onerr: ON_ERROR_CB = non_func) -> None:
+    def execute_preload(self, onerr: ON_ERROR_CB) -> None:
         """执行插件的二次初始化方法
 
         Args:
@@ -145,7 +145,7 @@ class PluginGroup:
         """
         classic_plugin.execute_preload(onerr)
 
-    def execute_init(self, onerr: ON_ERROR_CB = non_func) -> None:
+    def execute_init(self, onerr: ON_ERROR_CB) -> None:
         """执行插件的连接游戏后初始化方法
 
         Args:
@@ -154,7 +154,7 @@ class PluginGroup:
         classic_plugin.execute_active(onerr)
 
     def execute_player_join(
-        self, player: Player, onerr: ON_ERROR_CB = non_func
+        self, player: Player, onerr: ON_ERROR_CB
     ) -> None:
         """执行玩家加入的方法
 
@@ -167,7 +167,7 @@ class PluginGroup:
     def execute_chat(
         self,
         chat: Chat,
-        onerr: ON_ERROR_CB = non_func,
+        onerr: ON_ERROR_CB,
     ) -> None:
         """执行玩家消息的方法
 
@@ -179,7 +179,7 @@ class PluginGroup:
         classic_plugin.execute_chat(chat, onerr)
 
     def execute_player_leave(
-        self, player: Player, onerr: ON_ERROR_CB = non_func
+        self, player: Player, onerr: ON_ERROR_CB
     ) -> None:
         """执行玩家离开的方法
 
@@ -189,7 +189,7 @@ class PluginGroup:
         """
         classic_plugin.execute_player_leave(player, onerr)
 
-    def execute_frame_exit(self, evt: FrameExit, onerr: ON_ERROR_CB = non_func):
+    def execute_frame_exit(self, evt: FrameExit, onerr: ON_ERROR_CB):
         """执行框架退出的方法
 
         Args:
@@ -197,7 +197,7 @@ class PluginGroup:
         """
         classic_plugin.execute_frame_exit(evt, onerr)
 
-    def execute_reloaded(self, onerr: ON_ERROR_CB = non_func):
+    def execute_reloaded(self, onerr: ON_ERROR_CB):
         """执行插件重载的方法
 
         Args:
@@ -205,7 +205,7 @@ class PluginGroup:
         """
         classic_plugin.execute_reloaded(onerr)
 
-    def handle_packets(self, pktID: PacketIDS, pkt: dict) -> bool:
+    def handle_packets(self, pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -> bool:
         """处理数据包监听器
 
         Args:
@@ -215,7 +215,7 @@ class PluginGroup:
         Returns:
             bool: 是否处理成功
         """
-        blocking = classic_plugin.execute_packet_funcs(pktID, pkt, self.on_err_cb)
+        blocking = classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
         return blocking
 
     def handle_text_packet(self, pkt: dict):
@@ -226,7 +226,7 @@ class PluginGroup:
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):
-                        self.execute_player_join(player)
+                        self.execute_player_join(player, self.linked_frame.on_plugin_err)
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
                 elif pkt["Message"] == "§e%multiplayer.player.left":
@@ -234,7 +234,7 @@ class PluginGroup:
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):
-                        self.execute_player_leave(player)
+                        self.execute_player_leave(player, self.linked_frame.on_plugin_err)
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
             case _:
@@ -244,7 +244,7 @@ class PluginGroup:
                         playername
                     ):
                         chat = Chat(player, message)
-                        self.execute_chat(chat)
+                        self.execute_chat(chat, self.linked_frame.on_plugin_err)
         return False
 
     help = staticmethod(classic_plugin_loader.help)
