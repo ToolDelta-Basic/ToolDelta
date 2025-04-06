@@ -29,7 +29,7 @@ def timer_event(
     ```
     """
 
-    def receiver(func: Callable[..., None]):
+    def receiver(func: Callable):
         def caller(*args, **kwargs):
             func_name = name or f"简易方法:{func.__name__}"
             timer_events_table.setdefault(t, [])
