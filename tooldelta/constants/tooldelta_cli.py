@@ -67,6 +67,7 @@ TOOLDELTA_PLUGIN_DIR = "插件文件"
 TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
 "插件文件: ToolDelta 类式插件 路径"
 
+# Desperated
 TOOLDELTA_INJECTED_PLUGIN = "ToolDelta注入式插件"
 "插件文件: ToolDelta 注入式插件 路径"
 
@@ -78,6 +79,7 @@ TOOLDELTA_PLUGIN_DATA_DIR = "插件数据文件"
 
 PLUGIN_TYPE_MAPPING = {
     "classic": TOOLDELTA_CLASSIC_PLUGIN,
+    # Desperated
     "injected": TOOLDELTA_INJECTED_PLUGIN,
 }
 "插件属性名映射"

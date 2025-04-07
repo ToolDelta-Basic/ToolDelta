@@ -118,9 +118,6 @@ class ToolDelta:
         os.makedirs(
             os.path.join("插件文件", constants.TOOLDELTA_CLASSIC_PLUGIN), exist_ok=True
         )
-        os.makedirs(
-            os.path.join("插件文件", constants.TOOLDELTA_INJECTED_PLUGIN), exist_ok=True
-        )
         os.makedirs("插件配置文件", exist_ok=True)
         os.makedirs(os.path.join("tooldelta", "bin"), exist_ok=True)
         os.makedirs(os.path.join("插件数据文件", "game_texts"), exist_ok=True)
