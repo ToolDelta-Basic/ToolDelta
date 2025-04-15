@@ -75,7 +75,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 ServerPassword=self.serverPassword,
             )
 
-    def set_omega_conn(self, openat_port: int) -> str:
+    def set_omega_conn(self, addr: str) -> str:
         """设置 Omega 连接
 
         Args:
@@ -85,7 +85,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             bool: 是否启动成功
         """
         retries = 1
-        self.omega.address = f"tcp://localhost:{openat_port}"
+        self.omega.address = addr
         MAX_RETRIES = 5  # 最大重试次数
 
         while retries <= MAX_RETRIES:
@@ -199,7 +199,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
-        if (err_str := self.set_omega_conn(openat_port)) == "":
+        if (err_str := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")) == "":
             self.update_status(SysStatus.RUNNING)
             self.start_wait_omega_disconn_thread()
             fmts.print_suc("接入点框架通信网络连接成功")

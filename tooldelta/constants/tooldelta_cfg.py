@@ -24,6 +24,12 @@ LAUNCHER_NEOMEGA_DEFAULT: dict = {
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
+LAUNCHER_NEOMEGARM_STD: dict = {
+    "远程连接地址": str
+}
+LAUNCHER_NEOMEGARM_DEFAULT: dict = {
+    "远程连接地址": "tcp://127.0.0.1:24020"
+}
 LAUNCHER_NEOMG2TD_DEFAULT: dict = {
     "服务器号": 0,
     "密码": "",

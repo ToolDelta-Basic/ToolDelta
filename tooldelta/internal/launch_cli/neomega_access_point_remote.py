@@ -1,12 +1,10 @@
-from ...constants import SysStatus
-from ...utils import fmts, sys_args
+from ...constants import SysStatus, tooldelta_cfg
+from ...utils import cfg, fmts, sys_args
 from .neomega_access_point import FrameNeOmgAccessPoint
 
 
 class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
-    """远程启动器框架 (使用 NeOmega接入点 框架的 Remote 连接)
-
-    """
+    """远程启动器框架 (使用 NeOmega接入点 框架的 Remote 连接)"""
 
     launch_type = "NeOmegaAccessPoint Remote"
 
@@ -19,24 +17,12 @@ class FrameNeOmgAccessPointRemote(FrameNeOmgAccessPoint):
         Returns:
             SystemExit | Exception | SystemError: 退出状态
         """
-        try:
-            openat_port = int(
-                sys_args.sys_args_to_dict().get("access-point-port") or "24020"
-            )
-            if openat_port not in range(65536):
-                raise AssertionError
-        except (ValueError, AssertionError):
-            fmts.print_err("启动参数 -access-point-port 错误：不是 1~65535 的整数")
-            raise SystemExit("端口参数错误")
-        if openat_port == 0:
-            fmts.print_war(
-                "未用启动参数指定链接 neOmega 接入点开放端口，尝试使用默认端口 24015"
-            )
-            fmts.print_inf("可使用启动参数 -access-point-port 端口 以指定接入点端口。")
-            openat_port = 24015
-            return SystemExit("未指定端口号")
-        fmts.print_inf(f"将从端口[{openat_port}]连接至游戏网络接入点, 等待接入中...")
-        if (err_str := self.set_omega_conn(openat_port)) == "":
+        cfgs = cfg.get_cfg("ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD)
+        openat_addr = sys_args.sys_args_to_dict().get("access-point-port") or cfgs.get(
+            "NeOmega远程接入点模式", {}
+        ).get("远程连接地址", "tcp://127.0.0.1:24020")
+        fmts.print_inf(f"将从[{openat_addr}]连接至游戏网络接入点, 等待接入中...")
+        if (err_str := self.set_omega_conn(openat_addr)) == "":
             self.update_status(SysStatus.RUNNING)
             self.start_wait_omega_disconn_thread()
             fmts.print_suc("已与接入点进程建立通信网络")

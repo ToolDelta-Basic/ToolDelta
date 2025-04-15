@@ -110,11 +110,11 @@ class ConfigLoader:
                 raise SystemExit from err
         # 这是 NeOmega 和 ToolDelta 并行启动
         elif type(launcher) is FrameNeOmegaLauncher:
+            launcher_config_key = "NeOmega并行ToolDelta启动模式"
             launch_data = cfgs.get(
-                "NeOmega并行ToolDelta启动模式",
+                launcher_config_key,
                 tooldelta_cfg.LAUNCHER_NEOMG2TD_DEFAULT,
             )
-            launcher_config_key = "NeOmega并行ToolDelta启动模式"
             try:
                 cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMG2TD_STD, launch_data)
             except cfg.ConfigError as err:
@@ -127,10 +127,10 @@ class ConfigLoader:
                     )
                 raise SystemExit from err
         elif type(launcher) is FrameFateArk:
-            launch_data = cfgs.get(
-                "FateArk接入点启动模式", tooldelta_cfg.LAUNCHER_FATEARK_DEFAULT
-            )
             launcher_config_key = "FateArk接入点启动模式"
+            launch_data = cfgs.get(
+                launcher_config_key, tooldelta_cfg.LAUNCHER_FATEARK_DEFAULT
+            )
             try:
                 cfg.check_auto(tooldelta_cfg.LAUNCHER_FATEARK_STD, launch_data)
             except cfg.ConfigError as err:
@@ -143,8 +143,22 @@ class ConfigLoader:
                     )
                 raise SystemExit from err
         elif type(launcher) is FrameNeOmgAccessPointRemote:
-            # 不需要任何配置文件
-            ...
+            launcher_config_key = "NeOmega远程接入点模式"
+            launch_data = cfgs.get(
+                launcher_config_key, tooldelta_cfg.LAUNCHER_NEOMEGARM_DEFAULT
+            )
+            cfgs[launcher_config_key] = launch_data
+            cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
+            try:
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMEGARM_STD, launch_data)
+            except cfg.ConfigError as err:
+                r = self.upgrade_cfg()
+                if r:
+                    fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    fmts.print_err(
+                        f"ToolDelta 基本配置-远程NeOmega 启动配置有误，需要更正：{err}"
+                    )
         elif type(launcher) is FrameEulogistLauncher:
             # 不需要任何配置文件
             ...
