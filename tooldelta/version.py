@@ -14,7 +14,7 @@ def get_tool_delta_version() -> VERSION:
         VERSION: 版本号
     """
     # 由 Github 自动同步
-    return (1, 0, 4)
+    return (1, 0, 5)
 
 
 def check_tooldelta_version(need_vers: VERSION):
