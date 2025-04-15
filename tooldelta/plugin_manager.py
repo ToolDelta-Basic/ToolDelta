@@ -133,7 +133,7 @@ class PluginManager:
                 fmts.clean_print("§a正在下载新版插件...", end="\r")
                 market.download_plugin(plugin)
                 fmts.clean_print("§a插件更新完成")
-                plugin.version = tuple(int(i) for i in latest_version.split("."))
+                plugin.version = latest_version
             else:
                 fmts.clean_print("§6已取消操作")
 
@@ -167,7 +167,7 @@ class PluginManager:
         Args:
             plugins (list[PluginRegData]): 插件注册信息列表
         """
-        market_datas = market.get_market_datas()["MarketPlugins"]
+        market_datas = market.get_market_tree()["MarketPlugins"]
         need_updates: list[tuple[PluginRegData, str]] = []
         for i in plugins:
             s_data = market_datas.get(i.plugin_id)
@@ -378,7 +378,8 @@ class PluginManager:
             + plugin.name
         )
 
-    def make_printable_list(self, plugins: list[PluginRegData]) -> None:
+    @staticmethod
+    def make_printable_list(plugins: list[PluginRegData]) -> None:
         """生成可打印的插件列表
 
         Args:
@@ -386,7 +387,7 @@ class PluginManager:
         """
         texts = []
         for plugin in sorted(plugins, key=lambda x: x.is_registered):
-            texts.append(self.make_plugin_icon(plugin))
+            texts.append(PluginManager.make_plugin_icon(plugin))
         lfts = []
         rgts = []
         for i, t in enumerate(texts):
