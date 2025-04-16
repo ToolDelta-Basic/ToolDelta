@@ -2,34 +2,53 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 from threading import Event
 
-from ..utils import fmts, create_result_cb
-from .types.player import Player, UnreadyPlayer
-from .types.player_abilities import Abilities, update_player_ability_from_server
-from ..constants import PacketIDS
+from ...utils import fmts, create_result_cb
+from ..types.player import Player, UnreadyPlayer
+from ..types.player_abilities import Abilities, update_player_ability_from_ability_data
+from ...constants import PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import ToolDelta
-    from .packet_handler import PacketHandler
+    from ..packet_handler import PacketHandler
+
+KeyUUID = str
+KeyUniqueID = int
 
 
 class PlayerInfoMaintainer:
+    """
+    用于维护和更新玩家信息。
+    """
+
     def __init__(self, frame: "ToolDelta"):
         self.frame = frame
         self.name_to_player: dict[str, Player] = {}
         self.uq_to_player: dict[int, Player] = {}
         self.uuid_to_player: dict[str, Player] = {}
         self.xuid_to_player: dict[str, Player] = {}
-        self.player_abilities: dict[int, Abilities] = {}
-        self.player_abilities_getter_callback: dict[int, Callable[[bool], None]] = {}
+        self.player_abilities: dict[KeyUniqueID, Abilities] = {}
+        self.player_abilities_getter_callback: dict[
+            KeyUniqueID, Callable[[bool], None]
+        ] = {}
         self.inited_event = Event()
+        # pendings
+        self.pending_player_abilities_packet: dict[KeyUniqueID, dict] = {}
+        self.pending_add_player_packet: dict[KeyUUID, dict] = {}
 
     def hook_packet_handler(self, packet_handler: "PacketHandler"):
+        # PlayerList 的优先级是最高的, 至少需要比 PluginGroup 高
+        # 以在插件事件执行完成之前先行完善玩家信息
         packet_handler.add_packet_listener(
             packet_id=PacketIDS.PlayerList, cb=self._hook_playerlist, priority=100
         )
         packet_handler.add_packet_listener(
             packet_id=PacketIDS.UpdateAbilities,
             cb=self._hook_update_abilities,
+            priority=100,
+        )
+        packet_handler.add_packet_listener(
+            packet_id=PacketIDS.AddPlayer,
+            cb=self._hook_add_player,
             priority=100,
         )
 
@@ -120,6 +139,7 @@ class PlayerInfoMaintainer:
         self.uq_to_player[player.unique_id] = ready_player
         self.uuid_to_player[player.uuid] = ready_player
         self.xuid_to_player[player.xuid] = ready_player
+        self._lookup_pendings(ready_player)
 
     def remove_player(self, player: Player):
         del self.name_to_player[player.name]
@@ -129,6 +149,19 @@ class PlayerInfoMaintainer:
         if player.unique_id in self.player_abilities:
             del self.player_abilities[player.unique_id]
         player.online = False
+
+    def get_player_ability(self, player: Player) -> Abilities:
+        ab = self.player_abilities.get(player.unique_id)
+        if ab is None:
+            getter, setter = create_result_cb()
+            self.player_abilities_getter_callback[player.unique_id] = setter
+            res = getter(20)
+            del self.player_abilities_getter_callback[player.unique_id]
+            if res is None:
+                raise ValueError("[internal] 获取玩家能力超时")
+            return self.player_abilities[player.unique_id]
+        else:
+            return ab
 
     def _block_until_inited(self):
         # 阻塞直到获取到包含全局玩家身份的 PlayerList 数据包
@@ -140,30 +173,34 @@ class PlayerInfoMaintainer:
             raise SystemExit("全局玩家数据获取超时")
 
     def _hook_update_abilities(self, packet: dict):
-        ab_data = packet["AbilityData"]
-        uqID = ab_data["EntityUniqueID"]
+        uqID = packet["AbilityData"]["EntityUniqueID"]
         player = self.getPlayerByUniqueID(uqID)
         if player is None:
-            fmts.print_war(
-                f"[internal] PlayerInfoMaintainer: hook_update_abilities: 找不到玩家的 uniqueUD: {uqID}"
-            )
-            return False
-        update_player_ability_from_server(self, player, packet)
-        if uqID in self.player_abilities_getter_callback:
-            self.player_abilities_getter_callback[uqID](True)
+            self.pending_player_abilities_packet[uqID] = packet
+        else:
+            self._update_player_by_ability_packet(player, packet)
+        return False
+
+    def _hook_add_player(self, packet: dict):
+        puuid = packet["UUID"]
+        p = self.getPlayerByUUID(puuid)
+        if p is None:
+            self.pending_add_player_packet[puuid] = packet
+        else:
+            self._update_player_by_add_player_packet(p, packet)
         return False
 
     def _hook_playerlist(self, packet: dict):
         self.inited_event.set()
         if packet["ActionType"] == 0:
             for entry in packet["Entries"]:
-                self._hook_add_player(entry)
+                self._hook_playerlist_add_player(entry)
         else:
             for entry in packet["Entries"]:
-                self._hook_remove_player(entry)
+                self._hook_playerlist_remove_player(entry)
         return False
 
-    def _hook_add_player(self, entry: dict):
+    def _hook_playerlist_add_player(self, entry: dict):
         unique_id = entry["EntityUniqueID"]
         playername = entry["Username"]
         self.add_player(
@@ -178,7 +215,7 @@ class PlayerInfoMaintainer:
             )
         )
 
-    def _hook_remove_player(self, entry: dict):
+    def _hook_playerlist_remove_player(self, entry: dict):
         if player := self.getPlayerByUUID(entry["UUID"]):
             self.remove_player(player)
         else:
@@ -186,15 +223,24 @@ class PlayerInfoMaintainer:
                 f"[internal] PlayerInfoMaintainer: remove_player: 找不到玩家的 UUID: {entry['UUID']}"
             )
 
-    def get_player_ability(self, player: Player) -> Abilities:
-        ab = self.player_abilities.get(player.unique_id)
-        if ab is None:
-            getter, setter = create_result_cb()
-            self.player_abilities_getter_callback[player.unique_id] = setter
-            res = getter(20)
-            del self.player_abilities_getter_callback[player.unique_id]
-            if res is None:
-                raise ValueError("[internal] 获取玩家能力超时")
-            return self.player_abilities[player.unique_id]
-        else:
-            return ab
+    def _lookup_pendings(self, player: Player):
+        if player.uuid in self.pending_add_player_packet:
+            self._update_player_by_add_player_packet(
+                player, self.pending_add_player_packet.pop(player.uuid)
+            )
+        if player.unique_id in self.pending_player_abilities_packet:
+            self._update_player_by_ability_packet(
+                player, self.pending_player_abilities_packet.pop(player.unique_id)
+            )
+
+    def _update_player_by_ability_packet(self, player: Player, packet: dict):
+        ab_data = packet["AbilityData"]
+        uqID = ab_data["EntityUniqueID"]
+        update_player_ability_from_ability_data(self, player, ab_data)
+        if uqID in self.player_abilities_getter_callback:
+            self.player_abilities_getter_callback[uqID](True)
+
+    def _update_player_by_add_player_packet(self, player: Player, packet: dict):
+        player.runtime_id = packet["EntityRuntimeID"]
+        player.device_id = packet["DeviceID"]
+        update_player_ability_from_ability_data(self, player, packet["AbilityData"])

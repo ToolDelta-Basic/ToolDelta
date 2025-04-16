@@ -4,7 +4,7 @@ from tooldelta import game_utils
 from .player_abilities import Abilities, upload_player_abilities
 
 if TYPE_CHECKING:
-    from ..maintainers import PlayerInfoMaintainer
+    from ..maintainers.players import PlayerInfoMaintainer
 
 
 @dataclass
@@ -20,14 +20,16 @@ class UnreadyPlayer:
 
     def ready(self, _parent: "PlayerInfoMaintainer"):
         p = Player(
-            _parent,
-            self.uuid,
-            self.unique_id,
-            self.name,
-            self.xuid,
-            self.platform_chat_id,
-            self.build_platform,
-            self.online,
+            _parent=_parent,
+            uuid=self.uuid,
+            unique_id=self.unique_id,
+            name=self.name,
+            xuid=self.xuid,
+            device_id=None,
+            runtime_id=None,
+            platform_chat_id=self.platform_chat_id,
+            build_platform=self.build_platform,
+            online=self.online,
         )
         if self.abilities:
             p.setAbilities(self.abilities, upload=False)
@@ -41,6 +43,8 @@ class Player:
     unique_id: int
     name: str
     xuid: str
+    device_id: str | None
+    runtime_id: int | None
     platform_chat_id: str
     build_platform: int
     online: bool = True

@@ -8,7 +8,7 @@ from .frame import GameCtrl, ToolDelta
 from .plugin_load.plugins import PluginGroup
 from .internal.config_loader import ConfigLoader
 from .internal.cmd_executor import ConsoleCmdManager
-from .internal.maintainers import PlayerInfoMaintainer
+from .internal.maintainers.players import PlayerInfoMaintainer
 from .internal.packet_handler import PacketHandler
 
 

@@ -5,7 +5,7 @@ from tooldelta.constants import PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import GameCtrl
-    from ..maintainers import PlayerInfoMaintainer
+    from ..maintainers.players import PlayerInfoMaintainer
     from .player import Player
 
 
@@ -107,10 +107,9 @@ def upload_player_abilities(pkt_sender: "GameCtrl", playerUniqueID: int, abiliti
     )
 
 
-def update_player_ability_from_server(
-    maintainer: "PlayerInfoMaintainer", player: "Player", packet: dict
+def update_player_ability_from_ability_data(
+    maintainer: "PlayerInfoMaintainer", player: "Player", ab_data: dict
 ):
-    ab_data = packet["AbilityData"]
     player_permissions = ab_data["PlayerPermissions"]
     command_permissions = ab_data["CommandPermissions"]
     for layer_data in ab_data["Layers"]:
