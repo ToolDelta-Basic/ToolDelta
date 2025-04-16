@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, Any
 from collections.abc import Callable
 
 from ...constants import TOOLDELTA_PLUGIN_DATA_DIR, PacketIDS
@@ -60,7 +60,7 @@ class Plugin:
     def format_data_path(self, *paths: str):
         return os.path.join(self.data_path, *paths)
 
-    def ListenPreload(self, cb: Callable[[], None]):
+    def ListenPreload(self, cb: Callable[[], Any]):
         """
         监听预加载事件
         预加载事件: 在读取插件后、和游戏建立连接前触发一次
@@ -70,7 +70,7 @@ class Plugin:
         """
         event_cbs.on_preload_cbs.append((self, cb))
 
-    def ListenActive(self, cb: Callable[[], None]):
+    def ListenActive(self, cb: Callable[[], Any]):
         """
         监听连接建立事件
         连接建立事件: 在框架和游戏完全建立连接时触发一次
@@ -80,7 +80,7 @@ class Plugin:
         """
         event_cbs.on_active_cbs.append((self, cb))
 
-    def ListenPlayerJoin(self, cb: Callable[[Player], None]):
+    def ListenPlayerJoin(self, cb: Callable[[Player], Any]):
         """
         监听玩家加入事件
         玩家加入事件: 在有玩家加入游戏时触发一次
@@ -90,7 +90,7 @@ class Plugin:
         """
         event_cbs.on_player_join_cbs.append((self, cb))
 
-    def ListenPlayerLeave(self, cb: Callable[[Player], None]):
+    def ListenPlayerLeave(self, cb: Callable[[Player], Any]):
         """
         监听玩家退出事件
         玩家退出事件: 在有玩家退出游戏时触发一次
@@ -100,7 +100,7 @@ class Plugin:
         """
         event_cbs.on_player_leave_cbs.append((self, cb))
 
-    def ListenChat(self, cb: Callable[[Chat], None]):
+    def ListenChat(self, cb: Callable[[Chat], Any]):
         """
         监听玩家聊天事件
         玩家聊天事件: 在有玩家在聊天栏发言时触发一次
@@ -110,7 +110,7 @@ class Plugin:
         """
         event_cbs.on_chat_cbs.append((self, cb))
 
-    def ListenFrameExit(self, cb: Callable[[FrameExit], None]):
+    def ListenFrameExit(self, cb: Callable[[FrameExit], Any]):
         """
         监听框架退出事件
         框架退出事件: 在框架退出/插件即将重载时触发一次
