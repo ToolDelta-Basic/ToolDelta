@@ -1,6 +1,6 @@
 "ToolDelta 常量定义"
 
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 class TextType(IntEnum):
     TextTypeRaw = 0
@@ -95,7 +95,7 @@ class PlayerActionType(IntEnum):
     PlayerActionStopCrawling = 33
 
 
-class EffectIDS:
+class EffectIDS(str, Enum):
     EffectSpeed = "speed"  # 速度
     EffectSlowNess = "slowness"  # 缓慢
     EffectHaste = "haste"  # 急迫
@@ -128,7 +128,7 @@ class EffectIDS:
     EffectDarkNess = "darkness"  # 黑暗
 
 
-class BuildStructureIDS:
+class BuildStructureIDS(str, Enum):
     StructureBuriedTreasure = "buried_treasure"  # 埋藏宝藏
     StructureEndcity = "endcity"  # 末地城
     StructureFortress = "fortress"  # 下界要塞
