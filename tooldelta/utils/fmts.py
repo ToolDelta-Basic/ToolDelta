@@ -330,3 +330,19 @@ def c_log(inf: str, msg: str) -> None:
                 break
         msg = MC_COLOR_CODE_REG.sub("", msg)
         publicLogger.log_in(msg, inf.strip())
+
+
+def get_ansi_rgb(r: int, g: int, b: int):
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+def ansi_cls():
+    _original_print("\033[2J")
+
+
+def ansi_home():
+    _original_print("\033[H")
+
+
+def ansi_locate(x: int, y: int):
+    _original_print(f"\033[{x};{y}H")
