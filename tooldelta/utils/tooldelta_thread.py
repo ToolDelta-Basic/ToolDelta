@@ -1,13 +1,16 @@
 import ctypes
 import threading
 import traceback
-from typing import Any, TypeVar, TypeVarTuple, Unpack
+from typing import Any, TypeVar, TYPE_CHECKING
 from collections.abc import Callable
+
+if TYPE_CHECKING:
+    from typing import TypeVarTuple, Unpack
+    PT = TypeVarTuple("PT")
 
 from . import fmts
 
 VT = TypeVar("VT")
-PT = TypeVarTuple("PT")
 threads_list: list["ToolDeltaThread"] = []
 
 
@@ -114,7 +117,7 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(func: Callable[[Unpack[PT]], Any]) -> Callable[[Unpack[PT]], ToolDeltaThread]:
+    def _recv_func(func: Callable[["Unpack[PT]"], Any]) -> Callable[["Unpack[PT]"], ToolDeltaThread]:
         def thread_fun(*args: Any, **kwargs) -> ToolDeltaThread:
             return ToolDeltaThread(
                 func,
