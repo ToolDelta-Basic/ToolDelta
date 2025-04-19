@@ -218,9 +218,7 @@ def flush(path: str | None = None):
     if path:
         tempjson_paths[path].save()
     else:
-        with tempjson_rw_lock:
-            for j in tempjson_paths.values():
-                j.save()
+        save_all()
 
 
 def get_tmps() -> dict:
