@@ -5,8 +5,8 @@ from typing import Any, TypeVar, TYPE_CHECKING
 from collections.abc import Callable
 
 if TYPE_CHECKING:
-    from typing import TypeVarTuple, Unpack
-    PT = TypeVarTuple("PT")
+    from typing import ParamSpec
+    PT = ParamSpec("PT")
 
 from . import fmts
 
@@ -117,7 +117,7 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(func: Callable[["Unpack[PT]"], Any]) -> Callable[["Unpack[PT]"], ToolDeltaThread]:
+    def _recv_func(func: Callable["PT", Any]) -> Callable["PT", ToolDeltaThread]:
         def thread_fun(*args: Any, **kwargs) -> ToolDeltaThread:
             return ToolDeltaThread(
                 func,
