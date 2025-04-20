@@ -346,3 +346,11 @@ def ansi_home():
 
 def ansi_locate(x: int, y: int):
     _original_print(f"\033[{x};{y}H")
+
+
+def ansi_save_screen():
+    _original_print("\033[?47h")
+
+
+def ansi_load_screen():
+    _original_print("\033[?47l")

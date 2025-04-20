@@ -2,8 +2,6 @@
 
 import asyncio
 import os
-import platform
-import shlex
 import time
 import traceback
 import requests
@@ -20,17 +18,8 @@ from .constants import (
 from .plugin_load import PluginRegData, PluginsPackage
 from .utils import try_int, thread_gather, urlmethod
 
-if platform.system().lower() == "windows":
-    CLS_CMD = "cls"
-else:
-    CLS_CMD = "clear"
 
 FILETREE = dict[str, "int | FILETREE"]
-
-
-def clear_screen() -> None:
-    os.system(shlex.quote(CLS_CMD))
-
 
 def url_join(*urls: str) -> str:
     return "/".join(url.strip("/") for url in urls).strip("/")
@@ -85,6 +74,8 @@ class PluginMarket:
         """
         if source_url:
             self.plugin_market_content_url = source_url
+
+        fmts.ansi_save_screen()
         fmts.clean_print("§6正在连接到插件市场..")
         CONTENT_LENGTH = 15
 
@@ -97,7 +88,7 @@ class PluginMarket:
             ] + list(market_datas["MarketPlugins"].items())
 
             while 1:
-                clear_screen()
+                fmts.ansi_cls()
                 valid_show_list = self.search_by_rule(market_datas, show_list)
                 if valid_show_list is None:
                     fmts.clean_print("§6已退出。")
@@ -174,6 +165,7 @@ class PluginMarket:
             fmts.clean_print("§c" + traceback.format_exc().replace("\n", "\n§c"))
             input(fmts.clean_fmt("§6按回车键继续.."))
         finally:
+            fmts.ansi_load_screen()
             fmts.clean_print("§a已从插件市场返回 ToolDelta 控制台。")
 
     @staticmethod
@@ -187,7 +179,7 @@ class PluginMarket:
         fmts.clean_print("  2 -     §d按插件作者名")
         fmts.clean_print("  3 -     §e按插件 ID")
         fmts.clean_print("  4 -     §a随便逛逛")
-        fmts.clean_print("  .       §c退出")
+        fmts.clean_print("  其它    §c退出")
         resp = input(fmts.clean_fmt("请输入选项: ")).strip().strip("[]")
         output_show_list: list[tuple[str, dict]] = []
         match resp:
@@ -254,7 +246,7 @@ class PluginMarket:
             start_index (int): 起始索引
             total_pages (int): 总页数
         """
-        clear_screen()
+        fmts.ansi_cls()
         fmts.clean_print(f"{market_datas['SourceName']}: {market_datas['Greetings']}")
         for i in range(start_index, min(start_index + content_length, len(show_list))):
             show_name, description = show_list[i]
@@ -347,7 +339,7 @@ class PluginMarket:
         )
         has_doc = self.get_plugin_filetree(plugin_data.name).get("readme.txt") is not None
         while True:
-            clear_screen()
+            fmts.ansi_cls()
             fmts.clean_print(f"{plugin_data.name} v{plugin_data.version_str}")
             fmts.clean_print(
                 f"作者: §f{plugin_data.author}§7, 版本: §f{plugin_data.version_str} §b{plugin_data.plugin_type_str}"
@@ -386,7 +378,7 @@ class PluginMarket:
         Returns:
             bool: 是否下载安装
         """
-        clear_screen()
+        fmts.ansi_cls()
         inc_plugins_name: list[str] = []
         for pid in pack.plugin_ids:
             if pname := self.get_plugin_id_name_map().get(pid):
@@ -543,7 +535,7 @@ class PluginMarket:
             fmts.clean_print("§c无法获取插件文档")
             return
         counter = 0
-        clear_screen()
+        fmts.ansi_cls()
         fmts.clean_print("§b文档正文:")
         for ln in resp.text.split("\n"):
             fmts.clean_print("  " + ln)
