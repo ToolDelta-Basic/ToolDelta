@@ -135,7 +135,7 @@ def get(path: str) -> Any:
     """
     if jsonf := tempjson_paths.get(path):
         return jsonf.read(deepcopy=False)
-    raise ValueError("json 路径未初始化，不能进行读取和写入操作: " + path)
+    raise ValueError("json 路径未初始化, 不能进行读取和写入操作: " + path)
 
 
 def write(path: str, obj: Any) -> None:
@@ -149,7 +149,7 @@ def write(path: str, obj: Any) -> None:
     if jsonf := tempjson_paths.get(path):
         jsonf.write(obj)
     else:
-        raise ValueError("json 路径未初始化，不能进行读取和写入操作：" + path)
+        raise ValueError("json 路径未初始化, 不能进行读取和写入操作：" + path)
 
 
 def load_and_read(
@@ -216,7 +216,10 @@ def flush(path: str | None = None):
         path (str | None, optional): 文件虚拟路径, 默认全部存盘
     """
     if path:
-        tempjson_paths[path].save()
+        if tmpjson := tempjson_paths.get(path):
+            tmpjson.save()
+        else:
+            raise ValueError("json 路径未初始化, 不能 flush: " + path)
     else:
         save_all()
 
