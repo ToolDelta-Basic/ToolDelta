@@ -117,7 +117,7 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(func: Callable["PT", Any]) -> Callable["PT", ToolDeltaThread]:
+    def _recv_func(func: "Callable[PT, Any]") -> "Callable[PT, ToolDeltaThread]":
         def thread_fun(*args: Any, **kwargs) -> ToolDeltaThread:
             return ToolDeltaThread(
                 func,
