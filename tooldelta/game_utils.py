@@ -181,7 +181,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
     return int(result.OutputMessages[0].Parameters[1]) // 2
 
 
-def getPosXYZ(player, timeout: float = 30) -> tuple[float, float, float]:
+def getPosXYZ(playername: str, timeout: float = 30) -> tuple[float, float, float]:
     """
     获取玩家的简略坐标值，并以坐标三元元组返回
     Args:
@@ -190,7 +190,7 @@ def getPosXYZ(player, timeout: float = 30) -> tuple[float, float, float]:
     Returns:
         tuple[float, float, float]
     """
-    res = getPos(player, timeout=timeout)["position"]
+    res = getPos(playername, timeout=timeout)["position"]
     return res["x"], res["y"], res["z"]
 
 
