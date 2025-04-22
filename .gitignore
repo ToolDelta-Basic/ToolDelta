@@ -168,3 +168,6 @@ tempCodeRunnerFile.python
 *.exe
 commit
 快速启动.sig
+
+# ToolDelta Plugin Spec
+dev*.pyi
