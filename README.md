@@ -1,13 +1,21 @@
 <h1 align="center">ToolDelta - Bot Plugin Loader</h1>
+
 <p align="center">
   <a href="https://github.com/ToolDelta/ToolDelta/releases"><img src="https://img.shields.io/github/v/release/ToolDelta/ToolDelta?display_name=tag&sort=semver" alt="Releases"></a>
   <img src="https://img.shields.io/github/stars/ToolDelta/ToolDelta.svg?style=falt" alt="Stars">
 </p>
 
-🍓ToolDelta🍓 是**为《我的世界：中国版》手机端租赁服**制作的、基于机器人的插件加载器，不同于其他类型的插件加载器，ToolDelta 可以运行在**多种游戏交互启动器核心**上。
+🍓ToolDelta🍓 是**为《我的世界：中国版》手机端租赁服**制作的、基于机器人的插件加载器。
+
+不同于其他类型的租赁服插件加载器，ToolDelta 可以运行在**多种游戏交互启动器核心**上， 包括但不限于：
+   - ~~FastBuilder~~
+   - NeOmega接入点
+   - NeOmega启动器
+   - Eulogist（赞颂者）
+   - FateArk接入点
+
 ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化租赁服的流畅度。
 
-加入我们：[维基和用户指南](https://wiki.tooldelta.top/) | [交流群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ywf-Y9Sb7G3McLAN7TveI-qh-g1FEtLB&authKey=C0ZLK09UWRzWv9dpReVnZljSnZ15crGpNpdT5O%2BX%2B%2BQvZ%2Bsm2BWfN8qqdJ5OMnTq&noverify=0&group_code=1030755163)
 
 ## 目录
 - [目录](#目录)
@@ -28,20 +36,19 @@ ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化�
 
 
 ## 友情链接
-- [如何使用](https://wiki.tooldelta.top)
-- [Docker 镜像](https://hub.docker.com/r/wlingzhenyu/tooldelta)
+- [ToolDelta Wiki 用户指南](https://wiki.tooldelta.top/)
+- [ToolDelta 社区交流群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ywf-Y9Sb7G3McLAN7TveI-qh-g1FEtLB&authKey=C0ZLK09UWRzWv9dpReVnZljSnZ15crGpNpdT5O%2BX%2B%2BQvZ%2Bsm2BWfN8qqdJ5OMnTq&noverify=0&group_code=1030755163)
 
 
 
 ## 运行和配置
  - 直接下载 ToolDelta 可执行文件并运行
-    - <a href="https://github.com/ToolDelta/ToolDelta/releases">发行版 ToolDelta 下载点这里</a>
+    - [发行版 ToolDelta 下载点这里](https://github.com/ToolDelta/ToolDelta/releases)
  - 在 `pip` 安装 ToolDelta 并运行
     - `pip install tooldelta`
     - `echo import tooldelta;tooldelta.client_title() > main.py`
     运行:
       - `python main.py` 或 `python3 main.py`
- - 在docker运行
-    ```bash
-    docker run -v .:/app -t -i registry.cn-hangzhou.aliyuncs.com/dqyt/tooldelta:latest
-    ```
+
+## 打包 Docker 镜像
+   - 在项目目录下使用 docker build -t tooldelta . 即可
