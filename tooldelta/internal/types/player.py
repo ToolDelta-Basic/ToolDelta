@@ -59,9 +59,10 @@ class Player:
 
     def setTitle(self, title: str, sub_title: str = ""):
         """
-        设置玩家标题
+        对玩家显示标题内容
         Args:
-            text: 标题文本
+            title: 标题文本
+            sub_title: 副标题文本, 默认为空
         """
         self._parent.frame.get_game_control().player_title(self.name, title)
         if sub_title.strip():
@@ -69,7 +70,7 @@ class Player:
 
     def setActionbar(self, text: str):
         """
-        设置玩家行动栏文本
+        对玩家显示行动栏文本
         Args:
             text: 动作条文本
         """
@@ -77,7 +78,9 @@ class Player:
 
     def getSelector(self):
         """
-        获取玩家选择器
+        获取包含玩家名的选择器
+
+        等价于 `@a[name="{player.name}"]`
         Returns:
             str: 选择器
         """
@@ -99,7 +102,7 @@ class Player:
 
     def getItemCount(self, item_id: str, item_data: int = -1, timeout: float = 5):
         """
-        获取玩家物品数量
+        获取玩家背包中某一物品数量
         Args:
             item_id: 物品ID
             item_data: 物品数据值
@@ -122,9 +125,9 @@ class Player:
 
     def input(self, prompt: str = "", timeout: float = 30):
         """
-        获取玩家输入
+        获取玩家聊天栏输入
         Args:
-            prompt: 提示文本
+            prompt: 提示词
             timeout: 超时时间, 默认 30 秒
         Returns:
             str: 玩家输入
@@ -159,10 +162,12 @@ class Player:
             )
 
     def is_op(self):
+        "玩家是否为管理员"
         return self.abilities.command_permissions >= 3
 
     @property
     def safe_name(self):
+        "玩家可用于填充到指令内的名称"
         return '"' + self.name.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
     def __hash__(self) -> int:
