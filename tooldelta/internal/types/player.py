@@ -161,5 +161,10 @@ class Player:
     def is_op(self):
         return self.abilities.command_permissions >= 3
 
+    @property
+    def safe_name(self):
+        return '"' + self.name.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
     def __hash__(self) -> int:
         return hash(self.unique_id)
+
