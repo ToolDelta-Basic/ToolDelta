@@ -62,7 +62,15 @@ class FrameEulogistLauncher(StandardFrame):
     def get_players_info(self) -> dict[str, UnreadyPlayer]:
         # TODO: Can't get PlatformChatID and BuildPlatformID
         return {
-            k: UnreadyPlayer(v.uuid, v.uniqueID, v.name, v.xuid, "", 0)
+            k: UnreadyPlayer(
+                uuid=v.uuid,
+                unique_id=v.uniqueID,
+                name=v.name,
+                xuid=v.xuid,
+                platform_chat_id="",
+                device_id=None,
+                build_platform=0,
+            )
             for k, v in self.eulogist.uqs.items()
         }
 

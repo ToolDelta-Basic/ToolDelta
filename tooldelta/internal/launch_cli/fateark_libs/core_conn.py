@@ -204,22 +204,27 @@ def get_unready_player(uuid: str) -> UnreadyPlayer:
         else 1,  # TODO: 除非玩家为 OP, 否则命令等级恒为 1
     )
     return UnreadyPlayer(
-        uuid,
-        stub.GetPlayerEntityUniqueID(
+        uuid=uuid,
+        unique_id=stub.GetPlayerEntityUniqueID(
             playerkit_pb2.GetPlayerEntityUniqueIDRequest(uuid_str=uuid)
         ).payload,
-        stub.GetPlayerName(playerkit_pb2.GetPlayerNameRequest(uuid_str=uuid)).payload,
-        uuid[-8:],
-        stub.GetPlayerPlatformChatID(
+        name=stub.GetPlayerName(
+            playerkit_pb2.GetPlayerNameRequest(uuid_str=uuid)
+        ).payload,
+        xuid=uuid[-8:],
+        platform_chat_id=stub.GetPlayerPlatformChatID(
             playerkit_pb2.GetPlayerPlatformChatIDRequest(uuid_str=uuid)
         ).payload,
-        stub.GetPlayerBuildPlatform(
+        device_id=stub.GetPlayerDeviceID(
+            playerkit_pb2.GetPlayerDeviceIDRequest(uuid_str=uuid)
+        ).payload,
+        build_platform=stub.GetPlayerBuildPlatform(
             playerkit_pb2.GetPlayerBuildPlatformRequest(uuid_str=uuid)
         ).payload,
-        stub.GetPlayerOnline(
+        online=stub.GetPlayerOnline(
             playerkit_pb2.GetPlayerOnlineRequest(uuid_str=uuid)
         ).payload,
-        ab,
+        abilities=ab,
     )
 
 

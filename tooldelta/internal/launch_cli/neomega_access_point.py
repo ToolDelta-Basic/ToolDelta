@@ -243,6 +243,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                     i.name,
                     i.uuid[-8:],
                     i.platform_chat_id,
+                    i.device_id,
                     i.build_platform,
                     abilities=ab,
                 )

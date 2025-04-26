@@ -14,6 +14,7 @@ class UnreadyPlayer:
     name: str
     xuid: str
     platform_chat_id: str
+    device_id: str | None
     build_platform: int
     online: bool = True
     abilities: Abilities | None = None

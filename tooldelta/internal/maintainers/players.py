@@ -210,6 +210,7 @@ class PlayerInfoMaintainer:
                 name=playername,
                 xuid=entry["XUID"],
                 platform_chat_id=entry["PlatformChatID"],
+                device_id=None,
                 build_platform=entry["BuildPlatform"],
                 online=True,
             )
