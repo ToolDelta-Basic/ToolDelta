@@ -64,20 +64,26 @@ def try_convert(
         return None
 
 
-def fuzzy_match(lst: list[str], sub: str) -> list[str]:
+def fuzzy_match(lst: list[str], sub: str, ignore_caps = True) -> list[str]:
     """
     模糊匹配列表内的字符串，可以用在诸如模糊匹配玩家名的用途
 
     参数:
         lst: list, 字符串列表
         sub: str, 需要匹配的字符串
+        ignore_caps (bool, optional): 是否忽略大小写. Defaults to True.
     返回:
         list, 匹配结果
     """
     res = []
-    for i in lst:
-        if sub in i:
-            res.append(i)
+    if ignore_caps:
+        for i in lst:
+            if sub.lower() in i.lower():
+                res.append(i)
+    else:
+        for i in lst:
+            if sub in i:
+                res.append(i)
     return res
 
 
