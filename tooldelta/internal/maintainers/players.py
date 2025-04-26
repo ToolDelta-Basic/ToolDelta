@@ -56,7 +56,7 @@ class PlayerInfoMaintainer:
         # 载入初始玩家数据
         if not self.name_to_player:
             playerinfs = self.frame.launcher.get_players_info()
-            if playerinfs:
+            if playerinfs is not None:
                 for unready_player in playerinfs.values():
                     self.add_player(unready_player)
                 fmts.print_suc("已从接入点获取全局玩家数据")
