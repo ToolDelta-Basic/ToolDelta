@@ -209,7 +209,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             thread_level=utils.ToolDeltaThread.SYSTEM,
         )
         self.launch_event.wait()
-        self.set_omega_conn(openat_port)
+        self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")
         self.update_status(SysStatus.RUNNING)
         self.start_wait_omega_disconn_thread()
         fmts.print_suc("已获取游戏网络接入点最高权限")
