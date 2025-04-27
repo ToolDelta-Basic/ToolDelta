@@ -107,11 +107,38 @@ def OmitEvent():
 # event retrievers
 
 
+def SoftCall(api: str, json_args: str, retrieverID: str):
+    OmegaAvailable()
+    LIB.SoftCall(toCString(api), toCString(json_args), toCString(retrieverID))
+
+
+def SoftListen(api: str):
+    OmegaAvailable()
+    LIB.SoftListen(toCString(api))
+
+
+def SoftPub(
+    api: str,
+    json_args: str,
+):
+    OmegaAvailable()
+    LIB.SoftPub(toCString(api), toCString(json_args))
+
+
+def SoftReg(api: str):
+    OmegaAvailable()
+    LIB.SoftReg(toCString(api))
+
+
 class MCPacketEvent(ctypes.Structure):
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("packetDataAsJsonStr", CString),
         ("convertError", CString),
     ]
+
+
+class ConsumeMCBytesPacket_return(ctypes.Structure):
+    _fields_ = [("pktBytes", CBytes), ("l", CInt)]
 
 
 # Async Actions
@@ -485,6 +512,11 @@ class ThreadOmega:
         self._packet_listeners: dict[str, set[Callable[[str, Any], None]]]
         self._player_change_listeners: list[Callable[[PlayerKit, str], None]]
         self._bot_basic_info: ClientMaintainedBotBasicInfo
+        self._soft_call_counter = Counter("soft_call")
+        self._soft_call_cbs: dict[str, Callable] = {}
+        self._soft_listeners: dict[str, list[Callable[[Any], None]]] = {}
+        self._soft_reg: dict[str, Callable[[Any], Any]] = {}
+        self._soft_resp_counter = Counter("soft_resp")
 
     def connect(self):
         if self.connect_type == ConnectType.Local:
@@ -543,8 +575,20 @@ class ThreadOmega:
             if eventType == "CommandResponseCB":
                 self._handle_command_response_cb(retriever)
 
+            elif eventType == "SoftCallResp":
+                self._handle_soft_call_resp(retriever)
+
+            elif eventType == "SoftListen":
+                self._handle_soft_listen(retriever)
+
+            elif eventType == "SoftAPICall":
+                self._handle_soft_api_call(retriever)
+
             elif eventType == "MCPacket":
                 self._handle_mc_packet(retriever)
+
+            elif eventType == "MCBytesPacket":
+                self._handle_mc_bytes_packet(retriever)
 
             elif eventType == "PlayerChange":
                 self._handle_player_change(retriever)
@@ -565,6 +609,45 @@ class ThreadOmega:
                 f"接入点核心进程：指令返回 {retriever} 没有对应的回调，已忽略"
             )
 
+    def _handle_soft_call_resp(self, retriever: str):
+        softResp = json.loads(toPyString(LIB.ConsumeSoftData()))
+        self._soft_call_cbs[retriever](softResp)
+
+    def _handle_soft_listen(self, retriever: str):
+        api_name = retriever
+        listeners = self._soft_listeners.get(api_name, [])
+        softData = json.loads(toPyString(LIB.ConsumeSoftData()))
+        for listener in listeners:
+            ToolDeltaThread(
+                listener,
+                (softData,),
+                usage="Soft Listen Callback Thread",
+            )
+
+    def _handle_soft_api_call(self, retriever: str):
+        api_name = retriever
+        handler = self._soft_reg[api_name]
+        resp_id = next(self._soft_resp_counter)
+        soft_data = json.loads(toPyString(LIB.ConsumeSoftCall(toCString(resp_id))))
+
+        def wrapper(data, resp_id):
+            try:
+                ret = handler(data)
+                LIB.FinishSoftCall(
+                    toCString(resp_id),
+                    toCString(json.dumps(ret)),
+                    toCString(""),
+                )
+            except Exception as e:
+                es = f"{e}"
+                LIB.FinishSoftCall(toCString(resp_id), toCString(""), toCString(es))
+
+        ToolDeltaThread(
+            wrapper,
+            (soft_data, resp_id),
+            usage="Finish Soft Call Thread",
+        )
+
     def _handle_mc_packet(self, packetTypeName):
         if packetTypeName == "":
             LIB.OmitEvent()
@@ -581,6 +664,22 @@ class ThreadOmega:
 
         else:
             LIB.OmitEvent()
+
+    def _handle_mc_bytes_packet(self, customPacketTypeName):
+        customPacketTypeName = customPacketTypeName
+        listeners = self._packet_listeners.get(customPacketTypeName, [])
+        if len(listeners) == 0:
+            LIB.OmitEvent()
+        else:
+            ret: ConsumeMCBytesPacket_return = LIB.ConsumeMCBytesPacket()
+            bs = ret.pktBytes[: ret.l]
+            LIB.FreeMem(ret.pktBytes)
+            for listener in listeners:
+                ToolDeltaThread(
+                    listener,
+                    (customPacketTypeName, bs),
+                    usage="Packet Bytes Callback Thread",
+                )
 
     def _handle_player_change(self, playerUUID):
         if not self._player_change_listeners:
@@ -642,6 +741,28 @@ class ThreadOmega:
         self._omega_cmd_callback_events[retriever_id] = setter
         SendPlayerCommandNeedResponse(cmd, retriever_id)
         return self.send_cmd_resp(getter, timeout, retriever_id)
+
+    def soft_call(self, api: str, args: Any, timeout: int = -1) -> Optional[Any]:
+        setter, getter = self._create_lock_and_result_setter()
+        retriever_id = next(self._soft_call_counter)
+        self._soft_call_cbs[retriever_id] = setter
+        SoftCall(api, json.dumps(args), retriever_id)
+        res = getter(timeout=timeout)
+        del self._soft_call_cbs[retriever_id]
+        return res
+
+    def soft_pub(self, api: str, args: Any) -> None:
+        SoftPub(api, json.dumps(args))
+
+    def soft_listen(self, api: str, callback: Callable[[Any], None]):
+        if api not in self._soft_listeners:
+            self._soft_listeners[api] = []
+            SoftListen(api)
+        self._soft_listeners[api].append(callback)
+
+    def soft_reg(self, api: str, handler: Callable[[Any], Any]):
+        self._soft_reg[api] = handler
+        SoftReg(api)
 
     def send_cmd_resp(self, getter, timeout, retriever_id):
         res = getter(timeout=timeout)
@@ -826,7 +947,13 @@ def load_lib():
     LIB.EventPoll.restype = Event
     LIB.ConsumeOmegaConnError.restype = CString
     LIB.ConsumeCommandResponseCB.restype = CString
+    LIB.SoftCall.argtypes = [CString, CString, CString]
+    LIB.FinishSoftCall.argtypes = [CString, CString, CString]
+    LIB.SoftListen.argtypes = [CString]
+    LIB.ConsumeSoftCall.argtypes = [CString]
+    LIB.ConsumeSoftCall.restype = CString
     LIB.ConsumeMCPacket.restype = MCPacketEvent
+    LIB.ConsumeMCBytesPacket.restype = ConsumeMCBytesPacket_return
     LIB.SendWebSocketCommandNeedResponse.argtypes = [CString, CString]
     LIB.SendPlayerCommandNeedResponse.argtypes = [CString, CString]
     LIB.SendWOCommand.argtypes = [CString]
