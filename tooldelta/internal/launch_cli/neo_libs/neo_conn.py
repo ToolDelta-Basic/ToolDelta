@@ -41,7 +41,7 @@ def to_GoInt(i: int):
 def toPyString(c_string: CString | None):
     if c_string is None:
         return ""
-    result = ctypes.c_char_p(c_string).value.decode(encoding="utf-8")  # type: ignore
+    result = ctypes.string_at(c_string).decode(encoding="utf-8")
     LIB.FreeMem(c_string)
     return result
 
@@ -142,7 +142,7 @@ class MCPacketEvent(ctypes.Structure):
 
 
 class ConsumeMCBytesPacket_return(ctypes.Structure):
-    _fields_ = [("pktBytes", CBytes), ("l", CInt)]
+    _fields_ = (("pktBytes", CBytes), ("l", CInt))
 
 
 # Async Actions
@@ -215,7 +215,7 @@ class ClientMaintainedBotBasicInfo:
 
 
 class LoadBlobCache_return(ctypes.Structure):
-    _fields_ = [("bs", CBytes), ("l", CInt)]
+    _fields_ = (("bs", CBytes), ("l", CInt))
 
 
 @dataclass
@@ -750,7 +750,7 @@ class ThreadOmega:
         SendPlayerCommandNeedResponse(cmd, retriever_id)
         return self.send_cmd_resp(getter, timeout, retriever_id)
 
-    def soft_call(self, api: str, args: Any, timeout: int = -1) -> Optional[Any]:
+    def soft_call(self, api: str, args: Any, timeout: int = -1) -> Any | None:
         setter, getter = self._create_lock_and_result_setter()
         retriever_id = next(self._soft_call_counter)
         self._soft_call_cbs[retriever_id] = setter
@@ -828,17 +828,13 @@ class ThreadOmega:
             self._packet_listeners[t].add(callback)
 
     def construct_game_packet_bytes_in_json_as_is(
-        self, packet_type: int | str, content: Any
+        self, packet_type: int, content: Any
     ) -> tuple[int, bytes]:
-        if isinstance(packet_type, str):
-            packet_type = self.get_packet_name_to_id_mapping(packet_type)  # type: ignore
-        return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content))  # type: ignore
+        return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content))
 
-    def send_game_packet_in_json_as_is(self, packet_type: int | str, content: Any):
-        if isinstance(packet_type, str):
-            packet_type = self.get_packet_name_to_id_mapping(packet_type)  # type: ignore
+    def send_game_packet_in_json_as_is(self, packet_type: int, content: Any):
         OmegaAvailable()
-        SendGamePacket(packet_type, json.dumps(content))  # type: ignore
+        SendGamePacket(packet_type, json.dumps(content))
 
     def get_bot_basic_info(self) -> ClientMaintainedBotBasicInfo:
         return self._bot_basic_info
