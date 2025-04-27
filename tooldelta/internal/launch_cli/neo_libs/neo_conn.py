@@ -14,7 +14,7 @@ from ....utils import fmts, ToolDeltaThread
 from ....packets import Packet_CommandOutput
 
 CInt = ctypes.c_longlong
-CString = ctypes.c_char_p
+CString = ctypes.c_void_p
 CBytes = ctypes.POINTER(ctypes.c_char)
 
 
@@ -38,8 +38,10 @@ def to_GoInt(i: int):
     return ctypes.c_longlong(i)
 
 
-def toPyString(cstring: bytes):
-    return "" if cstring is None else cstring.decode(encoding="utf-8")
+def toPyString(c_string: CString):
+    result = ctypes.c_char_p(c_string).value.decode(encoding="utf-8")  # type: ignore
+    LIB.FreeMem(c_string)
+    return result
 
 
 def toByteCSlice(bs: bytes):
@@ -208,6 +210,10 @@ class ClientMaintainedBotBasicInfo:
     BotIdentity: str = ""
     BotUUIDStr: str = ""
     BotUID: str = ""
+
+
+class LoadBlobCache_return(ctypes.Structure):
+    _fields_ = [("bs", CBytes), ("l", CInt)]
 
 
 @dataclass
@@ -857,6 +863,13 @@ class ThreadOmega:
             **json.loads(toPyString(LIB.GetClientMaintainedExtendInfo()))
         )
 
+    def load_blob_cache(self, hash: int) -> bytes:
+        OmegaAvailable()
+        ret: LoadBlobCache_return = LIB.LoadBlobCache(ctypes.c_longlong(hash))
+        payload = ret.bs[: ret.l]
+        LIB.FreeMem(ret.bs)
+        return payload
+
     def _get_bind_player(self, uuidStr: str) -> PlayerKit | None:
         return None if uuidStr is None or not uuidStr else PlayerKit(uuidStr, self)
 
@@ -967,6 +980,8 @@ def load_lib():
     LIB.SendGamePacket.argtypes = [CInt, CString]
     LIB.SendGamePacket.restype = CString
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
+    LIB.LoadBlobCache.argtypes = [ctypes.c_longlong]
+    LIB.LoadBlobCache.restype = LoadBlobCache_return
     LIB.GetClientMaintainedExtendInfo.restype = CString
     LIB.GetAllOnlinePlayers.restype = CString
     LIB.AddGPlayerUsingCount.argtypes = [CString, CInt]
