@@ -129,7 +129,7 @@ def sendcmd_and_get_uuid(cmd: str):
                 "PlayerUniqueID": 0,
             },
             "Internal": False,
-            "Version": 0x23,
+            "Version": 0x24,
             "UnLimited": False,
         },
     )
@@ -149,7 +149,7 @@ def sendwscmd_and_get_uuid(cmd: str):
                 "PlayerUniqueID": 0,
             },
             "Internal": False,
-            "Version": 0x23,
+            "Version": 0x24,
             "UnLimited": False,
         },
     )
@@ -199,9 +199,13 @@ def get_unready_player(uuid: str) -> UnreadyPlayer:
             playerkit_pb2.GetPlayerCanTeleportRequest(uuid_str=uuid)
         ).payload,
         0,  # TODO: player_permission 现在固定为 0
-        3
-        if stub.GetPlayerIsOP(playerkit_pb2.GetPlayerIsOPRequest(uuid_str=uuid)).payload
-        else 1,  # TODO: 除非玩家为 OP, 否则命令等级恒为 1
+        (
+            3
+            if stub.GetPlayerIsOP(
+                playerkit_pb2.GetPlayerIsOPRequest(uuid_str=uuid)
+            ).payload
+            else 1
+        ),  # TODO: 除非玩家为 OP, 否则命令等级恒为 1
     )
     return UnreadyPlayer(
         uuid=uuid,

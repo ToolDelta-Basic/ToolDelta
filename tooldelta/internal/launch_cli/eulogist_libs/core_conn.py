@@ -10,6 +10,7 @@ from .... import utils
 from ....packets import Packet_CommandOutput
 from ....utils import fmts
 
+
 class MessageType:
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"
     CMD_SET_CLIENT_PKTS = "SetClientListenPackets"
@@ -29,6 +30,7 @@ class Message:
     def dumps(self):
         return {"type": self.type, "content": self.content}
 
+
 @dataclass
 class PlayerUQ:
     name: str
@@ -40,6 +42,7 @@ class PlayerUQ:
 
 class Eulogist:
     """赞颂者启动器核心"""
+
     packet_listener: Callable[[int, dict], None] | None = None
     connected = False
     bot_data_ready_event = threading.Event()
@@ -108,10 +111,14 @@ class Eulogist:
         self.send(Message(MessageType.CMD_SET_CLIENT_BLOCK_PKTS, {"PacketsID": pkIDs}))
 
     def sendPacket(self, pkID: int, pk: dict):
-        self.send(Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": json.dumps(pk)}))
+        self.send(
+            Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": json.dumps(pk)})
+        )
 
     def sendClientPacket(self, pkID: int, pk: dict):
-        self.send(Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": json.dumps(pk)}))
+        self.send(
+            Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": json.dumps(pk)})
+        )
 
     def sendcmd(self, cmd: str):
         ud = str(uuid.uuid4())
@@ -126,7 +133,7 @@ class Eulogist:
                     "PlayerUniqueID": 0,
                 },
                 "Internal": False,
-                "Version": 0x23,
+                "Version": 0x24,
                 "UnLimited": False,
             },
         )
@@ -145,13 +152,15 @@ class Eulogist:
                     "PlayerUniqueID": 0,
                 },
                 "Internal": False,
-                "Version": 0x23,
+                "Version": 0x24,
                 "UnLimited": False,
             },
         )
         return ud
 
-    def sendcmd_with_resp(self, cmd: str, timeout: float = 5) -> Packet_CommandOutput | None:
+    def sendcmd_with_resp(
+        self, cmd: str, timeout: float = 5
+    ) -> Packet_CommandOutput | None:
         ud = self.sendcmd(cmd)
         getter, setter = utils.create_result_cb()
         self.command_cbs[ud] = setter
@@ -162,7 +171,9 @@ class Eulogist:
         else:
             return Packet_CommandOutput(res)
 
-    def sendwscmd_with_resp(self, cmd: str, timeout: float = 5) -> Packet_CommandOutput | None:
+    def sendwscmd_with_resp(
+        self, cmd: str, timeout: float = 5
+    ) -> Packet_CommandOutput | None:
         ud = self.sendwscmd(cmd)
         getter, setter = utils.create_result_cb()
         self.command_cbs[ud] = setter
@@ -176,10 +187,7 @@ class Eulogist:
     def sendwocmd(self, cmd: str):
         self.sendPacket(
             140,
-            {
-                "CommandLine": cmd,
-                "SuppressOutput": False
-            },
+            {"CommandLine": cmd, "SuppressOutput": False},
         )
 
     @utils.thread_func("赞颂者消息处理", utils.ToolDeltaThread.SYSTEM)
@@ -202,18 +210,19 @@ class Eulogist:
                         pkUUID = pk["CommandOrigin"]["UUID"]
                         if pkUUID in self.command_cbs.keys():
                             self.command_cbs[pkUUID](pk)
-                        #else:
+                        # else:
                         #    fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
                     if self.packet_listener:
                         self.packet_listener(pkID, pk)
                 case MessageType.MSG_CLIENT_PKT:
-                    self.client_packet_handler(msg.content["ID"], msg.content["Content"])
+                    self.client_packet_handler(
+                        msg.content["ID"], msg.content["Content"]
+                    )
                 case _:
                     fmts.print_war(f"未知数据传输类型: {msg.type}")
         except Exception as err:
             fmts.print_err(f"处理赞颂者通信出错: {err}")
             fmts.print_err(traceback.format_exc())
-
 
     def send(self, msg: Message):
         self.conn.send(json.dumps(msg.dumps(), ensure_ascii=False))
