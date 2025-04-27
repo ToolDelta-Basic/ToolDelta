@@ -38,9 +38,9 @@ def to_GoInt(i: int):
     return ctypes.c_longlong(i)
 
 
-def toPyString(c_string: CString):
+def toPyString(c_string: CString | None):
     if c_string is None:
-        return
+        return ""
     result = ctypes.c_char_p(c_string).value.decode(encoding="utf-8")  # type: ignore
     LIB.FreeMem(c_string)
     return result
