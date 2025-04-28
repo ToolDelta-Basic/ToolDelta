@@ -43,6 +43,10 @@ def toByteCSlice(bs: bytes) -> CBytes:
     return ctypes.cast(ctypes.c_char_p(bs), CBytes)
 
 
+def as_python_bytes(bs: CBytes, l: int) -> bytes:
+    return ctypes.string_at(bs, l)
+
+
 # define lib path and how to load it
 
 
@@ -214,7 +218,7 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
     r = LIB.JsonStrAsIsGamePacketBytes(to_GoInt(packetID), toCString(jsonStr))
     if toPyString(r.err) != "":
         raise ValueError(toPyString(r.err))
-    bs = r.pktBytes[: r.l]
+    bs = as_python_bytes(r.pktBytes, r.l)
     LIB.FreeMem(r.pktBytes)
     return bs
 
@@ -644,7 +648,7 @@ class ThreadOmega:
 
     def _handle_soft_call_resp(self, retriever: str):
         softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
-        bs: bytes = softResp.bs[: softResp.l]
+        bs: bytes = as_python_bytes(softResp.bs, softResp.l)
         LIB.FreeMem(softResp.bs)
         if self._soft_call_cbs_is_bytes_result[retriever]:
             self._soft_call_cbs[retriever](bs)
@@ -655,7 +659,7 @@ class ThreadOmega:
         api_name = retriever
         listeners = self._soft_listeners.get(api_name, [])
         softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
-        bs: bytes = softResp.bs[: softResp.l]
+        bs: bytes = as_python_bytes(softResp.bs, softResp.l)
         LIB.FreeMem(softResp.bs)
         if self._soft_listeners_is_listen_bytes:
             for listener in listeners:
@@ -679,7 +683,7 @@ class ThreadOmega:
         resp_id = next(self._soft_resp_counter)
 
         softData: ConsumeSoftCall_return = LIB.ConsumeSoftCall(toCString(resp_id))
-        bs: bytes = softData.bs[: softData.l]
+        bs: bytes = as_python_bytes(softData.bs, softData.l)
         LIB.FreeMem(softData.bs)
 
         def wrapper(data, resp_id):
@@ -746,7 +750,7 @@ class ThreadOmega:
             LIB.OmitEvent()
         else:
             ret: ConsumeMCBytesPacket_return = LIB.ConsumeMCBytesPacket()
-            bs = ret.pktBytes[: ret.l]
+            bs: bytes = as_python_bytes(ret.pktBytes, ret.l)
             LIB.FreeMem(ret.pktBytes)
             for listener in listeners:
                 ToolDeltaThread(
@@ -952,7 +956,7 @@ class ThreadOmega:
     def load_blob_cache(self, hash: int) -> bytes:
         OmegaAvailable()
         ret: LoadBlobCache_return = LIB.LoadBlobCache(CLongLong(hash))
-        payload = ret.bs[: ret.l]
+        payload: bytes = as_python_bytes(ret.bs, ret.l)
         LIB.FreeMem(ret.bs)
         return payload
 
