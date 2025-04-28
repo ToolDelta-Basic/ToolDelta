@@ -13,17 +13,10 @@ import json
 from ....utils import fmts, ToolDeltaThread
 from ....packets import Packet_CommandOutput
 
-CInt = ctypes.c_longlong
+CInt = ctypes.c_int
+CLongLong = ctypes.c_longlong
 CString = ctypes.c_void_p
-CBytes = ctypes.POINTER(ctypes.c_char)
-
-
-class byteCSlice(ctypes.Structure):
-    _fields_: ClassVar[list[tuple[str, Any]]] = [
-        ("data", ctypes.POINTER(ctypes.c_char)),
-        ("len", ctypes.c_longlong),
-        ("cap", ctypes.c_longlong),
-    ]
+CBytes = ctypes.c_void_p
 
 
 def toCString(string: str):
@@ -35,7 +28,7 @@ def toGoUint8(b: bool):
 
 
 def to_GoInt(i: int):
-    return ctypes.c_longlong(i)
+    return CInt(i)
 
 
 def toPyString(c_string: CString | None):
@@ -46,14 +39,8 @@ def toPyString(c_string: CString | None):
     return result
 
 
-def toByteCSlice(bs: bytes):
-    length = len(bs)
-    kwargs = {
-        "data": (ctypes.c_char * length)(*bs),
-        "len": length,
-        "cap": length,
-    }
-    return byteCSlice(**kwargs)
+def toByteCSlice(bs: bytes) -> CBytes:
+    return ctypes.cast(ctypes.c_char_p(bs), CBytes)
 
 
 # define lib path and how to load it
@@ -111,27 +98,62 @@ def OmitEvent():
 # event retrievers
 
 
-def SoftCall(api: str, json_args: str, retrieverID: str):
+class ConsumeSoftData_return(ctypes.Structure):
+    _fields_ = [("bs", CBytes), ("l", CInt)]
+
+
+class ConsumeSoftCall_return(ctypes.Structure):
+    _fields_ = [("bs", CBytes), ("l", CInt)]
+
+
+def SoftCallWithJSON(api: str, json_args: str, retrieverID: str):
     OmegaAvailable()
     LIB.SoftCall(toCString(api), toCString(json_args), toCString(retrieverID))
+    LIB.SoftCall(
+        toCString(api),
+        0,
+        toByteCSlice(json_args.encode(encoding="utf-8")),
+        len(json_args),
+        toCString(retrieverID),
+    )
 
 
-def SoftListen(api: str):
+def SoftCallWithBytes(api: str, message: bytes, retrieverID: str):
     OmegaAvailable()
-    LIB.SoftListen(toCString(api))
+    LIB.SoftCall(
+        toCString(api), 1, toByteCSlice(message), len(message), toCString(retrieverID)
+    )
 
 
-def SoftPub(
+def SoftListen(api: str, listen_bytes_message: bool):
+    OmegaAvailable()
+    LIB.SoftListen(toCString(api), int(listen_bytes_message))
+
+
+def SoftPubJSON(
     api: str,
     json_args: str,
 ):
     OmegaAvailable()
-    LIB.SoftPub(toCString(api), toCString(json_args))
+    LIB.SoftPub(
+        toCString(api),
+        0,
+        toByteCSlice(json_args.encode(encoding="utf-8")),
+        len(json_args),
+    )
 
 
-def SoftReg(api: str):
+def SoftPubBytes(
+    api: str,
+    message: bytes,
+):
     OmegaAvailable()
-    LIB.SoftReg(toCString(api))
+    LIB.SoftPub(toCString(api), 1, toByteCSlice(message), len(message))
+
+
+def SoftReg(api: str, is_bytes_api: bool):
+    OmegaAvailable()
+    LIB.SoftReg(toCString(api), int(is_bytes_api))
 
 
 class MCPacketEvent(ctypes.Structure):
@@ -522,8 +544,11 @@ class ThreadOmega:
         self._bot_basic_info: ClientMaintainedBotBasicInfo
         self._soft_call_counter = Counter("soft_call")
         self._soft_call_cbs: dict[str, Callable] = {}
+        self._soft_call_cbs_is_bytes_result: dict[str, bool] = {}
         self._soft_listeners: dict[str, list[Callable[[Any], None]]] = {}
+        self._soft_listeners_is_listen_bytes: dict[str, bool] = {}
         self._soft_reg: dict[str, Callable[[Any], Any]] = {}
+        self._soft_reg_is_bytes_api: dict[str, bool] = {}
         self._soft_resp_counter = Counter("soft_resp")
 
     def connect(self):
@@ -618,43 +643,84 @@ class ThreadOmega:
             )
 
     def _handle_soft_call_resp(self, retriever: str):
-        softResp = json.loads(toPyString(LIB.ConsumeSoftData()))
-        self._soft_call_cbs[retriever](softResp)
+        softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
+        bs: bytes = softResp.bs[: softResp.l]
+        LIB.FreeMem(softResp.bs)
+        if self._soft_call_cbs_is_bytes_result[retriever]:
+            self._soft_call_cbs[retriever](bs)
+        else:
+            self._soft_call_cbs[retriever](json.loads(bs.decode(encoding="utf-8")))
 
     def _handle_soft_listen(self, retriever: str):
         api_name = retriever
         listeners = self._soft_listeners.get(api_name, [])
-        softData = json.loads(toPyString(LIB.ConsumeSoftData()))
-        for listener in listeners:
-            ToolDeltaThread(
-                listener,
-                (softData,),
-                usage="Soft Listen Callback Thread",
-            )
+        softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
+        bs: bytes = softResp.bs[: softResp.l]
+        LIB.FreeMem(softResp.bs)
+        if self._soft_listeners_is_listen_bytes:
+            for listener in listeners:
+                ToolDeltaThread(
+                    listener,
+                    (bs,),
+                    usage="Soft (JSON) Listen Callback Thread",
+                )
+        else:
+            json_dict = json.loads(bs.decode(encoding="utf-8"))
+            for listener in listeners:
+                ToolDeltaThread(
+                    listener,
+                    (json_dict,),
+                    usage="Soft (Bytes) Listen Callback Thread",
+                )
 
     def _handle_soft_api_call(self, retriever: str):
         api_name = retriever
         handler = self._soft_reg[api_name]
         resp_id = next(self._soft_resp_counter)
-        soft_data = json.loads(toPyString(LIB.ConsumeSoftCall(toCString(resp_id))))
+
+        softData: ConsumeSoftCall_return = LIB.ConsumeSoftCall(toCString(resp_id))
+        bs: bytes = softData.bs[: softData.l]
+        LIB.FreeMem(softData.bs)
 
         def wrapper(data, resp_id):
             try:
                 ret = handler(data)
-                LIB.FinishSoftCall(
-                    toCString(resp_id),
-                    toCString(json.dumps(ret)),
-                    toCString(""),
-                )
+                if self._soft_reg_is_bytes_api[api_name]:
+                    LIB.FinishSoftCall(
+                        toCString(resp_id), 1, toByteCSlice(ret), len(ret), ""
+                    )
+                else:
+                    json_ret = json.dumps(ret)
+                    LIB.FinishSoftCall(
+                        toCString(resp_id),
+                        0,
+                        toByteCSlice(json_ret.encode(encoding="utf-8")),
+                        len(json_ret),
+                        "",
+                    )
             except Exception as e:
                 es = f"{e}"
-                LIB.FinishSoftCall(toCString(resp_id), toCString(""), toCString(es))
+                LIB.FinishSoftCall(
+                    toCString(resp_id),
+                    int(self._soft_reg_is_bytes_api[api_name]),
+                    toByteCSlice(b""),
+                    0,
+                    toCString(es),
+                )
 
-        ToolDeltaThread(
-            wrapper,
-            (soft_data, resp_id),
-            usage="Finish Soft Call Thread",
-        )
+        if self._soft_reg_is_bytes_api[api_name]:
+            ToolDeltaThread(
+                wrapper,
+                (bs, resp_id),
+                usage="Finish Soft Call (Bytes) Thread",
+            )
+        else:
+            json_represents = json.loads(bs.decode(encoding="utf-8"))
+            ToolDeltaThread(
+                wrapper,
+                (json_represents, resp_id),
+                usage="Finish Soft Call (JSON) Thread",
+            )
 
     def _handle_mc_packet(self, packetTypeName):
         if packetTypeName == "":
@@ -750,27 +816,49 @@ class ThreadOmega:
         SendPlayerCommandNeedResponse(cmd, retriever_id)
         return self.send_cmd_resp(getter, timeout, retriever_id)
 
-    def soft_call(self, api: str, args: Any, timeout: int = -1) -> Any | None:
+    def soft_call_with_json(self, api: str, args: Any, timeout: int = -1) -> Any | None:
         setter, getter = self._create_lock_and_result_setter()
         retriever_id = next(self._soft_call_counter)
         self._soft_call_cbs[retriever_id] = setter
-        SoftCall(api, json.dumps(args), retriever_id)
+        self._soft_call_cbs_is_bytes_result[retriever_id] = False
+        SoftCallWithJSON(api, json.dumps(args), retriever_id)
         res = getter(timeout=timeout)
         del self._soft_call_cbs[retriever_id]
+        del self._soft_call_cbs_is_bytes_result[retriever_id]
         return res
 
-    def soft_pub(self, api: str, args: Any) -> None:
-        SoftPub(api, json.dumps(args))
+    def soft_call_with_bytes(
+        self, api: str, args: bytes, timeout: int = -1
+    ) -> Any | None:
+        setter, getter = self._create_lock_and_result_setter()
+        retriever_id = next(self._soft_call_counter)
+        self._soft_call_cbs[retriever_id] = setter
+        self._soft_call_cbs_is_bytes_result[retriever_id] = True
+        SoftCallWithBytes(api, args, retriever_id)
+        res = getter(timeout=timeout)
+        del self._soft_call_cbs[retriever_id]
+        del self._soft_call_cbs_is_bytes_result[retriever_id]
+        return res
 
-    def soft_listen(self, api: str, callback: Callable[[Any], None]):
+    def soft_pub_json(self, api: str, args: Any) -> None:
+        SoftPubJSON(api, json.dumps(args))
+
+    def soft_pub_bytes(self, api: str, message: bytes) -> None:
+        SoftPubBytes(api, message)
+
+    def soft_listen(
+        self, api: str, listen_bytes_message: bool, callback: Callable[[Any], None]
+    ):
         if api not in self._soft_listeners:
             self._soft_listeners[api] = []
-            SoftListen(api)
+            SoftListen(api, listen_bytes_message)
         self._soft_listeners[api].append(callback)
+        self._soft_listeners_is_listen_bytes[api] = listen_bytes_message
 
-    def soft_reg(self, api: str, handler: Callable[[Any], Any]):
+    def soft_reg(self, api: str, is_bytes_api: bool, handler: Callable[[Any], Any]):
         self._soft_reg[api] = handler
-        SoftReg(api)
+        self._soft_reg_is_bytes_api[api] = is_bytes_api
+        SoftReg(api, is_bytes_api)
 
     def send_cmd_resp(self, getter, timeout, retriever_id):
         res = getter(timeout=timeout)
@@ -863,7 +951,7 @@ class ThreadOmega:
 
     def load_blob_cache(self, hash: int) -> bytes:
         OmegaAvailable()
-        ret: LoadBlobCache_return = LIB.LoadBlobCache(ctypes.c_longlong(hash))
+        ret: LoadBlobCache_return = LIB.LoadBlobCache(CLongLong(hash))
         payload = ret.bs[: ret.l]
         LIB.FreeMem(ret.bs)
         return payload
@@ -958,11 +1046,14 @@ def load_lib():
     LIB.EventPoll.restype = Event
     LIB.ConsumeOmegaConnError.restype = CString
     LIB.ConsumeCommandResponseCB.restype = CString
-    LIB.SoftCall.argtypes = [CString, CString, CString]
-    LIB.FinishSoftCall.argtypes = [CString, CString, CString]
-    LIB.SoftListen.argtypes = [CString]
+    LIB.ConsumeSoftData.restype = ConsumeSoftData_return
+    LIB.SoftCall.argtypes = [CString, CInt, CBytes, CInt, CString]
+    LIB.SoftReg.argtypes = [CString, CInt]
+    LIB.SoftListen.argtypes = [CString, CInt]
+    LIB.FinishSoftCall.argtypes = [CString, CInt, CBytes, CInt, CString]
+    LIB.SoftPub.argtypes = [CString, CInt, CBytes, CInt]
     LIB.ConsumeSoftCall.argtypes = [CString]
-    LIB.ConsumeSoftCall.restype = CString
+    LIB.ConsumeSoftCall.restype = ConsumeSoftCall_return
     LIB.ConsumeMCPacket.restype = MCPacketEvent
     LIB.ConsumeMCBytesPacket.restype = ConsumeMCBytesPacket_return
     LIB.SendWebSocketCommandNeedResponse.argtypes = [CString, CString]
@@ -978,7 +1069,7 @@ def load_lib():
     LIB.SendGamePacket.argtypes = [CInt, CString]
     LIB.SendGamePacket.restype = CString
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
-    LIB.LoadBlobCache.argtypes = [ctypes.c_longlong]
+    LIB.LoadBlobCache.argtypes = [CLongLong]
     LIB.LoadBlobCache.restype = LoadBlobCache_return
     LIB.GetClientMaintainedExtendInfo.restype = CString
     LIB.GetAllOnlinePlayers.restype = CString
