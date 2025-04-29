@@ -30,9 +30,9 @@ class SubChunkRequest(BaseBytesPacket):
         writer.write(struct.pack("<i", self.SubChunkPosZ))
         writer.write(struct.pack("<H", len(self.Offsets)))
         for i in self.Offsets:
-            writer.write(i[0].to_bytes())
-            writer.write(i[1].to_bytes())
-            writer.write(i[2].to_bytes())
+            writer.write(struct.pack("<b", i[0]))
+            writer.write(struct.pack("<b", i[1]))
+            writer.write(struct.pack("<b", i[2]))
         return writer.getvalue()
 
     def decode(self, bs: bytes):

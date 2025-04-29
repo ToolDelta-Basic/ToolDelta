@@ -659,6 +659,11 @@ class ThreadOmega:
         softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
         bs: bytes = as_python_bytes(softResp.bs, softResp.l)
         LIB.FreeMem(softResp.bs)
+        if (
+            retriever not in self._soft_call_cbs_is_bytes_result
+            or retriever not in self._soft_call_cbs
+        ):
+            return
         if self._soft_call_cbs_is_bytes_result[retriever]:
             self._soft_call_cbs[retriever](bs)
         else:

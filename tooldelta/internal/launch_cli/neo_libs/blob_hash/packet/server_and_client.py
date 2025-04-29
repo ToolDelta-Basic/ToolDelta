@@ -21,7 +21,9 @@ class SetHolderResponse:
     holder_name: str = ""
     packet_name: str = "blob-hash-set-holder-response"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         self.success_states = bool(reader.read(1)[0])
         self.holder_name = reader.read(struct.unpack("<h", reader.read(2))[0]).decode(
@@ -47,7 +49,9 @@ class GetHashPayloadResponse:
     payload: list[PayloadByHash] = field(default_factory=lambda: [])
     packet_name: str = "blob-hash-get-hash-payload-response"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         for _ in range(struct.unpack("<H", reader.read(2))[0]):
             p = PayloadByHash()
@@ -75,7 +79,9 @@ class ClientQueryDiskHashExistResponse:
     )
     packet_name: str = "blob-hash-client-query-disk-hash-exist-response"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         self.states = numpy.frombuffer(
             reader.read(struct.unpack("<H", reader.read(2))[0]), dtype=numpy.bool
@@ -100,7 +106,9 @@ class ClientGetDiskHashPayloadResponse:
     payload: list[PayloadByHash] = field(default_factory=lambda: [])
     packet_name: str = "blob-hash-client-get-disk-hash-payload-response"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         for _ in range(struct.unpack("<H", reader.read(2))[0]):
             p = PayloadByHash()

@@ -15,7 +15,9 @@ class KeepAlive:
     )
     packet_name: str = "blob-hash-keep-alive"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         self.uid = uuid.UUID(
             reader.read(struct.unpack("<h", reader.read(2))[0]).decode(encoding="utf-8")
@@ -27,7 +29,9 @@ class ServerDisconnected:
     mirror_world_holder_name: str = ""
     packet_name: str = "blob-hash-server-disconnected"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         self.mirror_world_holder_name = reader.read(
             struct.unpack("<h", reader.read(2))[0]
@@ -39,7 +43,9 @@ class QueryDiskHashExist:
     hashes: list[HashWithPosition] = field(default_factory=lambda: [])
     packet_name: str = "blob-hash-query-disk-hash-exist"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         self.hashes = [
             decode_hash_with_position(reader)
@@ -70,7 +76,9 @@ class GetDiskHashPayload:
     hashes: list[HashWithPosition] = field(default_factory=lambda: [])
     packet_name: str = "blob-hash-get-disk-hash-payload"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         self.hashes = [
             decode_hash_with_position(reader)
@@ -100,7 +108,9 @@ class RequireSyncHashToDisk:
     payload: list[PayloadByHash] = field(default_factory=lambda: [])
     packet_name: str = "blob-hash-require-sync-hash-to-disk"
 
-    def decode(self, bs: bytes):
+    def decode(self, bs: bytes | None):
+        if bs is None:
+            return
         reader = BytesIO(bs)
         for _ in range(struct.unpack("<H", reader.read(2))[0]):
             p = PayloadByHash()
