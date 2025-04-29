@@ -21,18 +21,17 @@ class ToolDeltaLogger:
         self.logging_fmt = "[%H-%M-%S]"
         self.lastLogTime = time.time()
         self.enable_logger = False
-        self.writable = True
         self._wrapper = None
 
     def switch_logger(self, isopen: bool) -> None:
         "切换日志记录器状态"
         self.enable_logger = isopen
         if isopen:
-            self.open_wrapper_io(self.path)
+            self._wrapper = self.open_wrapper_io(self.path)
 
-    def open_wrapper_io(self, log_path: str) -> None:
+    def open_wrapper_io(self, log_path: str):
         "打开 IO 流"
-        self._wrapper = open(
+        return open(
             log_path + os.sep + time.strftime(self.name_fmt) + ".log",
             "a",
             encoding="utf-8",
@@ -41,7 +40,7 @@ class ToolDeltaLogger:
 
     def log_in(self, msg, level=INFO) -> None:
         "写入日志信息。level 给定了其等级。"
-        if not self.writable or not self.enable_logger or not self._wrapper:
+        if not self.enable_logger or not self._wrapper or self._wrapper.closed:
             return
         if not isinstance(msg, str):
             raise TypeError("only allows string")
@@ -61,22 +60,29 @@ class ToolDeltaLogger:
             self._save_log()
             self.lastLogTime = time.time()
 
-    def _save_log(self) -> None:
+    def _save_log(self) -> bool:
         "保存日志"
         if self._wrapper and not self._wrapper.closed:
             self._wrapper.flush()
+            return True
+        else:
+            return False
 
     def _check_is_another_day(self) -> None:
         "判断记录日志的时候是否已经是第二天，是的话就变更文件名"
         if time.strftime("%Y-%m-%d") != self.now_day:
-            self.exit()
-            self.open_wrapper_io(self.path)
+            self.reset()
+            self._wrapper = self.open_wrapper_io(self.path)
+
+    def reset(self) -> None:
+        "重置状态"
+        if self._wrapper and not self._wrapper.closed:
+            self._save_log()
 
     def exit(self) -> None:
-        "退出时调用"
-        if self.writable and self._wrapper:
-            self.writable = False
-            self._save_log()
+        "日志记录器完全退出"
+        self.reset()
+        if self._wrapper and not self._wrapper.closed:
             self._wrapper.close()
 
 
