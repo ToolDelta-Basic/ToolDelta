@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 from collections.abc import Callable
+
+from tooldelta.mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..constants.packets import PacketIDS
 
 if TYPE_CHECKING:
@@ -12,7 +14,7 @@ INTERNAL_LISTEN_PACKETS: set[PacketIDS] = {
     PacketIDS.UpdateAbilities,
 }
 
-PacketListener = Callable[[dict], bool]
+PacketListener = Callable[[dict | BaseBytesPacket], bool]
 
 
 class PacketHandler:
@@ -33,7 +35,7 @@ class PacketHandler:
         if cb not in plist:
             plist.append(cb)
 
-    def entrance(self, packetID: int, packet: dict):
+    def entrance(self, packetID: int, packet: dict | BaseBytesPacket):
         pkt_cbs = self.packet_listener_with_priority.get(packetID)
         if pkt_cbs:
             for priority in sorted(pkt_cbs.keys(), reverse=True):

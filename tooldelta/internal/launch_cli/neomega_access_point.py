@@ -5,6 +5,7 @@ import subprocess
 import threading
 import time
 
+from ...mc_bytes_packet.pool import bytes_packet_by_name
 from ... import utils
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
@@ -12,6 +13,9 @@ from ...utils import fmts, sys_args, urlmethod
 from ..types import UnreadyPlayer, Abilities
 from .standard_launcher import StandardFrame
 from .neo_libs import file_download as neo_fd, neo_conn
+from .neo_libs.blob_hash.blob_hash_holder import (
+    BlobHashHolder,
+)
 
 
 class FrameNeOmgAccessPoint(StandardFrame):
@@ -39,6 +43,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             address="tcp://localhost:24013",
             accountOption=None,
         )
+        self.blob_hash_holder = BlobHashHolder(self.omega)
         self.serverNumber: int | None = None
         self.serverPassword: str | None = None
         self.fbToken: str | None = None
@@ -127,9 +132,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             access_point_file = f"neomega_android_access_point_{sys_machine}"
         if platform.system() == "Windows":
             access_point_file += ".exe"
-        exe_file_path = os.path.join(
-            os.getcwd(), "tooldelta", "bin", access_point_file
-        )
+        exe_file_path = os.path.join(os.getcwd(), "tooldelta", "bin", access_point_file)
         if platform.uname().system.lower() == "linux":
             os.system(f"chmod +x {shlex.quote(exe_file_path)}")
         # 只需要+x 即可
@@ -191,6 +194,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             address="tcp://localhost:24013",
             accountOption=self.neomega_account_opt,
         )
+        self.blob_hash_holder = BlobHashHolder(self.omega)
         openat_port = self.start_neomega_proc()
         utils.createThread(
             self._msg_show_thread,
@@ -262,7 +266,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             self.bot_name = self.omega.get_bot_basic_info().BotName
         return self.bot_name
 
-    def packet_handler_parent(self, pkt_type: str, pkt: dict) -> None:
+    def packet_handler_parent(self, pkt_type: str, pkt: dict | bytes) -> None:
         """数据包处理器
 
         Args:
@@ -274,8 +278,13 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         if self.omega is None or self.packet_handler is None:
             raise ValueError("未连接到接入点")
-        packetType: int = self.omega.get_packet_name_to_id_mapping(pkt_type)  # type: ignore
-        self.packet_handler(packetType, pkt)
+        if type(pkt) == dict:
+            packetType: int = self.omega.get_packet_name_to_id_mapping(pkt_type)  # type: ignore
+            self.packet_handler(packetType, pkt)
+            return
+        real_pkt = bytes_packet_by_name(pkt_type)
+        real_pkt.decode(pkt)  # type: ignore
+        self.packet_handler(real_pkt.real_packet_id(), real_pkt)
 
     def check_avaliable(self):
         if self.status != SysStatus.RUNNING:
@@ -346,6 +355,14 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.check_avaliable()
         self.omega.send_game_packet_in_json_as_is(pckID, pck)
+
+    def blobHashHolder(self) -> BlobHashHolder:
+        """blobHashHolder 返回当前结点的 Blob hash cache 缓存数据集的持有人
+
+        Returns:
+            BlobHashHolder: 当前结点的 Blob hash cache 缓存数据集的持有人
+        """
+        return self.blob_hash_holder
 
     def place_command_block_with_nbt_data(
         self,

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, TypeVar
 from collections.abc import Callable
 
+from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts
 from ...constants import PacketIDS
 from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
@@ -160,7 +161,9 @@ def execute_reloaded(onerr: ON_ERROR_CB):
         onerr(name, err)
 
 
-def execute_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -> bool:
+def execute_packet_funcs(
+    pktID: PacketIDS, pkt: dict | BaseBytesPacket, onerr: ON_ERROR_CB
+) -> bool:
     """处理数据包监听器
 
     Args:

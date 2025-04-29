@@ -960,6 +960,15 @@ class ThreadOmega:
         LIB.FreeMem(ret.bs)
         return payload
 
+    def update_blob_cache(self, hash: int, payload: bytes) -> bool:
+        OmegaAvailable()
+        if (
+            LIB.UpdateBlobCache(CLongLong(hash), toByteCSlice(payload), len(payload))
+            == 1
+        ):
+            return True
+        return False
+
     def _get_bind_player(self, uuidStr: str) -> PlayerKit | None:
         return None if uuidStr is None or not uuidStr else PlayerKit(uuidStr, self)
 
@@ -1075,6 +1084,8 @@ def load_lib():
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
     LIB.LoadBlobCache.argtypes = [CLongLong]
     LIB.LoadBlobCache.restype = LoadBlobCache_return
+    LIB.UpdateBlobCache.argtypes = [CLongLong, CBytes, CInt]
+    LIB.UpdateBlobCache.restype = CInt
     LIB.GetClientMaintainedExtendInfo.restype = CString
     LIB.GetAllOnlinePlayers.restype = CString
     LIB.AddGPlayerUsingCount.argtypes = [CString, CInt]

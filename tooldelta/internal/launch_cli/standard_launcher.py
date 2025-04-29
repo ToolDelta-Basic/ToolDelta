@@ -1,4 +1,3 @@
-
 import threading
 from collections.abc import Callable
 
@@ -6,7 +5,7 @@ from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
 from ..packet_handler import PacketHandler
 from ..types import UnreadyPlayer
-
+from .neo_libs.blob_hash.blob_hash_holder import BlobHashHolder
 
 
 class StandardFrame:
@@ -140,6 +139,17 @@ class StandardFrame:
         Args:
             pckID (int): 数据包 ID
             pck (dict): 数据包内容
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        raise NotImplementedError
+
+    def blobHashHolder(self) -> BlobHashHolder:
+        """blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人
+
+        Returns:
+            BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
 
         Raises:
             NotImplementedError: 未实现此方法

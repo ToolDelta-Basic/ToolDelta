@@ -20,6 +20,7 @@ from .exceptions import (
 from ..constants import TextType, PacketIDS
 from ..internal.packet_handler import PacketHandler
 from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..game_utils import _set_frame
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
@@ -54,7 +55,9 @@ class PluginGroup:
         """
         self.plugins_api = {}
         self.broadcast_listeners = {}
-        self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"), self.linked_frame.on_plugin_err)
+        self.execute_frame_exit(
+            FrameExit(SysStatus.NORMAL_EXIT, "normal"), self.linked_frame.on_plugin_err
+        )
         classic_plugin.reload()
         fmts.print_inf("正在重新读取所有插件")
         self.load_plugins()
@@ -67,7 +70,7 @@ class PluginGroup:
         self.plugin_listen_packets = set(classic_plugin.packet_funcs.keys())
         for pkID in self.plugin_listen_packets:
 
-            def any_pk_handler(pkt: dict, pkID=pkID):
+            def any_pk_handler(pkt: dict | BaseBytesPacket, pkID=pkID):
                 return self.handle_packets(pkID, pkt, self.linked_frame.on_plugin_err)
 
             hdl.add_packet_listener(pkID, any_pk_handler, 0)
@@ -153,9 +156,7 @@ class PluginGroup:
         """
         classic_plugin.execute_active(onerr)
 
-    def execute_player_join(
-        self, player: Player, onerr: ON_ERROR_CB
-    ) -> None:
+    def execute_player_join(self, player: Player, onerr: ON_ERROR_CB) -> None:
         """执行玩家加入的方法
 
         Args:
@@ -178,9 +179,7 @@ class PluginGroup:
         """
         classic_plugin.execute_chat(chat, onerr)
 
-    def execute_player_leave(
-        self, player: Player, onerr: ON_ERROR_CB
-    ) -> None:
+    def execute_player_leave(self, player: Player, onerr: ON_ERROR_CB) -> None:
         """执行玩家离开的方法
 
         Args:
@@ -205,7 +204,9 @@ class PluginGroup:
         """
         classic_plugin.execute_reloaded(onerr)
 
-    def handle_packets(self, pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -> bool:
+    def handle_packets(
+        self, pktID: PacketIDS, pkt: dict | BaseBytesPacket, onerr: ON_ERROR_CB
+    ) -> bool:
         """处理数据包监听器
 
         Args:
@@ -218,7 +219,9 @@ class PluginGroup:
         blocking = classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
         return blocking
 
-    def handle_text_packet(self, pkt: dict):
+    def handle_text_packet(self, pkt: dict | BaseBytesPacket):
+        if type(pkt) != dict:
+            raise Exception("handle_text_packet: Should Nerver happened.")
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:
                 if pkt["Message"] == "§e%multiplayer.player.joined":
@@ -226,7 +229,9 @@ class PluginGroup:
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):
-                        self.execute_player_join(player, self.linked_frame.on_plugin_err)
+                        self.execute_player_join(
+                            player, self.linked_frame.on_plugin_err
+                        )
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
                 elif pkt["Message"] == "§e%multiplayer.player.left":
@@ -234,11 +239,17 @@ class PluginGroup:
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):
-                        self.execute_player_leave(player, self.linked_frame.on_plugin_err)
+                        self.execute_player_leave(
+                            player, self.linked_frame.on_plugin_err
+                        )
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
             case _:
-                playername, message, ensurePlayer = utils.get_playername_and_msg_from_text_packet(self.linked_frame, pkt)
+                playername, message, ensurePlayer = (
+                    utils.get_playername_and_msg_from_text_packet(
+                        self.linked_frame, pkt
+                    )
+                )
                 if playername is not None and message is not None and ensurePlayer:
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername

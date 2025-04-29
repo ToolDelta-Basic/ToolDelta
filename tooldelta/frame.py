@@ -21,11 +21,15 @@ from .packets import Packet_CommandOutput
 from .utils import cfg, fmts
 from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup
+from .mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from .internal.config_loader import ConfigLoader
 from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
 from .internal.maintainers.players import PlayerInfoMaintainer
 from .internal.types import FrameExit
+from .internal.launch_cli.neo_libs.blob_hash.blob_hash_holder import (
+    BlobHashHolder,
+)
 from .internal.launch_cli import (
     FrameNeOmgAccessPoint,
     FrameNeOmegaLauncher,
@@ -243,14 +247,17 @@ class GameCtrl:
         self.sendwscmd = launcher.sendwscmd
         self.sendwocmd = launcher.sendwocmd
         self.sendPacket = launcher.sendPacket
+        self.blobHashHolder = launcher.blobHashHolder
 
-    def handle_text_packet(self, pkt: dict):
+    def handle_text_packet(self, pkt: dict | BaseBytesPacket):
         """处理 文本 数据包
 
         Args:
             pkt (dict): 数据包内容
             plugin_grp (PluginGroup): 插件组对象
         """
+        if type(pkt) != dict:
+            raise Exception("handle_text_packet: Should Nerver happened.")
         msg: str = pkt["Message"]
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:
@@ -279,9 +286,15 @@ class GameCtrl:
                             fmts.print_inf(f"§e{who_died} 被 {killer} 击败了")
                         else:
                             fmts.print_inf(f"§e{who_died} 死亡了")
-            case TextType.TextTypeChat | TextType.TextTypeWhisper | TextType.TextTypeAnnouncement:
-                playername, message, ensurePlayer = utils.get_playername_and_msg_from_text_packet(
-                    self.linked_frame, pkt
+            case (
+                TextType.TextTypeChat
+                | TextType.TextTypeWhisper
+                | TextType.TextTypeAnnouncement
+            ):
+                playername, message, ensurePlayer = (
+                    utils.get_playername_and_msg_from_text_packet(
+                        self.linked_frame, pkt
+                    )
                 )
                 if playername is None or msg is None:
                     return False
@@ -350,6 +363,14 @@ class GameCtrl:
     ) -> Packet_CommandOutput:
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
+
+    def blob_hash_holder(self) -> BlobHashHolder:
+        """blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人
+
+        Returns:
+            BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
+        """
+        return self.blobHashHolder()
 
     def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息
