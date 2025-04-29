@@ -532,6 +532,10 @@ class ConnectType(enum.Enum):
     Local = "Local"  # 在内部启动一个单独的 neOmega Core
 
 
+class TranslateChunkNBT_return(ctypes.Structure):
+    _fields_ = (("bs", CBytes), ("l", CInt))
+
+
 # GOMEGA_HAD_LISTENED_PACKETS = False
 # GOMEGA_HAD_LISTENED_PLAYER_CHANGE = False
 
@@ -1093,6 +1097,8 @@ def load_lib():
     LIB.SendWebSocketCommandOmitResponse.argtypes = [CString]
     LIB.SendPlayerCommandOmitResponse.argtypes = [CString]
     LIB.FreeMem.argtypes = [ctypes.c_void_p]
+    LIB.TranslateChunkNBT.argtypes = [CBytes, CInt]
+    LIB.TranslateChunkNBT.restype = TranslateChunkNBT_return
     LIB.ListenAllPackets.argtypes = []
     LIB.GetPacketNameIDMapping.restype = CString
     LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
