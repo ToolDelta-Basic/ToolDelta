@@ -1,8 +1,14 @@
 import threading
+from typing import Any, TYPE_CHECKING
 from collections.abc import Callable
 
 from . import fmts
 from .tooldelta_thread import ToolDeltaThread, thread_func
+
+if TYPE_CHECKING:
+    from typing import ParamSpec
+
+    PT = ParamSpec("PT")
 
 timer_event_stop = threading.Event()
 timer_events_table: dict[int, list[tuple[str, Callable, tuple, dict, int]]] = {}
@@ -29,7 +35,7 @@ def timer_event(
     ```
     """
 
-    def receiver(func: Callable):
+    def receiver(func: Callable["PT", Any]) -> Callable["PT", None]:
         def caller(*args, **kwargs):
             func_name = name or f"简易方法:{func.__name__}"
             timer_events_table.setdefault(t, [])
