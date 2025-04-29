@@ -14,7 +14,7 @@ class LevelChunk(BaseBytesPacket):
     CacheEnabled: bool = False
 
     def name(self) -> str:
-        return "level_chunk"
+        return "LevelChunk"
 
     def custom_packet_id(self) -> int:
         return 0
