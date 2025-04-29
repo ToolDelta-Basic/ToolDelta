@@ -63,7 +63,7 @@ class ToolDeltaLogger:
 
     def _save_log(self) -> None:
         "保存日志"
-        if self._wrapper:
+        if self._wrapper and not self._wrapper.closed:
             self._wrapper.flush()
 
     def _check_is_another_day(self) -> None:
