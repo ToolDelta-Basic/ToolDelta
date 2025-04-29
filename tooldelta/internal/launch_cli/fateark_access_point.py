@@ -171,7 +171,7 @@ class FrameFateArk(StandardFrame):
 
         Args:
             pckID (int): 数据包 ID
-            pck (str): 数据包内容
+            pck (str | BaseBytesPacket): 数据包内容
 
         """
         if type(pck) != dict:
