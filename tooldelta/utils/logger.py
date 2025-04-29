@@ -13,7 +13,7 @@ class ToolDeltaLogger:
     FATAL = "FATAL"
     OTHER_TYPE = "???"
 
-    def __init__(self, log_path, name_fmt="%Y-%m-%d"):
+    def __init__(self, log_path: str, name_fmt="%Y-%m-%d"):
         "初始化"
         self.path = log_path
         self.name_fmt = name_fmt
