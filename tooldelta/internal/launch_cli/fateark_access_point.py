@@ -6,6 +6,7 @@ from grpc import RpcError
 from ... import utils
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
+from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts, urlmethod
 from .standard_launcher import StandardFrame
 from .fateark_libs import core_conn as fateark_core, utils as fateark_utils
@@ -165,7 +166,7 @@ class FrameFateArk(StandardFrame):
         self.check_avaliable()
         fateark_core.sendwocmd(cmd)
 
-    def sendPacket(self, pckID: int, pck: dict) -> None:
+    def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
         """发送数据包
 
         Args:
@@ -173,6 +174,8 @@ class FrameFateArk(StandardFrame):
             pck (str): 数据包内容
 
         """
+        if type(pck) != dict:
+            raise Exception("sendPacket: Bytes packet is not supported")
         fateark_core.sendPacket(pckID, pck)
 
     def get_players_info(self):

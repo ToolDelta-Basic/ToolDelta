@@ -26,7 +26,7 @@ class SubChunkEntry:
     def decode(self, reader: BytesIO):
         self.Result = reader.read(1)[0]
         self.SubChunkPosX = struct.unpack("<i", reader.read(4))[0]
-        self.SubChunkPosY = struct.unpack("<i", reader.read(4))[0]
+        self.SubChunkPosY = struct.unpack("<h", reader.read(2))[0]
         self.SubChunkPosZ = struct.unpack("<i", reader.read(4))[0]
         self.NBTData = numpy.frombuffer(
             reader.read(struct.unpack("<I", reader.read(4))[0]), dtype=numpy.uint8
@@ -48,6 +48,9 @@ class SubChunk(BaseBytesPacket):
 
     def real_packet_id(self) -> int:
         return PacketIDS.IDSubChunk
+
+    def encode(self) -> bytes:
+        raise NotImplementedError("Encode packet.SubChunk is not support")
 
     def decode(self, bs: bytes):
         reader = BytesIO(bs)

@@ -22,6 +22,9 @@ class LevelChunk(BaseBytesPacket):
     def real_packet_id(self) -> int:
         return PacketIDS.IDLevelChunk
 
+    def encode(self) -> bytes:
+        raise NotImplementedError("Encode packet.LevelChunk is not support")
+
     def decode(self, bs: bytes):
         reader = BytesIO(bs)
         self.Dimension = reader.read(1)[0]

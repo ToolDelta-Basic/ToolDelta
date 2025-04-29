@@ -3,6 +3,7 @@ from collections.abc import Callable
 
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
+from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..packet_handler import PacketHandler
 from ..types import UnreadyPlayer
 from .neo_libs.blob_hash.blob_hash_holder import BlobHashHolder
@@ -133,12 +134,12 @@ class StandardFrame:
         """
         raise NotImplementedError
 
-    def sendPacket(self, pckID: int, pck: dict) -> None:
+    def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
         """发送数据包
 
         Args:
             pckID (int): 数据包 ID
-            pck (dict): 数据包内容
+            pck (dict | | BaseBytesPacket): 数据包内容
 
         Raises:
             NotImplementedError: 未实现此方法

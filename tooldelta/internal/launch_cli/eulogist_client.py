@@ -9,6 +9,7 @@ from collections.abc import Callable
 from ... import utils
 from ...constants import SysStatus
 from ...packets import Packet_CommandOutput
+from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts
 from ..types import UnreadyPlayer
 from .eulogist_libs import core_conn as eulogist_conn
@@ -161,14 +162,16 @@ class FrameEulogistLauncher(StandardFrame):
         """
         self.eulogist.sendwocmd(cmd)
 
-    def sendPacket(self, pckID: int, pck: dict) -> None:
+    def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
         """发送数据包
 
         Args:
             pckID (int): 数据包 ID
-            pck (str): 数据包内容
+            pck (dict | BaseBytesPacket): 数据包内容
 
         """
+        if type(pck) != dict:
+            raise Exception("sendPacket: Bytes packet is not supported")
         self.eulogist.sendPacket(pckID, pck)
 
     sendPacketJson = sendPacket

@@ -223,8 +223,17 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
     return bs
 
 
-def SendGamePacket(packetID: int, jsonStr: str) -> None:
-    r = LIB.SendGamePacket(to_GoInt(packetID), toCString(jsonStr))
+def SendGamePacket(packetID: int, payload: str | bytes) -> None:
+    if type(payload) == str:
+        r = LIB.SendGamePacket(
+            to_GoInt(packetID),
+            toByteCSlice(payload.encode(encoding="utf-8")),
+            len(payload),
+        )
+        if toPyString(r) != "":
+            raise ValueError(toPyString(r))
+        return
+    r = LIB.SendGamePacket(to_GoInt(packetID), toByteCSlice(payload), len(payload))  # type: ignore
     if toPyString(r) != "":
         raise ValueError(toPyString(r))
 
@@ -928,6 +937,10 @@ class ThreadOmega:
         OmegaAvailable()
         SendGamePacket(packet_type, json.dumps(content))
 
+    def send_game_packet_in_bytes(self, packet_type: int, content: bytes):
+        OmegaAvailable()
+        SendGamePacket(packet_type, content)
+
     def get_bot_basic_info(self) -> ClientMaintainedBotBasicInfo:
         return self._bot_basic_info
 
@@ -1079,7 +1092,7 @@ def load_lib():
     LIB.GetPacketNameIDMapping.restype = CString
     LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
     LIB.JsonStrAsIsGamePacketBytes.restype = JsonStrAsIsGamePacketBytes_return
-    LIB.SendGamePacket.argtypes = [CInt, CString]
+    LIB.SendGamePacket.argtypes = [CInt, CBytes, CInt]
     LIB.SendGamePacket.restype = CString
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
     LIB.LoadBlobCache.argtypes = [CLongLong]
