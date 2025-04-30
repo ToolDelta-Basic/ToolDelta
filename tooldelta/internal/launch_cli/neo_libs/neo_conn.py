@@ -921,9 +921,11 @@ class ThreadOmega:
         self,
         targets: str | int | list[dict[int, str] | str],
         callback: Callable[[str, Any], None],
+        do_clean_listeners: bool = True,
     ):
-        for k in self._packet_listeners.copy():
-            self._packet_listeners[k].clear()
+        if do_clean_listeners:
+            for k in self._packet_listeners.copy():
+                self._packet_listeners[k].clear()
         if isinstance(targets, str):
             targets = [targets]
         if isinstance(targets, int):

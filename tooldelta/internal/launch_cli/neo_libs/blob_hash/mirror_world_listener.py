@@ -1,3 +1,4 @@
+import numpy
 from tooldelta.internal.launch_cli.neo_libs.blob_hash.define import (
     BLOCKING_DEADLINE_SECONDS,
     BaseBlobHashHolder,
@@ -17,11 +18,14 @@ from tooldelta.internal.launch_cli.neo_libs.blob_hash.packet.server_and_mirror_w
     GetDiskHashPayload,
     GetDiskHashPayloadResponse,
     QueryDiskHashExist,
+    QueryDiskHashExistResponse,
     RequireSyncHashToDisk,
     ServerDisconnected,
 )
-from tooldelta.constants.packets import PacketIDS
-from tooldelta.mc_bytes_packet.sub_chunk import SubChunk
+from tooldelta.mc_bytes_packet.sub_chunk import (
+    SUB_CHUNK_RESULT_SUCCESS_ALL_AIR,
+    SubChunk,
+)
 from tooldelta.utils.tooldelta_thread import ToolDeltaThread
 
 
@@ -64,7 +68,7 @@ class MirrorWorldListener:
     def _register_listener(self):
         # MC Packet
         self._base_blob_hash_holder().omega.listen_packets(
-            "SubChunk", self._on_sub_chunk
+            "SubChunk", self._on_sub_chunk, False
         )
         # Handle server keep alive and disconnected
         self._base_blob_hash_holder().omega.soft_reg(
@@ -96,13 +100,14 @@ class MirrorWorldListener:
         s.decode(bs)
 
         for i in s.Entries:
-            pos.append(
-                HashWithPosition(
-                    0,
-                    SubChunkPos(i.SubChunkPosX, i.SubChunkPosY, i.SubChunkPosZ),
-                    s.Dimension,
+            if i.Result == SUB_CHUNK_RESULT_SUCCESS_ALL_AIR:
+                pos.append(
+                    HashWithPosition(
+                        0,
+                        SubChunkPos(i.SubChunkPosX, i.SubChunkPosY, i.SubChunkPosZ),
+                        s.Dimension,
+                    )
                 )
-            )
 
         if len(pos) > 0:
             self.mirror_world_handler.f4(pos)
@@ -132,26 +137,27 @@ class MirrorWorldListener:
             # then we lost the status of
             # mirror world holder.
             recover_pk = SetHolderRequest()
-            recover_states: (
-                bytes | None
-            ) = self._base_blob_hash_holder().omega.soft_call_with_bytes(
-                recover_pk.packet_name,
-                recover_pk.encode(),
-                timeout=BLOCKING_DEADLINE_SECONDS,
+            recover_states: bytes | None = (
+                self._base_blob_hash_holder().omega.soft_call_with_bytes(
+                    recover_pk.packet_name,
+                    recover_pk.encode(),
+                    timeout=BLOCKING_DEADLINE_SECONDS,
+                )
             )
 
-            if recover_states is None:
-                raise Exception("Mirror world holder: Failed to recover")
+            if recover_states is None and self.mirror_world_handler.f5 is not None:
+                self.mirror_world_handler.f5()
 
             resp = SetHolderResponse()
             resp.decode(recover_states)
 
-            if not resp.success_states:
-                raise Exception("Mirror world holder: Failed to recover")
+            if resp.success_states:
+                self._base_blob_hash_holder().disk_holder_name = resp.holder_name
+                self._base_blob_hash_holder().is_disk_holder = True
+            elif self.mirror_world_handler.f5 is not None:
+                self.mirror_world_handler.f5()
 
-            self._base_blob_hash_holder().disk_holder_name = resp.holder_name
-
-        ToolDeltaThread(recover)
+        ToolDeltaThread(recover, usage="Mirror World Holder Recover Thread")
 
     def _handle_query_disk_hash_exist(self, packet: bytes) -> bytes | None:
         if (
@@ -163,7 +169,11 @@ class MirrorWorldListener:
         pk = QueryDiskHashExist()
         pk.decode(packet)
 
-        self.mirror_world_handler.f1(pk.hashes)
+        resp = QueryDiskHashExistResponse(
+            self._base_blob_hash_holder().disk_holder_name,
+            numpy.array(self.mirror_world_handler.f1(pk.hashes), dtype=numpy.bool),
+        )
+        return resp.encode()
 
     def _handle_get_disk_hash_payload(self, packet: bytes) -> bytes | None:
         if (

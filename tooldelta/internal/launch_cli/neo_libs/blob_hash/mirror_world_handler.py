@@ -17,7 +17,7 @@ class MirrorWorldHandler:
     f2: Callable[[list[HashWithPosition]], list[PayloadByHash]] | None
     f3: Callable[[list[PayloadByHash]], None] | None
     f4: Callable[[list[HashWithPosition]], None] | None
-    f5: Callable[[None], None] | None
+    f5: Callable[[], None] | None
 
     def __init__(self, base_blob_hash_holder: BaseBlobHashHolder):
         """
@@ -43,7 +43,7 @@ class MirrorWorldHandler:
         handle_clean_blob_hash_and_apply_to_world: (
             Callable[[list[HashWithPosition]], None] | None
         ),
-        handle_server_disconnect: Callable[[None], None] | None,
+        handle_server_disconnect: Callable[[], None] | None,
     ):
         """set_handler 根据给定的函数设置处理器，然后镜像存档的持有人便可作为资源中心处理来自服务者的资源请求
 
@@ -108,7 +108,7 @@ class MirrorWorldHandler:
                     - 这个子区块在镜像存档中非空
                 于是，可以安全的把这个镜像存档的这个子区块的 blob hash 置为 0，并将这个子区块置空
 
-            handle_server_disconnect (Callable[[None], None] | None):
+            handle_server_disconnect (Callable[[], None] | None):
                 当 blob hash 缓存数据集的服务者撤销当前镜像存档持有人的持有身份时，
                 底层实现将会尝试进行恢复（尝试重新取得我们作为持有人的身份）。
 
