@@ -174,7 +174,7 @@ class FrameFateArk(StandardFrame):
             pck (str | BaseBytesPacket): 数据包内容
 
         """
-        if type(pck) != dict:
+        if type(pck) is not dict:
             raise Exception("sendPacket: Bytes packet is not supported")
         fateark_core.sendPacket(pckID, pck)
 
