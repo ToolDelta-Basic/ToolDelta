@@ -2,6 +2,7 @@ import os
 from typing import TYPE_CHECKING, TypeVar, Any
 from collections.abc import Callable
 
+from ...mc_bytes_packet.pool import is_bytes_packet
 from ...constants import TOOLDELTA_PLUGIN_DATA_DIR, PacketIDS
 from ...utils import fmts
 from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
@@ -9,7 +10,10 @@ from . import event_cbs
 
 if TYPE_CHECKING:
     from tooldelta import ToolDelta
-    from tooldelta.internal.packet_handler import PacketListener
+    from tooldelta.internal.packet_handler import (
+        DictPacketListener,
+        BytesPacketListener,
+    )
     from tooldelta.plugin_load.plugins import PluginGroup
 
     PLUGIN_TYPE = TypeVar("PLUGIN_TYPE", bound="Plugin")
@@ -120,21 +124,57 @@ class Plugin:
         """
         event_cbs.on_frame_exit_cbs.append((self, cb))
 
-    def ListenPacket(self, pkt_id: PacketIDS | list[PacketIDS], cb: "PacketListener"):
+    def ListenPacket(
+        self, pkt_id: PacketIDS | list[PacketIDS], cb: "DictPacketListener"
+    ):
         """
-        监听数据包事件
+        监听字典数据包的事件
 
         Args:
             pkt_id (PacketIDS): 数据包ID
             cb ((dict) -> bool): 数据包监听回调, 返回 True 为拦截该数据包
+
+        Raises:
+            Exception: 尝试监听一个二进制数据包
         """
         if isinstance(pkt_id, int):
             pkt_ids = [pkt_id]
         else:
             pkt_ids = pkt_id
+
         for pkt_id in pkt_ids:
-            event_cbs.packet_funcs.setdefault(pkt_id, [])
-            event_cbs.packet_funcs[pkt_id].append(cb)
+            if is_bytes_packet(pkt_id):
+                raise Exception("你不能尝试使用 ListenPacket 监听二进制数据包")
+
+        for pkt_id in pkt_ids:
+            event_cbs.dict_packet_funcs.setdefault(pkt_id, [])
+            event_cbs.dict_packet_funcs[pkt_id].append(cb)
+
+    def ListenBytesPacket(
+        self, pkt_id: PacketIDS | list[PacketIDS], cb: "BytesPacketListener"
+    ):
+        """
+        监听二进制数据包的事件
+
+        Args:
+            pkt_id (PacketIDS): 数据包ID
+            cb ((BytesPacketListener) -> bool): 数据包监听回调, 返回 True 为拦截该数据包
+
+        Raises:
+            Exception: 尝试监听一个非二进制数据包
+        """
+        if isinstance(pkt_id, int):
+            pkt_ids = [pkt_id]
+        else:
+            pkt_ids = pkt_id
+
+        for pkt_id in pkt_ids:
+            if not is_bytes_packet(pkt_id):
+                raise Exception("你不能尝试使用 ListenBytesPacket 监听普通的字典数据包")
+
+        for pkt_id in pkt_ids:
+            event_cbs.bytes_packet_funcs.setdefault(pkt_id, [])
+            event_cbs.bytes_packet_funcs[pkt_id].append(cb)
 
     def ListenInternalBroadcast(
         self, broadcast_name: str, cb: Callable[[InternalBroadcast], None]

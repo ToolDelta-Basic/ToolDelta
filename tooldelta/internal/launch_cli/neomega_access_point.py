@@ -277,15 +277,20 @@ class FrameNeOmgAccessPoint(StandardFrame):
         Raises:
             ValueError: 未连接到接入点
         """
-        if self.omega is None or self.packet_handler is None:
+        if (
+            self.omega is None
+            or self.dict_packet_handler is None
+            or self.bytes_packet_handler is None
+        ):
             raise ValueError("未连接到接入点")
-        if type(pkt) == dict:
+
+        if type(pkt) is dict:
             packetType: int = self.omega.get_packet_name_to_id_mapping(pkt_type)  # type: ignore
-            self.packet_handler(packetType, pkt)
-            return
-        real_pkt = bytes_packet_by_name(pkt_type)
-        real_pkt.decode(pkt)  # type: ignore
-        self.packet_handler(real_pkt.real_packet_id(), real_pkt)
+            self.dict_packet_handler(packetType, pkt)
+        elif type(pkt) is bytes:
+            real_pkt = bytes_packet_by_name(pkt_type)
+            real_pkt.decode(pkt)
+            self.bytes_packet_handler(real_pkt.real_packet_id(), real_pkt)
 
     def check_avaliable(self):
         if self.status != SysStatus.RUNNING:
@@ -355,7 +360,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             pck (dict | BaseBytesPacket): 数据包内容dict
         """
         self.check_avaliable()
-        if type(pck) == dict:
+        if type(pck) is dict:
             self.omega.send_game_packet_in_json_as_is(pckID, pck)
         else:
             self.omega.send_game_packet_in_bytes(pckID, pck.encode())  # type: ignore

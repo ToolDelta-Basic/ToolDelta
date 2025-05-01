@@ -592,4 +592,5 @@ def hook_packet_handler(hdl: PacketHandler):
             if playername in player_waitmsg_cb.keys():
                 player_waitmsg_cb[playername](msg)
         return False
-    hdl.add_packet_listener(PacketIDS.IDText, handle_text_packet, 1)
+
+    hdl.add_dict_packet_listener(PacketIDS.IDText, handle_text_packet, 1)

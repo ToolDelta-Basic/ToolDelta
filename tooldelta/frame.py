@@ -239,7 +239,9 @@ class GameCtrl:
         self.linked_frame = frame
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
-        hdl.add_packet_listener(constants.PacketIDS.Text, self.handle_text_packet, -1)
+        hdl.add_dict_packet_listener(
+            constants.PacketIDS.Text, self.handle_text_packet, -1
+        )
 
     def hook_launcher(self, launcher: "LAUNCHERS"):
         self.launcher = launcher
@@ -249,15 +251,13 @@ class GameCtrl:
         self.sendPacket = launcher.sendPacket
         self.blobHashHolder = launcher.blobHashHolder
 
-    def handle_text_packet(self, pkt: dict | BaseBytesPacket):
+    def handle_text_packet(self, pkt: dict):
         """处理 文本 数据包
 
         Args:
             pkt (dict): 数据包内容
             plugin_grp (PluginGroup): 插件组对象
         """
-        if type(pkt) != dict:
-            raise Exception("handle_text_packet: Should Nerver happened.")
         msg: str = pkt["Message"]
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:

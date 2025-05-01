@@ -13,7 +13,10 @@ from ..exceptions import (
 
 if TYPE_CHECKING:
     from .plugin_cls import Plugin
-    from tooldelta.internal.packet_handler import PacketListener
+    from tooldelta.internal.packet_handler import (
+        DictPacketListener,
+        BytesPacketListener,
+    )
 
 T = TypeVar("T")
 PluginEvent = tuple["Plugin", T]
@@ -26,7 +29,8 @@ on_player_leave_cbs: list[PluginEvent[Callable[[Player], None]]] = []
 on_chat_cbs: list[PluginEvent[Callable[[Chat], None]]] = []
 on_frame_exit_cbs: list[PluginEvent[Callable[[FrameExit], None]]] = []
 on_reloaded_cbs: list[PluginEvent[Callable[[], None]]] = []
-packet_funcs: dict[PacketIDS, list["PacketListener"]] = {}
+dict_packet_funcs: dict[PacketIDS, list["DictPacketListener"]] = {}
+bytes_packet_funcs: dict[PacketIDS, list["BytesPacketListener"]] = {}
 broadcast_listener: dict[str, list[Callable[[InternalBroadcast], None]]] = {}
 
 
@@ -39,7 +43,8 @@ def reload():
     on_chat_cbs.clear()
     on_frame_exit_cbs.clear()
     on_reloaded_cbs.clear()
-    packet_funcs.clear()
+    dict_packet_funcs.clear()
+    bytes_packet_funcs.clear()
     broadcast_listener.clear()
 
 
@@ -161,19 +166,41 @@ def execute_reloaded(onerr: ON_ERROR_CB):
         onerr(name, err)
 
 
-def execute_packet_funcs(
-    pktID: PacketIDS, pkt: dict | BaseBytesPacket, onerr: ON_ERROR_CB
-) -> bool:
-    """处理数据包监听器
+def execute_dict_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -> bool:
+    """处理字典类型的数据包监听器
 
     Args:
         pktID (int): 数据包 ID
-        pkt (dict): 数据包
+        pkt (dict): 字典数据包
 
     Returns:
         bool: 是否处理成功
     """
-    d = packet_funcs.get(pktID)
+    d = dict_packet_funcs.get(pktID)
+    if d:
+        try:
+            for func in d:
+                res = func(pkt)
+                if res:
+                    return True
+        except Exception as err:
+            onerr("插件方法:" + func.__name__, err)
+    return False
+
+
+def execute_bytes_packet_funcs(
+    pktID: PacketIDS, pkt: BaseBytesPacket, onerr: ON_ERROR_CB
+) -> bool:
+    """处理二进制类型的数据包监听器
+
+    Args:
+        pktID (int): 数据包 ID
+        pkt (BaseBytesPacket): 二进制数据包
+
+    Returns:
+        bool: 是否处理成功
+    """
+    d = bytes_packet_funcs.get(pktID)
     if d:
         try:
             for func in d:

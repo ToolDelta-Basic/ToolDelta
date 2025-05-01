@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from .. import utils
 from ..utils import fmts
+from ..mc_bytes_packet.pool import is_bytes_packet
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_INJECTED_PLUGIN,
@@ -67,14 +68,27 @@ class PluginGroup:
         fmts.print_suc("重载插件已完成")
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
-        self.plugin_listen_packets = set(classic_plugin.packet_funcs.keys())
+        self.plugin_listen_packets = set(classic_plugin.dict_packet_funcs.keys()) | set(
+            classic_plugin.bytes_packet_funcs.keys()
+        )
         for pkID in self.plugin_listen_packets:
 
-            def any_pk_handler(pkt: dict | BaseBytesPacket, pkID=pkID):
-                return self.handle_packets(pkID, pkt, self.linked_frame.on_plugin_err)
+            def any_dict_pk_handler(pkt: dict, pkID=pkID):
+                return self.handle_dict_packets(
+                    pkID, pkt, self.linked_frame.on_plugin_err
+                )
 
-            hdl.add_packet_listener(pkID, any_pk_handler, 0)
-        hdl.add_packet_listener(PacketIDS.Text, self.handle_text_packet)
+            def any_bytes_pk_handler(pkt: BaseBytesPacket, pkID=pkID):
+                return self.handle_bytes_packets(
+                    pkID, pkt, self.linked_frame.on_plugin_err
+                )
+
+            if is_bytes_packet(pkID):
+                hdl.add_bytes_packet_listener(pkID, any_bytes_pk_handler, 0)
+            else:
+                hdl.add_dict_packet_listener(pkID, any_dict_pk_handler, 0)
+
+        hdl.add_dict_packet_listener(PacketIDS.Text, self.handle_text_packet)
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
         callback_list = []
@@ -121,7 +135,9 @@ class PluginGroup:
             fmts.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin_loader.read_plugins(self)
             # 主动读取类式插件监听的数据包
-            for i in classic_plugin.packet_funcs.keys():
+            for i in classic_plugin.dict_packet_funcs.keys():
+                self.__add_listen_packet_id(i)
+            for i in classic_plugin.bytes_packet_funcs.keys():
                 self.__add_listen_packet_id(i)
             # 主动读取类式插件监听的广播事件器
             self.broadcast_listeners.update(classic_plugin.broadcast_listener)
@@ -204,10 +220,10 @@ class PluginGroup:
         """
         classic_plugin.execute_reloaded(onerr)
 
-    def handle_packets(
-        self, pktID: PacketIDS, pkt: dict | BaseBytesPacket, onerr: ON_ERROR_CB
+    def handle_dict_packets(
+        self, pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB
     ) -> bool:
-        """处理数据包监听器
+        """处理字典型数据包的监听器
 
         Args:
             pktID (int): 数据包 ID
@@ -216,12 +232,25 @@ class PluginGroup:
         Returns:
             bool: 是否处理成功
         """
-        blocking = classic_plugin.execute_packet_funcs(pktID, pkt, onerr)
+        blocking = classic_plugin.execute_dict_packet_funcs(pktID, pkt, onerr)
         return blocking
 
-    def handle_text_packet(self, pkt: dict | BaseBytesPacket):
-        if type(pkt) != dict:
-            raise Exception("handle_text_packet: Should Nerver happened.")
+    def handle_bytes_packets(
+        self, pktID: PacketIDS, pkt: BaseBytesPacket, onerr: ON_ERROR_CB
+    ) -> bool:
+        """处理二进制数据包的监听器
+
+        Args:
+            pktID (int): 数据包 ID
+            pkt (BaseBytesPacket): 数据包
+
+        Returns:
+            bool: 是否处理成功
+        """
+        blocking = classic_plugin.execute_bytes_packet_funcs(pktID, pkt, onerr)
+        return blocking
+
+    def handle_text_packet(self, pkt: dict):
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:
                 if pkt["Message"] == "§e%multiplayer.player.joined":

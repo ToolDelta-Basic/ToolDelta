@@ -25,6 +25,7 @@ __cached_frame: "ToolDelta | None" = None
 
 PLUGIN_CLS = TypeVar("PLUGIN_CLS", bound=Plugin)
 
+
 # TODO: 会存储已删除的插件模块, 可能导致内存泄漏
 def plugin_entry(
     plugin_cls: type[PLUGIN_CLS],
@@ -94,7 +95,8 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
     if PLUGIN_PATH not in sys.path:
         sys.path.append(PLUGIN_PATH)
     event_cbs.broadcast_listener.clear()
-    event_cbs.packet_funcs.clear()
+    event_cbs.dict_packet_funcs.clear()
+    event_cbs.bytes_packet_funcs.clear()
     for plugin_dir in os.listdir(PLUGIN_PATH):
         if not plugin_is_enabled(plugin_dir):
             continue

@@ -103,7 +103,7 @@ class FrameEulogistLauncher(StandardFrame):
         """
         if not self.eulogist.connected:
             raise ValueError("还未连接到游戏")
-        self.packet_handler(pkt_type, pkt)
+        self.dict_packet_handler(pkt_type, pkt)
 
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30

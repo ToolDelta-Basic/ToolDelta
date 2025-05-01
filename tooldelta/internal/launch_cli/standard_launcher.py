@@ -20,7 +20,8 @@ class StandardFrame:
 
     def __init__(self) -> None:
         """实例化启动器框架"""
-        self.packet_handler = lambda pckType, pck: None
+        self.dict_packet_handler = lambda pckType, pck: None
+        self.bytes_packet_handler = lambda pckType, pck: None
         self.need_listen_packets: set[PacketIDS] = {
             PacketIDS.Text,
             PacketIDS.PlayerList,
@@ -44,7 +45,8 @@ class StandardFrame:
         } | listen_packets
 
     def set_packet_listener(self, handler: PacketHandler):
-        self.packet_handler = handler.entrance
+        self.dict_packet_handler = handler.entrance_dict_packet
+        self.bytes_packet_handler = handler.entrance_bytes_packet
         self.need_listen_packets |= handler.listen_packets
 
     def launch(self) -> None:

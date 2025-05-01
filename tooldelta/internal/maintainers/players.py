@@ -38,15 +38,15 @@ class PlayerInfoMaintainer:
     def hook_packet_handler(self, packet_handler: "PacketHandler"):
         # PlayerList 的优先级是最高的, 至少需要比 PluginGroup 高
         # 以在插件事件执行完成之前先行完善玩家信息
-        packet_handler.add_packet_listener(
+        packet_handler.add_dict_packet_listener(
             packet_id=PacketIDS.PlayerList, cb=self._hook_playerlist, priority=100
         )
-        packet_handler.add_packet_listener(
+        packet_handler.add_dict_packet_listener(
             packet_id=PacketIDS.UpdateAbilities,
             cb=self._hook_update_abilities,
             priority=100,
         )
-        packet_handler.add_packet_listener(
+        packet_handler.add_dict_packet_listener(
             packet_id=PacketIDS.AddPlayer,
             cb=self._hook_add_player,
             priority=100,
