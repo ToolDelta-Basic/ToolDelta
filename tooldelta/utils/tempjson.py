@@ -169,18 +169,14 @@ def load_and_read(
     Returns:
         Any: 该虚拟路径的 JSON
     """
-    try:
-        if path not in tempjson_paths.keys():
-            load_from_path(
-                path,
-                need_file_exists,
-                default() if callable(default) else default,
-                timeout,
-            )
-        return read(path)
-    except Exception as e:
-        e_new = type(e)(str(e))
-        raise e_new from None
+    if path not in tempjson_paths.keys():
+        load_from_path(
+            path,
+            need_file_exists,
+            default() if callable(default) else default,
+            timeout,
+        )
+    return read(path)
 
 
 def load_and_write(
