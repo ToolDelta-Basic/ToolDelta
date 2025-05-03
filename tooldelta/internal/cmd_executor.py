@@ -77,6 +77,8 @@ class ConsoleCmdManager:
                     self.frame.launcher.update_status(SysStatus.NORMAL_EXIT)
                     return
                 self.execute_cmd(rsp)
+            except (EOFError, KeyboardInterrupt):
+                fmts.print_war("命令执行被中止")
             except Exception:
                 fmts.print_err(f"控制台指令执行出现问题: {traceback.format_exc()}")
                 fmts.print_err("§6虽然出现了问题, 但是您仍然可以继续使用控制台菜单")
