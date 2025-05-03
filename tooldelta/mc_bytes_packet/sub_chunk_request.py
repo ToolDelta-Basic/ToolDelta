@@ -1,4 +1,5 @@
-import struct, numpy
+import struct
+
 from dataclasses import dataclass, field
 from io import BytesIO
 from tooldelta.constants.packets import PacketIDS

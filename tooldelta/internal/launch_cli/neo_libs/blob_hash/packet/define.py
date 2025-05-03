@@ -1,4 +1,6 @@
-import struct, numpy
+import struct
+import numpy
+
 from dataclasses import dataclass, field
 from io import BytesIO
 

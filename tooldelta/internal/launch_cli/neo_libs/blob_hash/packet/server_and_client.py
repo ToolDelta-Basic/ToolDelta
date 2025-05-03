@@ -1,4 +1,6 @@
-import struct, numpy
+import struct
+import numpy
+
 from dataclasses import dataclass, field
 from io import BytesIO
 from tooldelta.internal.launch_cli.neo_libs.blob_hash.packet.define import (
