@@ -1,7 +1,7 @@
 import ctypes
 import threading
 import traceback
-from typing import Any, TypeVar, TYPE_CHECKING
+from typing import Any, TypeVar, TYPE_CHECKING, Generic
 from collections.abc import Callable
 
 if TYPE_CHECKING:
@@ -11,14 +11,14 @@ if TYPE_CHECKING:
 from . import fmts
 
 VT = TypeVar("VT")
+CT = TypeVar("CT", bound=Callable)
 threads_list: list["ToolDeltaThread"] = []
 
 
 class ThreadExit(SystemExit):
     """线程退出"""
 
-
-class ToolDeltaThread(threading.Thread):
+class ToolDeltaThread(threading.Thread, Generic[CT]):
     "简化 ToolDelta 子线程创建的 threading.Thread 的子类"
 
     SYSTEM = 0
@@ -27,7 +27,7 @@ class ToolDeltaThread(threading.Thread):
 
     def __init__(
         self,
-        func: Callable,
+        func: CT,
         args: tuple = (),
         usage="",
         thread_level=PLUGIN,
