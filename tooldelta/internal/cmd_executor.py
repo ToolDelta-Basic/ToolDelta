@@ -46,7 +46,7 @@ class ConsoleCmdManager:
         """
         trig = CommandTrigger(triggers, arg_hint, usage, func)
         for trigger in triggers:
-            self.commands[trigger] = trig
+            self.commands[self.test_duplicate_trigger(trigger)] = trig
 
     def get_cmd_triggers(self):
         return list(self.commands.values())
@@ -62,6 +62,24 @@ class ConsoleCmdManager:
                 return True
         fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
         return False
+
+    def test_duplicate_trigger(self, trigger: str):
+        for exists_trigger in self.commands.keys():
+            counter = 0
+            invalid = False
+            origin_trigger = trigger
+            while 1:
+                if not (trigger.startswith(exists_trigger) or exists_trigger.startswith(trigger)):
+                    if invalid:
+                        fmts.print_war(
+                            f"命令 {origin_trigger} 与 {exists_trigger} 冲突, 已更改为 {trigger}"
+                        )
+                        return trigger
+                    break
+                invalid = True
+                counter += 1
+                trigger = f"{counter}-{trigger}"
+        return trigger
 
     @thread_func("控制台执行命令", ToolDeltaThread.SYSTEM)
     def command_readline_proc(self):
