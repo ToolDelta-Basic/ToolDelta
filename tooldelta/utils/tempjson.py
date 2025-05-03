@@ -7,6 +7,7 @@ from collections.abc import Callable
 from threading import Lock
 
 from .timer_events import timer_event
+from .safe_writer import safe_write
 
 tempjson_rw_lock = Lock()
 tempjson_paths: dict[str, "_jsonfile_status"] = {}
@@ -58,8 +59,9 @@ class _jsonfile_status:
 
     def save(self):
         if self.is_changed:
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(self.content, f, ensure_ascii=False)
+            safe_write(self.path, self.content)
+
+
 
 
 def load_from_path(

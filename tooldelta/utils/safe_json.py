@@ -4,21 +4,16 @@ from typing import Any
 from io import TextIOWrapper
 
 from ..constants import TOOLDELTA_PLUGIN_DATA_DIR
+from .safe_writer import safe_write
 
-
-def safe_json_dump(obj: Any, fp: TextIOWrapper | str, indent=2) -> None:
+def safe_json_dump(obj: Any, filepath: str, indent=2) -> None:
     """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
 
     Args:
         obj (str | dict | list): JSON 对象
         fp (Any): open(...) 打开的文件读写口 或 文件路径
     """
-    if isinstance(fp, str):
-        with open(fp, "w", encoding="utf-8") as file:
-            file.write(json.dumps(obj, indent=indent, ensure_ascii=False))
-    else:
-        with fp:
-            fp.write(json.dumps(obj, indent=indent, ensure_ascii=False))
+    safe_write(filepath, obj, indent=indent)
 
 
 def safe_json_load(fp: TextIOWrapper | str) -> Any:
@@ -62,8 +57,7 @@ def read_from_plugin(plugin_name: str, file: str, default: dict | None = None) -
     os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name), exist_ok=True)
     try:
         if default is not None and not os.path.isfile(filepath):
-            with open(filepath, "w") as f:
-                safe_json_dump(default, f)
+            safe_json_dump(default, filepath)
             return default
         with open(filepath, encoding="utf-8") as f:
             res = safe_json_load(f)
@@ -82,7 +76,4 @@ def write_to_plugin(plugin_name: str, file: str, obj: Any, indent=4) -> None:
         obj (str | dict[Any, Any] | list[Any]): JSON 对象
     """
     os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
-    with open(
-        f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", "w", encoding="utf-8"
-    ) as f:
-        safe_json_dump(obj, f, indent=indent)
+    safe_json_dump(obj, f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", indent=indent)
