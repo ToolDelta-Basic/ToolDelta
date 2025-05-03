@@ -35,6 +35,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         super().__init__()
         self.status = SysStatus.LOADING
+        self.launch_event = threading.Event()
         self.neomg_proc = None
         self.serverNumber = None
         self.neomega_account_opt = None
@@ -173,12 +174,17 @@ class FrameNeOmgAccessPoint(StandardFrame):
             raise ValueError("接入点进程未启动")
         while True:
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
+            if "成功完成网易要求的零知识机器人身份证明" in msg_orig:
+                self.launch_event.set()
             if msg_orig in ("", "SIGNAL: exit"):
                 fmts.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
             fmts.print_with_info(msg_orig, "§b NOMG ")
+
+    def wait_launched(self) -> None:
+        self.launch_event.wait()
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
@@ -205,7 +211,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
         if (err_str := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")) == "":
-            self.update_status(SysStatus.RUNNING)
             self.start_wait_omega_disconn_thread()
             fmts.print_suc("接入点框架通信网络连接成功")
             pcks = [
@@ -213,10 +218,12 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 for i in self.need_listen_packets
             ]
             self.omega.listen_packets(pcks, self.packet_handler_parent)
+            fmts.print_inf("等待接入点完成零知识证明..")
+            self.wait_launched()
+            self.update_status(SysStatus.RUNNING)
             self._exec_launched_listen_cbs()
         else:
             return SystemError(err_str)
-        self.update_status(SysStatus.RUNNING)
         self.wait_crashed()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
