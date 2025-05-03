@@ -10,7 +10,6 @@ from tooldelta.utils import fmts
 from tooldelta.constants import (
     PLUGIN_TYPE_MAPPING,
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
 )
 
@@ -69,7 +68,6 @@ class PluginRegData:
             str(TOOLDELTA_PLUGIN_DIR),
             {
                 "classic": TOOLDELTA_CLASSIC_PLUGIN,
-                "injected": TOOLDELTA_INJECTED_PLUGIN,
             }[self.plugin_type],
             self.name,
         )
@@ -105,7 +103,6 @@ class PluginRegData:
         """
         return {
             "classic": "主类式",
-            "injected": "注入式",
             "unknown": "未知类型",
         }.get(self.plugin_type, "未知类型")
 

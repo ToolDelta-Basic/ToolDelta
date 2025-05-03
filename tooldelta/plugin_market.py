@@ -10,7 +10,6 @@ import json
 from .utils import cfg, fmts
 from .constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_CFG_DIR,
     TOOLDELTA_PLUGIN_DATA_DIR,
     PLUGIN_MARKET_SOURCE_OFFICIAL,
@@ -256,7 +255,7 @@ class PluginMarket:
             else:
                 plugin_id = show_name
                 plugin_name = plugin_ids_map[plugin_id]
-                plugin_type = {"classic": "类式", "injected": "注入式"}.get(
+                plugin_type = {"classic": "类式"}.get(
                     description.get("plugin-type", "unknown"),
                     description.get("plugin-type", "unknown"),
                 )
@@ -506,10 +505,6 @@ class PluginMarket:
             match this_plugin_info.plugin_type:
                 case "classic":
                     plugintype_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
-                case "injected":
-                    plugintype_path = os.path.join(
-                        "插件文件", TOOLDELTA_INJECTED_PLUGIN
-                    )
                 case _:
                     raise ValueError(
                         f"未知插件类型：{this_plugin_info.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"

@@ -10,7 +10,6 @@ from ..utils import fmts
 from ..mc_bytes_packet.pool import is_bytes_packet
 from ..constants import (
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
     SysStatus,
 )
@@ -127,7 +126,7 @@ class PluginGroup:
         if self.linked_frame is None or self.linked_frame.on_plugin_err is None:
             raise ValueError("无法读取插件，请确保系统已初始化")
         for fdir in os.listdir(TOOLDELTA_PLUGIN_DIR):
-            if fdir not in (TOOLDELTA_CLASSIC_PLUGIN, TOOLDELTA_INJECTED_PLUGIN):
+            if fdir not in (TOOLDELTA_CLASSIC_PLUGIN,):
                 auto_move_plugin_dir(fdir)
         self.loaded_plugin_ids = []
         self.normal_plugin_loaded_num = 0
@@ -141,7 +140,6 @@ class PluginGroup:
                 self.__add_listen_packet_id(i)
             # 主动读取类式插件监听的广播事件器
             self.broadcast_listeners.update(classic_plugin.broadcast_listener)
-            # 因为注入式插件自带一个handler, 所以不用再注入方法
             fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_preload(self.linked_frame.on_plugin_err)
             fmts.print_suc(

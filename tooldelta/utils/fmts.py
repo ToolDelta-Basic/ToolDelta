@@ -232,7 +232,7 @@ def print_err(text: str, **print_kwargs) -> None:
 
 
 def print_inf(text: str, **print_kwargs) -> None:
-    """输出 INDO 信息
+    """输出 INFO 信息
 
     Args:
         text (str): 输出的文本

@@ -11,7 +11,6 @@ from .utils import fmts
 from .constants import (
     PLUGIN_TYPE_MAPPING,
     TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_INJECTED_PLUGIN,
     TOOLDELTA_PLUGIN_DIR,
 )
 from .plugin_load import PluginRegData
@@ -78,7 +77,6 @@ class PluginManager:
         )
         f_dirname = {
             "classic": TOOLDELTA_CLASSIC_PLUGIN,
-            "injected": TOOLDELTA_INJECTED_PLUGIN,
         }[plugin.plugin_type]
 
         choice = input(fmts.clean_fmt("§f请选择选项: "))
@@ -370,7 +368,7 @@ class PluginManager:
         Returns:
             str: 插件图标
         """
-        ico_colors = {"classic": "§b", "injected": "§d"}
+        ico_colors = {"classic": "§b"}
         return (
             ico_colors.get(plugin.plugin_type, "§7")
             + "■ "
