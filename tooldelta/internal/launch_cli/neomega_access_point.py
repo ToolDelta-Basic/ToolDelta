@@ -175,7 +175,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             raise ValueError("接入点进程未启动")
         while True:
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
-            if "成功完成网易要求的零知识机器人身份证明" in msg_orig:
+            if "就绪" in msg_orig:
                 self.launch_event.set()
             if msg_orig in ("", "SIGNAL: exit"):
                 fmts.print_with_info("接入点进程已结束", "§b NOMG ")
@@ -202,7 +202,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
         self.start_wait_omega_disconn_thread()
-        fmts.print_inf("等待接入点完成零知识证明..")
+        fmts.print_inf("等待接入点就绪..")
         self._wait_launched()
         self.omega = omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
