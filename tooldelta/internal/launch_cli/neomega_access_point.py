@@ -35,7 +35,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         super().__init__()
         self.status = SysStatus.LOADING
-        self.launch_event = threading.Event()
         self.neomg_proc = None
         self.serverNumber = None
         self.neomega_account_opt = None
@@ -168,24 +167,21 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
         return free_port
 
-    @utils.thread_func("显示来自 NeOmega接入点 的信息", thread_level=utils.ToolDeltaThread.SYSTEM)
-    def _msg_show_thread(self) -> None:
+    @utils.thread_func("NeOmega 信息显示线程", thread_level=utils.ToolDeltaThread.SYSTEM)
+    def _msg_show_thread(self, launch_event: threading.Event) -> None:
         """显示来自 NeOmega 的信息"""
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
             raise ValueError("接入点进程未启动")
         while True:
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
-            if "就绪" in msg_orig:
-                self.launch_event.set()
+            if "成功完成网易要求的零知识机器人身份证明" in msg_orig:
+                launch_event.set()
             if msg_orig in ("", "SIGNAL: exit"):
                 fmts.print_with_info("接入点进程已结束", "§b NOMG ")
                 if self.status == SysStatus.LAUNCHING:
                     self.update_status(SysStatus.CRASHED_EXIT)
                 break
             fmts.print_with_info(msg_orig, "§b NOMG ")
-
-    def _wait_launched(self) -> None:
-        self.launch_event.wait()
 
     def launch(self) -> SystemExit | Exception | SystemError:
         """启动 NeOmega 进程
@@ -197,29 +193,31 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.status = SysStatus.LAUNCHING
         self.exit_event = threading.Event()
-        openat_port = self.start_neomega_proc()
-        self._msg_show_thread()
-        if self.status != SysStatus.LAUNCHING:
-            return SystemError("接入点无法连接到服务器")
-        self.start_wait_omega_disconn_thread()
-        fmts.print_inf("等待接入点就绪..")
-        self._wait_launched()
-        self.omega = omega = neo_conn.ThreadOmega(
+        self.omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:24013",
             accountOption=self.neomega_account_opt,
         )
-        if err := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}"):
-            raise SystemError(err)
-        pkIDs = [
-            self.omega.get_packet_id_to_name_mapping(i)
-            for i in self.need_listen_packets
-        ]
-        omega.listen_packets(pkIDs, self.packet_handler_parent)
         self.blob_hash_holder = BlobHashHolder(self.omega)
-        fmts.print_suc("接入点框架通信网络连接成功")
+        openat_port = self.start_neomega_proc()
+        launch_event = threading.Event()
+        self._msg_show_thread(launch_event)
+        if self.status != SysStatus.LAUNCHING:
+            return SystemError("接入点无法连接到服务器")
+        if (err_str := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")) == "":
+            self.update_status(SysStatus.RUNNING)
+            self.start_wait_omega_disconn_thread()
+            launch_event.wait()
+            fmts.print_suc("接入点框架通信网络连接成功")
+            pcks = [
+                self.omega.get_packet_id_to_name_mapping(i)
+                for i in self.need_listen_packets
+            ]
+            self.omega.listen_packets(pcks, self.packet_handler_parent)
+            self._exec_launched_listen_cbs()
+        else:
+            return SystemError(err_str)
         self.update_status(SysStatus.RUNNING)
-        self._exec_launched_listen_cbs()
         self.wait_crashed()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
