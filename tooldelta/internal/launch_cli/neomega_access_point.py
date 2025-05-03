@@ -168,6 +168,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
         return free_port
 
+    @utils.thread_func("显示来自 NeOmega接入点 的信息", thread_level=utils.ToolDeltaThread.SYSTEM)
     def _msg_show_thread(self) -> None:
         """显示来自 NeOmega 的信息"""
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
@@ -183,7 +184,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                 break
             fmts.print_with_info(msg_orig, "§b NOMG ")
 
-    def wait_launched(self) -> None:
+    def _wait_launched(self) -> None:
         self.launch_event.wait()
 
     def launch(self) -> SystemExit | Exception | SystemError:
@@ -196,34 +197,29 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.status = SysStatus.LAUNCHING
         self.exit_event = threading.Event()
-        self.omega = neo_conn.ThreadOmega(
+        openat_port = self.start_neomega_proc()
+        self._msg_show_thread()
+        if self.status != SysStatus.LAUNCHING:
+            return SystemError("接入点无法连接到服务器")
+        self.start_wait_omega_disconn_thread()
+        fmts.print_inf("等待接入点完成零知识证明..")
+        self._wait_launched()
+        self.omega = omega = neo_conn.ThreadOmega(
             connect_type=neo_conn.ConnectType.Remote,
             address="tcp://localhost:24013",
             accountOption=self.neomega_account_opt,
         )
+        if err := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}"):
+            raise SystemError(err)
+        pkIDs = [
+            self.omega.get_packet_id_to_name_mapping(i)
+            for i in self.need_listen_packets
+        ]
+        omega.listen_packets(pkIDs, self.packet_handler_parent)
         self.blob_hash_holder = BlobHashHolder(self.omega)
-        openat_port = self.start_neomega_proc()
-        utils.createThread(
-            self._msg_show_thread,
-            usage="显示来自 NeOmega接入点 的信息",
-            thread_level=utils.ToolDeltaThread.SYSTEM,
-        )
-        if self.status != SysStatus.LAUNCHING:
-            return SystemError("接入点无法连接到服务器")
-        if (err_str := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")) == "":
-            self.start_wait_omega_disconn_thread()
-            fmts.print_suc("接入点框架通信网络连接成功")
-            pcks = [
-                self.omega.get_packet_id_to_name_mapping(i)
-                for i in self.need_listen_packets
-            ]
-            self.omega.listen_packets(pcks, self.packet_handler_parent)
-            fmts.print_inf("等待接入点完成零知识证明..")
-            self.wait_launched()
-            self.update_status(SysStatus.RUNNING)
-            self._exec_launched_listen_cbs()
-        else:
-            return SystemError(err_str)
+        fmts.print_suc("接入点框架通信网络连接成功")
+        self.update_status(SysStatus.RUNNING)
+        self._exec_launched_listen_cbs()
         self.wait_crashed()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
