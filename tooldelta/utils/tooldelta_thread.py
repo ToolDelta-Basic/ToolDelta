@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 if TYPE_CHECKING:
     from typing import ParamSpec
+
     PT = ParamSpec("PT")
 
 from . import fmts
@@ -17,6 +18,7 @@ threads_list: list["ToolDeltaThread"] = []
 
 class ThreadExit(SystemExit):
     """线程退出"""
+
 
 class ToolDeltaThread(threading.Thread, Generic[CT]):
     "简化 ToolDelta 子线程创建的 threading.Thread 的子类"
@@ -117,8 +119,10 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(func: "Callable[PT, Any]") -> "Callable[PT, ToolDeltaThread]":
-        def thread_fun(*args: Any, **kwargs) -> ToolDeltaThread:
+    def _recv_func(
+        func: "Callable[PT, Any]",
+    ) -> "Callable[PT, ToolDeltaThread[Callable[PT, None]]]":
+        def thread_fun(*args: Any, **kwargs):
             return ToolDeltaThread(
                 func,
                 usage=usage,
