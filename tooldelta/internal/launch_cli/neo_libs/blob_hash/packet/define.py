@@ -23,18 +23,20 @@ class HashWithPosition:
     dimension: int = 0
 
     def encode(self, writer: BytesIO):
-        writer.write(struct.pack("<Q", self.hash))
-        writer.write(struct.pack("<i", self.sub_chunk_pos.x))
-        writer.write(struct.pack("<i", self.sub_chunk_pos.y))
-        writer.write(struct.pack("<i", self.sub_chunk_pos.z))
+        writer.write(
+            struct.pack(
+                "<Qiii",
+                self.hash,
+                self.sub_chunk_pos.x,
+                self.sub_chunk_pos.y,
+                self.sub_chunk_pos.z,
+            )
+        )
         writer.write(self.dimension.to_bytes(length=1, byteorder="little"))
 
 
 def decode_hash_with_position(reader: BytesIO) -> HashWithPosition:
-    hash = struct.unpack("<Q", reader.read(8))[0]
-    x = struct.unpack("<i", reader.read(4))[0]
-    y = struct.unpack("<i", reader.read(4))[0]
-    z = struct.unpack("<i", reader.read(4))[0]
+    hash, x, y, z = struct.unpack("<Qiii", reader.read(20))
     dimension = reader.read(1)[0]
     return HashWithPosition(hash, SubChunkPos(x, y, z), dimension)
 

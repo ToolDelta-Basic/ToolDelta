@@ -28,7 +28,6 @@ class LevelChunk(BaseBytesPacket):
     def decode(self, bs: bytes):
         reader = BytesIO(bs)
         self.Dimension = reader.read(1)[0]
-        self.ChunkPosX = struct.unpack("<i", reader.read(4))[0]
-        self.ChunkPosZ = struct.unpack("<i", reader.read(4))[0]
+        self.ChunkPosX, self.ChunkPosZ = struct.unpack("<ii", reader.read(8))
         self.HighestSubChunkIndex = reader.read(1)[0]
         self.CacheEnabled = bool(reader.read(1)[0])

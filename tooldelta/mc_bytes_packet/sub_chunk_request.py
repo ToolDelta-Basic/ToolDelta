@@ -25,14 +25,17 @@ class SubChunkRequest(BaseBytesPacket):
     def encode(self) -> bytes:
         writer = BytesIO()
         writer.write(self.Dimension.to_bytes(length=1, byteorder="little"))
-        writer.write(struct.pack("<i", self.SubChunkPosX))
-        writer.write(struct.pack("<h", self.SubChunkPosY))
-        writer.write(struct.pack("<i", self.SubChunkPosZ))
-        writer.write(struct.pack("<H", len(self.Offsets)))
+        writer.write(
+            struct.pack(
+                "<ihiH",
+                self.SubChunkPosX,
+                self.SubChunkPosY,
+                self.SubChunkPosZ,
+                len(self.Offsets),
+            )
+        )
         for i in self.Offsets:
-            writer.write(struct.pack("<b", i[0]))
-            writer.write(struct.pack("<b", i[1]))
-            writer.write(struct.pack("<b", i[2]))
+            writer.write(struct.pack("<bbb", i[0], i[1], i[2]))
         return writer.getvalue()
 
     def decode(self, bs: bytes):
