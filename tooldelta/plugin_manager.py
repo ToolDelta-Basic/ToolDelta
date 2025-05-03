@@ -355,7 +355,7 @@ class PluginManager:
         old_dat.update(plugin_data.dump())
         safe_json_dump(
             old_dat,
-            open(os.path.join(f_dir, "datas.json"), "w", encoding="utf-8"),
+            os.path.join(f_dir, "datas.json"),
         )
 
     @staticmethod
