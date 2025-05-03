@@ -27,7 +27,7 @@ class HashWithPosition:
         writer.write(struct.pack("<i", self.sub_chunk_pos.x))
         writer.write(struct.pack("<i", self.sub_chunk_pos.y))
         writer.write(struct.pack("<i", self.sub_chunk_pos.z))
-        writer.write(self.dimension.to_bytes())
+        writer.write(self.dimension.to_bytes(1))
 
 
 def decode_hash_with_position(reader: BytesIO) -> HashWithPosition:
