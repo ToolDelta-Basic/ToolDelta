@@ -428,4 +428,7 @@ class GameCtrl:
 
     @property
     def players(self):
+        """
+        获取玩家信息存储 (PlayerInfoMaintainer)
+        """
         return self.linked_frame.get_players()
