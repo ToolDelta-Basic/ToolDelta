@@ -73,7 +73,7 @@ class PlayerInfoMaintainer:
         Returns:
             Player: 玩家对象
         """
-        bot_inf = self.name_to_player.get(self.frame.launcher.bot_name)
+        bot_inf = self.name_to_player.get(self.frame.game_ctrl.bot_name)
         if bot_inf is None:
             raise ValueError("无法获取机器人信息")
         return bot_inf
