@@ -249,7 +249,9 @@ class GameCtrl:
         self.sendwscmd = launcher.sendwscmd
         self.sendwocmd = launcher.sendwocmd
         self.sendPacket = launcher.sendPacket
-        self.blobHashHolder = launcher.blobHashHolder
+        # TODO: pretty this code because it is not a good interface
+        if hasattr(launcher, "blobHashHolder"):
+            self.blobHashHolder = launcher.blobHashHolder
 
     def handle_text_packet(self, pkt: dict):
         """处理 文本 数据包
@@ -445,10 +447,17 @@ class GameCtrl:
         """
         return self.linked_frame.get_players()
 
+    # TODO: pretty this code because it is not a good interface
+    # 这个方法需要得到修改, 因为它不是一个通用接口
     def blob_hash_holder(self) -> BlobHashHolder:
-        """blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人
+        """
+        blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人。
+        请确保当前的启动模式为 NeOmega 系启动器。
 
         Returns:
             BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
         """
+        blobHashHolder: BlobHashHolder | None = getattr(self, "blobHashHolder", None)
+        if blobHashHolder is None:
+            raise ValueError("仅 NeOmega 系框架可使用 BlobHashHolder 功能")
         return self.blobHashHolder()
