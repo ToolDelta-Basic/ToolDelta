@@ -425,3 +425,7 @@ class GameCtrl:
         if self.game_texts_data is None:
             raise ValueError("游戏翻译器字符串数据不可用")
         return self.game_texts_data
+
+    @property
+    def players(self):
+        return self.linked_frame.get_players()
