@@ -245,3 +245,7 @@ class PlayerInfoMaintainer:
         player.runtime_id = packet["EntityRuntimeID"]
         player.device_id = packet["DeviceID"]
         update_player_ability_from_ability_data(self, player, packet["AbilityData"])
+
+    def __iter__(self):
+        "iter online players"
+        return iter(self.getAllPlayers())
