@@ -355,22 +355,34 @@ class GameCtrl:
         raise ValueError("此启动器框架无法产生机器人名")
 
     def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
+        """
+        发送普通指令并获取返回。
+
+        Args:
+            cmd (str): Minecraft 指令
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+
+        Returns:
+            Packet_CommandOutput: 指令返回类
+        """
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 
     def sendwscmd_with_resp(
         self, cmd: str, timeout: float = 30
     ) -> Packet_CommandOutput:
-        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
-        return resp
+        """
+        发送 WebSocket 指令并获取返回。
 
-    def blob_hash_holder(self) -> BlobHashHolder:
-        """blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人
+        Args:
+            cmd (str): MC WebSocket 指令
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
 
         Returns:
-            BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
+            Packet_CommandOutput: 指令返回类
         """
-        return self.blobHashHolder()
+        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
+        return resp
 
     def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息
@@ -432,3 +444,11 @@ class GameCtrl:
         获取玩家信息存储 (PlayerInfoMaintainer)
         """
         return self.linked_frame.get_players()
+
+    def blob_hash_holder(self) -> BlobHashHolder:
+        """blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人
+
+        Returns:
+            BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
+        """
+        return self.blobHashHolder()
