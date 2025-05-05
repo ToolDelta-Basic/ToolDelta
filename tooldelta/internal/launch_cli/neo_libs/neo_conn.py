@@ -10,7 +10,7 @@ from typing import Any, ClassVar, Optional
 
 import json
 
-from ....utils import fmts, ToolDeltaThread
+from ....utils import fmts, thread_func, ToolDeltaThread
 from ....packets import Packet_CommandOutput
 
 CInt = ctypes.c_int
@@ -608,12 +608,9 @@ class ThreadOmega:
         )
 
         # start routine
-        return ToolDeltaThread(
-            self._react,
-            usage="接入点反应核心",
-            thread_level=ToolDeltaThread.SYSTEM,
-        )
+        return self._react()
 
+    @thread_func("接入点反应核心", ToolDeltaThread.SYSTEM)
     def _react(self):
         while True:
             eventType, retriever = EventPoll()
@@ -685,6 +682,7 @@ class ThreadOmega:
                     listener,
                     (bs,),
                     usage="Soft (JSON) Listen Callback Thread",
+                    thread_level=ToolDeltaThread.SYSTEM,
                 )
         else:
             json_dict = json.loads(bs.decode(encoding="utf-8"))
@@ -693,6 +691,7 @@ class ThreadOmega:
                     listener,
                     (json_dict,),
                     usage="Soft (Bytes) Listen Callback Thread",
+                    thread_level=ToolDeltaThread.SYSTEM,
                 )
 
     def _handle_soft_api_call(self, retriever: str):
@@ -735,6 +734,7 @@ class ThreadOmega:
                 wrapper,
                 (bs, resp_id),
                 usage="Finish Soft Call (Bytes) Thread",
+                thread_level=ToolDeltaThread.SYSTEM,
             )
         else:
             json_represents = json.loads(bs.decode(encoding="utf-8"))
@@ -742,6 +742,7 @@ class ThreadOmega:
                 wrapper,
                 (json_represents, resp_id),
                 usage="Finish Soft Call (JSON) Thread",
+                thread_level=ToolDeltaThread.SYSTEM,
             )
 
     def _handle_mc_packet(self, packetTypeName):
@@ -755,7 +756,7 @@ class ThreadOmega:
             jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
             for listener in listeners:
                 ToolDeltaThread(
-                    listener, (packetTypeName, jsonPkt), usage="Packet Callback Thread"
+                    listener, (packetTypeName, jsonPkt), usage="Packet Callback Thread", thread_level=ToolDeltaThread.SYSTEM,
                 )
 
         else:
@@ -775,6 +776,7 @@ class ThreadOmega:
                     listener,
                     (customPacketTypeName, bs),
                     usage="Packet Bytes Callback Thread",
+                    thread_level=ToolDeltaThread.SYSTEM,
                 )
 
     def _handle_player_change(self, playerUUID):
