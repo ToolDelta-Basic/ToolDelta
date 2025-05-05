@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar, Any
 from collections.abc import Callable
 
@@ -46,13 +47,13 @@ class Plugin:
         self.game_ctrl = frame.get_game_control()
 
     @property
-    def data_path(self) -> str:
+    def data_path(self) -> Path:
         "该插件的数据文件夹路径 (调用时直接创建数据文件夹)"
         path = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name)
         if not self.__path_created__:
             os.makedirs(path, exist_ok=True)
             self.__path_created__ = True
-        return path
+        return Path(path)
 
     def make_data_path(self):
         os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
