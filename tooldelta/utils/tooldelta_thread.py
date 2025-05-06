@@ -1,15 +1,13 @@
 import ctypes
 import threading
 import traceback
-from typing import Any, TypeVar, TYPE_CHECKING, Generic
+from typing import Any, TypeVar, ParamSpec, Generic
 from collections.abc import Callable
-
-if TYPE_CHECKING:
-    from typing import ParamSpec
-
-    PT = ParamSpec("PT")
-
 from . import fmts
+
+
+PT = ParamSpec("PT")
+
 
 VT = TypeVar("VT")
 RT = TypeVar("RT")
@@ -113,12 +111,11 @@ class ToolDeltaThread(threading.Thread, Generic[PT, RT]):
         self._stop_event.wait()
         if self._ret_exc:
             raise self._ret_exc
-        return self._ret # type: ignore
+        return self._ret  # type: ignore
 
     def block_get_result_with_timeout(self, timeout: float) -> RT | None:
         self._stop_event.wait(timeout)
         return self._ret
-
 
 
 createThread = ToolDeltaThread
