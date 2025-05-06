@@ -131,6 +131,9 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
                 **kwargs,
             )
 
+        thread_fun._orig = func
+        thread_fun._usage = usage
+
         return thread_fun
 
     return _recv_func
