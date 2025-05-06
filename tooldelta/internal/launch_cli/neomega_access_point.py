@@ -204,10 +204,12 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self._msg_show_thread(launch_event)
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
+        fmts.print_inf("等待接入点就绪..")
+        launch_event.wait()
+        fmts.print_suc("接入点已就绪")
         if (err_str := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")) == "":
             self.update_status(SysStatus.RUNNING)
             self.start_wait_omega_disconn_thread()
-            launch_event.wait()
             fmts.print_suc("接入点框架通信网络连接成功")
             pcks = [
                 self.omega.get_packet_id_to_name_mapping(i)
