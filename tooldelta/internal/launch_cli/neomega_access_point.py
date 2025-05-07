@@ -205,7 +205,10 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
         fmts.print_inf("等待接入点就绪..")
-        launch_event.wait()
+        while not launch_event.wait(timeout = 1):
+            if self.exit_event.is_set():
+                return SystemError("NeOmage 启动出现问题.")
+            pass
         fmts.print_suc("接入点已就绪")
         if (err_str := self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")) == "":
             self.update_status(SysStatus.RUNNING)

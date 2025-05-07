@@ -208,7 +208,10 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             usage="处理来自 NeOmega启动器 的信息",
             thread_level=utils.ToolDeltaThread.SYSTEM,
         )
-        self.launch_event.wait()
+        while not self.launch_event.wait(timeout = 1):
+            if self.exit_event.is_set():
+                raise SystemError("NeOmage 启动出现问题.")
+            pass
         self.set_omega_conn(f"tcp://127.0.0.1:{openat_port}")
         self.update_status(SysStatus.RUNNING)
         self.start_wait_omega_disconn_thread()
