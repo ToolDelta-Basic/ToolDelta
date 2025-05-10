@@ -1,5 +1,6 @@
-import json
 import uuid
+import base64
+import msgpack
 import threading
 import traceback
 from collections.abc import Callable
@@ -90,7 +91,7 @@ class Eulogist:
         self.launch_event.set()
 
     def on_msg(self, ws: WebSocket, msg_raw: str):
-        msgdata = json.loads(msg_raw)
+        msgdata = msgpack.unpackb(msg_raw)
         self.handler(Message(msgdata["type"], msgdata["content"]))
 
     def on_clos(self, ws: WebSocket, _, _2):
@@ -111,13 +112,15 @@ class Eulogist:
         self.send(Message(MessageType.CMD_SET_CLIENT_BLOCK_PKTS, {"PacketsID": pkIDs}))
 
     def sendPacket(self, pkID: int, pk: dict):
+        pk_bytes: Any = msgpack.packb(pk)
         self.send(
-            Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": json.dumps(pk)})
+            Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": base64.b64encode(pk_bytes)})
         )
 
     def sendClientPacket(self, pkID: int, pk: dict):
+        pk_bytes: Any = msgpack.packb(pk)
         self.send(
-            Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": json.dumps(pk)})
+            Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": base64.b64encode(pk_bytes)})
         )
 
     def sendcmd(self, cmd: str):
@@ -162,7 +165,7 @@ class Eulogist:
         self, cmd: str, timeout: float = 5
     ) -> Packet_CommandOutput | None:
         ud = self.sendcmd(cmd)
-        getter, setter = utils.create_result_cb()
+        getter, setter = utils.create_result_cb(dict)
         self.command_cbs[ud] = setter
         res = getter(timeout)
         del self.command_cbs[ud]
@@ -175,7 +178,7 @@ class Eulogist:
         self, cmd: str, timeout: float = 5
     ) -> Packet_CommandOutput | None:
         ud = self.sendwscmd(cmd)
-        getter, setter = utils.create_result_cb()
+        getter, setter = utils.create_result_cb(dict)
         self.command_cbs[ud] = setter
         res = getter(timeout)
         del self.command_cbs[ud]
@@ -225,4 +228,4 @@ class Eulogist:
             fmts.print_err(traceback.format_exc())
 
     def send(self, msg: Message):
-        self.conn.send(json.dumps(msg.dumps(), ensure_ascii=False))
+        self.conn.send(msgpack.packb(msg.dumps())) # type: ignore
