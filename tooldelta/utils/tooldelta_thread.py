@@ -54,6 +54,9 @@ class ToolDeltaThread(threading.Thread, Generic[PT, RT]):
         self._stop_event = threading.Event()
         self.start()
 
+    def __bool__(self) -> bool:
+        return True
+
     def run(self) -> None:
         """线程运行方法"""
         threads_list.append(self)

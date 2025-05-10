@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, TypeVar
 from collections.abc import Callable
 
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
-from ...utils import fmts, ToolDeltaThread
+from ...utils import fmts
 from ...constants import PacketIDS
 from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..basic import ON_ERROR_CB
@@ -180,9 +180,8 @@ def execute_dict_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -
     if d:
         try:
             for func in d:
-                res = func(pkt)
-                if res and (not isinstance(res, ToolDeltaThread)):
-                    return True
+                if res := func(pkt) is True:
+                    return res
         except Exception as err:
             onerr("插件方法:" + func.__name__, err)
     return False
@@ -204,9 +203,8 @@ def execute_bytes_packet_funcs(
     if d:
         try:
             for func in d:
-                res = func(pkt)
-                if res:
-                    return True
+                if res := func(pkt) is True:
+                    return res
         except Exception as err:
             onerr("插件方法:" + func.__name__, err)
     return False
