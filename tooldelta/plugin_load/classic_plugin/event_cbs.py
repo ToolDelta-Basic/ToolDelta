@@ -180,9 +180,8 @@ def execute_dict_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -
     if d:
         try:
             for func in d:
-                res = func(pkt)
-                if res:
-                    return True
+                if res := func(pkt) is True:
+                    return res
         except Exception as err:
             onerr("插件方法:" + func.__name__, err)
     return False
@@ -204,9 +203,8 @@ def execute_bytes_packet_funcs(
     if d:
         try:
             for func in d:
-                res = func(pkt)
-                if res is True:
-                    return True
+                if res := func(pkt) is True:
+                    return res
         except Exception as err:
             onerr("插件方法:" + func.__name__, err)
     return False

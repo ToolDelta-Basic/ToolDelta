@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 from collections.abc import Callable
 
 from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
@@ -14,9 +14,12 @@ INTERNAL_LISTEN_PACKETS: set[PacketIDS] = {
     PacketIDS.UpdateAbilities,
 }
 
-DictPacketListener = Callable[[dict], bool]
-BytesPacketListener = Callable[[BaseBytesPacket], bool]
+class Booleanable(Protocol):
+    def __bool__(self) -> bool:
+        return bool(self)
 
+DictPacketListener = Callable[[dict], Booleanable]
+BytesPacketListener = Callable[[BaseBytesPacket], Booleanable]
 
 class PacketHandler:
     def __init__(self, frame: "ToolDelta"):
