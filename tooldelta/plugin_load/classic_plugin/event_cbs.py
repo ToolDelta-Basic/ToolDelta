@@ -205,7 +205,7 @@ def execute_bytes_packet_funcs(
         try:
             for func in d:
                 res = func(pkt)
-                if res:
+                if res is True:
                     return True
         except Exception as err:
             onerr("插件方法:" + func.__name__, err)
