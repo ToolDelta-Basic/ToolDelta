@@ -367,7 +367,7 @@ class GameCtrl:
         Returns:
             Packet_CommandOutput: 指令返回类
         """
-        resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
+        resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
         return resp
 
     def sendwscmd_with_resp(

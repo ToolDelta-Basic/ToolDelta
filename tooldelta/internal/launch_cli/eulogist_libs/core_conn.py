@@ -52,7 +52,7 @@ class Eulogist:
     exit_event = threading.Event()
 
     def __init__(self) -> None:
-        self.command_cbs: dict[str, Callable[[dict], None]] = {}
+        self.command_cbs: dict[bytes, Callable[[dict], None]] = {}
         self.bot_name = ""
         self.bot_unique_id = 0
         self.bot_runtime_id = 0
@@ -92,7 +92,12 @@ class Eulogist:
 
     def on_msg(self, ws: WebSocket, msg_raw: str):
         msgdata = msgpack.unpackb(msg_raw)
-        self.handler(Message(msgdata["type"], msgdata["content"]))
+        # print(msgdata)
+        try:
+            self.handler(Message(msgdata["type"], msgdata["content"]))
+        except Exception:
+            fmts.print_err("赞颂者发送的消息解析失败")
+            fmts.print_err(traceback.format_exc())
 
     def on_clos(self, ws: WebSocket, _, _2):
         self.connected = False
@@ -114,25 +119,25 @@ class Eulogist:
     def sendPacket(self, pkID: int, pk: dict):
         pk_bytes: Any = msgpack.packb(pk)
         self.send(
-            Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": base64.b64encode(pk_bytes)})
+            Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": pk_bytes})
         )
 
     def sendClientPacket(self, pkID: int, pk: dict):
         pk_bytes: Any = msgpack.packb(pk)
         self.send(
-            Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": base64.b64encode(pk_bytes)})
+            Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": pk_bytes})
         )
 
     def sendcmd(self, cmd: str):
-        ud = str(uuid.uuid4())
+        u = uuid.uuid4()
         self.sendPacket(
             77,
             {
                 "CommandLine": cmd,
                 "CommandOrigin": {
                     "Origin": 0,
-                    "UUID": ud,
-                    "RequestID": ud,
+                    "UUID": u.bytes,
+                    "RequestID": u.bytes,
                     "PlayerUniqueID": 0,
                 },
                 "Internal": False,
@@ -140,18 +145,18 @@ class Eulogist:
                 "UnLimited": False,
             },
         )
-        return ud
+        return u
 
     def sendwscmd(self, cmd: str):
-        ud = str(uuid.uuid4())
+        u = uuid.uuid4()
         self.sendPacket(
             77,
             {
                 "CommandLine": cmd,
                 "CommandOrigin": {
                     "Origin": 5,
-                    "UUID": ud,
-                    "RequestID": ud,
+                    "UUID": u.bytes,
+                    "RequestID": u.bytes,
                     "PlayerUniqueID": 0,
                 },
                 "Internal": False,
@@ -159,16 +164,18 @@ class Eulogist:
                 "UnLimited": False,
             },
         )
-        return ud
+        return u
 
     def sendcmd_with_resp(
         self, cmd: str, timeout: float = 5
     ) -> Packet_CommandOutput | None:
+        print("1.0 !======")
         ud = self.sendcmd(cmd)
+        print("1 !======",ud.bytes)
         getter, setter = utils.create_result_cb(dict)
-        self.command_cbs[ud] = setter
+        self.command_cbs[ud.bytes] = setter
         res = getter(timeout)
-        del self.command_cbs[ud]
+        del self.command_cbs[ud.bytes]
         if res is None:
             return None
         else:
@@ -177,11 +184,13 @@ class Eulogist:
     def sendwscmd_with_resp(
         self, cmd: str, timeout: float = 5
     ) -> Packet_CommandOutput | None:
+        print("2.0 !======")
         ud = self.sendwscmd(cmd)
+        print("2 !======", ud.bytes)
         getter, setter = utils.create_result_cb(dict)
-        self.command_cbs[ud] = setter
+        self.command_cbs[ud.bytes] = setter
         res = getter(timeout)
-        del self.command_cbs[ud]
+        del self.command_cbs[ud.bytes]
         if res is None:
             return None
         else:
@@ -212,9 +221,10 @@ class Eulogist:
                     if pkID == 79:
                         pkUUID = pk["CommandOrigin"]["UUID"]
                         if pkUUID in self.command_cbs.keys():
+                            print("executed")
                             self.command_cbs[pkUUID](pk)
-                        # else:
-                        #    fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
+                        else:
+                           fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
                     if self.packet_listener:
                         self.packet_listener(pkID, pk)
                 case MessageType.MSG_CLIENT_PKT:
