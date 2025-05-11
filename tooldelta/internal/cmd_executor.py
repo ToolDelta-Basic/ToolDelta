@@ -1,7 +1,7 @@
 import json
 import traceback
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from collections.abc import Callable
 from .. import plugin_market
 from ..constants import SysStatus
@@ -18,7 +18,7 @@ class CommandTrigger:
     triggers: list[str]
     argument_hint: str | None
     usage: str
-    cb: Callable[[list[str]], None]
+    cb: Callable[[list[str]], Any]
 
     def __hash__(self):
         return id(self)
@@ -34,7 +34,7 @@ class ConsoleCmdManager:
         triggers: list[str],
         arg_hint: str | None,
         usage: str,
-        func: Callable[[list[str]], None],
+        func: Callable[[list[str]], Any],
     ):
         """注册 ToolDelta 控制台的菜单项
 
@@ -58,8 +58,9 @@ class ConsoleCmdManager:
         for prefix, trig in self.commands.items():
             if cmd.startswith(prefix):
                 cmds = cmd.removeprefix(prefix).split()
-                trig.cb(cmds)
-                return True
+                res = trig.cb(cmds)
+                if res is True:
+                    return True
         fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
         return False
 
