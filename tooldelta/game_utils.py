@@ -201,7 +201,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
         scoreboardNameToGet: 计分板名
         targetNameToGet: 获取分数的对象/目标选择器
     Returns:
-        分数：int
+        ...
     Raises:
         ValueError: 无法获取分数
     """
