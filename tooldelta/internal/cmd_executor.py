@@ -53,15 +53,16 @@ class ConsoleCmdManager:
 
     def execute_cmd(self, cmd: str) -> bool:
         cmd = cmd.strip()
-        if cmd == "":
-            return False
+        cmd_finded = False
         for prefix, trig in self.commands.items():
             if cmd.startswith(prefix):
                 cmds = cmd.removeprefix(prefix).split()
                 res = trig.cb(cmds)
+                cmd_finded = True
                 if res is True:
                     return True
-        fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
+        if not cmd_finded and cmd:
+            fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
         return False
 
     def test_duplicate_trigger(self, trigger: str):
