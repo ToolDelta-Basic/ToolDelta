@@ -11,7 +11,7 @@ from ...constants import SysStatus
 from ...packets import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts
-from ..types import UnreadyPlayer
+from ..types import UnreadyPlayer, Abilities
 from .eulogist_libs import core_conn as eulogist_conn
 from .standard_launcher import StandardFrame
 
@@ -71,6 +71,12 @@ class FrameEulogistLauncher(StandardFrame):
                 platform_chat_id="",
                 device_id=None,
                 build_platform=0,
+                # NOTE: this is dangerous
+                abilities=Abilities.unmarshal(
+                    v.abilities["Layers"][0]["Abilities"],
+                    v.abilities["PlayerPermissions"],
+                    v.abilities["CommandPermissions"],
+                ),
             )
             for k, v in self.eulogist.uqs.items()
         }
