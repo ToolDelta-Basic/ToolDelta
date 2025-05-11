@@ -1,5 +1,4 @@
 import uuid
-import base64
 import msgpack
 import threading
 import traceback
@@ -169,9 +168,7 @@ class Eulogist:
     def sendcmd_with_resp(
         self, cmd: str, timeout: float = 5
     ) -> Packet_CommandOutput | None:
-        print("1.0 !======")
         ud = self.sendcmd(cmd)
-        print("1 !======",ud.bytes)
         getter, setter = utils.create_result_cb(dict)
         self.command_cbs[ud.bytes] = setter
         res = getter(timeout)
@@ -184,9 +181,7 @@ class Eulogist:
     def sendwscmd_with_resp(
         self, cmd: str, timeout: float = 5
     ) -> Packet_CommandOutput | None:
-        print("2.0 !======")
         ud = self.sendwscmd(cmd)
-        print("2 !======", ud.bytes)
         getter, setter = utils.create_result_cb(dict)
         self.command_cbs[ud.bytes] = setter
         res = getter(timeout)
@@ -221,10 +216,9 @@ class Eulogist:
                     if pkID == 79:
                         pkUUID = pk["CommandOrigin"]["UUID"]
                         if pkUUID in self.command_cbs.keys():
-                            print("executed")
                             self.command_cbs[pkUUID](pk)
-                        else:
-                           fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
+                        # else:
+                        #    fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
                     if self.packet_listener:
                         self.packet_listener(pkID, pk)
                 case MessageType.MSG_CLIENT_PKT:
