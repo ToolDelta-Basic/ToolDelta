@@ -2,7 +2,7 @@ import time
 import json
 import os
 import copy
-from typing import Any
+from typing import Any, TypeVar
 from collections.abc import Callable
 from threading import Lock
 
@@ -10,6 +10,7 @@ from .timer_events import timer_event
 from .safe_writer import safe_write
 
 PathLike = str | os.PathLike[str]
+VT = TypeVar("VT")
 
 tempjson_rw_lock = Lock()
 tempjson_paths: dict[PathLike, "_jsonfile_status"] = {}
@@ -160,8 +161,8 @@ def load_and_read(
     path: PathLike,
     need_file_exists: bool = True,
     timeout: int = 60,
-    default: Callable[[], Any] | Any = None,
-) -> Any:
+    default: Callable[[], VT] | VT = {},
+) -> VT:
     """读取 json 文件并将其从磁盘加载到缓存区，以便一段时间内能快速读写.
 
     Args:
