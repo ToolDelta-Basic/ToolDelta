@@ -3,8 +3,9 @@ import os
 from typing import Any
 from . import fmts
 
+PathLike = str | os.PathLike[str]
 
-def safe_write(filepath: str, obj: Any, indent=2):
+def safe_write(filepath: PathLike, obj: Any, indent=2):
     """
     安全地写入文件, 防止文件在写入途中被强行中止。
 
@@ -14,9 +15,9 @@ def safe_write(filepath: str, obj: Any, indent=2):
     """
     while 1:
         try:
-            bak_name = filepath + ".bak"
+            bak_name = str(filepath) + ".bak"
             content = json.dumps(obj, indent=indent, ensure_ascii=False)
-            with open(filepath + ".bak", "w", encoding="utf-8") as fp:
+            with open(bak_name, "w", encoding="utf-8") as fp:
                 fp.write(content)
                 break
         except BaseException as err:

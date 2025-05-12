@@ -9,14 +9,16 @@ from threading import Lock
 from .timer_events import timer_event
 from .safe_writer import safe_write
 
+PathLike = str | os.PathLike[str]
+
 tempjson_rw_lock = Lock()
-tempjson_paths: dict[str, "_jsonfile_status"] = {}
+tempjson_paths: dict[PathLike, "_jsonfile_status"] = {}
 
 
 class _jsonfile_status:
     def __init__(
         self,
-        path: str,
+        path: PathLike,
         need_file_exists: bool,
         default: Any = None,
         unload_delay: float | None = None,
@@ -65,7 +67,7 @@ class _jsonfile_status:
 
 
 def load_from_path(
-    path: str,
+    path: PathLike,
     need_file_exists: bool = True,
     default: Any = None,
     unload_delay: int | None = None,
@@ -92,7 +94,7 @@ def load_from_path(
     return j
 
 
-def unload_to_path(path: str) -> bool:
+def unload_to_path(path: PathLike) -> bool:
     """
     将 json 文件从缓存区卸载 (保存内容到磁盘), 之后不能再在缓存区对这个文件进行读写.
     在缓存文件已卸载的情况下，再使用一次该方法不会有任何作用，但是可以通过其返回的值来知道存盘有没有成功.
@@ -110,7 +112,7 @@ def unload_to_path(path: str) -> bool:
     return False
 
 
-def read(path: str, deepcopy: bool = True):
+def read(path: PathLike, deepcopy: bool = True):
     """对缓存区的该虚拟路径的文件进行读操作，返回一个深拷贝的 JSON 对象
 
     Args:
@@ -124,10 +126,10 @@ def read(path: str, deepcopy: bool = True):
     """
     if jsonf := tempjson_paths.get(path):
         return jsonf.read(deepcopy=deepcopy)
-    raise ValueError("json 路径未初始化，不能进行读取和写入操作: " + path)
+    raise ValueError(f"json 路径未初始化，不能进行读取和写入操作: {path}")
 
 
-def get(path: str) -> Any:
+def get(path: PathLike) -> Any:
     """
     直接获取缓存区的该虚拟路径的 JSON, 不使用 copy
     WARNING: 如果你不知道有什么后果，请老老实实使用`read(...)`而不是`get(...)`!
@@ -137,10 +139,10 @@ def get(path: str) -> Any:
     """
     if jsonf := tempjson_paths.get(path):
         return jsonf.read(deepcopy=False)
-    raise ValueError("json 路径未初始化, 不能进行读取和写入操作: " + path)
+    raise ValueError(f"json 路径未初始化, 不能进行读取和写入操作: {path}")
 
 
-def write(path: str, obj: Any) -> None:
+def write(path: PathLike, obj: Any) -> None:
     """
     对缓存区的该虚拟路径的文件进行写操作，这将会覆盖之前的内容
 
@@ -151,11 +153,11 @@ def write(path: str, obj: Any) -> None:
     if jsonf := tempjson_paths.get(path):
         jsonf.write(obj)
     else:
-        raise ValueError("json 路径未初始化, 不能进行读取和写入操作：" + path)
+        raise ValueError(f"json 路径未初始化, 不能进行读取和写入操作：{path}")
 
 
 def load_and_read(
-    path: str,
+    path: PathLike,
     need_file_exists: bool = True,
     timeout: int = 60,
     default: Callable[[], Any] | Any = None,
@@ -182,7 +184,7 @@ def load_and_read(
 
 
 def load_and_write(
-    path: str, obj: Any, need_file_exists: bool = True, timeout: int = 60
+    path: PathLike, obj: Any, need_file_exists: bool = True, timeout: int = 60
 ) -> None:
     """写入 json 文件并将其从磁盘加载到缓存区，以便一段时间内能快速读写.
 
@@ -206,7 +208,7 @@ def cancel_change(path: str):
     tempjson_paths[path].is_changed = False
 
 
-def flush(path: str | None = None):
+def flush(path: PathLike | None = None):
     """
     刷新单个/全部JSON缓存区的缓存文件, 存入磁盘
 
@@ -217,7 +219,7 @@ def flush(path: str | None = None):
         if tmpjson := tempjson_paths.get(path):
             tmpjson.save()
         else:
-            raise ValueError("json 路径未初始化, 不能 flush: " + path)
+            raise ValueError(f"json 路径未初始化, 不能 flush: {path}")
     else:
         save_all()
 
