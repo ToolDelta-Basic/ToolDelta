@@ -195,13 +195,9 @@ def load_and_write(
         needFileExists (bool, optional): 默认为 True, 为 False 时，若文件路径不存在，就会自动创建一个文件，且写入默认值 null
         timeout (int, optional): 多久没有再进行读取操作时卸载缓存
     """
-    try:
-        if path not in tempjson_paths.keys():
-            load_from_path(path, need_file_exists, default=obj, unload_delay=timeout)
-        write(path, obj)
-    except Exception as e:
-        e_new = type(e)(str(e))
-        raise e_new from None
+    if path not in tempjson_paths.keys():
+        load_from_path(path, need_file_exists, default=obj, unload_delay=timeout)
+    write(path, obj)
 
 
 def cancel_change(path: str):
