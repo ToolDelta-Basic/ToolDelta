@@ -88,5 +88,5 @@ class PacketHandler:
 
     def _handle_next_dict_packet(self, packetID: int, packet: dict):
         cbs = self.dict_packet_wait_callbacks.get(packetID, [])
-        for cb in cbs:
+        for cb in cbs.copy():
             cb(packet)
