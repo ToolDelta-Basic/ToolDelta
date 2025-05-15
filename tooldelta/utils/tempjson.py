@@ -33,7 +33,7 @@ class _jsonfile_status:
             raise ValueError("文件夹: " + dp + " 路径不存在")
         if not need_file_exists and not os.path.isfile(path):
             with open(path, "w", encoding="utf-8") as f:
-                json.dump(default, f)
+                json.dump(default, f, ensure_ascii=False)
             self.content = default
             self.is_changed = True
         else:
