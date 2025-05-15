@@ -27,11 +27,11 @@ class PacketHandler:
         ] = {}
         self.dict_packet_wait_callbacks: dict[int, list[DictPacketWaiter]] = {}
 
-    def wait_next_packet(self, pkID: PacketIDS, timeout: float = 30) -> dict | None:
+    def wait_next_packet(self, packet_id: PacketIDS, timeout: float = 30) -> dict | None:
         getter, setter = create_result_cb(dict)
-        self.dict_packet_wait_callbacks.setdefault(pkID, []).append(setter)
+        self.dict_packet_wait_callbacks.setdefault(packet_id, []).append(setter)
         res = getter(timeout)
-        self.dict_packet_wait_callbacks[pkID].remove(setter)
+        self.dict_packet_wait_callbacks[packet_id].remove(setter)
         return res
 
     def add_dict_packet_listener(
