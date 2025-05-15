@@ -3,16 +3,12 @@ from collections.abc import Callable
 
 from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..constants.packets import PacketIDS
+from ..constants.tooldelta_cli import INTERNAL_LISTEN_PACKETS
 
 if TYPE_CHECKING:
     from tooldelta.frame import ToolDelta
 
-INTERNAL_LISTEN_PACKETS: set[PacketIDS] = {
-    PacketIDS.Text,
-    PacketIDS.PlayerList,
-    PacketIDS.CommandOutput,
-    PacketIDS.UpdateAbilities,
-}
+
 
 DictPacketListener = Callable[[dict], bool]
 BytesPacketListener = Callable[[BaseBytesPacket], bool]

@@ -1,4 +1,5 @@
 from enum import IntEnum
+from .packets import PacketIDs
 
 
 class SysStatus(IntEnum):
@@ -99,3 +100,11 @@ class LaunchMode(IntEnum):
     LAUNCH_MODE_NEOMG_ACCESS_POINT_REMOTE = 2
     LAUNCH_MODE_NEOMG_LAUNCH = 3
     LAUNCH_MODE_EULOGIST = 4
+
+
+INTERNAL_LISTEN_PACKETS: set[PacketIDs] = {
+    PacketIDs.Text,
+    PacketIDs.PlayerList,
+    PacketIDs.CommandOutput,
+    PacketIDs.UpdateAbilities,
+}
