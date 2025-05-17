@@ -14,14 +14,8 @@ import sys
 import traceback
 import json
 
-from . import constants, game_utils, utils
+from . import constants, extend_functions, game_utils, utils
 from .constants import SysStatus, TextType
-from .game_texts import GameTextsHandle, GameTextsLoader
-from .packets import Packet_CommandOutput
-from .utils import cfg, fmts
-from .version import get_tool_delta_version
-from .plugin_load.plugins import PluginGroup
-from .mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from .internal.config_loader import ConfigLoader
 from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
@@ -36,6 +30,11 @@ from .internal.launch_cli import (
     FB_LIKE_LAUNCHERS,
     LAUNCHERS,
 )
+from .game_texts import GameTextsHandle, GameTextsLoader
+from .packets import Packet_CommandOutput
+from .utils import cfg, fmts
+from .version import get_tool_delta_version
+from .plugin_load.plugins import PluginGroup
 
 
 ###### CONSTANT DEFINE
@@ -83,9 +82,14 @@ class ToolDelta:
             utils.timer_event_boostrap()
             utils.tempjson.jsonfile_auto_save()
             game_utils.hook_packet_handler(self.packet_handler)
+            extend_functions.load_functions(self)
             self.launcher.init()
             self.launcher.listen_launched(
-                [self.game_ctrl.system_inject, self.cmd_manager.start_proc_thread]
+                [
+                    self.game_ctrl.system_inject,
+                    self.cmd_manager.start_proc_thread,
+                    extend_functions.activate_functions,
+                ]
             )
             fmts.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
             err = self.wait_closed()
@@ -354,7 +358,9 @@ class GameCtrl:
     def bot_name(self) -> str:
         if hasattr(self.launcher, "bot_name"):
             return self.launcher.get_bot_name()
-        raise ValueError(f"此启动器 ({self.launcher.__class__.__name__}) 框架无法产生机器人名")
+        raise ValueError(
+            f"此启动器 ({self.launcher.__class__.__name__}) 框架无法产生机器人名"
+        )
 
     def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
         """
