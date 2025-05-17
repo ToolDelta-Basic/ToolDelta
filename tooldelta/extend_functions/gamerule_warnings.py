@@ -26,5 +26,3 @@ class GameruleWarnings(ExtendFunction):
         self.frame.packet_handler.add_dict_packet_listener(
             PacketIDS.GameRulesChanged, on_gamerule_changed
         )
-
-    def when_sendcommandfeedback_set_to_false(self): ...
