@@ -157,7 +157,7 @@ class ConsoleCmdManager:
                         f"指令执行成功, 详细返回结果:\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
                     )
             except TimeoutError:
-                fmts.print_err("[超时] 指令获取结果返回超时")
+                fmts.print_err(f"[超时] 指令获取结果返回超时: {cmd}")
 
         def _send_to_neomega(cmds: list[str]):
             # 仅当启动模式为 neomega 并行模式才生效
