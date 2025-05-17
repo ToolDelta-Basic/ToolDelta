@@ -54,7 +54,7 @@ class ConsoleCmdManager:
     def execute_cmd(self, cmd: str) -> bool:
         cmd = cmd.strip()
         cmd_finded = False
-        for prefix, trig in self.commands.items():
+        for prefix, trig in self.commands.copy().items():
             if cmd.startswith(prefix):
                 cmds = cmd.removeprefix(prefix).split()
                 res = trig.cb(cmds)
