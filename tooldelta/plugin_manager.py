@@ -33,7 +33,6 @@ class PluginManager:
     "插件管理器"
 
     def __init__(self) -> None:
-        self.plugin_reg_data_path = "插件注册表"
         self._plugin_datas_cache: list[PluginRegData] = []
 
     def manage_plugins(self) -> None:
