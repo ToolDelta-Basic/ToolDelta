@@ -31,6 +31,7 @@ sqlite-easy-ctrl = "0.1.2"
 numpy = "^2.1.0"
 protobuf = "^6.30.1"
 grpcio = "^1.71.0"
+msgpack = "^1.1.0"
 
 [[tool.poetry.source]]
 name = "mirrors"
