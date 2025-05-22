@@ -180,23 +180,23 @@ def thread_gather(
         list[VT]: 方法的返回 (按传入方法的顺序依次返回其结果)
     """
     res: list[Any] = [None] * len(funcs_and_args)
-    oks = [False for _ in range(len(funcs_and_args))]
+    finish_events = [threading.Event() for _ in range(len(funcs_and_args))]
     for i, (func, args) in enumerate(funcs_and_args):
 
-        def _closet(_i, _func):
+        def _closet(_i: int, _func):
             def _cbfunc(*args):
                 try:
                     assert isinstance(args, tuple), "传参必须是 tuple 类型"
                     res[_i] = _func(*args)
                 finally:
-                    oks[_i] = True
+                    finish_events[_i].set()
 
             return _cbfunc
 
         fun, usage = _closet(i, func), f"并行方法 {func.__name__}"
         ToolDeltaThread(fun, args, usage=usage)
-    while not all(oks):
-        pass
+    for evt in finish_events:
+        evt.wait()
     return res
 
 

@@ -22,13 +22,15 @@ def get_playername_and_msg_from_text_packet(
     """
     msg: str = pkt["Message"]
     sender_name = ""
-    if sender_xuid := pkt["XUID"]:
-        if sender_player := frame.get_players().getPlayerByXUID(sender_xuid):
-            sender_name = sender_player.name
-    elif (extraData := pkt["NeteaseExtraData"]) and len(extraData) > 1:
+
+    if (extraData := pkt["NeteaseExtraData"]) and len(extraData) > 1:
         sender_uqID = int(extraData[1])
         if sender_player := frame.get_players().getPlayerByUniqueID(sender_uqID):
             sender_name = sender_player.name
+    if len(sender_name) == 0 and (sender_xuid := pkt["XUID"]):
+        if sender_player := frame.get_players().getPlayerByXUID(sender_xuid):
+            sender_name = sender_player.name
+
     match pkt["TextType"]:
         case TextType.TextTypeTranslation:
             return None, None, False
@@ -42,7 +44,9 @@ def get_playername_and_msg_from_text_packet(
                     playername = to_plain_name(playername or msg_list[1])
                     msg = " ".join(msg_list[2:])
                 else:
-                    fmts.print_war(f"[internal] 无法获取发言中的玩家名与消息: {playername}: {msg}")
+                    fmts.print_war(
+                        f"[internal] 无法获取发言中的玩家名与消息: {playername}: {msg}"
+                    )
                     return None, None, False
             return playername, msg, sender_name != ""
         case TextType.TextTypeAnnouncement:
