@@ -178,7 +178,7 @@ class Plugin:
             event_cbs.bytes_packet_funcs[pkt_id].append(cb)
 
     def ListenInternalBroadcast(
-        self, broadcast_name: str, cb: Callable[[InternalBroadcast], None]
+        self, broadcast_name: str, cb: Callable[[InternalBroadcast], Any]
     ):
         """
         监听广播事件
@@ -186,7 +186,7 @@ class Plugin:
 
         Args:
             broadcast_name (str): 广播事件名
-            cb (Callable[[InternalBroadcast], None]): 监听回调, 传参: 广播事件 (InternalBroadcast)
+            cb (Callable[[InternalBroadcast], Any]): 监听回调, 传参: 广播事件 (InternalBroadcast), 返回: 回传给发送者的内容
         """
         event_cbs.broadcast_listener.setdefault(broadcast_name, [])
         event_cbs.broadcast_listener[broadcast_name].append(cb)
