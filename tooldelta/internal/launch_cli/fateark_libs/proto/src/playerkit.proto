@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package fateark.proto.playerkit;
+
+import "proto/response.proto";
+
+option go_package = "./proto/gen/playerkit;playerkitpb";
+
+message GetAllOnlinePlayersRequest {}
+
+message GetPlayerByNameRequest { string name = 1; }
+
+message GetPlayerByUUIDRequest { string uuid = 1; }
+
+message ReleaseBindPlayerRequest { string uuid_str = 1; }
+
+message GetPlayerNameRequest { string uuid_str = 1; }
+
+message GetPlayerEntityUniqueIDRequest { string uuid_str = 1; }
+
+message GetPlayerLoginTimeRequest { string uuid_str = 1; }
+
+message GetPlayerPlatformChatIDRequest { string uuid_str = 1; }
+
+message GetPlayerBuildPlatformRequest { string uuid_str = 1; }
+
+message GetPlayerSkinIDRequest { string uuid_str = 1; }
+
+message GetPlayerCanBuildRequest { string uuid_str = 1; }
+
+message SetPlayerCanBuildRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanDigRequest { string uuid_str = 1; }
+
+message SetPlayerCanDigRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanDoorsAndSwitchesRequest { string uuid_str = 1; }
+
+message SetPlayerCanDoorsAndSwitchesRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanOpenContainersRequest { string uuid_str = 1; }
+
+message SetPlayerCanOpenContainersRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanAttackPlayersRequest { string uuid_str = 1; }
+
+message SetPlayerCanAttackPlayersRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanAttackMobsRequest { string uuid_str = 1; }
+
+message SetPlayerCanAttackMobsRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanOperatorCommandsRequest { string uuid_str = 1; }
+
+message SetPlayerCanOperatorCommandsRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerCanTeleportRequest { string uuid_str = 1; }
+
+message SetPlayerCanTeleportRequest {
+  string uuid_str = 1;
+  bool allow = 2;
+}
+
+message GetPlayerStatusInvulnerableRequest { string uuid_str = 1; }
+
+message GetPlayerStatusFlyingRequest { string uuid_str = 1; }
+
+message GetPlayerStatusMayFlyRequest { string uuid_str = 1; }
+
+message GetPlayerDeviceIDRequest { string uuid_str = 1; }
+
+message GetPlayerEntityRuntimeIDRequest { string uuid_str = 1; }
+
+message GetPlayerEntityMetadataRequest { string uuid_str = 1; }
+
+message GetPlayerIsOPRequest { string uuid_str = 1; }
+
+message GetPlayerOnlineRequest { string uuid_str = 1; }
+
+message SendPlayerChatRequest {
+  string uuid_str = 1;
+  string msg = 2;
+}
+
+message SendPlayerRawChatRequest {
+  string uuid_str = 1;
+  string msg = 2;
+}
+
+message SendPlayerTitleRequest {
+  string uuid_str = 1;
+  string title = 2;
+  string sub_title = 3;
+}
+
+message SendPlayerActionBarRequest {
+  string uuid_str = 1;
+  string action_bar = 2;
+}
+
+message InterceptPlayerJustNextInputRequest {
+  string uuid_str = 1;
+  string retriever_id = 2;
+}
+
+service PlayerKitService {
+  rpc GetAllOnlinePlayers(GetAllOnlinePlayersRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerByName(GetPlayerByNameRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerByUUID(GetPlayerByUUIDRequest)
+      returns (response.GeneralResponse);
+  rpc ReleaseBindPlayer(ReleaseBindPlayerRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerName(GetPlayerNameRequest) returns (response.GeneralResponse);
+  rpc GetPlayerEntityUniqueID(GetPlayerEntityUniqueIDRequest)
+      returns (response.GeneralInt64Response);
+  rpc GetPlayerLoginTime(GetPlayerLoginTimeRequest)
+      returns (response.GeneralInt64Response);
+  rpc GetPlayerPlatformChatID(GetPlayerPlatformChatIDRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerBuildPlatform(GetPlayerBuildPlatformRequest)
+      returns (response.GeneralInt32Response);
+  rpc GetPlayerSkinID(GetPlayerSkinIDRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanBuild(GetPlayerCanBuildRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanBuild(SetPlayerCanBuildRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanDig(GetPlayerCanDigRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanDig(SetPlayerCanDigRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanDoorsAndSwitches(GetPlayerCanDoorsAndSwitchesRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanDoorsAndSwitches(SetPlayerCanDoorsAndSwitchesRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanOpenContainers(GetPlayerCanOpenContainersRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanOpenContainers(SetPlayerCanOpenContainersRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanAttackPlayers(GetPlayerCanAttackPlayersRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanAttackPlayers(SetPlayerCanAttackPlayersRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanAttackMobs(GetPlayerCanAttackMobsRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanAttackMobs(SetPlayerCanAttackMobsRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanOperatorCommands(GetPlayerCanOperatorCommandsRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanOperatorCommands(SetPlayerCanOperatorCommandsRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCanTeleport(GetPlayerCanTeleportRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SetPlayerCanTeleport(SetPlayerCanTeleportRequest)
+      returns (response.GeneralBoolResponse);
+  rpc GetPlayerStatusInvulnerable(GetPlayerStatusInvulnerableRequest)
+      returns (response.GeneralBoolResponse);
+  rpc GetPlayerStatusFlying(GetPlayerStatusFlyingRequest)
+      returns (response.GeneralBoolResponse);
+  rpc GetPlayerStatusMayFly(GetPlayerStatusMayFlyRequest)
+      returns (response.GeneralBoolResponse);
+  rpc GetPlayerDeviceID(GetPlayerDeviceIDRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerEntityRuntimeID(GetPlayerEntityRuntimeIDRequest)
+      returns (response.GeneralUint64Response);
+  rpc GetPlayerEntityMetadata(GetPlayerEntityMetadataRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerIsOP(GetPlayerIsOPRequest)
+      returns (response.GeneralBoolResponse);
+  rpc GetPlayerOnline(GetPlayerOnlineRequest)
+      returns (response.GeneralBoolResponse);
+  rpc SendPlayerChat(SendPlayerChatRequest) returns (response.GeneralResponse);
+  rpc SendPlayerRawChat(SendPlayerRawChatRequest)
+      returns (response.GeneralResponse);
+  rpc SendPlayerTitle(SendPlayerTitleRequest)
+      returns (response.GeneralResponse);
+  rpc SendPlayerActionBar(SendPlayerActionBarRequest)
+      returns (response.GeneralResponse);
+  rpc InterceptPlayerJustNextInput(InterceptPlayerJustNextInputRequest)
+      returns (response.GeneralResponse);
+}

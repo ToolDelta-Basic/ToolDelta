@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package fateark.proto.reversaler;
+
+import "proto/response.proto";
+
+option go_package = "./proto/gen/reversaler;reversalerpb";
+
+message NewFateReversalerRequest {
+  string auth_server = 1;
+  string user_name = 2;
+  string user_password = 3;
+  string user_token = 4;
+  string server_code = 5;
+  string server_password = 6;
+}
+
+service FateReversalerService {
+  rpc NewFateReversaler(NewFateReversalerRequest)
+      returns (response.GeneralResponse);
+}

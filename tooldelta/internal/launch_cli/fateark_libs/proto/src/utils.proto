@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package fateark.proto.utils;
+
+import "proto/response.proto";
+
+option go_package = "./proto/gen/utils;utilspb";
+
+message SendPacketRequest {
+  int32 packet_id = 1;
+  string json_str = 2;
+}
+
+message GetPacketNameIDMappingRequest {}
+
+message GetClientMaintainedBotBasicInfoRequest {}
+
+message GetClientMaintainedExtendInfoRequest {}
+
+service UtilsService {
+  rpc SendPacket(SendPacketRequest) returns (response.GeneralResponse);
+  rpc GetPacketNameIDMapping(GetPacketNameIDMappingRequest)
+      returns (response.GeneralResponse);
+  rpc GetClientMaintainedBotBasicInfo(GetClientMaintainedBotBasicInfoRequest)
+      returns (response.GeneralResponse);
+  rpc GetClientMaintainedExtendInfo(GetClientMaintainedExtendInfoRequest)
+      returns (response.GeneralResponse);
+}

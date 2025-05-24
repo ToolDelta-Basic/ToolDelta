@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package fateark.proto.listener;
+
+import "proto/response.proto";
+
+option go_package = "./proto/gen/listener;listenerpb";
+
+message ListenFateArkRequest {}
+
+message ListenPacketsRequest {}
+
+message ListenTypedPacketRequest { uint32 packet_id = 1; }
+
+message ListenPlayerChangeRequest {}
+
+message ListenChatRequest {}
+
+message ListenCommandBlockRequest { string name = 1; }
+
+message Output {
+  string msg_type = 1;
+  string msg = 2;
+  string err_msg = 3;
+}
+
+message Packet {
+  uint32 id = 1;
+  string payload = 2;
+}
+
+message PlayerAction { string action = 1; }
+
+message Chat { string payload = 1; }
+
+service ListenerService {
+  rpc ListenFateArk(ListenFateArkRequest) returns (stream Output);
+  rpc ListenPackets(ListenPacketsRequest) returns (stream Packet);
+  rpc ListenTypedPacket(ListenTypedPacketRequest)
+      returns (response.GeneralResponse);
+  rpc ListenPlayerChange(ListenPlayerChangeRequest)
+      returns (stream PlayerAction);
+  rpc ListenChat(ListenChatRequest) returns (stream Chat);
+  rpc ListenCommandBlock(ListenCommandBlockRequest) returns (stream Chat);
+}

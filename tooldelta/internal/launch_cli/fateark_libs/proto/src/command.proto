@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package fateark.proto.command;
+
+import "proto/response.proto";
+
+option go_package = "./proto/gen/command;commandpb";
+
+message SendWOCommandRequest { string cmd = 1; }
+
+message SendWSCommandRequest { string cmd = 1; }
+
+message SendPlayerCommandRequest { string cmd = 1; }
+
+message SendAICommandRequest {
+  string runtime_id = 1;
+  string cmd = 2;
+}
+
+message SendWSCommandWithResponseRequest { string cmd = 1; }
+
+message SendPlayerCommandWithResponseRequest { string cmd = 1; }
+
+message SendAICommandWithResponseRequest {
+  string runtime_id = 1;
+  string cmd = 2;
+}
+
+service CommandService {
+  rpc SendWOCommand(SendWOCommandRequest) returns (response.GeneralResponse);
+  rpc SendWSCommand(SendWSCommandRequest) returns (response.GeneralResponse);
+  rpc SendPlayerCommand(SendPlayerCommandRequest)
+      returns (response.GeneralResponse);
+  rpc SendAICommand(SendAICommandRequest) returns (response.GeneralResponse);
+  rpc SendWSCommandWithResponse(SendWSCommandWithResponseRequest)
+      returns (response.GeneralResponse);
+  rpc SendPlayerCommandWithResponse(SendPlayerCommandWithResponseRequest)
+      returns (response.GeneralResponse);
+  rpc SendAICommandWithResponse(SendAICommandWithResponseRequest)
+      returns (response.GeneralResponse);
+}

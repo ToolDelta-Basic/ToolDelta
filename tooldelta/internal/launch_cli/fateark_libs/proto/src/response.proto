@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package fateark.proto.response;
+
+option go_package = "./proto/gen/response;responsepb";
+
+message GeneralResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILED = 1;
+  }
+  Status status = 1;
+  string payload = 2;
+  string error_msg = 3;
+}
+
+message GeneralInt32Response {
+  enum Status {
+    SUCCESS = 0;
+    FAILED = 1;
+  }
+  Status status = 1;
+  int32 payload = 2;
+  string error_msg = 3;
+}
+
+message GeneralInt64Response {
+  enum Status {
+    SUCCESS = 0;
+    FAILED = 1;
+  }
+  Status status = 1;
+  int64 payload = 2;
+  string error_msg = 3;
+}
+
+message GeneralUint64Response {
+  enum Status {
+    SUCCESS = 0;
+    FAILED = 1;
+  }
+  Status status = 1;
+  uint64 payload = 2;
+  string error_msg = 3;
+}
+
+message GeneralBoolResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILED = 1;
+  }
+  Status status = 1;
+  bool payload = 2;
+  string error_msg = 3;
+}
