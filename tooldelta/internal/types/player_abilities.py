@@ -53,18 +53,39 @@ class Abilities:
     command_permissions: int
 
     def auto_permission_level(self):
-        level = 0
         if (
-            self.mine
+            self.build
+            and self.mine
+            and self.doors_and_switches
+            and self.open_containers
+            and self.attack_players
+            and self.attack_mobs
+            and self.operator_commands
+            and self.teleport
+        ):
+            return 2 # 管理员权限
+        elif (
+            self.build
+            and self.mine
+            and self.doors_and_switches
+            and self.open_containers
+            and self.attack_players
+            and self.attack_mobs
+        ):
+            return 1 # 普通玩家权限
+        elif not (
+            self.build
+            or self.mine
             or self.doors_and_switches
             or self.open_containers
-            or self.attack_players
             or self.attack_mobs
+            or self.attack_players
+            or self.operator_commands
+            or self.teleport
         ):
-            level += 1
-        if self.operator_commands and self.teleport:
-            level += 1
-        return level
+            return 0 # 访客权限
+        else:
+            return 3 # 自定义权限
 
     def marshal(self) -> int:
         return (
