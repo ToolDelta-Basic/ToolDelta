@@ -174,7 +174,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             raise ValueError("接入点进程未启动")
         while True:
             msg_orig = self.neomg_proc.stdout.readline().strip("\n")
-            if "成功完成网易要求的零知识机器人身份证明" in msg_orig:
+            if "机器人已获得操作员权限" in msg_orig:
                 launch_event.set()
             if msg_orig in ("", "SIGNAL: exit"):
                 fmts.print_with_info("接入点进程已结束", "§b NOMG ")
