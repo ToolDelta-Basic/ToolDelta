@@ -47,6 +47,15 @@ class PluginGroup:
         self.loaded_plugin_ids = []
         self.on_err_cb = self.linked_frame.on_plugin_err
 
+    def pre_reload(self):
+        """
+        重载插件框架前的预处理
+        执行插件的框架退出回调
+        """
+        self.execute_frame_exit(
+            FrameExit(SysStatus.NORMAL_EXIT, "normal"), self.linked_frame.on_plugin_err
+        )
+
     def reload(self):
         """
         重载插件框架
@@ -55,9 +64,6 @@ class PluginGroup:
         """
         self.plugins_api = {}
         self.broadcast_listeners = {}
-        self.execute_frame_exit(
-            FrameExit(SysStatus.NORMAL_EXIT, "normal"), self.linked_frame.on_plugin_err
-        )
         classic_plugin.reload()
         fmts.print_inf("正在重新读取所有插件")
         self.load_plugins()

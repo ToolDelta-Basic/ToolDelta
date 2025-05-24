@@ -144,12 +144,12 @@ def execute_frame_exit(evt: FrameExit, onerr: ON_ERROR_CB):
     Args:
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    try:
-        for p, func in on_frame_exit_cbs:
+    for p, func in on_frame_exit_cbs:
+        try:
             name = p.name
             func(evt)
-    except Exception as err:
-        onerr(name, err)
+        except Exception as err:
+            onerr(name, err)
 
 
 def execute_reloaded(onerr: ON_ERROR_CB):
