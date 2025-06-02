@@ -1,5 +1,7 @@
 import ctypes
 import enum
+import json
+import msgpack
 import os.path
 import platform
 import threading
@@ -8,8 +10,6 @@ from dataclasses import dataclass
 from threading import Thread
 from typing import Any, ClassVar, Optional
 
-import json
-
 from ....utils import fmts, thread_func, ToolDeltaThread
 from ....packets import Packet_CommandOutput
 
@@ -17,6 +17,9 @@ CInt = ctypes.c_int
 CLongLong = ctypes.c_longlong
 CString = ctypes.c_void_p
 CBytes = ctypes.c_void_p
+
+
+APIVersion: int = 0
 
 
 def toCString(string: str):
@@ -43,14 +46,14 @@ def toByteCSlice(bs: bytes) -> CBytes:
     return ctypes.cast(ctypes.c_char_p(bs), CBytes)
 
 
-def as_python_bytes(bs: CBytes, l: int) -> bytes:
-    return ctypes.string_at(bs, l)
+def as_python_bytes(bs: CBytes, length: int | CInt) -> bytes:
+    return ctypes.string_at(bs, int(length))
 
 
 # define lib path and how to load it
 
 
-def ConnectOmega(address):
+def ConnectOmega(address: str):
     r = LIB.ConnectOmega(toCString(address))
     if r is not None:
         raise Exception(toPyString(r))
@@ -66,7 +69,7 @@ class AccountOptions:
     ServerPassword: str = ""
 
 
-def StartOmega(address, options):
+def StartOmega(address: str, options: AccountOptions):
     r = LIB.StartOmega(toCString(address), toCString(json.dumps(options.__dict__)))
     if r is not None:
         raise Exception(toPyString(r))
@@ -82,6 +85,8 @@ def OmegaAvailable():
 
 # lib core: event basic
 class Event(ctypes.Structure):
+    type: CString
+    retriever: CString
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("type", CString),
         ("retriever", CString),
@@ -103,11 +108,15 @@ def OmitEvent():
 
 
 class ConsumeSoftData_return(ctypes.Structure):
-    _fields_ = [("bs", CBytes), ("l", CInt)]
+    bs: CBytes
+    length: CInt
+    _fields_ = (("bs", CBytes), ("length", CInt))
 
 
 class ConsumeSoftCall_return(ctypes.Structure):
-    _fields_ = [("bs", CBytes), ("l", CInt)]
+    bs: CBytes
+    length: CInt
+    _fields_ = (("bs", CBytes), ("l", CInt))
 
 
 def SoftCallWithJSON(api: str, json_args: str, retrieverID: str):
@@ -161,14 +170,29 @@ def SoftReg(api: str, is_bytes_api: bool):
 
 
 class MCPacketEvent(ctypes.Structure):
+    packetDataAsJsonStr: CString
+    convertError: CString
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("packetDataAsJsonStr", CString),
         ("convertError", CString),
     ]
 
 
+class MCMsgpackPacketEvent(ctypes.Structure):
+    packetDataAsMsgpack: CString
+    bs_len: CInt
+    convertError: CString
+    _fields_: ClassVar[list[tuple[str, Any]]] = [
+        ("packetDataAsMsgpack", CString),
+        ("bs_len", CInt),
+        ("convertError", CString),
+    ]
+
+
 class ConsumeMCBytesPacket_return(ctypes.Structure):
-    _fields_ = (("pktBytes", CBytes), ("l", CInt))
+    pktBytes: CBytes
+    length: CInt
+    _fields_ = (("pktBytes", CBytes), ("length", CInt))
 
 
 # Async Actions
@@ -207,24 +231,29 @@ def SendPlayerCommandOmitResponse(cmd: str):
 
 
 class JsonStrAsIsGamePacketBytes_return(ctypes.Structure):
+    pktBytes: CBytes
+    length: CInt
+    err: CString
     _fields_: ClassVar[list[tuple[str, Any]]] = [
         ("pktBytes", CBytes),
-        ("l", CInt),
+        ("length", CInt),
         ("err", CString),
     ]
 
 
 def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
-    r = LIB.JsonStrAsIsGamePacketBytes(to_GoInt(packetID), toCString(jsonStr))
+    r: JsonStrAsIsGamePacketBytes_return = LIB.JsonStrAsIsGamePacketBytes(
+        to_GoInt(packetID), toCString(jsonStr)
+    )
     if toPyString(r.err) != "":
         raise ValueError(toPyString(r.err))
-    bs = as_python_bytes(r.pktBytes, r.l)
+    bs = as_python_bytes(r.pktBytes, r.length)
     LIB.FreeMem(r.pktBytes)
     return bs
 
 
 def SendGamePacket(packetID: int, payload: str | bytes) -> None:
-    if type(payload) == str:
+    if type(payload) is str:
         r = LIB.SendGamePacket(
             to_GoInt(packetID),
             toByteCSlice(payload.encode(encoding="utf-8")),
@@ -250,7 +279,9 @@ class ClientMaintainedBotBasicInfo:
 
 
 class LoadBlobCache_return(ctypes.Structure):
-    _fields_ = (("bs", CBytes), ("l", CInt))
+    bs: CBytes
+    length: CInt
+    _fields_ = (("bs", CBytes), ("length", CInt))
 
 
 @dataclass
@@ -533,7 +564,9 @@ class ConnectType(enum.Enum):
 
 
 class TranslateChunkNBT_return(ctypes.Structure):
-    _fields_ = (("bs", CBytes), ("l", CInt))
+    bs: CBytes
+    length: CInt
+    _fields_ = (("bs", CBytes), ("length", CInt))
 
 
 # GOMEGA_HAD_LISTENED_PACKETS = False
@@ -570,6 +603,8 @@ class ThreadOmega:
 
     def connect(self):
         if self.connect_type == ConnectType.Local:
+            if self.accountOption is None:
+                raise ValueError("accountOption is None")
             StartOmega(self.address, self.accountOption)
             fmts.print_inf(f"Omega 接入点已启动，在 {self.address} 开放接口")
         elif self.connect_type == ConnectType.Remote:
@@ -647,7 +682,7 @@ class ThreadOmega:
         self._omega_disconnected_reason = toPyString(LIB.ConsumeOmegaConnError())
         self._omega_disconnected_lock.set()
 
-    def _handle_command_response_cb(self, retriever):
+    def _handle_command_response_cb(self, retriever: str):
         cmdResp = unpackCommandOutput(toPyString(LIB.ConsumeCommandResponseCB()))
         if callback_event := self._omega_cmd_callback_events.get(retriever):
             callback_event(cmdResp)
@@ -658,7 +693,7 @@ class ThreadOmega:
 
     def _handle_soft_call_resp(self, retriever: str):
         softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
-        bs: bytes = as_python_bytes(softResp.bs, softResp.l)
+        bs: bytes = as_python_bytes(softResp.bs, softResp.length)
         LIB.FreeMem(softResp.bs)
         if (
             retriever not in self._soft_call_cbs_is_bytes_result
@@ -674,7 +709,7 @@ class ThreadOmega:
         api_name = retriever
         listeners = self._soft_listeners.get(api_name, [])
         softResp: ConsumeSoftData_return = LIB.ConsumeSoftData()
-        bs: bytes = as_python_bytes(softResp.bs, softResp.l)
+        bs: bytes = as_python_bytes(softResp.bs, softResp.length)
         LIB.FreeMem(softResp.bs)
         if self._soft_listeners_is_listen_bytes:
             for listener in listeners:
@@ -700,7 +735,7 @@ class ThreadOmega:
         resp_id = next(self._soft_resp_counter)
 
         softData: ConsumeSoftCall_return = LIB.ConsumeSoftCall(toCString(resp_id))
-        bs: bytes = as_python_bytes(softData.bs, softData.l)
+        bs: bytes = as_python_bytes(softData.bs, softData.length)
         LIB.FreeMem(softData.bs)
 
         def wrapper(data, resp_id):
@@ -749,15 +784,34 @@ class ThreadOmega:
         if packetTypeName == "":
             LIB.OmitEvent()
         elif listeners := self._packet_listeners.get(packetTypeName, []):
-            ret = LIB.ConsumeMCPacket()
-            if convertError := toPyString(ret.convertError):
-                fmts.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
-                return
-            jsonPkt = json.loads(toPyString(ret.packetDataAsJsonStr))
-            for listener in listeners:
-                ToolDeltaThread(
-                    listener, (packetTypeName, jsonPkt), usage="Packet Callback Thread", thread_level=ToolDeltaThread.SYSTEM,
+            if APIVersion >= 100:
+                msgpack_ret: MCMsgpackPacketEvent = LIB.ConsumeMCPacketToMsgpack()
+                if convertError := toPyString(msgpack_ret.convertError):
+                    fmts.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
+                    return
+                msgpackPkt = msgpack.unpackb(
+                    as_python_bytes(msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len)
                 )
+                for listener in listeners:
+                    ToolDeltaThread(
+                        listener,
+                        (packetTypeName, msgpackPkt),
+                        usage="Packet Callback Thread",
+                        thread_level=ToolDeltaThread.SYSTEM,
+                    )
+            else:
+                json_ret: MCPacketEvent = LIB.ConsumeMCPacket()
+                if convertError := toPyString(json_ret.convertError):
+                    fmts.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
+                    return
+                jsonPkt = json.loads(toPyString(json_ret.packetDataAsJsonStr))
+                for listener in listeners:
+                    ToolDeltaThread(
+                        listener,
+                        (packetTypeName, jsonPkt),
+                        usage="Packet Callback Thread",
+                        thread_level=ToolDeltaThread.SYSTEM,
+                    )
 
         else:
             LIB.OmitEvent()
@@ -769,7 +823,7 @@ class ThreadOmega:
             LIB.OmitEvent()
         else:
             ret: ConsumeMCBytesPacket_return = LIB.ConsumeMCBytesPacket()
-            bs: bytes = as_python_bytes(ret.pktBytes, ret.l)
+            bs: bytes = as_python_bytes(ret.pktBytes, ret.length)
             LIB.FreeMem(ret.pktBytes)
             for listener in listeners:
                 ToolDeltaThread(
@@ -982,7 +1036,7 @@ class ThreadOmega:
     def load_blob_cache(self, hash: int) -> bytes:
         OmegaAvailable()
         ret: LoadBlobCache_return = LIB.LoadBlobCache(CLongLong(hash))
-        payload: bytes = as_python_bytes(ret.bs, ret.l)
+        payload: bytes = as_python_bytes(ret.bs, ret.length)
         LIB.FreeMem(ret.bs)
         return payload
 
@@ -1047,7 +1101,7 @@ class ThreadOmega:
 
 
 def load_lib():
-    global LIB
+    global LIB, APIVersion
 
     sys_machine = platform.machine().lower()
     sys_type = platform.uname().system
@@ -1178,3 +1232,12 @@ def load_lib():
     LIB.PlaceCommandBlock.argtypes = [CString]
     LIB.UseHotbarItem.argtypes = [ctypes.c_uint8]
     LIB.DropItemFromHotBar.argtypes = [ctypes.c_uint8]
+
+    if hasattr(LIB, "OmegaAPIVersion"):
+        LIB.OmegaAPIVersion.restype = ctypes.c_int32
+        APIVersion = LIB.OmegaAPIVersion()
+    else:
+        APIVersion = 0
+
+    if APIVersion >= 100:
+        LIB.ConsumeMCPacketToMsgpack.restype = MCMsgpackPacketEvent
