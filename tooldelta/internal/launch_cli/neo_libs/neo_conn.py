@@ -116,7 +116,7 @@ class ConsumeSoftData_return(ctypes.Structure):
 class ConsumeSoftCall_return(ctypes.Structure):
     bs: CBytes
     length: CInt
-    _fields_ = (("bs", CBytes), ("l", CInt))
+    _fields_ = (("bs", CBytes), ("length", CInt))
 
 
 def SoftCallWithJSON(api: str, json_args: str, retrieverID: str):
