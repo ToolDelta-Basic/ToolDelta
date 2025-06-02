@@ -285,18 +285,6 @@ class GameCtrl:
                         fmts.print_inf("§1" + " ".join(jon).strip('"'))
                     else:
                         fmts.print_inf(msg)
-                    if msg.startswith("death."):
-                        args = pkt["Parameters"]
-                        utils.fill_list_index(args, ["", "", ""])
-                        who_died, killer, weapon_name = args
-                        if weapon_name:
-                            fmts.print_inf(
-                                f"§e{who_died} 被 {killer} 用 {weapon_name} §r杀死了"
-                            )
-                        elif killer:
-                            fmts.print_inf(f"§e{who_died} 被 {killer} 击败了")
-                        else:
-                            fmts.print_inf(f"§e{who_died} 死亡了")
             case (
                 TextType.TextTypeChat
                 | TextType.TextTypeWhisper
