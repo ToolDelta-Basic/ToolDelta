@@ -6,9 +6,10 @@ import requests
 import json
 
 from .utils import fmts
+from .constants.tooldelta_cli import FBLIKE_APIS
 
 
-def fblike_sign_login(url: str, api_urls_fmt: list[str]) -> str:
+def fblike_sign_login(url: str, api_urls_fmt: list[str] = FBLIKE_APIS) -> str:
     """登录各大验证服务器获取 Token
 
     Raises:
