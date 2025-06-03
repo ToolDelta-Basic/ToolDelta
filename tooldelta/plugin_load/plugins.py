@@ -139,6 +139,8 @@ class PluginGroup:
         try:
             fmts.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
             classic_plugin_loader.read_plugins(self)
+            fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
+            self.execute_preload(self.linked_frame.on_plugin_err)
             # 主动读取类式插件监听的数据包
             for i in classic_plugin.dict_packet_funcs.keys():
                 self.__add_listen_packet_id(i)
@@ -146,8 +148,6 @@ class PluginGroup:
                 self.__add_listen_packet_id(i)
             # 主动读取类式插件监听的广播事件器
             self.broadcast_listeners.update(classic_plugin.broadcast_listener)
-            fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
-            self.execute_preload(self.linked_frame.on_plugin_err)
             fmts.print_suc(
                 f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个类式插件"
             )
