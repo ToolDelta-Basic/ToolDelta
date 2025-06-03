@@ -52,50 +52,54 @@ def client_title() -> None:
             start_tool_delta()
             return
         else:
-            text=choice(TOOLDELTA_LOGO_mode)
-            if text[0]==0:
-                print(fmts.clean_fmt(text[1]))
-            elif text[0]==1:
-                print(fmts.print_gradient(text[1],text[2],text[3]))
-            if "title" in sys_args.sys_args_to_dict():
-                fmts.clean_print(launch_args["title"] or "")
-            fmts.clean_print(
-                "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
-            )
-            fmts.clean_print("1 - §b启动 ToolDelta")
-            fmts.clean_print("2 - §d打开插件管理器")
-            fmts.clean_print("3 - §d打开插件市场")
-            fmts.clean_print("4 - §6初始化所有插件配置")
-            fmts.clean_print("5 - §a修改启动配置")
-            fmts.clean_print("6 - §c开启直接启动模式")
-            for i, (opt_name, _) in enumerate(more_opts.values()):
-                fmts.clean_print(f"{i + 7} - {opt_name}")
-            fmts.clean_print("q - §7退出")
-            r = input("请选择：").strip()
-        match r:
-            case "1":
-                start_tool_delta()
-            case "2":
-                plugin_manager.manage_plugins()
-            case "3":
-                market.enter_plugin_market()
-            case "4":
-                init_cfg_only()
-            case "5":
-                ConfigLoader.change_config()
-            case "6":
-                open("快速启动.sig", "wb").close()
-                fmts.clean_print("§a快速启动模式已开启")
+            while 1:
+                text=choice(TOOLDELTA_LOGO_mode)
+                if text[0]==0:
+                    print(fmts.clean_fmt(text[1]))
+                elif text[0]==1:
+                    print(fmts.print_gradient(text[1],text[2],text[3]))
+                if "title" in sys_args.sys_args_to_dict():
+                    fmts.clean_print(launch_args["title"] or "")
                 fmts.clean_print(
-                    "§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能"
+                    "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
                 )
-            case "q":
-                fmts.clean_print("§aToolDelta 已退出.")
-            case _:
-                if r in more_opts.keys():
-                    os.system(more_opts[r][1])
-                else:
-                    fmts.clean_print("§c不合法的启动模式: " + r)
+                fmts.clean_print("1 - §b启动 ToolDelta")
+                fmts.clean_print("2 - §d打开插件管理器")
+                fmts.clean_print("3 - §d打开插件市场")
+                fmts.clean_print("4 - §6初始化所有插件配置")
+                fmts.clean_print("5 - §a修改启动配置")
+                fmts.clean_print("6 - §c开启直接启动模式")
+                for i, (opt_name, _) in enumerate(more_opts.values()):
+                    fmts.clean_print(f"{i + 7} - {opt_name}")
+                fmts.clean_print("q - §7退出")
+                r = input("请选择: ").strip()
+                match r:
+                    case "1":
+                        start_tool_delta()
+                    case "2":
+                        plugin_manager.manage_plugins()
+                    case "3":
+                        market.enter_plugin_market()
+                    case "4":
+                        init_cfg_only()
+                    case "5":
+                        ConfigLoader.change_config()
+                    case "6":
+                        open("快速启动.sig", "wb").close()
+                        fmts.clean_print("§a快速启动模式已开启")
+                        fmts.clean_print(
+                            "§6删除本地的 §f快速启动.sig§6 文件即可取消快速启动功能"
+                        )
+                        time.sleep(1)
+                    case "q":
+                        fmts.clean_print("§aToolDelta 已退出.")
+                        return
+                    case _:
+                        if r in more_opts.keys():
+                            os.system(more_opts[r][1])
+                        else:
+                            fmts.clean_print("§c不合法的启动模式: " + r)
+                        return
     except (EOFError, SystemExit):
         pass
     except Exception:
