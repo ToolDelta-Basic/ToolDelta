@@ -77,6 +77,7 @@ def client_title() -> None:
             match r:
                 case "1":
                     start_tool_delta()
+                    return
                 case "2":
                     plugin_manager.manage_plugins()
                 case "3":
