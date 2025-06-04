@@ -4,7 +4,7 @@ import os
 import copy
 from typing import Any, TypeVar
 from collections.abc import Callable
-from threading import Lock
+from threading import Lock, RLock
 
 from .timer_events import timer_event
 from .safe_writer import safe_write
@@ -28,17 +28,19 @@ class _jsonfile_status:
         self.is_changed = False
         self.load_time = time.time()
         self.unload_delay = unload_delay
+        self.lock = RLock()
         parent_dir = os.path.dirname(path)
-        if parent_dir and not os.path.isdir(dp := os.path.dirname(path)):
-            raise ValueError("文件夹: " + dp + " 路径不存在")
-        if not need_file_exists and not os.path.isfile(path):
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(default, f, ensure_ascii=False)
-            self.content = default
-            self.is_changed = True
-        else:
-            with open(path, encoding="utf-8") as f:
-                self.content = json.load(f)
+        with self.lock:
+            if parent_dir and not os.path.isdir(dp := os.path.dirname(path)):
+                raise ValueError("文件夹: " + dp + " 路径不存在")
+            if not need_file_exists and not os.path.isfile(path):
+                with open(path, "w", encoding="utf-8") as f:
+                    json.dump(default, f, ensure_ascii=False)
+                self.content = default
+                self.is_changed = True
+            else:
+                with open(path, encoding="utf-8") as f:
+                    self.content = json.load(f)
 
     def flush_time(self):
         self.load_time = time.time()
@@ -56,13 +58,15 @@ class _jsonfile_status:
             return self.content
 
     def write(self, content):
-        self.flush_time()
-        self.is_changed = content != self.content
-        self.content = content
+        with self.lock:
+            self.flush_time()
+            self.is_changed = content != self.content
+            self.content = content
 
     def save(self):
-        if self.is_changed:
-            safe_write(self.path, self.content)
+        with self.lock:
+            if self.is_changed:
+                safe_write(self.path, self.content)
 
 
 
