@@ -20,7 +20,12 @@ CBytes = ctypes.c_void_p
 
 
 APIVersion: int = 0
+OldAccessPointVersion = False
 
+def NewAccessPointVersionCheck(attr_name: str):
+    global OldAccessPointVersion
+    if OldAccessPointVersion:
+        raise AttributeError(attr_name + " 在旧版 NeOmega 接入点不被支持。")
 
 def toCString(string: str):
     return ctypes.c_char_p(bytes(string, encoding="utf-8"))
@@ -817,6 +822,7 @@ class ThreadOmega:
             LIB.OmitEvent()
 
     def _handle_mc_bytes_packet(self, customPacketTypeName):
+        # Not new version check because it's already new version when this method is called
         customPacketTypeName = customPacketTypeName
         listeners = self._packet_listeners.get(customPacketTypeName, [])
         if len(listeners) == 0:
@@ -1034,6 +1040,7 @@ class ThreadOmega:
         )
 
     def load_blob_cache(self, hash: int) -> bytes:
+        NewAccessPointVersionCheck("load_blob_cache")
         OmegaAvailable()
         ret: LoadBlobCache_return = LIB.LoadBlobCache(CLongLong(hash))
         payload: bytes = as_python_bytes(ret.bs, ret.length)
@@ -1041,6 +1048,7 @@ class ThreadOmega:
         return payload
 
     def update_blob_cache(self, hash: int, payload: bytes) -> bool:
+        NewAccessPointVersionCheck("update_blob_cache")
         OmegaAvailable()
         if (
             LIB.UpdateBlobCache(CLongLong(hash), toByteCSlice(payload), len(payload))
@@ -1101,7 +1109,7 @@ class ThreadOmega:
 
 
 def load_lib():
-    global LIB, APIVersion
+    global LIB, APIVersion, OldAccessPointVersion
 
     sys_machine = platform.machine().lower()
     sys_type = platform.uname().system
@@ -1148,15 +1156,12 @@ def load_lib():
     LIB.ConsumeSoftCall.argtypes = [CString]
     LIB.ConsumeSoftCall.restype = ConsumeSoftCall_return
     LIB.ConsumeMCPacket.restype = MCPacketEvent
-    LIB.ConsumeMCBytesPacket.restype = ConsumeMCBytesPacket_return
     LIB.SendWebSocketCommandNeedResponse.argtypes = [CString, CString]
     LIB.SendPlayerCommandNeedResponse.argtypes = [CString, CString]
     LIB.SendWOCommand.argtypes = [CString]
     LIB.SendWebSocketCommandOmitResponse.argtypes = [CString]
     LIB.SendPlayerCommandOmitResponse.argtypes = [CString]
     LIB.FreeMem.argtypes = [ctypes.c_void_p]
-    LIB.TranslateChunkNBT.argtypes = [CBytes, CInt]
-    LIB.TranslateChunkNBT.restype = TranslateChunkNBT_return
     LIB.ListenAllPackets.argtypes = []
     LIB.GetPacketNameIDMapping.restype = CString
     LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
@@ -1164,10 +1169,6 @@ def load_lib():
     LIB.SendGamePacket.argtypes = [CInt, CBytes, CInt]
     LIB.SendGamePacket.restype = CString
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
-    LIB.LoadBlobCache.argtypes = [CLongLong]
-    LIB.LoadBlobCache.restype = LoadBlobCache_return
-    LIB.UpdateBlobCache.argtypes = [CLongLong, CBytes, CInt]
-    LIB.UpdateBlobCache.restype = CInt
     LIB.GetClientMaintainedExtendInfo.restype = CString
     LIB.GetAllOnlinePlayers.restype = CString
     LIB.AddGPlayerUsingCount.argtypes = [CString, CInt]
@@ -1232,6 +1233,19 @@ def load_lib():
     LIB.PlaceCommandBlock.argtypes = [CString]
     LIB.UseHotbarItem.argtypes = [ctypes.c_uint8]
     LIB.DropItemFromHotBar.argtypes = [ctypes.c_uint8]
+
+    # Older access point version compatible
+    try:
+        LIB.LoadBlobCache.argtypes = [CLongLong]
+        LIB.LoadBlobCache.restype = LoadBlobCache_return
+        LIB.UpdateBlobCache.argtypes = [CLongLong, CBytes, CInt]
+        LIB.UpdateBlobCache.restype = CInt
+        LIB.TranslateChunkNBT.argtypes = [CBytes, CInt]
+        LIB.TranslateChunkNBT.restype = TranslateChunkNBT_return
+        LIB.ConsumeMCBytesPacket.restype = ConsumeMCBytesPacket_return
+        OldAccessPointVersion = False
+    except Exception:
+        OldAccessPointVersion = True
 
     if hasattr(LIB, "OmegaAPIVersion"):
         LIB.OmegaAPIVersion.restype = ctypes.c_int32
