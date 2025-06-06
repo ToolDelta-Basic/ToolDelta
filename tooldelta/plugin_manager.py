@@ -4,9 +4,8 @@ import os
 import platform
 import shlex
 import shutil
-
 import json
-
+from pathlib import Path
 from .utils import fmts
 from .constants import (
     PLUGIN_TYPE_MAPPING,
@@ -103,8 +102,13 @@ class PluginManager:
         r = input(fmts.clean_fmt("§c删除插件操作不可逆, 请输入 y, 其他取消：")).lower()
         if r != "y":
             return
-        plugin_dir = os.path.join("插件文件", f_dirname, plugin.name)
-        dir_path = plugin_dir + ("+disabled" if not plugin.is_enabled else "")
+        plugin_dir = Path("插件文件") / f_dirname / plugin.name
+        dir_path = plugin_dir / ("+disabled" if not plugin.is_enabled else "")
+        if not dir_path.is_dir():
+            dir_path = Path(str(dir_path).removesuffix("+disabled"))
+            if not dir_path.is_dir():
+                fmts.clean_print("§c找不到插件文件夹, 回车键继续")
+                return
         shutil.rmtree(dir_path)
         plugin.is_deleted = True
         fmts.clean_print(f"§a已成功删除插件 {plugin.name}, 回车键继续")
@@ -142,16 +146,21 @@ class PluginManager:
             plugin (PluginRegData): 插件数据类
             f_dirname (str): 插件所属类别的文件夹名
         """
+        pth = Path("插件文件", f_dirname, plugin.name)
         if plugin.is_enabled:
-            os.rename(
-                os.path.join("插件文件", f_dirname, plugin.name),
-                os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
-            )
+            # NOT: datas.json 中标明它被启用, 但是文件夹名实际上表明它未被启用
+            if not Path(str(pth) + "+disabled").is_dir():
+                os.rename(
+                    pth,
+                    str(pth) + "+disabled",
+                )
         else:
-            os.rename(
-                os.path.join("插件文件", f_dirname, plugin.name + "+disabled"),
-                os.path.join("插件文件", f_dirname, plugin.name),
-            )
+            # NOT: datas.json 中标明它被禁用, 但是文件夹名实际上表明它被启用
+            if not pth.is_dir():
+                os.rename(
+                    str(pth) + "+disabled",
+                    pth,
+                )
         plugin.is_enabled = not plugin.is_enabled
         fmts.clean_print(
             f"§6当前插件状态为: {['§c禁用', '§a启用'][plugin.is_enabled]}§6"
@@ -303,9 +312,9 @@ class PluginManager:
         """
         plugins = []
         for ptype, type_dir in PLUGIN_TYPE_MAPPING.items():
-            p_dirs = os.path.join(TOOLDELTA_PLUGIN_DIR, type_dir)
+            p_dirs = Path(TOOLDELTA_PLUGIN_DIR) / type_dir
             for fd in os.listdir(p_dirs):
-                datpath = os.path.join(p_dirs, fd, "datas.json")
+                datpath = p_dirs / fd / "datas.json"
                 is_enabled = not fd.endswith("+disabled")
                 if os.path.isfile(datpath):
                     with open(datpath, encoding="utf-8") as f:
