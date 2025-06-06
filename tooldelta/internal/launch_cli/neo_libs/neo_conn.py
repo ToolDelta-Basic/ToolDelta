@@ -822,7 +822,9 @@ class ThreadOmega:
             LIB.OmitEvent()
 
     def _handle_mc_bytes_packet(self, customPacketTypeName):
-        # Not new version check because it's already new version when this method is called
+        if OldAccessPointVersion:
+            # New end point & old access point
+            return
         customPacketTypeName = customPacketTypeName
         listeners = self._packet_listeners.get(customPacketTypeName, [])
         if len(listeners) == 0:
