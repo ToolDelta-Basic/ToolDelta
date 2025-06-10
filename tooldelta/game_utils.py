@@ -3,10 +3,10 @@
 """
 
 import time
+import json
 from typing import TYPE_CHECKING, Optional
 from collections.abc import Callable
-import json
-import threading
+from .utils import create_result_cb
 
 from . import utils
 from .constants import PacketIDS, TextType
@@ -21,24 +21,6 @@ game_ctrl: Optional["GameCtrl"] = None
 frame: Optional["ToolDelta"] = None
 player_waitmsg_cb: dict[str, Callable[[str], None]] = {}
 
-
-def _create_lock_and_result_setter():
-    """
-    创建回调监听器与返回器
-    """
-    lock = threading.Lock()
-    lock.acquire()
-    ret = [None]
-
-    def result_setter(result):
-        ret[0] = result
-        lock.release()
-
-    def result_getter(timeout: float = -1):
-        lock.acquire(timeout=timeout)
-        return ret[0]
-
-    return result_setter, result_getter
 
 
 def _set_frame(_frame: "ToolDelta") -> None:
@@ -301,10 +283,10 @@ def waitMsg(playername: str, timeout: float = 30) -> str | None:
     Returns:
         result (str | None): 返回, 如果超时或玩家中途退出则返回None
     """
-    s, g = _create_lock_and_result_setter()
-    player_waitmsg_cb[playername] = s
+    getter, setter = create_result_cb(str)
+    player_waitmsg_cb[playername] = setter
     try:
-        res = g(timeout)
+        res = getter(timeout)
     finally:
         player_waitmsg_cb.pop(playername, None)
     return res
