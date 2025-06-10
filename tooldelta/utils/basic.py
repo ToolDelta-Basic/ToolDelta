@@ -178,7 +178,7 @@ def create_result_cb(typechecker: type[VT] = object):
     ```
     getter, setter = create_result_cb(str)
 
-    cbs[special_id] = getter
+    cbs[special_id] = setter
     # 在这边等待回调...
     result = getter()
 
