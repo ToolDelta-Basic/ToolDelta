@@ -17,9 +17,14 @@ def safe_write(filepath: PathLike, obj: Any, indent=2):
         try:
             bak_name = str(filepath) + ".bak"
             content = json.dumps(obj, indent=indent, ensure_ascii=False)
+            # 1. make backup
             with open(bak_name, "w", encoding="utf-8") as fp:
                 fp.write(content)
-                break
+            # Seemed unneccessary
+            # # 2. write orig file
+            # with open(filepath, "w", encoding="utf-8") as fp:
+            #     fp.write(content)
+            # break
         except BaseException as err:
             # 防止写入过程中被退出, 导致文件只写了一半
             fmts.print_war(f"文件在写入时遭到强行中止 ({err}), 重试")

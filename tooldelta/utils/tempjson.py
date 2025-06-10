@@ -238,11 +238,9 @@ def jsonfile_auto_save():
 def save_all():
     with tempjson_rw_lock:
         for k, v in tempjson_paths.copy().items():
+            v.save()
             if v.should_unload():
-                v.save()
                 del tempjson_paths[k]
-            else:
-                v.save()
 
 
 def reset():
