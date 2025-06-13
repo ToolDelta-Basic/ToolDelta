@@ -304,11 +304,12 @@ class GameCtrl:
             case TextType.TextTypeObjectWhisper:
                 # /tellraw 消息
                 msg = pkt["Message"]
-                msg_text = json.loads(msg)["rawtext"]
-                if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
-                    fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
-                    return False
-                msg_text = "".join([i["text"] for i in msg_text])
+                msg_text = json.loads(msg).get("rawtext")
+                if msg_text is not None:
+                    if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
+                        fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
+                        return False
+                    msg_text = "".join([i["text"] for i in msg_text])
                 fmts.print_with_info(msg_text, "§f 消息 ")
         return False
 
