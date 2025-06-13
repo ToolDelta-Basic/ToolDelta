@@ -109,7 +109,7 @@ class FrameFateArk(StandardFrame):
         self.dict_packet_handler(pkID, pk)
 
     def _command_output_handler(self, pk: dict):
-        pkUUID = pk["CommandOrigin"]["UUID"]
+        pkUUID = utils.basic.validate_uuid(pk["CommandOrigin"]["UUID"])
         if pkUUID in self.command_output_cbs:
             self.command_output_cbs[pkUUID](pk)
         # else:

@@ -214,7 +214,7 @@ class Eulogist:
                     pkID = msg.content["ID"]
                     pk = msg.content["Content"]
                     if pkID == 79:
-                        pkUUID = pk["CommandOrigin"]["UUID"]
+                        pkUUID: bytes = pk["CommandOrigin"]["UUID"]
                         if pkUUID in self.command_cbs.keys():
                             self.command_cbs[pkUUID](pk)
                         # else:

@@ -1,8 +1,10 @@
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 from threading import Event
+import uuid
 
 from ...utils import fmts, create_result_cb
+from ...utils.basic import validate_uuid
 from ..types.player import Player, UnreadyPlayer
 from ..types.player_abilities import Abilities, update_player_ability_from_ability_data
 from ...constants import PacketIDS
@@ -102,7 +104,7 @@ class PlayerInfoMaintainer:
         """
         return self.uq_to_player.get(uqID)
 
-    def getPlayerByUUID(self, uuid: str) -> Player | None:
+    def getPlayerByUUID(self, _uuid: str | uuid.UUID) -> Player | None:
         """
         通过玩家UUID获取玩家对象。
         Args:
@@ -111,18 +113,20 @@ class PlayerInfoMaintainer:
         Returns:
             Player | None: 玩家对象
         """
-        return self.uuid_to_player.get(uuid)
+        if isinstance(_uuid, uuid.UUID):
+            _uuid = str(_uuid)
+        return self.uuid_to_player.get(_uuid)
 
-    def getPlayerByXUID(self, uuid: str) -> Player | None:
+    def getPlayerByXUID(self, xuid: str) -> Player | None:
         """
         通过玩家XUID获取玩家对象。
         Args:
-            uuid (str): XUID
+            xuid (str): XUID
 
         Returns:
             Player | None: 玩家对象
         """
-        return self.xuid_to_player.get(uuid)
+        return self.xuid_to_player.get(xuid)
 
     def getAllPlayers(self) -> list[Player]:
         """
@@ -182,7 +186,7 @@ class PlayerInfoMaintainer:
         return False
 
     def _hook_add_player(self, packet: dict):
-        puuid = packet["UUID"]
+        puuid = validate_uuid(packet["UUID"])
         p = self.getPlayerByUUID(puuid)
         if p is None:
             self.pending_add_player_packet[puuid] = packet
@@ -203,9 +207,10 @@ class PlayerInfoMaintainer:
     def _hook_playerlist_add_player(self, entry: dict):
         unique_id = entry["EntityUniqueID"]
         playername = entry["Username"]
+        ud = validate_uuid(entry["UUID"])
         self.add_player(
             UnreadyPlayer(
-                uuid=entry["UUID"],
+                uuid=ud,
                 unique_id=unique_id,
                 name=playername,
                 xuid=entry["XUID"],
@@ -217,11 +222,12 @@ class PlayerInfoMaintainer:
         )
 
     def _hook_playerlist_remove_player(self, entry: dict):
-        if player := self.getPlayerByUUID(entry["UUID"]):
+        ud = validate_uuid(entry["UUID"])
+        if player := self.getPlayerByUUID(ud):
             self.remove_player(player)
         else:
             fmts.print_war(
-                f"[internal] PlayerInfoMaintainer: remove_player: 找不到玩家的 UUID: {entry['UUID']}"
+                f"[internal] PlayerInfoMaintainer: remove_player: 找不到玩家的 UUID: {ud}"
             )
 
     def _lookup_pendings(self, player: Player):

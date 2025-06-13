@@ -4,6 +4,7 @@ import re
 import threading
 from typing import Any, TypeVar
 from collections.abc import Callable
+import uuid
 
 from .fmts import simple_fmt, print_war
 
@@ -202,6 +203,26 @@ def create_result_cb(typechecker: type[VT] = object):
         lock.release()
 
     return getter, setter
+
+def parse_uuid(ud: str | bytes | uuid.UUID) -> uuid.UUID:
+    if isinstance(ud, str):
+        return uuid.UUID(ud)
+    elif isinstance(ud, uuid.UUID):
+        return ud
+    elif isinstance(ud, bytes):
+        return uuid.UUID(ud.decode())
+    else:
+        raise ValueError(f"Invalid UUID type: {type(ud).__name__}")
+
+def validate_uuid(ud: str | bytes | uuid.UUID) -> str:
+    if isinstance(ud, str):
+        return ud
+    elif isinstance(ud, bytes):
+        return ud.decode()
+    elif isinstance(ud, uuid.UUID):
+        return str(ud)
+    else:
+        raise ValueError(f"Invalid UUID type: {type(ud).__name__}")
 
 
 class DesperateFuncClass:
