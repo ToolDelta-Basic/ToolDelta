@@ -210,7 +210,7 @@ def parse_uuid(ud: str | bytes | uuid.UUID) -> uuid.UUID:
     elif isinstance(ud, uuid.UUID):
         return ud
     elif isinstance(ud, bytes):
-        return uuid.UUID(ud.decode())
+        return uuid.UUID(bytes=ud)
     else:
         raise ValueError(f"Invalid UUID type: {type(ud).__name__}")
 
@@ -218,7 +218,7 @@ def validate_uuid(ud: str | bytes | uuid.UUID) -> str:
     if isinstance(ud, str):
         return ud
     elif isinstance(ud, bytes):
-        return ud.decode()
+        return str(uuid.UUID(bytes=ud))
     elif isinstance(ud, uuid.UUID):
         return str(ud)
     else:
