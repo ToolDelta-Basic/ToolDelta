@@ -309,7 +309,12 @@ class GameCtrl:
                     if len(msg_text) > 0 and msg_text[0].get("translate") == "***":
                         fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
                         return False
-                    msg_text = "".join([i["text"] for i in msg_text])
+                    msg_text = "".join(
+                        [
+                            (i.get("text") or i.get("translate", "???"))
+                            for i in msg_text
+                        ]
+                    )
                 fmts.print_with_info(msg_text, "§f 消息 ")
         return False
 
