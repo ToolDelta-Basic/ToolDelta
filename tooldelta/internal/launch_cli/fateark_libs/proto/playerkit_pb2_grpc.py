@@ -6,7 +6,7 @@ import warnings
 from . import playerkit_pb2 as proto_dot_playerkit__pb2
 from . import response_pb2 as proto_dot_response__pb2
 
-GRPC_GENERATED_VERSION = '1.71.0'
+GRPC_GENERATED_VERSION = '1.73.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
