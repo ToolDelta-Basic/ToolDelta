@@ -4,6 +4,7 @@ from collections.abc import Callable
 from grpc import RpcError
 
 from ... import utils
+from ...utils.urlmethod import get_global_github_src_url
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
@@ -23,6 +24,7 @@ class FrameFateArk(StandardFrame):
 
     def init(self) -> None:
         super().init()
+        fateark_utils.check_update(get_global_github_src_url())
 
     def set_launch_data(
         self, serverNumber: int, password: str, fbToken: str, auth_server_url: str

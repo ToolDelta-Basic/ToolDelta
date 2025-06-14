@@ -92,6 +92,9 @@ TDREPO_URL = (
 )
 "ToolDelta镜像: github项目仓库"
 
+TDDEPENDENCY_REPO_RAW = "ToolDelta-Basic/DependencyLibrary"
+TDDEPENDENCY_REPO = "https://raw.githubusercontent.com/" + TDDEPENDENCY_REPO_RAW
+
 PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.tooldelta.top/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
 
 

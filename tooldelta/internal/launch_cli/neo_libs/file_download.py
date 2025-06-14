@@ -5,6 +5,7 @@ import platform
 import brotli
 import requests
 
+from ....constants.tooldelta_cli import TDDEPENDENCY_REPO_RAW
 from ....utils import fmts, urlmethod, sys_args
 
 
@@ -88,9 +89,9 @@ def download_neomg() -> bool:
     return True
 
 
-def get_github_content_url(url) -> tuple[str, str]:
+def get_github_content_url(url: str) -> tuple[str, str]:
     mirror_src = url + "/ToolDelta-Basic/ToolDelta/main"
-    depen_url = url + "/ToolDelta-Basic/DependencyLibrary/main"
+    depen_url = url + f"/{TDDEPENDENCY_REPO_RAW}/main"
     return mirror_src, depen_url
 
 
@@ -98,7 +99,7 @@ def get_required_dependencies(mirror_src: str) -> tuple[dict, dict]:
     try:
         resp1 = requests.get(f"{mirror_src}/require_files.json", timeout=5)
         resp1.raise_for_status()
-        require_depen = resp1.json()
+        require_depen = resp1.json()["NeOmega"]
         resp2 = requests.get(f"{mirror_src}/neomega_files.json", timeout=5)
         resp2.raise_for_status()
         require_neomega = resp2.json()

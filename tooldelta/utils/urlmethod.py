@@ -15,7 +15,7 @@ import requests
 from colorama import Fore, Style, init
 from tqdm.asyncio import tqdm
 
-from ..constants import TDREPO_URL
+from ..constants.tooldelta_cli import TDREPO_URL, TDDEPENDENCY_REPO_RAW
 from ..version import get_tool_delta_version
 from . import fmts
 
@@ -52,12 +52,15 @@ init(autoreset=True)
 #     self.url = "https://github.tooldelta.top/https://raw.githubusercontent.com"
 #     return self.url
 
+
 def set_global_github_src_url(url: str):
     global GGithubSrcURL
     GGithubSrcURL = url
 
+
 def get_global_github_src_url():
     return GGithubSrcURL or "https://mirror.ghproxy.com"
+
 
 def get_fastest_github_mirror():
     # fmts.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
@@ -164,7 +167,6 @@ async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
         progress_bars = await asyncio.gather(*tasks)
         for progress_bar in progress_bars:
             progress_bar.close()
-
 
 
 def githubdownloadurl_to_rawurl(url: str) -> str:
@@ -453,3 +455,16 @@ def check_update() -> None:
         fmts.print_war("获取最新版本失败，请检查网络连接")
     except Exception as err:
         fmts.print_war(f"无法获取最新版本: {err}, 已忽略")
+
+
+def get_newest_dependency_commit(mirror_src: str) -> str:
+    """
+    获取最新的 commit
+
+    Args:
+        mirror_src (str): like "https://ghproxy.com"
+    """
+    return requests.get(
+        mirror_src
+        + f"/https://raw.githubusercontent.com/{TDDEPENDENCY_REPO_RAW}/main/commit"
+    ).text
