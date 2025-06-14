@@ -1,16 +1,35 @@
 {
-  "Linux:amd64": ["neomega_linux_amd64.so", "neomega_linux_access_point_amd64"],
-  "Android:arm64": [
-    "neomega_android_arm64.so",
-    "neomega_android_access_point_arm64"
-  ],
-  "Linux:arm64": ["neomega_linux_arm64.so", "neomega_linux_access_point_arm64"],
-  "Windows:amd64": [
-    "neomega_windows_amd64.dll",
-    "neomega_windows_access_point_amd64.exe"
-  ],
-  "Windows:arm64": [
-    "neomega_windows_arm64.dll",
-    "neomega_windows_access_point_arm64.exe"
-  ]
+    "NeOmega": {
+        "Linux:amd64": [
+            "neomega_linux_amd64.so",
+            "neomega_linux_access_point_amd64"
+        ],
+        "Android:arm64": [
+            "neomega_android_arm64.so",
+            "neomega_android_access_point_arm64"
+        ],
+        "Linux:arm64": [
+            "neomega_linux_arm64.so",
+            "neomega_linux_access_point_arm64"
+        ],
+        "Windows:amd64": [
+            "neomega_windows_amd64.dll",
+            "neomega_windows_access_point_amd64.exe"
+        ],
+        "Windows:arm64": [
+            "neomega_windows_arm64.dll",
+            "neomega_windows_access_point_arm64.exe"
+        ]
+    },
+    "FateArk": {
+        "Windows:amd64": [
+            "FateArk_windows_amd64.exe"
+        ],
+        "Linux:amd64": [
+            "FateArk_linux_amd64"
+        ],
+        "Linux:arm64": [
+            "FateArk_linux_arm64"
+        ]
+    }
 }
