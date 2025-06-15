@@ -20,9 +20,9 @@ def get_bin_path():
     if sys_type == "Windows":
         exe_fn = f"FateArk_windows_{sys_machine}.exe"
     elif "TERMUX_VERSION" in os.environ:
-        exe_fn = "FateArk_android_arm64.so"
+        exe_fn = "FateArk_android_arm64"
     elif sys_type == "Linux":
-        exe_fn = f"FateArk_linux_{sys_machine}.so"
+        exe_fn = f"FateArk_linux_{sys_machine}"
     else:
         fmts.print_err(f"暂不支持的操作系统: {sys_machine}")
         raise SystemExit

@@ -2,6 +2,7 @@ import os
 import subprocess
 from collections.abc import Callable
 from grpc import RpcError
+import grpc
 
 from ... import utils
 from ...utils.urlmethod import get_global_github_src_url
@@ -43,9 +44,13 @@ class FrameFateArk(StandardFrame):
         fateark_core.connect(f"localhost:{free_port}")
         fmts.print_suc("FateArk 接入点进程已启动")
         self._message_show_thread()
-        status, _, err_msg = fateark_core.login(
-            self.auth_server, self.fbToken, str(self.serverNumber), self.serverPassword
-        )
+        try:
+            status, _, err_msg = fateark_core.login(
+                self.auth_server, self.fbToken, str(self.serverNumber), self.serverPassword
+            )
+        except grpc.RpcError:
+            self.update_status(SysStatus.CRASHED_EXIT)
+            return SystemError("FateArk 与 ToolDelta 断开连接")
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
             return SystemError(f"FateArk 登录失败: {err_msg}")
