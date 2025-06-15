@@ -1,7 +1,7 @@
 import os
 import subprocess
-import platform
 from collections.abc import Callable
+import time
 from grpc import RpcError
 import grpc
 
@@ -38,10 +38,11 @@ class FrameFateArk(StandardFrame):
 
     def launch(self):
         self.update_status(SysStatus.LAUNCHING)
-        free_port = urlmethod.get_free_port(19000)
+        free_port = urlmethod.get_free_port(19200)
         self.start_fateark_proc(free_port)
         self._proc_message_show_thread()
         fmts.print_suc(f"将在 {free_port} 端口启动 FateArk 接入点")
+        time.sleep(3)
         fateark_core.connect(f"localhost:{free_port}")
         fmts.print_suc("FateArk 接入点进程已启动")
         self._message_show_thread()
@@ -49,9 +50,9 @@ class FrameFateArk(StandardFrame):
             status, _, err_msg = fateark_core.login(
                 self.auth_server, self.fbToken, str(self.serverNumber), self.serverPassword
             )
-        except grpc.RpcError:
+        except grpc.RpcError as err:
             self.update_status(SysStatus.CRASHED_EXIT)
-            return SystemError("FateArk 与 ToolDelta 断开连接")
+            return SystemError(f"FateArk 与 ToolDelta 断开连接: {err}")
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
             return SystemError(f"FateArk 登录失败: {err_msg}")
@@ -75,7 +76,7 @@ class FrameFateArk(StandardFrame):
             # Maybe is linux and so on
             os.system("chmod +x " + path)
         self.proc = subprocess.Popen(
-            ["./" + path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
