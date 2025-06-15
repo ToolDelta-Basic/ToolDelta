@@ -1,5 +1,6 @@
 import os
 import subprocess
+import platform
 from collections.abc import Callable
 from grpc import RpcError
 import grpc
@@ -70,8 +71,11 @@ class FrameFateArk(StandardFrame):
         if not os.path.isfile(path):
             fmts.print_err(f"FateArk 接入点不存在: {path}")
             raise SystemExit
+        if not path.endswith(".exe"):
+            # Maybe is linux and so on
+            os.system("chmod +x " + path)
         self.proc = subprocess.Popen(
-            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            ["./" + path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
