@@ -65,17 +65,18 @@ class Plugin:
     def format_data_path(self, *paths: str):
         return os.path.join(self.data_path, *paths)
 
-    def ListenPreload(self, cb: Callable[[], Any]):
+    def ListenPreload(self, cb: Callable[[], Any], priority: int = 0):
         """
         监听预加载事件
         预加载事件: 在读取插件后、和游戏建立连接前触发一次
 
         Args:
             cb (Callable[[], None]): 监听回调
+            priority (int, optional): 优先级, 默认为 0
         """
-        event_cbs.on_preload_cbs.append((self, cb))
+        event_cbs.on_preload_cbs.setdefault(priority, []).append((self, cb))
 
-    def ListenActive(self, cb: Callable[[], Any]):
+    def ListenActive(self, cb: Callable[[], Any], priority: int = 0):
         """
         监听连接建立事件
         连接建立事件: 在框架和游戏完全建立连接时触发一次
@@ -83,9 +84,9 @@ class Plugin:
         Args:
             cb (Callable[[], None]): 监听回调
         """
-        event_cbs.on_active_cbs.append((self, cb))
+        event_cbs.on_active_cbs.setdefault(priority, []).append((self, cb))
 
-    def ListenPlayerJoin(self, cb: Callable[[Player], Any]):
+    def ListenPlayerJoin(self, cb: Callable[[Player], Any], priority: int = 0):
         """
         监听玩家加入事件
         玩家加入事件: 在有玩家加入游戏时触发一次
@@ -93,9 +94,9 @@ class Plugin:
         Args:
             cb (Callable[[Player], None]): 监听回调, 传参: 玩家 (Player)
         """
-        event_cbs.on_player_join_cbs.append((self, cb))
+        event_cbs.on_player_join_cbs.setdefault(priority, []).append((self, cb))
 
-    def ListenPlayerLeave(self, cb: Callable[[Player], Any]):
+    def ListenPlayerLeave(self, cb: Callable[[Player], Any], priority: int = 0):
         """
         监听玩家退出事件
         玩家退出事件: 在有玩家退出游戏时触发一次
@@ -103,9 +104,9 @@ class Plugin:
         Args:
             cb (Callable[[Player], None]): 监听回调, 传参: 玩家 (Player)
         """
-        event_cbs.on_player_leave_cbs.append((self, cb))
+        event_cbs.on_player_leave_cbs.setdefault(priority, []).append((self, cb))
 
-    def ListenChat(self, cb: Callable[[Chat], Any]):
+    def ListenChat(self, cb: Callable[[Chat], Any], priority: int = 0):
         """
         监听玩家聊天事件
         玩家聊天事件: 在有玩家在聊天栏发言时触发一次
@@ -113,9 +114,9 @@ class Plugin:
         Args:
             cb (Callable[[Player], None]): 监听回调, 传参: 聊天事件 (Chat)
         """
-        event_cbs.on_chat_cbs.append((self, cb))
+        event_cbs.on_chat_cbs.setdefault(priority, []).append((self, cb))
 
-    def ListenFrameExit(self, cb: Callable[[FrameExit], Any]):
+    def ListenFrameExit(self, cb: Callable[[FrameExit], Any], priority: int = 0):
         """
         监听框架退出事件
         框架退出事件: 在框架退出/插件即将重载时触发一次
@@ -123,10 +124,13 @@ class Plugin:
         Args:
             cb (Callable[[Player], None]): 监听回调, 传参: 聊天事件 (Chat)
         """
-        event_cbs.on_frame_exit_cbs.append((self, cb))
+        event_cbs.on_frame_exit_cbs.setdefault(priority, []).append((self, cb))
 
     def ListenPacket(
-        self, pkt_id: PacketIDS | list[PacketIDS], cb: "DictPacketListener"
+        self,
+        pkt_id: PacketIDS | list[PacketIDS],
+        cb: "DictPacketListener",
+        priority: int = 0,
     ):
         """
         监听字典数据包的事件
@@ -148,11 +152,15 @@ class Plugin:
                 raise Exception("你不能尝试使用 ListenPacket 监听二进制数据包")
 
         for pkt_id in pkt_ids:
-            event_cbs.dict_packet_funcs.setdefault(pkt_id, [])
-            event_cbs.dict_packet_funcs[pkt_id].append(cb)
+            event_cbs.dict_packet_funcs.setdefault(pkt_id, {}).setdefault(
+                priority, []
+            ).append((self, cb))
 
     def ListenBytesPacket(
-        self, pkt_id: PacketIDS | list[PacketIDS], cb: "BytesPacketListener"
+        self,
+        pkt_id: PacketIDS | list[PacketIDS],
+        cb: "BytesPacketListener",
+        priority: int = 0,
     ):
         """
         监听二进制数据包的事件
@@ -174,11 +182,15 @@ class Plugin:
                 raise Exception("你不能尝试使用 ListenBytesPacket 监听普通的字典数据包")
 
         for pkt_id in pkt_ids:
-            event_cbs.bytes_packet_funcs.setdefault(pkt_id, [])
-            event_cbs.bytes_packet_funcs[pkt_id].append(cb)
+            event_cbs.bytes_packet_funcs.setdefault(pkt_id, {}).setdefault(
+                priority, []
+            ).append((self, cb))
 
     def ListenInternalBroadcast(
-        self, broadcast_name: str, cb: Callable[[InternalBroadcast], Any]
+        self,
+        broadcast_name: str,
+        cb: Callable[[InternalBroadcast], Any],
+        priority: int = 0,
     ):
         """
         监听广播事件
@@ -188,8 +200,9 @@ class Plugin:
             broadcast_name (str): 广播事件名
             cb (Callable[[InternalBroadcast], Any]): 监听回调, 传参: 广播事件 (InternalBroadcast), 返回: 回传给发送者的内容
         """
-        event_cbs.broadcast_listener.setdefault(broadcast_name, [])
-        event_cbs.broadcast_listener[broadcast_name].append(cb)
+        event_cbs.broadcast_listener.setdefault(broadcast_name, {}).setdefault(
+            priority, []
+        ).append((self, cb))
 
     def BroadcastEvent(self, evt: InternalBroadcast):
         """

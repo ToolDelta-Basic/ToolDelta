@@ -38,8 +38,8 @@ class PluginGroup:
 
     def __init__(self, frame: "ToolDelta"):
         self.set_frame(frame)
-        self.broadcast_listeners: dict[
-            str, list[Callable[[InternalBroadcast], Any]]
+        self.global_broadcast_listeners: dict[
+            str, classic_plugin.PluginEvents_P[Callable[[InternalBroadcast], Any]]
         ] = {}
         self.plugin_listen_packets: set[PacketIDS] = set()
         self.plugins_api: dict[str, Plugin] = {}
@@ -63,7 +63,7 @@ class PluginGroup:
         可能会因为一些插件线程由于底层原因无法被停止, 或者有垃圾无法被回收, 导致内存泄露等问题
         """
         self.plugins_api = {}
-        self.broadcast_listeners = {}
+        self.global_broadcast_listeners = {}
         classic_plugin.reload()
         fmts.print_inf("正在重新读取所有插件")
         self.load_plugins()
@@ -97,12 +97,14 @@ class PluginGroup:
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
         callback_list = []
-        res = self.broadcast_listeners.get(evt.evt_name)
+        res = self.global_broadcast_listeners.get(evt.evt_name)
         if res:
-            for f in res:
-                res2 = f(evt)
-                if res2:
-                    callback_list.append(res2)
+            listeners = sorted(res.items(), key=lambda x: x[0])
+            for _, thislevel_listeners in listeners:
+                for _, func in thislevel_listeners:
+                    res2 = func(evt)
+                    if res2 is not None:
+                        callback_list.append(res2)
         return callback_list
 
     def get_plugin_api(
@@ -147,7 +149,7 @@ class PluginGroup:
             for i in classic_plugin.bytes_packet_funcs.keys():
                 self.__add_listen_packet_id(i)
             # 主动读取类式插件监听的广播事件器
-            self.broadcast_listeners.update(classic_plugin.broadcast_listener)
+            self.global_broadcast_listeners.update(classic_plugin.broadcast_listener)
             fmts.print_suc(
                 f"插件初始化成功, 载入 §f{self.normal_plugin_loaded_num}§a 个类式插件"
             )

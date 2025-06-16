@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, Any
 from collections.abc import Callable
 
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
@@ -17,21 +17,21 @@ if TYPE_CHECKING:
         DictPacketListener,
         BytesPacketListener,
     )
-
 T = TypeVar("T")
-PluginEvent = tuple["Plugin", T]
+PluginEvents_P = dict[int, list[tuple["Plugin", T]]]
+"具有优先级的回调表"
 
 
-on_preload_cbs: list[PluginEvent[Callable[[], None]]] = []
-on_active_cbs: list[PluginEvent[Callable[[], None]]] = []
-on_player_join_cbs: list[PluginEvent[Callable[[Player], None]]] = []
-on_player_leave_cbs: list[PluginEvent[Callable[[Player], None]]] = []
-on_chat_cbs: list[PluginEvent[Callable[[Chat], None]]] = []
-on_frame_exit_cbs: list[PluginEvent[Callable[[FrameExit], None]]] = []
-on_reloaded_cbs: list[PluginEvent[Callable[[], None]]] = []
-dict_packet_funcs: dict[PacketIDS, list["DictPacketListener"]] = {}
-bytes_packet_funcs: dict[PacketIDS, list["BytesPacketListener"]] = {}
-broadcast_listener: dict[str, list[Callable[[InternalBroadcast], None]]] = {}
+on_preload_cbs: PluginEvents_P[Callable[[], None]] = {}
+on_active_cbs: PluginEvents_P[Callable[[], None]] = {}
+on_player_join_cbs: PluginEvents_P[Callable[[Player], None]] = {}
+on_player_leave_cbs: PluginEvents_P[Callable[[Player], None]] = {}
+on_chat_cbs: PluginEvents_P[Callable[[Chat], None]] = {}
+on_frame_exit_cbs: PluginEvents_P[Callable[[FrameExit], None]] = {}
+on_reloaded_cbs: PluginEvents_P[Callable[[], None]] = {}
+dict_packet_funcs: dict[PacketIDS, PluginEvents_P["DictPacketListener"]] = {}
+bytes_packet_funcs: dict[PacketIDS, PluginEvents_P["BytesPacketListener"]] = {}
+broadcast_listener: dict[str, PluginEvents_P[Callable[[InternalBroadcast], Any]]] = {}
 
 
 def reload():
@@ -48,6 +48,15 @@ def reload():
     broadcast_listener.clear()
 
 
+def run_by_priority(listeners: PluginEvents_P[Callable], args, onerr: ON_ERROR_CB,):
+    for _, sub_listeners in sorted(listeners.items(), reverse=True):
+        for plugin, listener in sub_listeners:
+            try:
+                listener(*args)
+            except Exception as e:
+                onerr(plugin.name, e)
+
+
 def execute_preload(onerr: ON_ERROR_CB) -> None:
     """执行插件的二次初始化方法
 
@@ -58,21 +67,19 @@ def execute_preload(onerr: ON_ERROR_CB) -> None:
         SystemExit: 缺少前置
         SystemExit: 前置版本过低
     """
-    try:
-        for p, func in on_preload_cbs:
-            name = p.name
-            func()
-    except PluginAPINotFoundError as err:
-        fmts.print_err(f"插件 {name} 需要包含该种接口的前置组件：{err.name}")
-        raise SystemExit from err
-    except PluginAPIVersionError as err:
-        fmts.print_err(
-            f"插件 {name} 需要该前置组件 {err.name} 版本：{err.m_ver}, 但是现有版本过低：{err.n_ver}"
-        )
-        raise SystemExit from err
-    except Exception as err:
-        onerr(name, err)
-        raise SystemExit
+    def error_handler(plugin_name: str, err: Exception):
+        if isinstance(err, PluginAPINotFoundError):
+            fmts.print_err(f"插件 {plugin_name} 需要包含该种接口的前置组件：{err.name}")
+            raise SystemExit from err
+        elif isinstance(err, PluginAPIVersionError):
+            fmts.print_err(
+                f"插件 {plugin_name} 需要该前置组件 {err.name} 版本：{err.m_ver}, 但是现有版本过低：{err.n_ver}"
+            )
+            raise SystemExit from err
+        else:
+            onerr(plugin_name, err)
+            raise SystemExit
+    run_by_priority(on_preload_cbs, (), error_handler)
 
 
 def execute_active(onerr: ON_ERROR_CB) -> None:
@@ -81,12 +88,7 @@ def execute_active(onerr: ON_ERROR_CB) -> None:
     Args:
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    try:
-        for p, func in on_active_cbs:
-            name = p.name
-            func()
-    except Exception as err:
-        onerr(name, err)
+    run_by_priority(on_active_cbs, (), onerr)
 
 
 def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
@@ -96,12 +98,7 @@ def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
         player (str): 玩家
         onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
     """
-    try:
-        for p, func in on_player_join_cbs:
-            name = p.name
-            func(player)
-    except Exception as err:
-        onerr(name, err)
+    run_by_priority(on_chat_cbs, (player,), onerr)
 
 
 def execute_chat(
@@ -115,12 +112,7 @@ def execute_chat(
         msg (str): 消息
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    try:
-        for p, func in on_chat_cbs:
-            name = p.name
-            func(chat)
-    except Exception as err:
-        onerr(name, err)
+    run_by_priority(on_chat_cbs, (chat,), onerr)
 
 
 def execute_player_leave(player: Player, onerr: ON_ERROR_CB) -> None:
@@ -130,12 +122,7 @@ def execute_player_leave(player: Player, onerr: ON_ERROR_CB) -> None:
         player (str): 玩家
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    try:
-        for p, func in on_player_leave_cbs:
-            name = p.name
-            func(player)
-    except Exception as err:
-        onerr(name, err)
+    run_by_priority(on_player_leave_cbs, (player,), onerr)
 
 
 def execute_frame_exit(evt: FrameExit, onerr: ON_ERROR_CB):
@@ -144,12 +131,7 @@ def execute_frame_exit(evt: FrameExit, onerr: ON_ERROR_CB):
     Args:
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    for p, func in on_frame_exit_cbs:
-        try:
-            name = p.name
-            func(evt)
-        except Exception as err:
-            onerr(name, err)
+    run_by_priority(on_frame_exit_cbs, (evt,), onerr)
 
 
 def execute_reloaded(onerr: ON_ERROR_CB):
@@ -158,12 +140,7 @@ def execute_reloaded(onerr: ON_ERROR_CB):
     Args:
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
-    try:
-        for p, func in on_reloaded_cbs:
-            name = p.name
-            func()
-    except Exception as err:
-        onerr(name, err)
+    run_by_priority(on_reloaded_cbs, (), onerr)
 
 
 def execute_dict_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -> bool:
@@ -178,13 +155,7 @@ def execute_dict_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -
     """
     d = dict_packet_funcs.get(pktID)
     if d:
-        try:
-            for func in d:
-                res = func(pkt)
-                if res is True:
-                    return True
-        except Exception as err:
-            onerr("插件方法:" + func.__name__, err)
+        run_by_priority(d, (pkt,), onerr)
     return False
 
 
@@ -202,11 +173,5 @@ def execute_bytes_packet_funcs(
     """
     d = bytes_packet_funcs.get(pktID)
     if d:
-        try:
-            for func in d:
-                res = func(pkt)
-                if res is True:
-                    return True
-        except Exception as err:
-            onerr("插件方法:" + func.__name__, err)
+        run_by_priority(d, pkt, onerr)
     return False

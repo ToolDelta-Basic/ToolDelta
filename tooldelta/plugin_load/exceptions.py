@@ -8,9 +8,10 @@ class NotValidPluginError(AssertionError):
 
 class PluginAPINotFoundError(ModuleNotFoundError):
     """插件 API 未找到错误"""
+    api_name: str
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, api_name: str):
+        self.api_name = api_name
 
 
 class PluginAPIVersionError(ModuleNotFoundError):
