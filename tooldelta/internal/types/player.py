@@ -79,8 +79,9 @@ class Player:
 
     def getSelector(self):
         """
-        获取包含玩家名的选择器
+        Deprecated: 请改为使用 `safe_name` 属性。
 
+        获取包含玩家名的选择器
         等价于 `@a[name="{player.name}"]`
         Returns:
             str: 选择器
@@ -173,4 +174,3 @@ class Player:
 
     def __hash__(self) -> int:
         return hash(self.unique_id)
-
