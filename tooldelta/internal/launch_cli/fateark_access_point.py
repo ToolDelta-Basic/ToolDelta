@@ -17,7 +17,6 @@ from .fateark_libs import core_conn as fateark_core, utils as fateark_utils
 
 class FrameFateArk(StandardFrame):
     launch_type = "FateArk"
-    proc: subprocess.Popen
 
     def __init__(self) -> None:
         super().__init__()
@@ -52,7 +51,7 @@ class FrameFateArk(StandardFrame):
             )
         except grpc.RpcError as err:
             self.update_status(SysStatus.CRASHED_EXIT)
-            return SystemError(f"FateArk 与 ToolDelta 断开连接: {err}")
+            return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
             return SystemError(f"FateArk 登录失败: {err_msg}")
@@ -76,7 +75,7 @@ class FrameFateArk(StandardFrame):
             # Maybe is linux and so on
             os.system("chmod +x " + path)
         self.proc = subprocess.Popen(
-            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
