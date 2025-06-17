@@ -173,5 +173,5 @@ def execute_bytes_packet_funcs(
     """
     d = bytes_packet_funcs.get(pktID)
     if d:
-        run_by_priority(d, pkt, onerr)
+        run_by_priority(d, (pkt,), onerr)
     return False
