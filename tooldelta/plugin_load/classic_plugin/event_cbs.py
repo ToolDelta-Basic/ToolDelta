@@ -48,12 +48,10 @@ def reload():
     broadcast_listener.clear()
 
 
-def run_by_priority(listeners: PluginEvents_P[Callable], args, onerr: ON_ERROR_CB,):
+def run_by_priority(listeners: PluginEvents_P[Callable], args: tuple, onerr: ON_ERROR_CB,):
     for _, sub_listeners in sorted(listeners.items(), reverse=True):
         for plugin, listener in sub_listeners:
             try:
-                if not isinstance(args, (tuple, list)):
-                    args = (args,)
                 listener(*args)
             except Exception as e:
                 onerr(plugin.name, e)
