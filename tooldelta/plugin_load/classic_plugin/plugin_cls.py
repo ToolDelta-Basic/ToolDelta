@@ -210,7 +210,8 @@ class Plugin:
         Args:
             evt (InternalBroadcast): 事件
         Returns:
-             list[Any]: 收集到的数据的列表 (如果接收到广播的方法返回了数据的话)
+            list[Any]: 收集到的数据的列表 (如果接收到广播的方法返回了数据的话)。
+                       如果返回了 None 则不会把此返回放入收集表里。
         """
         if self._plugin_group is None:
             raise RuntimeError("不能在非运行环境调用此方法")
