@@ -56,6 +56,9 @@ class Plugin:
         return Path(path)
 
     def make_data_path(self):
+        """
+        Deprecated: 获取 data_path 属性时会自动创建缺失的插件数据路径。
+        """
         os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
         self.__path_created__ = True
 
@@ -63,6 +66,15 @@ class Plugin:
         fmts.print_inf(f"{self.name}: {msg}")
 
     def format_data_path(self, *paths: str):
+        """
+        Deprecated: Use plugin.data_path / "dirpath" / "to" / "file" instead.
+
+        将所给路径与该插件的默认数据文件存放处拼合，
+        等价于 `os.path.join(self.data_path, *paths)`
+
+        Returns:
+            _type_: _description_
+        """
         return os.path.join(self.data_path, *paths)
 
     def ListenPreload(self, cb: Callable[[], Any], priority: int = 0):
