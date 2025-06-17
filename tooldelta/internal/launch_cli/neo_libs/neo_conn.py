@@ -18,6 +18,9 @@ CLongLong = ctypes.c_longlong
 CString = ctypes.c_void_p
 CBytes = ctypes.c_void_p
 
+# Give an initial value
+LIB: Any = None
+
 
 APIVersion: int = 0
 OldAccessPointVersion = False
