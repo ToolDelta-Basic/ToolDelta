@@ -2,7 +2,6 @@ import os
 import subprocess
 from collections.abc import Callable
 import time
-import time
 from grpc import RpcError
 import grpc
 
@@ -39,7 +38,6 @@ class FrameFateArk(StandardFrame):
     def launch(self):
         self.update_status(SysStatus.LAUNCHING)
         free_port = urlmethod.get_free_port(19200)
-        free_port = urlmethod.get_free_port(19200)
         self.start_fateark_proc(free_port)
         self._proc_message_show_thread()
         self._proc_stderr_show_thread()
@@ -57,7 +55,7 @@ class FrameFateArk(StandardFrame):
             )
         except grpc.RpcError as err:
             self.update_status(SysStatus.CRASHED_EXIT)
-            return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}: {err}")
+            return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
             return SystemError(f"FateArk 登录失败: {err_msg}")
