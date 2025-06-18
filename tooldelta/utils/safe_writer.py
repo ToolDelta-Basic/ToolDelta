@@ -13,6 +13,7 @@ def safe_write(filepath: PathLike, obj: Any, indent=2):
         filepath (TextIOWrapper): 文件路径
         obj (Any): 写入的 json 待序列化对象
     """
+    retry_times = 0
     while 1:
         try:
             bak_name = str(filepath) + ".bak"
@@ -27,7 +28,11 @@ def safe_write(filepath: PathLike, obj: Any, indent=2):
             break
         except BaseException as err:
             # 防止写入过程中被退出, 导致文件只写了一半
-            fmts.print_war(f"文件在写入时遭到强行中止 ({err}), 重试")
+            retry_times += 1
+            if retry_times >= 50:
+                fmts.print_err(f"文件第 50 次写入失败: {err}")
+                raise
+            fmts.print_war(f"文件在写入时遭到强行中止 ({err}), 重试第 {retry_times} 次")
             continue
     try:
         os.remove(filepath)
