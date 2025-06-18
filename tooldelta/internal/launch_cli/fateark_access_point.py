@@ -45,7 +45,6 @@ class FrameFateArk(StandardFrame):
         self._proc_stderr_show_thread()
         fmts.print_suc(f"将在 {free_port} 端口启动 FateArk 接入点")
         time.sleep(3)
-        time.sleep(3)
         fateark_core.connect(f"localhost:{free_port}")
         fmts.print_suc("FateArk 接入点进程已启动")
         self._message_show_thread()
