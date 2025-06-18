@@ -89,7 +89,7 @@ class ConsoleCmdManager:
         while 1:
             try:
                 try:
-                    rsp = input()
+                    rsp = input().encode(errors="ignore").decode("utf-8")
                     if rsp in ("^C", "^D"):
                         raise KeyboardInterrupt
                 except (KeyboardInterrupt, EOFError):

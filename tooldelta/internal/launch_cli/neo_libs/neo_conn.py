@@ -31,7 +31,7 @@ def NewAccessPointVersionCheck(attr_name: str):
         raise AttributeError(attr_name + " 在旧版 NeOmega 接入点不被支持。")
 
 def toCString(string: str):
-    return ctypes.c_char_p(bytes(string, encoding="utf-8"))
+    return ctypes.c_char_p(string.encode(errors="replace"))
 
 
 def toGoUint8(b: bool):
