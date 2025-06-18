@@ -40,6 +40,7 @@ class FrameFateArk(StandardFrame):
         free_port = urlmethod.get_free_port(19200)
         self.start_fateark_proc(free_port)
         self._proc_message_show_thread()
+        self._proc_stderr_show_thread()
         fmts.print_suc(f"将在 {free_port} 端口启动 FateArk 接入点")
         time.sleep(3)
         fateark_core.connect(f"localhost:{free_port}")
@@ -47,7 +48,10 @@ class FrameFateArk(StandardFrame):
         self._message_show_thread()
         try:
             status, _, err_msg = fateark_core.login(
-                self.auth_server, self.fbToken, str(self.serverNumber), self.serverPassword
+                self.auth_server,
+                self.fbToken,
+                str(self.serverNumber),
+                self.serverPassword,
             )
         except grpc.RpcError as err:
             self.update_status(SysStatus.CRASHED_EXIT)
@@ -75,7 +79,7 @@ class FrameFateArk(StandardFrame):
             # Maybe is linux and so on
             os.system("chmod +x " + path)
         self.proc = subprocess.Popen(
-            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
@@ -90,6 +94,18 @@ class FrameFateArk(StandardFrame):
                     self.update_status(SysStatus.CRASHED_EXIT)
         except RpcError:
             fmts.print_inf("FateArk 输出通道已断开连接")
+
+    @utils.thread_func(
+        "FateArk 报错输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
+    )
+    def _proc_stderr_show_thread(self):
+        assert self.proc.stderr
+        while 1:
+            msg = self.proc.stderr.readline().decode("utf-8").strip()
+            if msg == "":
+                break
+            fmts.print_with_info(msg, "§c FARK ")
+        # fmts.print_inf("FateArk 进程已退出")
 
     @utils.thread_func(
         "FateArk 进程输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
