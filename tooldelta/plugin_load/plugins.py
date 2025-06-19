@@ -52,8 +52,14 @@ class PluginGroup:
         重载插件框架前的预处理
         执行插件的框架退出回调
         """
+        def dont_raise(name, err):
+            # 保证每个插件的 on_frame_exit 都能被执行
+            try:
+                self.linked_frame.on_plugin_err(name, err)
+            except Exception:
+                pass
         self.execute_frame_exit(
-            FrameExit(SysStatus.NORMAL_EXIT, "normal"), self.linked_frame.on_plugin_err
+            FrameExit(SysStatus.NORMAL_EXIT, "normal"), dont_raise
         )
 
     def reload(self):

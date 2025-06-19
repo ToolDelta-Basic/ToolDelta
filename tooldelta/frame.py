@@ -206,27 +206,29 @@ class ToolDelta:
 
     def reload(self):
         """重载所有插件"""
-        try:
-            fmts.print_inf("重载: 正在让插件自行退出..")
-            self.plugin_group.pre_reload()
-            fmts.print_inf("重载: 正在保存数据缓存文件..")
-            utils.safe_close()
-            self.cmd_manager.reset_cmds()
-            fmts.print_inf("重载: 正在重新载入插件..")
-            self.plugin_group.reload()
-            fmts.print_suc("重载插件: 全部插件重载成功！")
-        except cfg.ConfigError as err:
-            fmts.print_err(f"重载插件时发现插件配置文件有误: {err}")
-            self.system_exit("reload_error")
-        except SystemExit:
-            fmts.print_err("重载插件遇到问题")
-            self.system_exit("reload_error")
-        except BaseException:
-            fmts.print_err("重载插件遇到问题 (报错如下):")
-            fmts.print_err(traceback.format_exc())
-            self.system_exit("reload_error")
-        else:
-            utils.timer_event_boostrap()
+        self.plugin_group.pre_reload()
+        while 1:
+            try:
+                fmts.print_inf("重载: 正在让插件自行退出..")
+                fmts.print_inf("重载: 正在保存数据缓存文件..")
+                utils.safe_close()
+                self.cmd_manager.reset_cmds()
+                fmts.print_inf("重载: 正在重新载入插件..")
+                self.plugin_group.reload()
+                fmts.print_suc("重载插件: 全部插件重载成功！")
+                utils.timer_event_boostrap()
+                return
+            except cfg.ConfigError as err:
+                fmts.print_err(f"重载插件时发现插件配置文件有误: {err}")
+            except SystemExit:
+                fmts.print_err("重载插件遇到问题")
+            except BaseException:
+                fmts.print_err("重载插件遇到问题 (报错如下):")
+                fmts.print_err(traceback.format_exc())
+            finally:
+                self.plugin_group.pre_reload()
+                input(fmts.fmt_info("在修好插件后, 按回车键重新重载插件"))
+                continue
 
 
 class GameCtrl:
