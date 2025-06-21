@@ -225,10 +225,9 @@ class ToolDelta:
             except BaseException:
                 fmts.print_err("重载插件遇到问题 (报错如下):")
                 fmts.print_err(traceback.format_exc())
-            finally:
-                self.plugin_group.pre_reload()
-                input(fmts.fmt_info("在修好插件后, 按回车键重新重载插件"))
-                continue
+            self.plugin_group.pre_reload()
+            input(fmts.fmt_info("在修好插件后, 按回车键重新重载插件"))
+            continue
 
 
 class GameCtrl:
