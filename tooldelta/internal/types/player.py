@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 from tooldelta import game_utils
+from .inventory_querier import QueriedInventory
 from .player_abilities import Abilities, upload_player_abilities
 
 if TYPE_CHECKING:
@@ -166,6 +167,20 @@ class Player:
     def is_op(self):
         "玩家是否为管理员"
         return self.abilities.command_permissions >= 3
+
+    def queryInventory(self):
+        """
+        查询玩家背包内容
+
+        Returns:
+            QueriedInventory: 背包物品栏内容
+
+        Raises:
+            ValueError: 背包内容查询失败
+        """
+        return QueriedInventory.from_dict(
+            game_utils.queryPlayerInventory(self.safe_name)["inventory"]
+        )
 
     @property
     def safe_name(self):

@@ -22,7 +22,6 @@ frame: Optional["ToolDelta"] = None
 player_waitmsg_cb: dict[str, Callable[[str], None]] = {}
 
 
-
 def _set_frame(_frame: "ToolDelta") -> None:
     """
     全局初始化框架
@@ -357,6 +356,25 @@ def getTickingAreaList() -> dict:
             result[tickareaName].update(tickareaPos)
     return result
 
+
+def queryPlayerInventory(selector: str) -> dict:
+    """
+    查询玩家背包内容
+
+    Args:
+        selector (str): 目标选择器
+
+    Raises:
+        ValueError: 无法查询背包内容
+
+    Returns:
+        dict: 背包内容
+    """
+    resp = sendwscmd(f"codebuilder_actorinfo inventory {selector}", True)
+    assert resp is not None
+    if resp.SuccessCount < 1:
+        raise ValueError("查询玩家背包内容失败")
+    return json.loads(resp.DataSet)
 
 def __set_effect_while__(
     player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True
