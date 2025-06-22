@@ -61,12 +61,16 @@ def timer_events_clear():
     timer_event_lock.release()
 
 
-@thread_func("ToolDelta 定时任务", ToolDeltaThread.SYSTEM)
 def timer_event_boostrap():
     "启动定时任务, 请不要在系统调用以外调用"
+    fmts.print_suc("已开始执行 ToolDelta定时任务 函数集.")
+    _internal_timer_event_boostrap()
+
+
+@thread_func("ToolDelta 定时任务", ToolDeltaThread.SYSTEM)
+def _internal_timer_event_boostrap():
     timer = 0
     timer_event_stop.clear()
-    fmts.print_suc("已开始执行 ToolDelta定时任务 函数集.")
     while not timer_event_stop.is_set():
         timer_event_lock.acquire()
         for k, func_args in timer_events_table.copy().items():
