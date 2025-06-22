@@ -50,6 +50,7 @@ class Packet_CommandOutput:
     OutputType: int
     SuccessCount: int
     OutputMessages: list[SubPacket_CmdOutputMsg]
+    DataSet: str
     as_dict: dict
 
     def __init__(self, pkt: dict):
@@ -60,6 +61,7 @@ class Packet_CommandOutput:
         ]
         self.SuccessCount = pkt["SuccessCount"]
         self.OutputType = pkt["OutputType"]
+        self.DataSet = pkt["DataSet"]
 
 
 class Text(Packet):
