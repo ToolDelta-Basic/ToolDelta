@@ -7,6 +7,7 @@ import grpc
 
 from ... import utils
 from ...utils.urlmethod import get_global_github_src_url
+from ...utils.sys_args import sys_args_to_dict
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
@@ -25,7 +26,8 @@ class FrameFateArk(StandardFrame):
 
     def init(self) -> None:
         super().init()
-        fateark_utils.check_update(get_global_github_src_url())
+        if "no-download-libs" not in sys_args_to_dict().keys():
+            fateark_utils.check_update(get_global_github_src_url())
 
     def set_launch_data(
         self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
@@ -130,7 +132,9 @@ class FrameFateArk(StandardFrame):
             fmts.print_inf(f"FateArk 数据包处理通道已断开连接: {err}")
             self.update_status(SysStatus.CRASHED_EXIT)
 
+    @utils.thread_func("单数据包处理线程")
     def _packets_handler(self, pkID: int, pk: dict):
+        print(pk)
         if pkID == PacketIDS.CommandOutput:
             self._command_output_handler(pk)
         self.dict_packet_handler(pkID, pk)
@@ -166,7 +170,7 @@ class FrameFateArk(StandardFrame):
             self.command_output_cbs[ud] = setter
             res = getter(timeout)
             if res is None:
-                raise TimeoutError("指令超时")
+                raise TimeoutError("指令超时", ud)
             return Packet_CommandOutput(res)
         return None
 
@@ -180,7 +184,7 @@ class FrameFateArk(StandardFrame):
             self.command_output_cbs[ud] = setter
             res = getter(timeout)
             if res is None:
-                raise TimeoutError("指令超时")
+                raise TimeoutError("指令超时", ud)
             return Packet_CommandOutput(res)
 
     def sendwocmd(self, cmd: str):

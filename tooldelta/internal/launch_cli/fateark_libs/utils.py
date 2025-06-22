@@ -61,6 +61,7 @@ def download_fateark_dependency_libs(
 
 
 def check_update(mirror_src: str):
+    fmts.print_inf("正在检测 FateArk 更新..")
     if not os.path.isfile("tooldelta/bin/fateark_commit"):
         commit = ""
     else:
@@ -75,3 +76,4 @@ def check_update(mirror_src: str):
         )
         with open("tooldelta/bin/fateark_commit", "w", encoding="utf-8") as f:
             f.write(newest_commit)
+    fmts.print_inf("检测 FateArk 更新完成")

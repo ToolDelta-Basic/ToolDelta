@@ -11,6 +11,7 @@ from .launch_cli import (
     FrameNeOmgAccessPointRemote,
     FrameEulogistLauncher,
     FrameFateArk,
+    FrameFateArkIndirect,
     LAUNCHERS,
     ACCESS_POINT_LAUNCHERS,
 )
@@ -32,6 +33,7 @@ LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
     ),
     ("Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
     ("FateArk 框架", FrameFateArk),
+    ("FateArk 远程框架", FrameFateArkIndirect),
 ]
 
 
@@ -86,17 +88,18 @@ class ConfigLoader:
                 except ValueError:
                     fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
             cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
-        launcher = LAUNCHERS_SHOWN[
+        launcher: LAUNCHERS = LAUNCHERS_SHOWN[
             cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
         ][1]()
+        launcher_type = type(launcher)
         # 每个启动器框架的单独启动配置
-        launcher_config_key = ""
+        LAUNCHER_CONFIG_KEY = ""
         # 这是 普通 NeOmega 接入点
-        if type(launcher) is FrameNeOmgAccessPoint:
+        if launcher_type is FrameNeOmgAccessPoint:
             launch_data = cfgs.get(
                 "NeOmega接入点启动模式", tooldelta_cfg.LAUNCHER_NEOMEGA_DEFAULT
             )
-            launcher_config_key = "NeOmega接入点启动模式"
+            LAUNCHER_CONFIG_KEY = "NeOmega接入点启动模式"
             try:
                 cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMEGA_STD, launch_data)
             except cfg.ConfigError as err:
@@ -109,10 +112,10 @@ class ConfigLoader:
                     )
                 raise SystemExit from err
         # 这是 NeOmega 和 ToolDelta 并行启动
-        elif type(launcher) is FrameNeOmegaLauncher:
-            launcher_config_key = "NeOmega并行ToolDelta启动模式"
+        elif launcher_type is FrameNeOmegaLauncher:
+            LAUNCHER_CONFIG_KEY = "NeOmega并行ToolDelta启动模式"
             launch_data = cfgs.get(
-                launcher_config_key,
+                LAUNCHER_CONFIG_KEY,
                 tooldelta_cfg.LAUNCHER_NEOMG2TD_DEFAULT,
             )
             try:
@@ -126,10 +129,30 @@ class ConfigLoader:
                         f"ToolDelta 基本配置-NeOmega 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
-        elif type(launcher) is FrameFateArk:
-            launcher_config_key = "FateArk接入点启动模式"
+        elif launcher_type is FrameNeOmgAccessPointRemote:
+            LAUNCHER_CONFIG_KEY = "NeOmega远程接入点模式"
             launch_data = cfgs.get(
-                launcher_config_key, tooldelta_cfg.LAUNCHER_FATEARK_DEFAULT
+                LAUNCHER_CONFIG_KEY, tooldelta_cfg.LAUNCHER_NEOMEGARM_DEFAULT
+            )
+            cfgs[LAUNCHER_CONFIG_KEY] = launch_data
+            cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
+            try:
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMEGARM_STD, launch_data)
+            except cfg.ConfigError as err:
+                r = self.upgrade_cfg()
+                if r:
+                    fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    fmts.print_err(
+                        f"ToolDelta 基本配置-远程NeOmega 启动配置有误，需要更正：{err}"
+                    )
+        elif launcher_type is FrameEulogistLauncher:
+            # 不需要任何配置文件
+            ...
+        elif launcher_type is FrameFateArk:
+            LAUNCHER_CONFIG_KEY = "FateArk接入点启动模式"
+            launch_data = cfgs.get(
+                LAUNCHER_CONFIG_KEY, tooldelta_cfg.LAUNCHER_FATEARK_DEFAULT
             )
             try:
                 cfg.check_auto(tooldelta_cfg.LAUNCHER_FATEARK_STD, launch_data)
@@ -142,30 +165,26 @@ class ConfigLoader:
                         f"ToolDelta 基本配置-FateArk 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
-        elif type(launcher) is FrameNeOmgAccessPointRemote:
-            launcher_config_key = "NeOmega远程接入点模式"
+        elif launcher_type is FrameFateArkIndirect:
+            LAUNCHER_CONFIG_KEY = "FateArk远程接入点启动模式"
             launch_data = cfgs.get(
-                launcher_config_key, tooldelta_cfg.LAUNCHER_NEOMEGARM_DEFAULT
+                LAUNCHER_CONFIG_KEY, tooldelta_cfg.LAUNCHER_FATEARK_INDIRECT_DEFAULT
             )
-            cfgs[launcher_config_key] = launch_data
-            cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
             try:
-                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEOMEGARM_STD, launch_data)
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_FATEARK_INDIRECT_STD, launch_data)
             except cfg.ConfigError as err:
                 r = self.upgrade_cfg()
                 if r:
                     fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
                 else:
                     fmts.print_err(
-                        f"ToolDelta 基本配置-远程NeOmega 启动配置有误，需要更正：{err}"
+                        f"ToolDelta 基本配置-FateArk 启动配置有误，需要更正：{err}"
                     )
-        elif type(launcher) is FrameEulogistLauncher:
-            # 不需要任何配置文件
-            ...
+                raise SystemExit from err
         else:
-            raise ValueError("LAUNCHER Error")
+            raise ValueError(f"LAUNCHER error: {launcher_type.__name__}")
 
-        if type(launcher) in ACCESS_POINT_LAUNCHERS:
+        if launcher_type in ACCESS_POINT_LAUNCHERS:
             serverNumber = launch_data["服务器号"]
             serverPasswd: str = launch_data["密码"]
             auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
@@ -186,7 +205,7 @@ class ConfigLoader:
                         )
                         launch_data["服务器号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
-                        cfgs[launcher_config_key] = launch_data
+                        cfgs[LAUNCHER_CONFIG_KEY] = launch_data
                         cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
                         fmts.print_suc("登录配置设置成功")
                         break
@@ -212,13 +231,13 @@ class ConfigLoader:
                                         "请手动输入验证服务器地址: ", "§f 输入 "
                                     )
                                 )
-                                cfgs[launcher_config_key][
+                                cfgs[LAUNCHER_CONFIG_KEY][
                                     "验证服务器地址(更换时记得更改fbtoken)"
                                 ] = auth_server
                                 break
                         else:
                             auth_server = auth_servers[ch - 1][1]
-                            cfgs[launcher_config_key][
+                            cfgs[LAUNCHER_CONFIG_KEY][
                                 "验证服务器地址(更换时记得更改fbtoken)"
                             ] = auth_server
                             break
@@ -246,7 +265,7 @@ class ConfigLoader:
                     if login_method == "1":
                         try:
                             token = fblike_sign_login(
-                                cfgs[launcher_config_key][
+                                cfgs[LAUNCHER_CONFIG_KEY][
                                     "验证服务器地址(更换时记得更改fbtoken)"
                                 ],
                                 tooldelta_cli.FBLIKE_APIS,

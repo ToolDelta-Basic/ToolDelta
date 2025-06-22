@@ -57,3 +57,13 @@ LAUNCHER_FATEARK_DEFAULT: dict = {
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
+LAUNCHER_FATEARK_INDIRECT_STD: dict = {
+    "服务器号": int,
+    "密码": str,
+    "验证服务器地址(更换时记得更改fbtoken)": str,
+}
+LAUNCHER_FATEARK_INDIRECT_DEFAULT: dict = {
+    "服务器号": 0,
+    "密码": "",
+    "验证服务器地址(更换时记得更改fbtoken)": "",
+}
