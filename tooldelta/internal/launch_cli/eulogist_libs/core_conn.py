@@ -91,7 +91,6 @@ class Eulogist:
 
     def on_msg(self, ws: WebSocket, msg_raw: str):
         msgdata = msgpack.unpackb(msg_raw)
-        # print(msgdata)
         try:
             self.handler(Message(msgdata["type"], msgdata["content"]))
         except Exception:

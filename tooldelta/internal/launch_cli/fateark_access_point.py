@@ -128,13 +128,12 @@ class FrameFateArk(StandardFrame):
         try:
             for id, packet in fateark_core.read_packet():
                 self._packets_handler(id, packet)
-        except RpcError as err:
-            fmts.print_inf(f"FateArk 数据包处理通道已断开连接: {err}")
+        except RpcError:
+            fmts.print_inf("FateArk 数据包处理通道已断开连接")
             self.update_status(SysStatus.CRASHED_EXIT)
 
     @utils.thread_func("单数据包处理线程")
     def _packets_handler(self, pkID: int, pk: dict):
-        print(pk)
         if pkID == PacketIDS.CommandOutput:
             self._command_output_handler(pk)
         self.dict_packet_handler(pkID, pk)

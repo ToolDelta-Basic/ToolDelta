@@ -25,10 +25,12 @@ LIB: Any = None
 APIVersion: int = 0
 OldAccessPointVersion = False
 
+
 def NewAccessPointVersionCheck(attr_name: str):
     global OldAccessPointVersion
     if OldAccessPointVersion:
         raise AttributeError(attr_name + " 在旧版 NeOmega 接入点不被支持。")
+
 
 def toCString(string: str):
     return ctypes.c_char_p(string.encode(errors="replace"))
@@ -261,7 +263,7 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
 
 
 def SendGamePacket(packetID: int, payload: str | bytes) -> None:
-    if type(payload) is str:
+    if isinstance(payload, str):
         r = LIB.SendGamePacket(
             to_GoInt(packetID),
             toByteCSlice(payload.encode(encoding="utf-8")),
@@ -269,8 +271,20 @@ def SendGamePacket(packetID: int, payload: str | bytes) -> None:
         )
         if toPyString(r) != "":
             raise ValueError(toPyString(r))
-        return
-    r = LIB.SendGamePacket(to_GoInt(packetID), toByteCSlice(payload), len(payload))  # type: ignore
+    else:
+        r = LIB.SendGamePacket(to_GoInt(packetID), toByteCSlice(payload), len(payload))
+        if toPyString(r) != "":
+            raise ValueError(toPyString(r))
+
+
+def SendGamePacket2(packetID: int, pk: dict) -> None:
+    bs = msgpack.packb(pk)
+    assert bs
+    r = LIB.SendGamePacket2(
+        to_GoInt(packetID),
+        toByteCSlice(bs),
+        len(bs),
+    )
     if toPyString(r) != "":
         raise ValueError(toPyString(r))
 
@@ -1019,6 +1033,10 @@ class ThreadOmega:
         OmegaAvailable()
         SendGamePacket(packet_type, content)
 
+    def send_game_packet_in_msgpack_as_is(self, packet_type: int, content: Any):
+        OmegaAvailable()
+        SendGamePacket2(packet_type, content)
+
     def get_bot_basic_info(self) -> ClientMaintainedBotBasicInfo:
         return self._bot_basic_info
 
@@ -1173,6 +1191,8 @@ def load_lib():
     LIB.JsonStrAsIsGamePacketBytes.restype = JsonStrAsIsGamePacketBytes_return
     LIB.SendGamePacket.argtypes = [CInt, CBytes, CInt]
     LIB.SendGamePacket.restype = CString
+    LIB.SendGamePacket2.argtypes = [CInt, CBytes, CString]
+    LIB.SendGamePacket2.restype = CString
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
     LIB.GetClientMaintainedExtendInfo.restype = CString
     LIB.GetAllOnlinePlayers.restype = CString
