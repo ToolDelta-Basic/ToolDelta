@@ -4,7 +4,6 @@ import shlex
 import subprocess
 import threading
 import time
-import uuid
 
 from ...mc_bytes_packet.pool import bytes_packet_by_name
 from ... import utils
@@ -19,8 +18,6 @@ from .neo_libs.neo_conn import LIB as _Library
 from .neo_libs.blob_hash.blob_hash_holder import (
     BlobHashHolder,
 )
-
-USE_INTERNAL_CMDSENDER = False
 
 
 class FrameNeOmgAccessPoint(StandardFrame):
@@ -54,7 +51,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.fbToken: str | None = None
         self.auth_server: str | None = None
         self.exit_reason = ""
-        self.command_cbs = {}
 
     def init(self):
         if "no-download-libs" not in sys_args.sys_args_to_dict().keys():
@@ -172,9 +168,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         )
         return free_port
 
-    @utils.thread_func(
-        "NeOmega 信息显示线程", thread_level=utils.ToolDeltaThread.SYSTEM
-    )
+    @utils.thread_func("NeOmega 信息显示线程", thread_level=utils.ToolDeltaThread.SYSTEM)
     def _msg_show_thread(self, launch_event: threading.Event) -> None:
         """显示来自 NeOmega 的信息"""
         if self.neomg_proc is None or self.neomg_proc.stdout is None:
@@ -212,7 +206,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         if self.status != SysStatus.LAUNCHING:
             return SystemError("接入点无法连接到服务器")
         fmts.print_inf("等待接入点就绪..")
-        while not launch_event.wait(timeout=1):
+        while not launch_event.wait(timeout = 1):
             if self.exit_event.is_set():
                 return SystemError("NeOmage 启动出现问题.")
             pass
@@ -302,8 +296,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
 
         if type(pkt) is dict:
             packetType: int = self.omega.get_packet_name_to_id_mapping(pkt_type)  # type: ignore
-            if packetType == PacketIDS.CommandOutput and not USE_INTERNAL_CMDSENDER:
-                self._spec_handle_command_output(pkt)
             self.dict_packet_handler(packetType, pkt)
         elif type(pkt) is bytes:
             real_pkt = bytes_packet_by_name(pkt_type)
@@ -328,43 +320,13 @@ class FrameNeOmgAccessPoint(StandardFrame):
             Optional[Packet_CommandOutput]: 返回命令结果
         """
         self.check_avaliable()
-        if USE_INTERNAL_CMDSENDER:
-            if waitForResp:
-                res = self.omega.send_player_command_need_response(cmd, timeout)
-                if res is None:
-                    raise TimeoutError("指令超时")
-                return res
-            self.omega.send_player_command_omit_response(cmd)
-            return None
-        else:
-            ud = uuid.uuid4()
-            ud2 = uuid.uuid4()
-            self.sendPacket(
-                77,
-                {
-                    "CommandLine": cmd,
-                    "CommandOrigin": {
-                        "Origin": 0,
-                        "UUID": ud.bytes,
-                        "RequestID": str(ud2),
-                        "PlayerUniqueID": 0,
-                    },
-                    "Internal": False,
-                    "Version": 0x24,
-                    "UnLimited": False,
-                },
-            )
-            if waitForResp:
-                getter, setter = utils.create_result_cb(dict)
-                self.command_cbs[ud.bytes] = setter
-                res = getter(timeout)
-                del self.command_cbs[ud.bytes]
-                if res is None:
-                    raise TimeoutError("指令超时")
-                else:
-                    return Packet_CommandOutput(res)
-            else:
-                return None
+        if waitForResp:
+            res = self.omega.send_player_command_need_response(cmd, timeout)
+            if res is None:
+                raise TimeoutError("指令超时")
+            return res
+        self.omega.send_player_command_omit_response(cmd)
+        return None
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
@@ -409,7 +371,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.check_avaliable()
         if type(pck) is dict:
-            self.omega.send_game_packet_in_msgpack_as_is(pckID, pck)
+            self.omega.send_game_packet_in_json_as_is(pckID, pck)
         else:
             self.omega.send_game_packet_in_bytes(pckID, pck.encode())  # type: ignore
 
@@ -471,10 +433,5 @@ class FrameNeOmgAccessPoint(StandardFrame):
             for i in self.need_listen_packets
         ]
         self.omega.listen_packets(pcks, self.packet_handler_parent)
-
-    def _spec_handle_command_output(self, pk: dict):
-        pkUUID: bytes = pk["CommandOrigin"]["UUID"]
-        if pkUUID in self.command_cbs.keys():
-            self.command_cbs[pkUUID](pk)
 
     sendPacketJson = sendPacket

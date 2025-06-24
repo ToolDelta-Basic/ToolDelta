@@ -185,11 +185,6 @@ class ConsoleCmdManager:
                         f" §e{' 或 '.join(cmd_trigger.triggers)}  §f->  {cmd_trigger.usage}"
                     )
 
-        def _list(_):
-            players = self.frame.game_ctrl.players
-            players_format = ", ".join(p.name for p in players)
-            fmts.print_inf(f"在线玩家 {len(list(players))} 人: {players_format}")
-
         def _exit(_):
             fmts.print_inf("准备退出..")
             self.frame.launcher.update_status(SysStatus.NORMAL_EXIT)
@@ -219,7 +214,9 @@ class ConsoleCmdManager:
             ["list"],
             None,
             "查询在线玩家",
-            _list
+            lambda _: fmts.print_inf(
+                "在线玩家：" + ", ".join(self.frame.get_game_control().allplayers)
+            ),
         )
         self.add_console_cmd_trigger(
             ["reload"],
