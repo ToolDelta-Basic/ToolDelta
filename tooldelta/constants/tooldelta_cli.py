@@ -57,8 +57,9 @@ FBLIKE_APIS = [
 "验证服务器: FastBuilder API 列表"
 
 AUTH_SERVERS = [
-    ("FastBuilder 官方验证服务器", "https://user.fastbuilder.pro"),
-    ("咕咕酱 FB验证服务器", "https://liliya233.uk"),
+    ("§7FastBuilder 官方验证服务器 §c✘不再可用", "https://user.fastbuilder.pro"),
+    ("§7咕咕酱 FB验证服务器 §c✘不再可用", "https://liliya233.uk"),
+    ("NetHard 验证服务器 §a✔可用", "https://nv1.nethard.pro")
 ]
 "验证服务器列表"
 
