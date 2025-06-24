@@ -173,8 +173,6 @@ def print_with_info(
                     try:
                         n = text_line.rfind("§")
                         _set_next_col_value = text_line[n : n + 2]
-                        if set_next_color == -1:
-                            raise AssertionError
                         set_next_color = _set_next_col_value
                     except Exception as exc:
                         string  = "输出信息时出现错误:\n"
