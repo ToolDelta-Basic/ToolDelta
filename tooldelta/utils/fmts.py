@@ -182,7 +182,7 @@ def print_with_info(
                             string % (str(exc), text)
                         )
                 output_txts.append(
-                    datetime.datetime.now().strftime("[%H:%M] ")
+                    datetime.datetime.now().strftime("%H:%M ")
                     + colormode_replace(info, 7)
                     + " "
                     + colormode_replace(set_next_color + text_line)
@@ -190,7 +190,7 @@ def print_with_info(
             _original_print("\n".join(output_txts), **print_kwargs)
         else:
             _original_print(
-                datetime.datetime.now().strftime("[%H:%M] ")
+                datetime.datetime.now().strftime("%H:%M ")
                 + colormode_replace(info, 7)
                 + " "
                 + colormode_replace(text),
