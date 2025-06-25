@@ -36,11 +36,11 @@ from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup
 
 
-###### CONSTANT DEFINE
+
 VERSION = get_tool_delta_version()
 
 
-###### FRAME DEFINE
+
 class ToolDelta:
     """ToolDelta 主框架"""
 
@@ -52,6 +52,8 @@ class ToolDelta:
 
     def __init__(self) -> None:
         """初始化"""
+        self.initialized = False
+        self.ready = False
         self.sys_data = self.FrameBasic()
         self.launchMode: int = 0
         self.on_plugin_err = staticmethod(
@@ -59,6 +61,13 @@ class ToolDelta:
                 f"插件 <{name}> 出现问题: {err}\n§c{traceback.format_exc()}"
             )
         )
+        def signal_handler(_, pyframe) -> None:
+            fmts.clean_print("§6ToolDelta 已被手动终止")
+            self.system_exit("用户退出程序")
+            os._exit(1)
+
+
+        signal.signal(signal.SIGINT, signal_handler)
 
     def bootstrap(self):
         try:
@@ -78,6 +87,7 @@ class ToolDelta:
             self.plugin_group.load_plugins()
             self.plugin_group.hook_packet_handler(self.packet_handler)
             self.launcher.set_packet_listener(self.packet_handler)
+            self.initialized = True
             utils.timer_event_boostrap()
             utils.tempjson.jsonfile_auto_save()
             game_utils.hook_packet_handler(self.packet_handler)
@@ -91,6 +101,7 @@ class ToolDelta:
                 ]
             )
             fmts.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
+            self.ready = True
             err = self.wait_closed()
             if not isinstance(err, SystemExit):
                 fmts.print_err(f"启动器框架崩溃, 原因: {err}")
@@ -119,52 +130,6 @@ class ToolDelta:
         fmts.print_load("§dToolDelta 项目地址: https://github.com/ToolDelta-Basic")
         fmts.print_load(f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}")
         fmts.print_load("§dToolDelta Panel 已启动")
-
-    def system_exit(self, reason: str) -> None:
-        """ToolDelta 系统退出"""
-        # 启动器框架是否被载入
-        has_launcher = hasattr(self, "launcher")
-        if has_launcher:
-            if self.launcher.status == SysStatus.RUNNING:
-                self.launcher.update_status(SysStatus.NORMAL_EXIT)
-        self.plugin_group.execute_frame_exit(
-            FrameExit(self.launcher.status, reason), self.on_plugin_err
-        )
-        # 先将启动框架 (进程) 关闭了
-        if has_launcher:
-            if self.launcher.status == SysStatus.NORMAL_EXIT:
-                # 运行中退出
-                if isinstance(
-                    self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher
-                ):
-                    try:
-                        self.game_ctrl.sendwocmd(
-                            f'/kick "{self.game_ctrl.bot_name}" ToolDelta 退出中。'
-                        )
-                    except Exception:
-                        pass
-                    if not isinstance(self.launcher.neomg_proc, type(None)):
-                        if os.name == "nt":
-                            self.launcher.neomg_proc.send_signal(
-                                signal.CTRL_BREAK_EVENT
-                            )
-                        else:
-                            self.launcher.neomg_proc.send_signal(signal.SIGTERM)
-            else:
-                # 其他情况下退出 (例如启动失败)
-                pass
-            # 然后使得启动框架联络进程也退出
-            if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
-                self.launcher.exit_event.set()
-        # 最后做善后工作
-        self.actions_before_exited()
-        # 到这里就基本上是退出完成了
-
-    @staticmethod
-    def actions_before_exited() -> None:
-        """安全退出"""
-        utils.safe_close()
-        fmts.print_inf("已保存数据与日志等信息。")
 
     def get_game_control(self) -> "GameCtrl":
         """获取 GameControl 对象
@@ -210,6 +175,52 @@ class ToolDelta:
             self.plugin_group.pre_reload()
             input(fmts.fmt_info("在修好插件后, 按回车键重新重载插件"))
             continue
+
+    def system_exit(self, reason: str) -> None:
+        """ToolDelta 系统退出"""
+        # 启动器框架是否被载入
+        if self.ready:
+            if self.launcher.status == SysStatus.RUNNING:
+                self.launcher.update_status(SysStatus.NORMAL_EXIT)
+        if self.initialized:
+            self.plugin_group.execute_frame_exit(
+                FrameExit(self.launcher.status, reason), self.on_plugin_err
+            )
+        # 先将启动框架 (进程) 关闭了
+        if self.ready:
+            if self.launcher.status == SysStatus.NORMAL_EXIT:
+                # 运行中退出
+                if isinstance(
+                    self.launcher, FrameNeOmgAccessPoint | FrameNeOmegaLauncher
+                ):
+                    try:
+                        self.game_ctrl.sendwocmd(
+                            f'/kick "{self.game_ctrl.bot_name}" ToolDelta 退出中。'
+                        )
+                    except Exception:
+                        pass
+                    if not isinstance(self.launcher.neomg_proc, type(None)):
+                        if os.name == "nt":
+                            self.launcher.neomg_proc.send_signal(
+                                signal.CTRL_BREAK_EVENT
+                            )
+                        else:
+                            self.launcher.neomg_proc.send_signal(signal.SIGTERM)
+            else:
+                # 其他情况下退出 (例如启动失败)
+                pass
+            # 然后使得启动框架联络进程也退出
+            if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
+                self.launcher.exit_event.set()
+        # 最后做善后工作
+        self.actions_before_exited()
+        # 到这里就基本上退出完成了
+
+    @staticmethod
+    def actions_before_exited() -> None:
+        """安全退出"""
+        utils.safe_close()
+        fmts.print_inf("已保存数据与日志等信息。")
 
 
 class GameCtrl:

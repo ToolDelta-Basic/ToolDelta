@@ -1,6 +1,5 @@
 "启动页面"
 
-import signal
 import os
 import time
 import traceback
@@ -13,14 +12,6 @@ from .plugin_manager import plugin_manager
 from .plugin_market import market
 from .starter import start_tool_delta, init_cfg_only
 from .version import get_tool_delta_version
-
-
-def signal_handler(*_) -> None:
-    """排除信号中断"""
-    ...
-
-
-signal.signal(signal.SIGINT, signal_handler)
 
 
 def client_title() -> None:
@@ -56,11 +47,11 @@ def client_title() -> None:
             if launch_section:
                 r = launch_section
             else:
-                text=choice(TOOLDELTA_LOGO_mode)
-                if text[0]==0:
+                text = choice(TOOLDELTA_LOGO_mode)
+                if text[0] == 0:
                     print(fmts.clean_fmt(text[1]))
-                elif text[0]==1:
-                    print(fmts.print_gradient(text[1],text[2],text[3]))
+                elif text[0] == 1:
+                    print(fmts.print_gradient(text[1], text[2], text[3]))
                 if "title" in sys_args.sys_args_to_dict():
                     fmts.clean_print(launch_args["title"] or "")
                 fmts.clean_print(
