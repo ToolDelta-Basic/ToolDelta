@@ -10,7 +10,6 @@ ToolDelta 基本框架
 
 import os
 import signal
-import sys
 import traceback
 import json
 
@@ -32,7 +31,7 @@ from .internal.launch_cli import (
 )
 from .game_texts import GameTextsHandle, GameTextsLoader
 from .packets import Packet_CommandOutput
-from .utils import cfg, fmts
+from .utils import internal as utils_internal, cfg, fmts
 from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup
 
@@ -65,7 +64,7 @@ class ToolDelta:
         try:
             self.cfg_loader = ConfigLoader(self)
             self.welcome()
-            self.init_dirs()
+            utils_internal.init_dirs()
             self.packet_handler = PacketHandler(self)
             self.cmd_manager = ConsoleCmdManager(self)
             self.players_maintainer = PlayerInfoMaintainer(self)
@@ -121,27 +120,6 @@ class ToolDelta:
         fmts.print_load(f"§dToolDelta v {'.'.join([str(i) for i in VERSION])}")
         fmts.print_load("§dToolDelta Panel 已启动")
 
-    def init_dirs(self):
-        """初始化文件夹等"""
-        os.makedirs(
-            os.path.join("插件文件", constants.TOOLDELTA_CLASSIC_PLUGIN), exist_ok=True
-        )
-        os.makedirs("插件配置文件", exist_ok=True)
-        os.makedirs(os.path.join("tooldelta", "bin"), exist_ok=True)
-        os.makedirs(os.path.join("插件数据文件", "game_texts"), exist_ok=True)
-        if sys.platform == "win32":
-            self.win_create_batch_file()
-
-    @staticmethod
-    def win_create_batch_file():
-        if not os.path.isfile("点我启动.bat"):
-            argv = sys.argv.copy()
-            if argv[0].endswith(".py"):
-                argv.insert(0, "python")
-            exec_cmd = " ".join(argv)
-            with open("点我启动.bat", "w") as f:
-                f.write(f"@echo off\n{exec_cmd}\npause")
-
     def system_exit(self, reason: str) -> None:
         """ToolDelta 系统退出"""
         # 启动器框架是否被载入
@@ -182,6 +160,12 @@ class ToolDelta:
         self.actions_before_exited()
         # 到这里就基本上是退出完成了
 
+    @staticmethod
+    def actions_before_exited() -> None:
+        """安全退出"""
+        utils.safe_close()
+        fmts.print_inf("已保存数据与日志等信息。")
+
     def get_game_control(self) -> "GameCtrl":
         """获取 GameControl 对象
 
@@ -198,14 +182,12 @@ class ToolDelta:
         """
         return self.players_maintainer
 
-    @staticmethod
-    def actions_before_exited() -> None:
-        """安全退出"""
-        utils.safe_close()
-        fmts.print_inf("已保存数据与日志等信息。")
-
     def reload(self):
-        """重载所有插件"""
+        """
+        重载系统插件。
+
+        如果需要在插件内调用, 请为执行这个方法的函数分配系统级的 ToolDeltaThread。
+        """
         self.plugin_group.pre_reload()
         while 1:
             try:
@@ -311,10 +293,7 @@ class GameCtrl:
                         fmts.print_with_info("(该 tellraw 内容为敏感词)", "§f 消息 ")
                         return False
                     msg_text = "".join(
-                        [
-                            (i.get("text") or i.get("translate", "???"))
-                            for i in msg_text
-                        ]
+                        [(i.get("text") or i.get("translate", "???")) for i in msg_text]
                     )
                 fmts.print_with_info(msg_text, "§f 消息 ")
         return False
@@ -343,6 +322,12 @@ class GameCtrl:
     # 向下兼容
     @property
     def players_uuid(self):
+        """
+        Deprecated: 请使用 `game_ctrl.players.uuid_to_player`
+
+        Returns:
+            dict[str, str]: uuid -> 玩家名 的映射
+        """
         return {
             v.name: k
             for k, v in self.linked_frame.players_maintainer.uuid_to_player.items()
@@ -351,11 +336,25 @@ class GameCtrl:
     # 向下兼容
     @property
     def allplayers(self):
+        """
+        Deprecated: 使用 `game_ctrl.players` 获取所有在线玩家。
+        Returns:
+            _type_: _description_
+        """
         return [i.name for i in self.linked_frame.players_maintainer.getAllPlayers()]
 
     # 向下兼容
     @property
     def bot_name(self) -> str:
+        """
+        Deprecated: 使用 `game_ctrl.players.getBotInfo()` 获取更详细的机器人信息。
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            str: _description_
+        """
         if hasattr(self.launcher, "bot_name"):
             return self.launcher.get_bot_name()
         raise ValueError(
