@@ -53,26 +53,29 @@ def client_title() -> None:
             start_tool_delta()
             return
         while 1:
-            text=choice(TOOLDELTA_LOGO_mode)
-            if text[0]==0:
-                print(fmts.clean_fmt(text[1]))
-            elif text[0]==1:
-                print(fmts.print_gradient(text[1],text[2],text[3]))
-            if "title" in sys_args.sys_args_to_dict():
-                fmts.clean_print(launch_args["title"] or "")
-            fmts.clean_print(
-                "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
-            )
-            fmts.clean_print("1 - §b启动 ToolDelta")
-            fmts.clean_print("2 - §d打开插件管理器")
-            fmts.clean_print("3 - §d打开插件市场")
-            fmts.clean_print("4 - §6初始化所有插件配置")
-            fmts.clean_print("5 - §a修改启动配置")
-            fmts.clean_print("6 - §c开启直接启动模式")
-            for i, (opt_name, _) in enumerate(more_opts.values()):
-                fmts.clean_print(f"{i + 7} - {opt_name}")
-            fmts.clean_print("q - §7退出")
-            r = launch_section or input("请选择: ").strip()
+            if launch_section:
+                r = launch_section
+            else:
+                text=choice(TOOLDELTA_LOGO_mode)
+                if text[0]==0:
+                    print(fmts.clean_fmt(text[1]))
+                elif text[0]==1:
+                    print(fmts.print_gradient(text[1],text[2],text[3]))
+                if "title" in sys_args.sys_args_to_dict():
+                    fmts.clean_print(launch_args["title"] or "")
+                fmts.clean_print(
+                    "§a请选择启动模式§6(使用启动参数 -l <启动模式> 可以跳过该页面):"
+                )
+                fmts.clean_print("1 - §b启动 ToolDelta")
+                fmts.clean_print("2 - §d打开插件管理器")
+                fmts.clean_print("3 - §d打开插件市场")
+                fmts.clean_print("4 - §6初始化所有插件配置")
+                fmts.clean_print("5 - §a修改启动配置")
+                fmts.clean_print("6 - §c开启直接启动模式")
+                for i, (opt_name, _) in enumerate(more_opts.values()):
+                    fmts.clean_print(f"{i + 7} - {opt_name}")
+                fmts.clean_print("q - §7退出")
+                r = input("请选择: ").strip()
             launch_section = ""
             match r:
                 case "1":
