@@ -798,7 +798,8 @@ class ThreadOmega:
                     fmts.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
                     return
                 msgpackPkt = msgpack.unpackb(
-                    as_python_bytes(msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len)
+                    as_python_bytes(msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len),
+                    strict_map_key=False
                 )
                 for listener in listeners:
                     ToolDeltaThread(
