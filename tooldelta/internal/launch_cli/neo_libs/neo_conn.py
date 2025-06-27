@@ -797,14 +797,25 @@ class ThreadOmega:
                 if convertError := toPyString(msgpack_ret.convertError):
                     fmts.print_err(f"数据包 {packetTypeName} 处理出错: {convertError}")
                     return
-                msgpackPkt = msgpack.unpackb(
-                    as_python_bytes(msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len),
-                    strict_map_key=False
-                )
+                try:
+                    pkt = msgpack.unpackb(
+                        as_python_bytes(msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len),
+                        strict_map_key=False
+                    )
+                except Exception as e:
+                    # use fallback
+                    pk_ret: MCPacketEvent = LIB.ConsumeMCPacket()
+                    pk_jsonstr = toPyString(pk_ret.packetDataAsJsonStr)
+                    try:
+                        pkt = json.loads(pk_jsonstr)
+                        fmts.print_war(f"数据包 {packetTypeName} 处理出错 ({e}), 使用默认处理方式, 包体: {pkt}")
+                    except Exception as e2:
+                        # thats strange
+                        fmts.print_err(f"数据包 {packetTypeName} 处理出错 ({e}, {e2}), 无法处理数据包 JSON: {pk_jsonstr}")
                 for listener in listeners:
                     ToolDeltaThread(
                         listener,
-                        (packetTypeName, msgpackPkt),
+                        (packetTypeName, pkt),
                         usage="Packet Callback Thread",
                         thread_level=ToolDeltaThread.SYSTEM,
                     )
