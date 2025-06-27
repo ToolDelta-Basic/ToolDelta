@@ -812,6 +812,7 @@ class ThreadOmega:
                     except Exception as e2:
                         # thats strange
                         fmts.print_err(f"数据包 {packetTypeName} 处理出错 ({e}, {e2}), 无法处理数据包 JSON: {pk_jsonstr}")
+                        return
                 for listener in listeners:
                     ToolDeltaThread(
                         listener,
