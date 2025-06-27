@@ -98,7 +98,7 @@ def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
         player (str): 玩家
         onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
     """
-    run_by_priority(on_chat_cbs, (player,), onerr)
+    run_by_priority(on_player_join_cbs, (player,), onerr)
 
 
 def execute_chat(
