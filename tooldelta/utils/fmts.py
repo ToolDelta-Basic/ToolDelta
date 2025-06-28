@@ -162,38 +162,42 @@ def print_with_info(
     Raises:
         AssertionError: 无法找到对应的颜色代码
     """
-    with print_lock:
-        if need_log:
-            c_log(info, text)
-        set_next_color = "§r"
-        if "\n" in text:
-            output_txts = []
-            for text_line in str(text).split("\n"):
-                if "§" in text_line:
-                    try:
-                        n = text_line.rfind("§")
-                        _set_next_col_value = text_line[n : n + 2]
-                        set_next_color = _set_next_col_value
-                    except Exception as exc:
-                        string  = "输出信息时出现错误:\n"
-                        string += "    %s\n"
-                        string += "    原信息: %s"
-                        _original_print(
-                            string % (str(exc), text)
-                        )
-                output_txts.append(
-                    datetime.datetime.now().strftime("%H:%M ")
-                    + colormode_replace(info, 7)
-                    + " "
-                    + colormode_replace(set_next_color + text_line)
-                )
-            _original_print("\n".join(output_txts), **print_kwargs)
-        else:
-            _original_print(
+
+    if need_log:
+        c_log(info, text)
+    set_next_color = "§r"
+    if "\n" in text:
+        output_txts = []
+        for text_line in str(text).split("\n"):
+            if "§" in text_line:
+                try:
+                    n = text_line.rfind("§")
+                    _set_next_col_value = text_line[n : n + 2]
+                    set_next_color = _set_next_col_value
+                except Exception as exc:
+                    string = "输出信息时出现错误:\n"
+                    string += "    %s\n"
+                    string += "    原信息: %s"
+                    _original_print(string % (str(exc), text))
+            output_txts.append(
                 datetime.datetime.now().strftime("%H:%M ")
                 + colormode_replace(info, 7)
                 + " "
-                + colormode_replace(text),
+                + colormode_replace(set_next_color + text_line)
+            )
+            content = "\n".join(output_txts)
+            with print_lock:
+                _original_print(content, **print_kwargs)
+    else:
+        content = (
+            datetime.datetime.now().strftime("%H:%M ")
+            + colormode_replace(info, 7)
+            + " "
+            + colormode_replace(text)
+        )
+        with print_lock:
+            _original_print(
+                content,
                 **print_kwargs,
             )
 
