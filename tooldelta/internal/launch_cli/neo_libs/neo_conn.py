@@ -808,10 +808,10 @@ class ThreadOmega:
                     pk_jsonstr = toPyString(pk_ret.packetDataAsJsonStr)
                     try:
                         pkt = json.loads(pk_jsonstr)
-                        fmts.print_war(f"数据包 {packetTypeName} 处理出错 ({e}), 使用默认处理方式, 包体: {pkt}")
+                        fmts.print_war(f"数据包 {packetTypeName} 处理出错 ({e}), 使用默认处理方式, 包体: {pk_jsonstr[:1000]}")
                     except Exception as e2:
                         # thats strange
-                        fmts.print_err(f"数据包 {packetTypeName} 处理出错 ({e}, {e2}), 无法处理数据包 JSON: {pk_jsonstr}")
+                        fmts.print_err(f"数据包 {packetTypeName} 处理出错 ({e}, {e2}), 无法处理数据包 JSON: {pk_jsonstr[:1000]}")
                         return
                 for listener in listeners:
                     ToolDeltaThread(
