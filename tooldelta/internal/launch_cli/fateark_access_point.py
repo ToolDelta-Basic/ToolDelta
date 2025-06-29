@@ -57,6 +57,7 @@ class FrameFateArk(StandardFrame):
             )
         except grpc.RpcError as err:
             self.update_status(SysStatus.CRASHED_EXIT)
+            self._safe_exit()
             return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
@@ -66,6 +67,7 @@ class FrameFateArk(StandardFrame):
         self._packets_handler_thread()
         self._exec_launched_listen_cbs()
         self.wait_crashed()
+        self._safe_exit()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
         if self.status == SysStatus.CRASHED_EXIT:
@@ -144,6 +146,9 @@ class FrameFateArk(StandardFrame):
             self.command_output_cbs[pkUUID](pk)
         # else:
         #     fmts.print_war(f"命令没有对应回调: {pkUUID}")
+        
+    def _safe_exit(self):
+        self.proc.kill()
 
     def check_avaliable(self):
         if self.status != SysStatus.RUNNING:
