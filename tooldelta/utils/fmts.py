@@ -185,9 +185,9 @@ def print_with_info(
                 + " "
                 + colormode_replace(set_next_color + text_line)
             )
-            content = "\n".join(output_txts)
-            with print_lock:
-                _original_print(content, **print_kwargs)
+        content = "\n".join(output_txts)
+        with print_lock:
+            _original_print(content, **print_kwargs)
     else:
         content = (
             datetime.datetime.now().strftime("%H:%M ")
