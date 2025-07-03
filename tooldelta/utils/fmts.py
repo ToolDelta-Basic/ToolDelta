@@ -303,14 +303,14 @@ def fmt_info(text: str, info: str = "§f 信息 ") -> str:
                     except Exception:
                         pass
                 output_txts.append(
-                    datetime.datetime.now().strftime("[%H:%M] ")
+                    datetime.datetime.now().strftime("%H:%M ")
                     + colormode_replace(info, 7)
                     + " "
                     + colormode_replace(nextcolor + text_line)
                 )
             return "\n".join(output_txts)
         return (
-            datetime.datetime.now().strftime("[%H:%M] ")
+            datetime.datetime.now().strftime("%H:%M ")
             + colormode_replace(info, 7)
             + " "
             + colormode_replace(text)
