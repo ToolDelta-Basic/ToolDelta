@@ -52,9 +52,12 @@ def run_by_priority(listeners: PluginEvents_P[Callable], args: tuple, onerr: ON_
     for _, sub_listeners in sorted(listeners.items(), reverse=True):
         for plugin, listener in sub_listeners:
             try:
-                listener(*args)
+                is_blocking = listener(*args)
+                if is_blocking is True:
+                    return True
             except Exception as e:
                 onerr(plugin.name, e)
+    return False
 
 
 def execute_preload(onerr: ON_ERROR_CB) -> None:
@@ -155,7 +158,7 @@ def execute_dict_packet_funcs(pktID: PacketIDS, pkt: dict, onerr: ON_ERROR_CB) -
     """
     d = dict_packet_funcs.get(pktID)
     if d:
-        run_by_priority(d, (pkt,), onerr)
+        return run_by_priority(d, (pkt,), onerr)
     return False
 
 
@@ -173,5 +176,5 @@ def execute_bytes_packet_funcs(
     """
     d = bytes_packet_funcs.get(pktID)
     if d:
-        run_by_priority(d, (pkt,), onerr)
+        return run_by_priority(d, (pkt,), onerr)
     return False
