@@ -3,6 +3,7 @@
 import traceback
 
 from .utils import fmts
+from .utils.internal import init_dirs
 from .frame import GameCtrl, ToolDelta
 
 from .plugin_load.plugins import PluginGroup
@@ -25,7 +26,7 @@ def init_cfg_only() -> None:
     try:
         tooldelta.cfg_loader = ConfigLoader(tooldelta)
         tooldelta.welcome()
-        tooldelta.init_dirs()
+        init_dirs()
         tooldelta.packet_handler = PacketHandler(tooldelta)
         tooldelta.cmd_manager = ConsoleCmdManager(tooldelta)
         tooldelta.players_maintainer = PlayerInfoMaintainer(tooldelta)
