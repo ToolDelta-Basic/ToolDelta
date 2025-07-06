@@ -72,7 +72,7 @@ def execute_preload(onerr: ON_ERROR_CB) -> None:
     """
     def error_handler(plugin_name: str, err: Exception):
         if isinstance(err, PluginAPINotFoundError):
-            fmts.print_err(f"插件 {plugin_name} 需要包含该种接口的前置组件：{err.name}")
+            fmts.print_err(f"插件 {plugin_name} 需要包含该种接口的前置组件：{err.api_name}")
             raise SystemExit from err
         elif isinstance(err, PluginAPIVersionError):
             fmts.print_err(
