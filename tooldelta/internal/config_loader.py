@@ -22,17 +22,17 @@ if TYPE_CHECKING:
 
 "所有启动器框架类型"
 LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
-    ("NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)", FrameNeOmgAccessPoint),
+    ("§7NeOmega 框架 (NeOmega 模式)", FrameNeOmgAccessPoint),
     (
-        "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
+        "§7NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
         FrameNeOmgAccessPointRemote,
     ),
     (
-        "NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
+        "§7NeOmega 框架 (NeOmega 并行模式，同时运行NeOmega和ToolDelta)",
         FrameNeOmegaLauncher,
     ),
-    ("Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
-    ("FateArk 框架", FrameFateArk),
+    ("§7Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
+    ("FateArk 框架 §a[推荐]", FrameFateArk),
     ("FateArk 远程框架", FrameFateArkIndirect),
 ]
 
