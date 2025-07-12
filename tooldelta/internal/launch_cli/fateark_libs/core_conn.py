@@ -5,6 +5,7 @@ import importlib
 
 from ....constants import PacketIDS
 from ....internal.types import UnreadyPlayer, Abilities
+from ....mc_bytes_packet.pool import is_bytes_packet
 
 utils_pb2 = importlib.import_module(".proto.utils_pb2", package=__package__)
 reversaler_pb2 = importlib.import_module(".proto.reversaler_pb2", package=__package__)
@@ -90,11 +91,19 @@ def read_packet():
     for packet in get_listener_stub().ListenPackets(
         listener_pb2.ListenPacketsRequest()
     ):
-        pk_payload = packet.payload
+        pk_payload: str = packet.payload
         if pk_payload == "":
             continue
         yield packet.id, json.loads(packet.payload)
 
+def read_bytes_packet():
+    for packet in get_listener_stub().ListenBytesPackets(
+        listener_pb2.ListenBytesPacketsRequest()
+    ):
+        pk_payload: bytes = packet.payload
+        if pk_payload == b"":
+            continue
+        yield packet.id, pk_payload
 
 def sendPacket(pkID: int, pk: dict):
     get_utils_stub().SendPacket(
@@ -108,11 +117,18 @@ def set_listen_packets(pkIDs: set[int]):
     global listen_packets
     for i in pkIDs:
         if i not in listen_packets:
-            resp = get_listener_stub().ListenTypedPacket(
-                listener_pb2.ListenTypedPacketRequest(packet_id=i)
-            )
-            if resp.status != 0:
-                raise Exception(resp.error_msg)
+            if is_bytes_packet(i):
+                resp = get_listener_stub().ListenTypedBytesPacket(
+                    listener_pb2.ListenTypedBytesPacketRequest(packet_id=i)
+                )
+                if resp.status != 0:
+                    raise Exception(f"设置字节流数据包监听错误: {resp.error_msg}")
+            else:
+                resp = get_listener_stub().ListenTypedPacket(
+                    listener_pb2.ListenTypedPacketRequest(packet_id=i)
+                )
+                if resp.status != 0:
+                    raise Exception(f"设置普通数据包监听错误: {resp.error_msg}")
             listen_packets.add(i)
 
 

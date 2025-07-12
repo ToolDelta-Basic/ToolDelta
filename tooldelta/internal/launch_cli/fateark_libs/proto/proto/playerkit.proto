@@ -4,7 +4,7 @@ package fateark.proto.playerkit;
 
 import "proto/response.proto";
 
-option go_package = "./proto/gen/playerkit;playerkitpb";
+option go_package = "network_api/playerkit;playerkitpb";
 
 message GetAllOnlinePlayersRequest {}
 

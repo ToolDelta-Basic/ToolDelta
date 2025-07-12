@@ -191,7 +191,7 @@ class Plugin:
 
         for pkt_id in pkt_ids:
             if not is_bytes_packet(pkt_id):
-                raise Exception("你不能尝试使用 ListenBytesPacket 监听普通的字典数据包")
+                raise Exception(f"你不能尝试使用 ListenBytesPacket 监听普通的字典数据包: {pkt_id}")
 
         for pkt_id in pkt_ids:
             event_cbs.bytes_packet_funcs.setdefault(pkt_id, {}).setdefault(

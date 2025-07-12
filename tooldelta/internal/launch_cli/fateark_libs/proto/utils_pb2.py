@@ -25,14 +25,14 @@ _sym_db = _symbol_database.Default()
 from . import response_pb2 as proto_dot_response__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/utils.proto\x12\x13\x66\x61teark.proto.utils\x1a\x14proto/response.proto\"8\n\x11SendPacketRequest\x12\x11\n\tpacket_id\x18\x01 \x01(\x05\x12\x10\n\x08json_str\x18\x02 \x01(\t\"\x1f\n\x1dGetPacketNameIDMappingRequest\"(\n&GetClientMaintainedBotBasicInfoRequest\"&\n$GetClientMaintainedExtendInfoRequest2\xf4\x03\n\x0cUtilsService\x12]\n\nSendPacket\x12&.fateark.proto.utils.SendPacketRequest\x1a\'.fateark.proto.response.GeneralResponse\x12u\n\x16GetPacketNameIDMapping\x12\x32.fateark.proto.utils.GetPacketNameIDMappingRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x87\x01\n\x1fGetClientMaintainedBotBasicInfo\x12;.fateark.proto.utils.GetClientMaintainedBotBasicInfoRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x83\x01\n\x1dGetClientMaintainedExtendInfo\x12\x39.fateark.proto.utils.GetClientMaintainedExtendInfoRequest\x1a\'.fateark.proto.response.GeneralResponseB\x1bZ\x19./proto/gen/utils;utilspbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/utils.proto\x12\x13\x66\x61teark.proto.utils\x1a\x14proto/response.proto\"8\n\x11SendPacketRequest\x12\x11\n\tpacket_id\x18\x01 \x01(\x05\x12\x10\n\x08json_str\x18\x02 \x01(\t\"\x1f\n\x1dGetPacketNameIDMappingRequest\"(\n&GetClientMaintainedBotBasicInfoRequest\"&\n$GetClientMaintainedExtendInfoRequest2\xf4\x03\n\x0cUtilsService\x12]\n\nSendPacket\x12&.fateark.proto.utils.SendPacketRequest\x1a\'.fateark.proto.response.GeneralResponse\x12u\n\x16GetPacketNameIDMapping\x12\x32.fateark.proto.utils.GetPacketNameIDMappingRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x87\x01\n\x1fGetClientMaintainedBotBasicInfo\x12;.fateark.proto.utils.GetClientMaintainedBotBasicInfoRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x83\x01\n\x1dGetClientMaintainedExtendInfo\x12\x39.fateark.proto.utils.GetClientMaintainedExtendInfoRequest\x1a\'.fateark.proto.response.GeneralResponseB\x1bZ\x19network_api/utils;utilspbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'proto.utils_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'Z\031./proto/gen/utils;utilspb'
+  _globals['DESCRIPTOR']._serialized_options = b'Z\031network_api/utils;utilspb'
   _globals['_SENDPACKETREQUEST']._serialized_start=64
   _globals['_SENDPACKETREQUEST']._serialized_end=120
   _globals['_GETPACKETNAMEIDMAPPINGREQUEST']._serialized_start=122

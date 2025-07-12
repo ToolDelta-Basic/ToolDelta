@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package fateark.proto.response;
 
-option go_package = "./proto/gen/response;responsepb";
+option go_package = "network_api/response;responsepb";
 
 message GeneralResponse {
   enum Status {

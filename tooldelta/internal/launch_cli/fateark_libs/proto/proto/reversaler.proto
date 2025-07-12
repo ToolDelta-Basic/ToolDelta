@@ -4,7 +4,7 @@ package fateark.proto.reversaler;
 
 import "proto/response.proto";
 
-option go_package = "./proto/gen/reversaler;reversalerpb";
+option go_package = "network_api/reversaler;reversalerpb";
 
 message NewFateReversalerRequest {
   string auth_server = 1;

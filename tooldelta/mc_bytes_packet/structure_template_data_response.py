@@ -36,7 +36,7 @@ class StructureTemplateDataResponse(BaseBytesPacket):
         reader = BytesIO(bs)
 
         string_length = struct.unpack("<h", reader.read(2))[0]
-        self.StructureName = reader.read(string_length).decode(encoding="utf-8")
+        self.StructureName = reader.read(string_length).decode(encoding="utf-8",errors="ignore")
 
         self.Success = bool(reader.read(1)[0])
         self.ResponseType = reader.read(1)[0]

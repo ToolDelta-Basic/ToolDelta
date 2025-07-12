@@ -45,9 +45,19 @@ class ListenerServiceStub(object):
                 request_serializer=proto_dot_listener__pb2.ListenPacketsRequest.SerializeToString,
                 response_deserializer=proto_dot_listener__pb2.Packet.FromString,
                 _registered_method=True)
+        self.ListenBytesPackets = channel.unary_stream(
+                '/fateark.proto.listener.ListenerService/ListenBytesPackets',
+                request_serializer=proto_dot_listener__pb2.ListenBytesPacketsRequest.SerializeToString,
+                response_deserializer=proto_dot_listener__pb2.BytesPacket.FromString,
+                _registered_method=True)
         self.ListenTypedPacket = channel.unary_unary(
                 '/fateark.proto.listener.ListenerService/ListenTypedPacket',
                 request_serializer=proto_dot_listener__pb2.ListenTypedPacketRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.GeneralResponse.FromString,
+                _registered_method=True)
+        self.ListenTypedBytesPacket = channel.unary_unary(
+                '/fateark.proto.listener.ListenerService/ListenTypedBytesPacket',
+                request_serializer=proto_dot_listener__pb2.ListenTypedBytesPacketRequest.SerializeToString,
                 response_deserializer=proto_dot_response__pb2.GeneralResponse.FromString,
                 _registered_method=True)
         self.ListenPlayerChange = channel.unary_stream(
@@ -82,7 +92,19 @@ class ListenerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListenBytesPackets(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ListenTypedPacket(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListenTypedBytesPacket(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -119,9 +141,19 @@ def add_ListenerServiceServicer_to_server(servicer, server):
                     request_deserializer=proto_dot_listener__pb2.ListenPacketsRequest.FromString,
                     response_serializer=proto_dot_listener__pb2.Packet.SerializeToString,
             ),
+            'ListenBytesPackets': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenBytesPackets,
+                    request_deserializer=proto_dot_listener__pb2.ListenBytesPacketsRequest.FromString,
+                    response_serializer=proto_dot_listener__pb2.BytesPacket.SerializeToString,
+            ),
             'ListenTypedPacket': grpc.unary_unary_rpc_method_handler(
                     servicer.ListenTypedPacket,
                     request_deserializer=proto_dot_listener__pb2.ListenTypedPacketRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.GeneralResponse.SerializeToString,
+            ),
+            'ListenTypedBytesPacket': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListenTypedBytesPacket,
+                    request_deserializer=proto_dot_listener__pb2.ListenTypedBytesPacketRequest.FromString,
                     response_serializer=proto_dot_response__pb2.GeneralResponse.SerializeToString,
             ),
             'ListenPlayerChange': grpc.unary_stream_rpc_method_handler(
@@ -205,6 +237,33 @@ class ListenerService(object):
             _registered_method=True)
 
     @staticmethod
+    def ListenBytesPackets(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/fateark.proto.listener.ListenerService/ListenBytesPackets',
+            proto_dot_listener__pb2.ListenBytesPacketsRequest.SerializeToString,
+            proto_dot_listener__pb2.BytesPacket.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
     def ListenTypedPacket(request,
             target,
             options=(),
@@ -220,6 +279,33 @@ class ListenerService(object):
             target,
             '/fateark.proto.listener.ListenerService/ListenTypedPacket',
             proto_dot_listener__pb2.ListenTypedPacketRequest.SerializeToString,
+            proto_dot_response__pb2.GeneralResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListenTypedBytesPacket(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.listener.ListenerService/ListenTypedBytesPacket',
+            proto_dot_listener__pb2.ListenTypedBytesPacketRequest.SerializeToString,
             proto_dot_response__pb2.GeneralResponse.FromString,
             options,
             channel_credentials,

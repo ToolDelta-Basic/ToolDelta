@@ -4,7 +4,7 @@ package fateark.proto.command;
 
 import "proto/response.proto";
 
-option go_package = "./proto/gen/command;commandpb";
+option go_package = "network_api/command;commandpb";
 
 message SendWOCommandRequest { string cmd = 1; }
 

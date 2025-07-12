@@ -6,12 +6,10 @@ from grpc import RpcError
 import grpc
 
 from ... import utils
-from ...utils.urlmethod import get_global_github_src_url
-from ...utils.sys_args import sys_args_to_dict
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
-from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
-from ...utils import fmts, urlmethod
+from ...mc_bytes_packet import base_bytes_packet, pool
+from ...utils import fmts, urlmethod, sys_args
 from .standard_launcher import StandardFrame
 from .fateark_libs import core_conn as fateark_core, utils as fateark_utils
 
@@ -26,8 +24,8 @@ class FrameFateArk(StandardFrame):
 
     def init(self) -> None:
         super().init()
-        if "no-download-libs" not in sys_args_to_dict().keys():
-            fateark_utils.check_update(get_global_github_src_url())
+        if "no-download-libs" not in sys_args.sys_args_to_dict().keys():
+            fateark_utils.check_update(urlmethod.get_global_github_src_url())
 
     def set_launch_data(
         self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
@@ -65,6 +63,7 @@ class FrameFateArk(StandardFrame):
         self.update_status(SysStatus.RUNNING)
         fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()
+        self._bytes_packets_handler_thread()
         self._exec_launched_listen_cbs()
         self.wait_crashed()
         self._safe_exit()
@@ -134,11 +133,27 @@ class FrameFateArk(StandardFrame):
             fmts.print_inf("FateArk 数据包处理通道已断开连接")
             self.update_status(SysStatus.CRASHED_EXIT)
 
+    @utils.thread_func(
+        "FateArk 字节流数据包处理线程", thread_level=utils.ToolDeltaThread.SYSTEM
+    )
+    def _bytes_packets_handler_thread(self):
+        try:
+            for pkID, packet_bytes in fateark_core.read_bytes_packet():
+                packet = pool.bytes_packet_by_id(pkID)
+                packet.decode(packet_bytes)
+                self._packets_handler(pkID, packet)
+        except RpcError:
+            fmts.print_inf("FateArk 数据包处理通道已断开连接")
+            self.update_status(SysStatus.CRASHED_EXIT)
+
     @utils.thread_func("单数据包处理线程")
-    def _packets_handler(self, pkID: int, pk: dict):
-        if pkID == PacketIDS.CommandOutput:
-            self._command_output_handler(pk)
-        self.dict_packet_handler(pkID, pk)
+    def _packets_handler(self, pkID: int, pk: dict | base_bytes_packet.BaseBytesPacket):
+        if isinstance(pk, base_bytes_packet.BaseBytesPacket):
+            self.bytes_packet_handler(pkID, pk)
+        else:
+            if pkID == PacketIDS.CommandOutput:
+                self._command_output_handler(pk)
+            self.dict_packet_handler(pkID, pk)
 
     def _command_output_handler(self, pk: dict):
         pkUUID = utils.basic.validate_uuid(pk["CommandOrigin"]["UUID"])
@@ -146,7 +161,7 @@ class FrameFateArk(StandardFrame):
             self.command_output_cbs[pkUUID](pk)
         # else:
         #     fmts.print_war(f"命令没有对应回调: {pkUUID}")
-        
+
     def _safe_exit(self):
         self.proc.kill()
 
@@ -201,7 +216,7 @@ class FrameFateArk(StandardFrame):
         self.check_avaliable()
         fateark_core.sendwocmd(cmd)
 
-    def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
+    def sendPacket(self, pckID: int, pck: dict | base_bytes_packet.BaseBytesPacket) -> None:
         """发送数据包
 
         Args:

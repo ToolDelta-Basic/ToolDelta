@@ -45,6 +45,7 @@ class FrameFateArkIndirect(FrameFateArk):
         self.update_status(SysStatus.RUNNING)
         fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()
+        self._bytes_packets_handler_thread()
         self._exec_launched_listen_cbs()
         self.wait_crashed()
         if self.status == SysStatus.NORMAL_EXIT:

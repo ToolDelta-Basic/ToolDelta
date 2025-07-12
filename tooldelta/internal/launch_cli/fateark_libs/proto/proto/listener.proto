@@ -4,13 +4,17 @@ package fateark.proto.listener;
 
 import "proto/response.proto";
 
-option go_package = "./proto/gen/listener;listenerpb";
+option go_package = "network_api/listener;listenerpb";
 
 message ListenFateArkRequest {}
 
 message ListenPacketsRequest {}
 
+message ListenBytesPacketsRequest {}
+
 message ListenTypedPacketRequest { uint32 packet_id = 1; }
+
+message ListenTypedBytesPacketRequest { uint32 packet_id = 1; }
 
 message ListenPlayerChangeRequest {}
 
@@ -29,6 +33,11 @@ message Packet {
   string payload = 2;
 }
 
+message BytesPacket {
+  uint32 id = 1;
+  bytes payload = 2;
+}
+
 message PlayerAction { string action = 1; }
 
 message Chat { string payload = 1; }
@@ -36,7 +45,10 @@ message Chat { string payload = 1; }
 service ListenerService {
   rpc ListenFateArk(ListenFateArkRequest) returns (stream Output);
   rpc ListenPackets(ListenPacketsRequest) returns (stream Packet);
+  rpc ListenBytesPackets(ListenBytesPacketsRequest) returns (stream BytesPacket);
   rpc ListenTypedPacket(ListenTypedPacketRequest)
+      returns (response.GeneralResponse);
+  rpc ListenTypedBytesPacket(ListenTypedBytesPacketRequest)
       returns (response.GeneralResponse);
   rpc ListenPlayerChange(ListenPlayerChangeRequest)
       returns (stream PlayerAction);

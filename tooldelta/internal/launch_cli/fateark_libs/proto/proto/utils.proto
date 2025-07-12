@@ -4,7 +4,7 @@ package fateark.proto.utils;
 
 import "proto/response.proto";
 
-option go_package = "./proto/gen/utils;utilspb";
+option go_package = "network_api/utils;utilspb";
 
 message SendPacketRequest {
   int32 packet_id = 1;
