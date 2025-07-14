@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 from tooldelta.internal.launch_cli.neo_libs.blob_hash.define import BaseBlobHashHolder
 from tooldelta.internal.launch_cli.neo_libs.blob_hash.packet.define import (
     HashWithPosition,
