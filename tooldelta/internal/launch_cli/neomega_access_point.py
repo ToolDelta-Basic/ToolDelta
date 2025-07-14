@@ -364,7 +364,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.check_avaliable()
         self.omega.send_settings_command(cmd)
 
-    def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
+    def sendPacket(self, pkID: int, pk: dict | bytes | BaseBytesPacket) -> None:
         """发送数据包
 
         Args:
@@ -372,11 +372,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             pck (dict | BaseBytesPacket): 数据包内容dict
         """
         self.check_avaliable()
-        if isinstance(pck, BaseBytesPacket):
-            self.omega.send_game_packet_in_bytes(pckID, pck.encode())
-        else:
-            self.omega.send_game_packet_in_json_as_is(pckID, pck)
-
+        self.omega.send_packet(pkID, pk)
     def blobHashHolder(self) -> BlobHashHolder:
         """blobHashHolder 返回当前结点的 Blob hash cache 缓存数据集的持有人
 

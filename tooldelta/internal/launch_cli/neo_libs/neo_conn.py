@@ -11,6 +11,7 @@ from threading import Thread
 from typing import Any, ClassVar, Optional
 
 from ....utils import fmts, thread_func, ToolDeltaThread
+from ....mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ....packets import Packet_CommandOutput
 
 CInt = ctypes.c_int
@@ -22,13 +23,17 @@ CBytes = ctypes.c_void_p
 LIB: Any = None
 
 
-APIVersion: int = 0
+APIVersion: int = 100
 OldAccessPointVersion = False
+
+USE_FASTER_MSGPACK_SEND_PACKET = True
+
 
 def NewAccessPointVersionCheck(attr_name: str):
     global OldAccessPointVersion
     if OldAccessPointVersion:
         raise AttributeError(attr_name + " 在旧版 NeOmega 接入点不被支持。")
+
 
 def toCString(string: str):
     return ctypes.c_char_p(string.encode(errors="replace"))
@@ -260,17 +265,38 @@ def JsonStrAsIsGamePacketBytes(packetID: int, jsonStr: str) -> bytes:
     return bs
 
 
-def SendGamePacket(packetID: int, payload: str | bytes) -> None:
-    if type(payload) is str:
-        r = LIB.SendGamePacket(
-            to_GoInt(packetID),
-            toByteCSlice(payload.encode(encoding="utf-8")),
-            len(payload),
-        )
-        if toPyString(r) != "":
-            raise ValueError(toPyString(r))
-        return
-    r = LIB.SendGamePacket(to_GoInt(packetID), toByteCSlice(payload), len(payload))  # type: ignore
+def SendJsonGamePacket(packetID: int, pk: dict) -> None:
+    bs = json.dumps(pk, ensure_ascii=False).encode(encoding="utf-8")
+    r = LIB.SendGamePacket(
+        to_GoInt(packetID),
+        toByteCSlice(bs),
+        len(bs),
+    )
+    if toPyString(r) != "":
+        raise ValueError(toPyString(r))
+
+
+def SendMsgpackGamePacket(packetID: int, pk: dict) -> None:
+    bs = msgpack.packb(pk)
+    assert isinstance(bs, bytes)
+    r = LIB.SendMsgpackGamePacket(
+        to_GoInt(packetID),
+        toByteCSlice(bs),
+        len(bs),
+    )
+    if toPyString(r) != "":
+        raise ValueError(toPyString(r))
+
+
+def SendCustomGamePacket(packetID: int, pk: BaseBytesPacket):
+    bs = pk.encode()
+    r = LIB.SendCustomGamePacket(to_GoInt(packetID), toByteCSlice(bs), len(bs))
+    if toPyString(r) != "":
+        raise ValueError(toPyString(r))
+
+# future feature
+def SendBytesGamePacket(packetID: int, payload: bytes) -> None:
+    r = LIB.SendBytesGamePacket(to_GoInt(packetID), toByteCSlice(payload), len(payload))
     if toPyString(r) != "":
         raise ValueError(toPyString(r))
 
@@ -799,8 +825,10 @@ class ThreadOmega:
                     return
                 try:
                     pkt = msgpack.unpackb(
-                        as_python_bytes(msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len),
-                        strict_map_key=False
+                        as_python_bytes(
+                            msgpack_ret.packetDataAsMsgpack, msgpack_ret.bs_len
+                        ),
+                        strict_map_key=False,
                     )
                 except Exception as e:
                     # use fallback
@@ -808,10 +836,14 @@ class ThreadOmega:
                     pk_jsonstr = toPyString(pk_ret.packetDataAsJsonStr)
                     try:
                         pkt = json.loads(pk_jsonstr)
-                        fmts.print_war(f"数据包 {packetTypeName} 处理出错 ({e}), 使用默认处理方式, 包体: {pk_jsonstr[:1000]}")
+                        fmts.print_war(
+                            f"数据包 {packetTypeName} 处理出错 ({e}), 使用默认处理方式, 包体: {pk_jsonstr[:1000]}"
+                        )
                     except Exception as e2:
                         # thats strange
-                        fmts.print_err(f"数据包 {packetTypeName} 处理出错 ({e}, {e2}), 无法处理数据包 JSON: {pk_jsonstr[:1000]}")
+                        fmts.print_err(
+                            f"数据包 {packetTypeName} 处理出错 ({e}, {e2}), 无法处理数据包 JSON: {pk_jsonstr[:1000]}"
+                        )
                         return
                 for listener in listeners:
                     ToolDeltaThread(
@@ -1024,13 +1056,18 @@ class ThreadOmega:
     ) -> tuple[int, bytes]:
         return packet_type, JsonStrAsIsGamePacketBytes(packet_type, json.dumps(content))
 
-    def send_game_packet_in_json_as_is(self, packet_type: int, content: Any):
-        OmegaAvailable()
-        SendGamePacket(packet_type, json.dumps(content))
-
-    def send_game_packet_in_bytes(self, packet_type: int, content: bytes):
-        OmegaAvailable()
-        SendGamePacket(packet_type, content)
+    def send_packet(self, packetID: int, content: dict | bytes | BaseBytesPacket):
+        if isinstance(content, dict):
+            if USE_FASTER_MSGPACK_SEND_PACKET:
+                SendMsgpackGamePacket(packetID, content)
+            else:
+                SendJsonGamePacket(packetID, content)
+        elif isinstance(content, bytes):
+            SendBytesGamePacket(packetID, content)
+        elif isinstance(content, BaseBytesPacket):
+            SendCustomGamePacket(packetID, content)
+        else:
+            raise TypeError(f"Unsupported packet type: {type(content).__name__}")
 
     def get_bot_basic_info(self) -> ClientMaintainedBotBasicInfo:
         return self._bot_basic_info
@@ -1162,6 +1199,7 @@ def load_lib():
     LIB.StartOmega.argtypes = [CString, CString]
     LIB.StartOmega.restype = CString
     LIB.OmegaAvailable.restype = ctypes.c_uint8
+
     LIB.EventPoll.restype = Event
     LIB.ConsumeOmegaConnError.restype = CString
     LIB.ConsumeCommandResponseCB.restype = CString
@@ -1184,10 +1222,19 @@ def load_lib():
     LIB.GetPacketNameIDMapping.restype = CString
     LIB.JsonStrAsIsGamePacketBytes.argtypes = [CInt, CString]
     LIB.JsonStrAsIsGamePacketBytes.restype = JsonStrAsIsGamePacketBytes_return
-    LIB.SendGamePacket.argtypes = [CInt, CBytes, CInt]
-    LIB.SendGamePacket.restype = CString
+
+    LIB.SendJsonGamePacket.argtypes = [CInt, CBytes, CInt]
+    LIB.SendJsonGamePacket.restype = CString
+    LIB.SendMsgpackGamePacket.argtypes = [CInt, CBytes, CInt]
+    LIB.SendMsgpackGamePacket.restype = CString
+    LIB.SendCustomGamePacket.argtypes = [CInt, CBytes, CInt]
+    LIB.SendCustomGamePacket.restype = CString
+    LIB.SendBytesGamePacket.argtypes = [CInt, CBytes, CInt]
+    LIB.SendBytesGamePacket.restype = CString
+
     LIB.GetClientMaintainedBotBasicInfo.restype = CString
     LIB.GetClientMaintainedExtendInfo.restype = CString
+
     LIB.GetAllOnlinePlayers.restype = CString
     LIB.AddGPlayerUsingCount.argtypes = [CString, CInt]
     LIB.ForceReleaseBindPlayer.argtypes = [CString]
@@ -1248,6 +1295,7 @@ def load_lib():
     LIB.GetPlayerByName.argtypes = [CString]
     LIB.GetPlayerByName.restype = CString
     LIB.ConsumePlayerChange.restype = CString
+
     LIB.PlaceCommandBlock.argtypes = [CString]
     LIB.UseHotbarItem.argtypes = [ctypes.c_uint8]
     LIB.DropItemFromHotBar.argtypes = [ctypes.c_uint8]
