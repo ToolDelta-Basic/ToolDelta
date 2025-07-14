@@ -23,7 +23,7 @@ CBytes = ctypes.c_void_p
 LIB: Any = None
 
 
-APIVersion: int = 100
+APIVersion: int = 110
 OldAccessPointVersion = False
 
 USE_FASTER_MSGPACK_SEND_PACKET = True
