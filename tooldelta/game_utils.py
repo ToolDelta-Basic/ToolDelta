@@ -4,7 +4,7 @@
 
 import time
 import json
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 from collections.abc import Callable
 from .utils import create_result_cb
 
@@ -20,6 +20,34 @@ if TYPE_CHECKING:
 game_ctrl: Optional["GameCtrl"] = None
 frame: Optional["ToolDelta"] = None
 player_waitmsg_cb: dict[str, Callable[[str], None]] = {}
+
+
+__all__ = [
+    "_set_frame",
+    "getBlockTile",
+    "getItem",
+    "getMultiScore",
+    "getPos",
+    "getPosXYZ",
+    "getScore",
+    "getTarget",
+    "getTickingAreaList",
+    "get_all_player",
+    "get_robotname",
+    "isCmdSuccess",
+    "is_op",
+    "notifyToServer",
+    "queryPlayerInventory",
+    "rawText",
+    "sendPacket",
+    "sendcmd",
+    "sendwocmd",
+    "sendwscmd",
+    "set_player_effect",
+    "take_item_out_item_frame",
+    "tellrawText",
+    "waitMsg",
+]
 
 
 def _set_frame(_frame: "ToolDelta") -> None:
@@ -375,6 +403,23 @@ def queryPlayerInventory(selector: str) -> dict:
     if resp.SuccessCount < 1:
         raise ValueError("查询玩家背包内容失败")
     return json.loads(resp.DataSet)
+
+
+def notifyToServer(
+    gameNamespace: str, modNamespace: str, eventName: str, eventData: Any
+):
+    # need future tests
+    _get_game_ctrl().sendPacket(
+        PacketIDS.PyRpc,
+        {
+            "Value": [
+                "ModEventS2C",
+                [gameNamespace, modNamespace, eventName, eventData],
+            ],
+            "OperationType": 32346342,
+        },
+    )
+
 
 def __set_effect_while__(
     player_name: str, effect: str, level: int, particle: bool, icon_flicker: bool = True
