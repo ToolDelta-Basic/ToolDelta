@@ -140,7 +140,7 @@ class Plugin:
 
     def ListenPacket(
         self,
-        pkt_id: PacketIDS | list[PacketIDS],
+        pkID: PacketIDS | list[PacketIDS],
         cb: "DictPacketListener",
         priority: int = 0,
     ):
@@ -148,29 +148,27 @@ class Plugin:
         监听字典数据包的事件
 
         Args:
-            pkt_id (PacketIDS): 数据包ID
+            pkID (PacketIDS): 数据包ID
             cb ((dict) -> bool): 数据包监听回调, 返回 True 为拦截该数据包
 
         Raises:
             Exception: 尝试监听一个二进制数据包
         """
-        if isinstance(pkt_id, int):
-            pkt_ids = [pkt_id]
+        if isinstance(pkID, int):
+            pkIDs = [pkID]
         else:
-            pkt_ids = pkt_id
+            pkIDs = pkID
 
-        for pkt_id in pkt_ids:
-            if is_bytes_packet(pkt_id):
-                raise Exception("你不能尝试使用 ListenPacket 监听二进制数据包")
-
-        for pkt_id in pkt_ids:
-            event_cbs.dict_packet_funcs.setdefault(pkt_id, {}).setdefault(
+        for pk_id in pkIDs:
+            if is_bytes_packet(pk_id):
+                raise Exception("你不能尝试使用 ListenPacket 监听二进制数据包; 请改用 ListenBytesPacket")
+            event_cbs.dict_packet_funcs.setdefault(pk_id, {}).setdefault(
                 priority, []
             ).append((self, cb))
 
     def ListenBytesPacket(
         self,
-        pkt_id: PacketIDS | list[PacketIDS],
+        pkID: PacketIDS | list[PacketIDS],
         cb: "BytesPacketListener",
         priority: int = 0,
     ):
@@ -184,17 +182,15 @@ class Plugin:
         Raises:
             Exception: 尝试监听一个非二进制数据包
         """
-        if isinstance(pkt_id, int):
-            pkt_ids = [pkt_id]
+        if isinstance(pkID, int):
+            pkIDs = [pkID]
         else:
-            pkt_ids = pkt_id
+            pkIDs = pkID
 
-        for pkt_id in pkt_ids:
-            if not is_bytes_packet(pkt_id):
-                raise Exception(f"你不能尝试使用 ListenBytesPacket 监听普通的字典数据包: {pkt_id}")
-
-        for pkt_id in pkt_ids:
-            event_cbs.bytes_packet_funcs.setdefault(pkt_id, {}).setdefault(
+        for pk_id in pkIDs:
+            if not is_bytes_packet(pk_id):
+                raise Exception("你不能尝试使用 ListenBytesPacket 监听普通的字典数据包; 请改用 ListenPacket")
+            event_cbs.bytes_packet_funcs.setdefault(pk_id, {}).setdefault(
                 priority, []
             ).append((self, cb))
 

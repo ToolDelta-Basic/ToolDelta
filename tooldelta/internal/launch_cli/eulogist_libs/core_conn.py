@@ -2,22 +2,28 @@ import uuid
 import msgpack
 import threading
 import traceback
+import enum
 from collections.abc import Callable
 from typing import Any
 from websocket import WebSocketApp, WebSocket
 from dataclasses import dataclass
-from .... import utils
+from .... import constants, utils
+from ....constants import PacketIDS
 from ....packets import Packet_CommandOutput
 from ....utils import fmts
+from ....mc_bytes_packet.base_bytes_packet import BaseBytesPacket
+from ....mc_bytes_packet.pool import BYTES_PACKET_ID_POOL
 
 
-class MessageType:
+class MessageType(str, enum.Enum):
     CMD_SET_SERVER_PKTS = "SetServerListenPackets"
     CMD_SET_CLIENT_PKTS = "SetClientListenPackets"
     CMD_SET_SERVER_BLOCK_PKTS = "SetBlockingServerPackets"
     CMD_SET_CLIENT_BLOCK_PKTS = "SetBlockingClientPackets"
     MSG_SERVER_PKT = "ServerMCPacket"
+    MSG_SERVER_CUSTOM_PKT = "ServerCustomMCPacket"
     MSG_CLIENT_PKT = "ClientMCPacket"
+    MSG_CLIENT_CUSTOM_PKT = "ClientCustomMCPacket"
     MSG_SET_BOT_BASIC_INFO = "SetBotBasicInfo"
     MSG_UPDATE_UQ = "UpdateUQ"
 
@@ -43,7 +49,6 @@ class PlayerUQ:
 class Eulogist:
     """赞颂者启动器核心"""
 
-    packet_listener: Callable[[int, dict], None] | None = None
     connected = False
     bot_data_ready_event = threading.Event()
     uq_data_ready_event = threading.Event()
@@ -57,7 +62,26 @@ class Eulogist:
         self.bot_runtime_id = 0
         self.bot_uuid = ""
         self.uqs: dict[str, PlayerUQ] = {}
-        self.client_packet_handler: Callable[[int, dict], None] = lambda x, y: None
+        self.server_dict_packet_handler = None
+        self.server_bytes_packet_handler = None
+        self.client_dict_packet_handler = None
+        self.client_bytes_packet_handler = None
+
+    def set_server_packet_listener(
+        self,
+        server_dict_packet_listener: Callable[[PacketIDS, dict], None],
+        server_bytes_packet_listener: Callable[[PacketIDS, BaseBytesPacket], None],
+    ):
+        self.server_dict_packet_handler = server_dict_packet_listener
+        self.server_bytes_packet_handler = server_bytes_packet_listener
+
+    def set_client_packet_listener(
+        self,
+        client_dict_packet_handler: Callable[[PacketIDS, dict], None] | None,
+        client_bytes_packet_handler: Callable[[PacketIDS, BaseBytesPacket], None] | None,
+    ):
+        self.client_dict_packet_handler = client_dict_packet_handler
+        self.client_bytes_packet_handler = client_bytes_packet_handler
 
     @staticmethod
     def make_conn(
@@ -70,7 +94,7 @@ class Eulogist:
             ipaddr, on_open=on_conn, on_message=on_msg, on_close=on_close
         )
 
-    def start(self):
+    def start_connection(self):
         self.conn = self.make_conn(
             "ws://127.0.0.1:10132", self.on_conn, self.on_msg, self.on_clos
         )
@@ -91,7 +115,6 @@ class Eulogist:
 
     def on_msg(self, ws: WebSocket, msg_raw: str):
         msgdata = msgpack.unpackb(msg_raw)
-        # print(msgdata)
         try:
             self.handler(Message(msgdata["type"], msgdata["content"]))
         except Exception:
@@ -115,17 +138,31 @@ class Eulogist:
     def set_blocking_client_packets(self, pkIDs: list[int]):
         self.send(Message(MessageType.CMD_SET_CLIENT_BLOCK_PKTS, {"PacketsID": pkIDs}))
 
-    def sendPacket(self, pkID: int, pk: dict):
-        pk_bytes: Any = msgpack.packb(pk)
-        self.send(
-            Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": pk_bytes})
-        )
+    def sendPacket(self, pkID: int, pk: dict | BaseBytesPacket):
+        if isinstance(pk, dict):
+            pk_bytes: Any = msgpack.packb(pk)
+            self.send(
+                Message(MessageType.MSG_SERVER_PKT, {"ID": pkID, "Content": pk_bytes})
+            )
+        elif isinstance(pk, BaseBytesPacket):
+            self.send(
+                Message(MessageType.MSG_SERVER_CUSTOM_PKT, {"ID": pkID, "Content": pk.encode()})
+            )
+        else:
+            raise ValueError("sendPacket() arg 1 must be dict or BaseBytesPacket")
 
-    def sendClientPacket(self, pkID: int, pk: dict):
-        pk_bytes: Any = msgpack.packb(pk)
-        self.send(
-            Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": pk_bytes})
-        )
+    def sendClientPacket(self, pkID: int, pk: dict | BaseBytesPacket):
+        if isinstance(pk, dict):
+            pk_bytes: Any = msgpack.packb(pk)
+            self.send(
+                Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": pk_bytes})
+            )
+        elif isinstance(pk, BaseBytesPacket):
+            self.send(
+                Message(MessageType.MSG_CLIENT_CUSTOM_PKT, {"ID": pkID, "Content": pk.encode()})
+            )
+        else:
+            raise ValueError("sendClientPacket() arg 1 must be dict or BaseBytesPacket")
 
     def sendcmd(self, cmd: str):
         u = uuid.uuid4()
@@ -211,20 +248,43 @@ class Eulogist:
                     self.uqs = {k: PlayerUQ(**v) for k, v in msg.content.items()}
                     self.uq_data_ready_event.set()
                 case MessageType.MSG_SERVER_PKT:
-                    pkID = msg.content["ID"]
-                    pk = msg.content["Content"]
-                    if pkID == 79:
-                        pkUUID: bytes = pk["CommandOrigin"]["UUID"]
-                        if pkUUID in self.command_cbs.keys():
-                            self.command_cbs[pkUUID](pk)
-                        # else:
-                        #    fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
-                    if self.packet_listener:
-                        self.packet_listener(pkID, pk)
+                    if self.server_dict_packet_handler is not None:
+                        pkID = msg.content["ID"]
+                        pk = msg.content["Content"]
+                        if pkID == constants.PacketIDS.CommandOutput:
+                            pkUUID: bytes = pk["CommandOrigin"]["UUID"]
+                            if pkUUID in self.command_cbs.keys():
+                                self.command_cbs[pkUUID](pk)
+                            # else:
+                            #    fmts.print_war(f"无效命令返回UUID: {pkUUID} ({self.command_cbs}) {id(self.command_cbs)}")
+                        self.server_dict_packet_handler(pkID, pk)
+                    else:
+                        raise RuntimeError("[internal] 未设置字典数据包处理函数")
+                case MessageType.MSG_SERVER_CUSTOM_PKT:
+                    if self.server_bytes_packet_handler is not None:
+                        pkID = msg.content["ID"]
+                        packet = BYTES_PACKET_ID_POOL.get(pkID)
+                        if packet is None:
+                            raise ValueError(f"赞颂者: 未知自定义字节数据包 {pkID}")
+                        pk = packet()
+                        pk.decode(msg.content["Content"])
+                        self.server_bytes_packet_handler(pkID, pk)
+                    else:
+                        raise RuntimeError("[internal] 未设置字节数据包处理函数")
                 case MessageType.MSG_CLIENT_PKT:
-                    self.client_packet_handler(
-                        msg.content["ID"], msg.content["Content"]
-                    )
+                    if self.client_dict_packet_handler:
+                        self.client_dict_packet_handler(
+                            msg.content["ID"], msg.content["Content"]
+                        )
+                case MessageType.MSG_CLIENT_CUSTOM_PKT:
+                    if self.client_bytes_packet_handler is not None:
+                        pkID = msg.content["ID"]
+                        packet = BYTES_PACKET_ID_POOL.get(pkID)
+                        if packet is None:
+                            raise ValueError(f"赞颂者: 未知自定义字节数据包 {pkID}")
+                        pk = packet()
+                        pk.decode(msg.content["Content"])
+                        self.client_bytes_packet_handler(pkID, pk)
                 case _:
                     fmts.print_war(f"未知数据传输类型: {msg.type}")
         except Exception as err:
@@ -232,4 +292,4 @@ class Eulogist:
             fmts.print_err(traceback.format_exc())
 
     def send(self, msg: Message):
-        self.conn.send(msgpack.packb(msg.dumps())) # type: ignore
+        self.conn.send(msgpack.packb(msg.dumps()))  # type: ignore

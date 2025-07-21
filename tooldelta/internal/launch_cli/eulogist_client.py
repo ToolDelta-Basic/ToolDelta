@@ -49,11 +49,13 @@ class FrameEulogistLauncher(StandardFrame):
         self.update_status(SysStatus.LAUNCHING)
         fmts.print_inf("正在从 10132 端口连接到赞颂者...")
         utils.createThread(
-            self.eulogist.start, thread_level=utils.ToolDeltaThread.SYSTEM
+            self.eulogist.start_connection, thread_level=utils.ToolDeltaThread.SYSTEM
         )
         self.eulogist.launch_event.wait()
         self.update_status(SysStatus.RUNNING)
-        self.eulogist.packet_listener = self.packet_handler_parent
+        self.eulogist.set_server_packet_listener(
+            self.dict_packet_handler_parent, self.bytes_packet_handler_parent
+        )
         self.eulogist.set_listen_server_packets(list(self.need_listen_packets))
         self._exec_launched_listen_cbs()
         self.eulogist.exit_event.wait()
@@ -97,7 +99,7 @@ class FrameEulogistLauncher(StandardFrame):
         if new_status in (SysStatus.NORMAL_EXIT, SysStatus.CRASHED_EXIT):
             self.exit_event.set()
 
-    def packet_handler_parent(self, pkt_type: int, pkt: dict) -> None:
+    def dict_packet_handler_parent(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理器
 
         Args:
@@ -110,6 +112,20 @@ class FrameEulogistLauncher(StandardFrame):
         if not self.eulogist.connected:
             raise ValueError("还未连接到游戏")
         self.dict_packet_handler(pkt_type, pkt)
+
+    def bytes_packet_handler_parent(self, pkt_type: int, pkt: BaseBytesPacket) -> None:
+        """数据包处理器
+
+        Args:
+            pkt_type (str): 数据包类型
+            pkt (dict): 数据包内容
+
+        Raises:
+            ValueError: 还未连接到游戏
+        """
+        if not self.eulogist.connected:
+            raise ValueError("还未连接到游戏")
+        self.bytes_packet_handler(pkt_type, pkt)
 
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
@@ -179,8 +195,6 @@ class FrameEulogistLauncher(StandardFrame):
         if type(pck) is not dict:
             raise Exception("sendPacket: Bytes packet is not supported")
         self.eulogist.sendPacket(pckID, pck)
-
-    sendPacketJson = sendPacket
 
     def is_op(self, player: str) -> bool:
         """检查玩家是否为 OP
