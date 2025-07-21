@@ -102,12 +102,14 @@ class FrameFateArk(StandardFrame):
         "FateArk 报错输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
     def _proc_stderr_show_thread(self):
-        assert self.proc.stderr
+        if self.proc.stderr is None:
+            fmts.print_war("FateArk 错误输出通道不可用")
+            return
         while 1:
-            msg = self.proc.stderr.readline().decode("utf-8").strip()
+            msg = self.proc.stderr.readline().decode("utf-8")
             if msg == "":
                 break
-            fmts.print_with_info(msg, "§c FARK ")
+            fmts.print_with_info(msg.removesuffix("\n"), "§c FARK ")
         # fmts.print_inf("FateArk 进程已退出")
 
     @utils.thread_func(
@@ -143,7 +145,7 @@ class FrameFateArk(StandardFrame):
                 packet.decode(packet_bytes)
                 self._packets_handler(pkID, packet)
         except RpcError:
-            fmts.print_inf("FateArk 数据包处理通道已断开连接")
+            fmts.print_inf("FateArk 字节数据包处理通道已断开连接")
             self.update_status(SysStatus.CRASHED_EXIT)
 
     @utils.thread_func("单数据包处理线程")
