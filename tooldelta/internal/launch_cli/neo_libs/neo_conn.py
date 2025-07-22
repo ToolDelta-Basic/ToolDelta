@@ -1185,6 +1185,8 @@ def load_lib():
         lib_path = f"neomega_macos_{sys_machine}.dylib"
 
     lib_path = os.path.join(sys_fn, "bin", lib_path)
+    if not os.path.isfile(lib_path):
+        raise SystemExit("neOmega 目前已停止自动更新服务。请删除 ToolDelta基本配置.json, 并使用推荐的接入点而非 neOmega 接入点。")
     LIB = (
         ctypes.CDLL(lib_path)
         if sys_type != "Windows"
