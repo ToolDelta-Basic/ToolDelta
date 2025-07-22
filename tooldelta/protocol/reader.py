@@ -1,3 +1,4 @@
+import struct
 from typing import TypeVar
 from collections.abc import Callable
 
@@ -17,17 +18,6 @@ class Reader:
         self.offset += 1
         return value
 
-    def var_uint32(self):
-        value = 0
-        for i in range(5):
-            byte = self.read_byte()
-            value |= (byte & 0x7F) << (i * 7)
-            if byte & 0x80 == 0:
-                break
-            elif i == 4:
-                raise ValueError("VarUInt32 is too big")
-        return value
-
     def uint8(self) -> int:
         return self.read_byte()
 
@@ -43,6 +33,46 @@ class Reader:
     def bool(self) -> bool:
         value = self.uint8()
         return value == 1
+
+    def float32_bigendian(self):
+        ...
+
+    # varint
+
+    def var_uint64(self):
+        value = 0
+        for i in range(0, 70, 7):
+            b = self.read_byte()
+            value |= (b & 0x7F) << i  # uint64_t(b & 0x7f)
+            if b & 0x80 == 0:
+                return value
+        raise ValueError("VarUInt64 did not terminate after 5 bytes")
+
+    def var_int64(self):
+        ux = self.var_uint64()
+        x = ux >> 1 # *x = int64_t(ux >> 1)
+        if ux & 1 != 0:
+            x = ~x
+        return x
+
+    def var_uint32(self):
+        value = 0
+        for i in range(0, 35, 7):
+            b = self.read_byte()
+            value |= (b & 0x7F) << i  # uint64_t(b & 0x7f)
+            if b & 0x80 == 0:
+                return value
+        raise ValueError("VarUInt32 did not terminate after 5 bytes")
+
+    def var_int32(self):
+        ux = self.var_uint32()
+        x = ux >> 1  # *x = int32_t(ux >> 1)
+        if ux & 1 != 0:
+            x = ~x  # *x = ^*x
+        return x
+
+
+    # misc types
 
     def string(self):
         strlen = self.var_uint32()
@@ -62,4 +92,3 @@ class Reader:
         for _ in range(count):
             ls.append(fnc())
         return ls
-
