@@ -12,7 +12,7 @@ import aiohttp
 import anyio
 import pyspeedtest
 import requests
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 from tqdm.asyncio import tqdm
 
 from ..constants.tooldelta_cli import TDREPO_URL, TDDEPENDENCY_REPO_RAW
@@ -21,9 +21,6 @@ from . import fmts
 
 GGithubSrcURL = ""
 GPluginMarketURL = ""
-
-# Initialize colorama
-init(autoreset=True)
 
 # def get_avali_github_url(self):
 #     """自动选择最佳镜像地址"""
@@ -63,14 +60,16 @@ def get_global_github_src_url():
 
 
 def get_fastest_github_mirror():
-    # fmts.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
-    # res = test_site_latency([
-    #     "https://gh-proxy.com/",
-    #     "https://github.tooldelta.top",
-    # ])
-    # fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
-    # return site
-    return "https://github.tooldelta.top"
+    fmts.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
+    res = test_site_latency([
+        "https://gh-proxy.com/",
+        "https://ghfast.top",
+        "https://ghp.ci",
+        "https://github.tooldelta.top",
+    ])
+    fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
+    return site
+    # return "https://github.tooldelta.top"
 
 
 async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:

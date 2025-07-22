@@ -2,6 +2,8 @@
 
 from enum import IntEnum, Enum
 
+COMMAND_VERSION = 39
+
 class TextType(IntEnum):
     TextTypeRaw = 0
     TextTypeChat = 1

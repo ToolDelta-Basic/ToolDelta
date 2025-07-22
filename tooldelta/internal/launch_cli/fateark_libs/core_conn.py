@@ -3,7 +3,7 @@ import json
 import uuid
 import importlib
 
-from ....constants import PacketIDS
+from .... import constants
 from ....internal.types import UnreadyPlayer, Abilities
 from ....mc_bytes_packet.pool import is_bytes_packet
 
@@ -135,7 +135,7 @@ def set_listen_packets(pkIDs: set[int]):
 def sendcmd_and_get_uuid(cmd: str):
     ud = str(uuid.uuid4())
     sendPacket(
-        PacketIDS.CommandRequest,
+        constants.PacketIDS.CommandRequest,
         {
             "CommandLine": cmd,
             "CommandOrigin": {
@@ -145,7 +145,7 @@ def sendcmd_and_get_uuid(cmd: str):
                 "PlayerUniqueID": 0,
             },
             "Internal": False,
-            "Version": 0x24,
+            "Version": constants.minecraft.COMMAND_VERSION,
             "UnLimited": False,
         },
     )
@@ -155,7 +155,7 @@ def sendcmd_and_get_uuid(cmd: str):
 def sendwscmd_and_get_uuid(cmd: str):
     ud = str(uuid.uuid4())
     sendPacket(
-        PacketIDS.CommandRequest,
+        constants.PacketIDS.CommandRequest,
         {
             "CommandLine": cmd,
             "CommandOrigin": {
@@ -165,7 +165,7 @@ def sendwscmd_and_get_uuid(cmd: str):
                 "PlayerUniqueID": 0,
             },
             "Internal": False,
-            "Version": 0x24,
+            "Version": constants.minecraft.COMMAND_VERSION,
             "UnLimited": False,
         },
     )
@@ -174,7 +174,7 @@ def sendwscmd_and_get_uuid(cmd: str):
 
 def sendwocmd(cmd: str):
     sendPacket(
-        PacketIDS.SettingsCommand,
+        constants.PacketIDS.SettingsCommand,
         {"CommandLine": cmd, "SuppressOutput": False},
     )
 
