@@ -76,4 +76,5 @@ def check_update(mirror_src: str):
         )
         with open("tooldelta/bin/fateark_commit", "w", encoding="utf-8") as f:
             f.write(newest_commit)
-    fmts.print_inf("检测 FateArk 更新完成")
+    else:
+        fmts.print_suc("FateArk 接入点已是最新版本")
