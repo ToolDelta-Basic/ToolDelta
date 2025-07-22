@@ -20,7 +20,7 @@ def get_bin_path():
     if sys_type == "Windows":
         exe_fn = f"FateArk_windows_{sys_machine}.exe"
     elif "TERMUX_VERSION" in os.environ:
-        exe_fn = "FateArk_android_arm64"
+        exe_fn = "FateArk_linux_arm64"
     elif sys_type == "Linux":
         exe_fn = f"FateArk_linux_{sys_machine}"
     else:
