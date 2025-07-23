@@ -20,7 +20,7 @@ def get_bin_path():
     if sys_type == "Windows":
         exe_fn = f"FateArk_windows_{sys_machine}.exe"
     elif "TERMUX_VERSION" in os.environ:
-        exe_fn = "FateArk_android_arm64"
+        exe_fn = "FateArk_linux_arm64"
     elif sys_type == "Linux":
         exe_fn = f"FateArk_linux_{sys_machine}"
     else:
@@ -76,4 +76,5 @@ def check_update(mirror_src: str):
         )
         with open("tooldelta/bin/fateark_commit", "w", encoding="utf-8") as f:
             f.write(newest_commit)
-    fmts.print_inf("检测 FateArk 更新完成")
+    else:
+        fmts.print_suc("FateArk 接入点已是最新版本")
