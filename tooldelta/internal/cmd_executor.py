@@ -1,11 +1,10 @@
-import json
 import traceback
 from dataclasses import dataclass
 from typing import Any, TYPE_CHECKING
 from collections.abc import Callable
 from .. import plugin_market
 from ..constants import SysStatus
-from ..utils import fmts, thread_func, ToolDeltaThread
+from ..utils import fmts, mc_translator, thread_func, ToolDeltaThread
 from .launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
 
 
@@ -71,7 +70,10 @@ class ConsoleCmdManager:
             invalid = False
             origin_trigger = trigger
             while 1:
-                if not (trigger.startswith(exists_trigger) or exists_trigger.startswith(trigger)):
+                if not (
+                    trigger.startswith(exists_trigger)
+                    or exists_trigger.startswith(trigger)
+                ):
                     if invalid:
                         fmts.print_war(
                             f"命令 {origin_trigger} 与 {exists_trigger} 冲突, 已更改为 {trigger}"
@@ -122,40 +124,30 @@ class ConsoleCmdManager:
                 ):
                     fmts.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
                 else:
-                    if (
-                        game_text_handler
-                        := self.frame.get_game_control().game_data_handler
-                    ):
-                        msgs_output = " ".join(
-                            json.loads(i)
-                            for i in game_text_handler.Handle_Text_Class1(
-                                result.as_dict["OutputMessages"]
-                            )
-                        )
-                    else:
-                        msgs_output = json.dumps(
-                            result.as_dict["OutputMessages"],
-                            indent=2,
-                            ensure_ascii=False,
-                        )
-                    desc = json.dumps(
-                        result.OutputMessages[0].Parameters,
-                        indent=2,
-                        ensure_ascii=False,
-                    )
+                    msgs_output = [
+                        mc_translator.translate(o.Message, o.Parameters)
+                        for o in result.OutputMessages
+                    ]
+                    # if (
+                    #     game_text_handler
+                    #     := self.frame.get_game_control().game_data_handler
+                    # ):
+                    #     msgs_output = " ".join(
+                    #         json.loads(i)
+                    #         for i in game_text_handler.Handle_Text_Class1(
+                    #             result.as_dict["OutputMessages"]
+                    #         )
+                    #     )
+                    # else:
+                    #     msgs_output = json.dumps(
+                    #         result.as_dict["OutputMessages"],
+                    #         indent=2,
+                    #         ensure_ascii=False,
+                    #     )
                     if result.SuccessCount:
-                        fmts.print_suc("指令执行成功: " + msgs_output)
-                        fmts.print_suc(desc)
+                        fmts.print_suc("指令执行成功: \n\t" + "\n\t".join(msgs_output))
                     else:
-                        fmts.print_war("指令执行失败: " + msgs_output)
-                        fmts.print_war(desc)
-            except IndexError as exec_err:
-                if isinstance(result, type(None)):
-                    raise ValueError("指令执行失败") from exec_err
-                if result.SuccessCount:
-                    fmts.print_suc(
-                        f"指令执行成功, 详细返回结果:\n{json.dumps(result.as_dict['OutputMessages'], indent=2, ensure_ascii=False)}"
-                    )
+                        fmts.print_war("指令执行失败: \n\t" + "\n\t".join(msgs_output))
             except TimeoutError:
                 fmts.print_err(f"[超时] 指令获取结果返回超时: {cmd}")
 
@@ -213,14 +205,12 @@ class ConsoleCmdManager:
             lambda _: plugin_market.market.enter_plugin_market(in_game=True),
         )
         self.add_console_cmd_trigger(
-            ["/"], "[指令]", "执行 MC 指令", lambda args: _execute_mc_command_and_get_callback(args) and None
+            ["/"],
+            "[指令]",
+            "执行 MC 指令",
+            lambda args: _execute_mc_command_and_get_callback(args) and None,
         )
-        self.add_console_cmd_trigger(
-            ["list"],
-            None,
-            "查询在线玩家",
-            _list
-        )
+        self.add_console_cmd_trigger(["list"], None, "查询在线玩家", _list)
         self.add_console_cmd_trigger(
             ["reload"],
             None,

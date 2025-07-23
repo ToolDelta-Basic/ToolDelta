@@ -29,9 +29,8 @@ from .internal.launch_cli import (
     FB_LIKE_LAUNCHERS,
     LAUNCHERS,
 )
-from .game_texts import GameTextsHandle, GameTextsLoader
 from .packets import Packet_CommandOutput
-from .utils import internal as utils_internal, cfg, fmts
+from .utils import internal as utils_internal, cfg, fmts, mc_translator
 from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup
 
@@ -232,13 +231,7 @@ class GameCtrl:
         Args:
             frame (ToolDelta): 继承 Frame 的对象
         """
-        try:
-            self.game_texts_data = GameTextsLoader().game_texts_data
-            self.game_data_handler = GameTextsHandle(self.game_texts_data)
-        except Exception as err:
-            fmts.print_war(f"游戏文本翻译器不可用: {err}")
-            self.game_texts_data = None
-            self.game_data_handler = None
+        mc_translator.init_pool()
         self.linked_frame = frame
 
     def hook_packet_handler(self, hdl: "PacketHandler"):
@@ -266,19 +259,7 @@ class GameCtrl:
         msg: str = pkt["Message"]
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:
-                if msg == "§e%multiplayer.player.joined":
-                    playername = pkt["Parameters"][0]
-                    fmts.print_inf(f"§e{playername} 加入了游戏")
-                elif msg == "§e%multiplayer.player.left":
-                    playername = pkt["Parameters"][0]
-                    fmts.print_inf(f"§e{playername} 退出了游戏")
-                else:
-                    # TODO: another type of message
-                    if self.game_data_handler is not None:
-                        jon = self.game_data_handler.Handle_Text_Class1(pkt)
-                        fmts.print_inf("§1" + " ".join(jon).strip('"'))
-                    else:
-                        fmts.print_inf(msg)
+                fmts.print_inf(mc_translator.translate(msg.removeprefix("%"), pkt["Parameters"]))
             case (
                 TextType.TextTypeChat
                 | TextType.TextTypeWhisper
@@ -445,16 +426,6 @@ class GameCtrl:
         self.sendwocmd(
             f"titleraw {utils.to_player_selector(target)} actionbar {text_json}"
         )
-
-    def get_game_data(self) -> dict:
-        """获取游戏常见字符串数据
-
-        Returns:
-            dict: 游戏常见字符串数据
-        """
-        if self.game_texts_data is None:
-            raise ValueError("游戏翻译器字符串数据不可用")
-        return self.game_texts_data
 
     @property
     def players(self):
