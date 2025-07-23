@@ -259,7 +259,7 @@ class GameCtrl:
         msg: str = pkt["Message"]
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:
-                fmts.print_inf(mc_translator.translate(msg.removeprefix("%"), pkt["Parameters"]))
+                fmts.print_inf(mc_translator.translate(msg, pkt["Parameters"]))
             case (
                 TextType.TextTypeChat
                 | TextType.TextTypeWhisper
