@@ -1,5 +1,5 @@
 import re
-from .pool import translator_pool
+from .pool import translator_pool, ensure_inited
 
 sec_translator = re.compile(r"%([A-Za-z0-9\.\-_]+)")
 
@@ -17,6 +17,7 @@ def translate(key: str, args: list | None = None, translate_args=True) -> str:
     Returns:
         str: 翻译后的文本, 翻译失败将返回原内容
     """
+    ensure_inited()
     if key.startswith("§"):
         # e.g. §emultiplayer.player.joined
         color, key = split_color_and_key(key)
