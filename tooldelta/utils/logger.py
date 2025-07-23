@@ -46,9 +46,9 @@ class ToolDeltaLogger:
             raise TypeError("only allows string")
         if "\n" in msg:
             msg = msg.replace("\n", "\n    ")
-        MAX_MSG_LENGTH = 200
+        MAX_MSG_LENGTH = 100000
         if len(msg) > MAX_MSG_LENGTH:
-            msg = msg[:200] + "..."
+            msg = msg[:MAX_MSG_LENGTH] + "..."
         self._check_is_another_day()
         self._wrapper.write(
             time.strftime(self.logging_fmt)
