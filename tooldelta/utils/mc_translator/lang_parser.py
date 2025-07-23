@@ -5,7 +5,7 @@ REPLACER = list[REPLACE_FLAG | str]
 
 repl_rule = re.compile(r"%(?P<a>[0-9a-z\.]+)(?P<b>(\$[a-z]+)?)")
 
-REPLACER_SPLIT = "[Rep1]"
+REPLACER_SPLIT = "\x00"
 
 
 def parse_file(content: str):
