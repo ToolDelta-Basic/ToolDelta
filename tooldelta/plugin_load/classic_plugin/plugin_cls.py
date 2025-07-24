@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from ...mc_bytes_packet.pool import is_bytes_packet
 from ...constants import TOOLDELTA_PLUGIN_DATA_DIR, PacketIDS
-from ...utils import fmts
+from ...utils import cfg, fmts
 from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
 from . import event_cbs
 
@@ -76,6 +76,22 @@ class Plugin:
             _type_: _description_
         """
         return os.path.join(self.data_path, *paths)
+
+    def get_config_and_version(self, template: dict, default_cfg: dict):
+        """
+        获取该插件的配置文件及版本
+
+        Args:
+            plugin_name (str): 插件名
+            template (dict): 配置模版
+            default_cfg (dict): 默认配置
+
+        Returns:
+            tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
+    """
+        return cfg.get_plugin_config_and_version(
+            self.name, template, default_cfg, self.version
+        )
 
     def ListenPreload(self, cb: Callable[[], Any], priority: int = 0):
         """
@@ -161,7 +177,9 @@ class Plugin:
 
         for pk_id in pkIDs:
             if is_bytes_packet(pk_id):
-                raise Exception("你不能尝试使用 ListenPacket 监听二进制数据包; 请改用 ListenBytesPacket")
+                raise Exception(
+                    "你不能尝试使用 ListenPacket 监听二进制数据包; 请改用 ListenBytesPacket"
+                )
             event_cbs.dict_packet_funcs.setdefault(pk_id, {}).setdefault(
                 priority, []
             ).append((self, cb))
@@ -189,7 +207,9 @@ class Plugin:
 
         for pk_id in pkIDs:
             if not is_bytes_packet(pk_id):
-                raise Exception("你不能尝试使用 ListenBytesPacket 监听普通的字典数据包; 请改用 ListenPacket")
+                raise Exception(
+                    "你不能尝试使用 ListenBytesPacket 监听普通的字典数据包; 请改用 ListenPacket"
+                )
             event_cbs.bytes_packet_funcs.setdefault(pk_id, {}).setdefault(
                 priority, []
             ).append((self, cb))

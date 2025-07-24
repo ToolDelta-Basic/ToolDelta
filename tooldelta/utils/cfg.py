@@ -192,12 +192,12 @@ def get_plugin_config_and_version(
 
     Args:
         plugin_name (str): 插件名
-        standard_type (dict): 标准类型
+        standard_type (dict): 配置模版
         default (dict): 默认配置
         default_vers (tuple[int, int, int]): 默认版本
 
     Returns:
-            tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
+        tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
     """
     # 详情见 插件编写指南.md
     assert isinstance(standard_type, dict)
