@@ -11,6 +11,21 @@ from .launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
 if TYPE_CHECKING:
     from tooldelta import ToolDelta
 
+def get_nearest_command(cmd: str, available_commands: list[str]):
+    cmd_weights: dict[str, float] = {}
+    for char in cmd:
+        for _cmd in available_commands:
+            if char in _cmd:
+                cmd_weights[_cmd] = cmd_weights.get(_cmd, 0) + 1
+                if (fc := _cmd.find(char)) != -1:
+                    cmd_weights[_cmd] += max(0, 10 - abs(fc - cmd.find(char)))
+    cmd_weights = dict(sorted(cmd_weights.items(), key=lambda x: x[1], reverse=True)[:5])
+    for _cmd, _weight in cmd_weights.copy().items():
+        cmd_weights[_cmd] = _weight + max(0, 10 - abs(len(_cmd) - len(cmd))) / 2
+    nearest_cmds = sorted(cmd_weights.items(), key=lambda x: x[1], reverse=True)
+    if len(nearest_cmds) < 1:
+        return None
+    return nearest_cmds[0][0]
 
 @dataclass
 class CommandTrigger:
@@ -61,7 +76,11 @@ class ConsoleCmdManager:
                 if res is True:
                     return True
         if not cmd_finded and cmd:
-            fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
+            nearest_cmd = get_nearest_command(cmd, list(self.commands.keys()))
+            if nearest_cmd is not None:
+                fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 你指的是 {nearest_cmd} 吗？\n输入 ? 查看帮助")
+            else:
+                fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
         return False
 
     def test_duplicate_trigger(self, trigger: str):
