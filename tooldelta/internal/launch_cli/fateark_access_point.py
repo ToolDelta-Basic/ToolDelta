@@ -218,7 +218,7 @@ class FrameFateArk(StandardFrame):
         self.check_avaliable()
         fateark_core.sendwocmd(cmd)
 
-    def sendPacket(self, pckID: int, pck: dict | base_bytes_packet.BaseBytesPacket) -> None:
+    def sendPacket(self, pkID: int, pk: dict | base_bytes_packet.BaseBytesPacket) -> None:
         """发送数据包
 
         Args:
@@ -226,9 +226,9 @@ class FrameFateArk(StandardFrame):
             pck (str | BaseBytesPacket): 数据包内容
 
         """
-        if type(pck) is not dict:
+        if type(pk) is not dict:
             raise Exception("sendPacket: Bytes packet is not supported")
-        fateark_core.sendPacket(pckID, pck)
+        fateark_core.sendPacket(pkID, pk)
 
     def get_players_info(self):
         uuids = fateark_core.get_online_player_uuids()

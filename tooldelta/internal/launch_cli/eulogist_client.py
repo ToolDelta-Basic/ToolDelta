@@ -184,7 +184,7 @@ class FrameEulogistLauncher(StandardFrame):
         """
         self.eulogist.sendwocmd(cmd)
 
-    def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
+    def sendPacket(self, pckID: int, pk: dict | BaseBytesPacket) -> None:
         """发送数据包
 
         Args:
@@ -192,9 +192,9 @@ class FrameEulogistLauncher(StandardFrame):
             pck (dict | BaseBytesPacket): 数据包内容
 
         """
-        if type(pck) is not dict:
-            raise Exception("sendPacket: Bytes packet is not supported")
-        self.eulogist.sendPacket(pckID, pck)
+        if type(pk) is not dict:
+            raise Exception("sendPacket: 目前只支持传入 dict 作为数据包")
+        self.eulogist.sendPacket(pckID, pk)
 
     def is_op(self, player: str) -> bool:
         """检查玩家是否为 OP
