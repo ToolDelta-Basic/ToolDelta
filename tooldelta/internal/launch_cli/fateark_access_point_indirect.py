@@ -20,7 +20,7 @@ class FrameFateArkIndirect(FrameFateArk):
         cfgs = get_cfg("ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD)
         openat_addr = (
             sys_args.sys_args_to_dict().get("access-point-port")
-            or cfgs.get("FateArk远程接入点模式", {}).get(
+            or cfgs.get("FateArk远程接入点启动模式", {}).get(
                 "远程连接端口", "tcp://127.0.0.1:24020"
             )
         ).removeprefix("tcp://")
