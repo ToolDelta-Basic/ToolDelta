@@ -188,8 +188,8 @@ class FrameEulogistLauncher(StandardFrame):
         """发送数据包
 
         Args:
-            pckID (int): 数据包 ID
-            pck (dict | BaseBytesPacket): 数据包内容
+            pkID (int): 数据包 ID
+            pk (dict | BaseBytesPacket): 数据包内容
 
         """
         if type(pk) is not dict:
