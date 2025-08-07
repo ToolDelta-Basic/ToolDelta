@@ -294,7 +294,6 @@ def SendCustomGamePacket(packetID: int, pk: BaseBytesPacket):
     if toPyString(r) != "":
         raise ValueError(toPyString(r))
 
-
 # future feature
 def SendBytesGamePacket(packetID: int, payload: bytes) -> None:
     r = LIB.SendBytesGamePacket(to_GoInt(packetID), toByteCSlice(payload), len(payload))
@@ -311,6 +310,12 @@ class ClientMaintainedBotBasicInfo:
     BotIdentity: str = ""
     BotUUIDStr: str = ""
     BotUID: str = ""
+
+
+class LoadBlobCache_return(ctypes.Structure):
+    bs: CBytes
+    length: CInt
+    _fields_ = (("bs", CBytes), ("length", CInt))
 
 
 @dataclass
@@ -1089,6 +1094,24 @@ class ThreadOmega:
             **json.loads(toPyString(LIB.GetClientMaintainedExtendInfo()))
         )
 
+    def load_blob_cache(self, hash: int) -> bytes:
+        NewAccessPointVersionCheck("load_blob_cache")
+        OmegaAvailable()
+        ret: LoadBlobCache_return = LIB.LoadBlobCache(CLongLong(hash))
+        payload: bytes = as_python_bytes(ret.bs, ret.length)
+        LIB.FreeMem(ret.bs)
+        return payload
+
+    def update_blob_cache(self, hash: int, payload: bytes) -> bool:
+        NewAccessPointVersionCheck("update_blob_cache")
+        OmegaAvailable()
+        if (
+            LIB.UpdateBlobCache(CLongLong(hash), toByteCSlice(payload), len(payload))
+            == 1
+        ):
+            return True
+        return False
+
     def _get_bind_player(self, uuidStr: str) -> PlayerKit | None:
         return None if uuidStr is None or not uuidStr else PlayerKit(uuidStr, self)
 
@@ -1163,9 +1186,7 @@ def load_lib():
 
     lib_path = os.path.join(sys_fn, "bin", lib_path)
     if not os.path.isfile(lib_path):
-        raise SystemExit(
-            "neOmega 目前已停止自动更新服务。请删除 ToolDelta基本配置.json, 并使用推荐的接入点而非 neOmega 接入点。"
-        )
+        raise SystemExit("neOmega 目前已停止自动更新服务。请删除 ToolDelta基本配置.json, 并使用推荐的接入点而非 neOmega 接入点。")
     LIB = (
         ctypes.CDLL(lib_path)
         if sys_type != "Windows"
@@ -1283,6 +1304,10 @@ def load_lib():
 
     # Older access point version compatible
     try:
+        LIB.LoadBlobCache.argtypes = [CLongLong]
+        LIB.LoadBlobCache.restype = LoadBlobCache_return
+        LIB.UpdateBlobCache.argtypes = [CLongLong, CBytes, CInt]
+        LIB.UpdateBlobCache.restype = CInt
         LIB.TranslateChunkNBT.argtypes = [CBytes, CInt]
         LIB.TranslateChunkNBT.restype = TranslateChunkNBT_return
         LIB.ConsumeMCBytesPacket.restype = ConsumeMCBytesPacket_return

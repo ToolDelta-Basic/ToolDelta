@@ -6,6 +6,7 @@ from ...packets import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..packet_handler import PacketHandler
 from ..types import UnreadyPlayer
+from .neo_libs.blob_hash.blob_hash_holder import BlobHashHolder
 
 
 class StandardFrame:
@@ -141,6 +142,17 @@ class StandardFrame:
         Args:
             pckID (int): 数据包 ID
             pck (dict | | BaseBytesPacket): 数据包内容
+
+        Raises:
+            NotImplementedError: 未实现此方法
+        """
+        raise NotImplementedError
+
+    def blobHashHolder(self) -> BlobHashHolder:
+        """blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人
+
+        Returns:
+            BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
 
         Raises:
             NotImplementedError: 未实现此方法
