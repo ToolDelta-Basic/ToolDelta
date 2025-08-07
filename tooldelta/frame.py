@@ -20,9 +20,6 @@ from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
 from .internal.maintainers.players import PlayerInfoMaintainer
 from .internal.types import FrameExit
-from .internal.launch_cli.neo_libs.blob_hash.blob_hash_holder import (
-    BlobHashHolder,
-)
 from .internal.launch_cli import (
     FrameNeOmgAccessPoint,
     FrameNeOmegaLauncher,
@@ -35,9 +32,7 @@ from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup
 
 
-
 VERSION = get_tool_delta_version()
-
 
 
 class ToolDelta:
@@ -60,11 +55,11 @@ class ToolDelta:
                 f"插件 <{name}> 出现问题: {err}\n§c{traceback.format_exc()}"
             )
         )
+
         def signal_handler(_, pyframe) -> None:
             fmts.clean_print("§6ToolDelta 已被手动终止")
             self.system_exit("用户退出程序")
             os._exit(1)
-
 
         signal.signal(signal.SIGINT, signal_handler)
 
@@ -245,9 +240,6 @@ class GameCtrl:
         self.sendwscmd = launcher.sendwscmd
         self.sendwocmd = launcher.sendwocmd
         self.sendPacket = launcher.sendPacket
-        # TODO: pretty this code because it is not a good interface
-        if hasattr(launcher, "blobHashHolder"):
-            self.blobHashHolder = launcher.blobHashHolder
 
     def handle_text_packet(self, pkt: dict):
         """处理 文本 数据包
@@ -433,18 +425,3 @@ class GameCtrl:
         获取玩家信息存储 (PlayerInfoMaintainer)
         """
         return self.linked_frame.get_players()
-
-    # TODO: pretty this code because it is not a good interface
-    # 这个方法需要得到修改, 因为它不是一个通用接口
-    def blob_hash_holder(self) -> BlobHashHolder:
-        """
-        blobHashHolder 返回 ToolDelta 的 Blob hash cache 缓存数据集的持有人。
-        请确保当前的启动模式为 NeOmega 系启动器。
-
-        Returns:
-            BlobHashHolder: ToolDelta 的 Blob hash cache 缓存数据集的持有人
-        """
-        blobHashHolder: BlobHashHolder | None = getattr(self, "blobHashHolder", None)
-        if blobHashHolder is None:
-            raise ValueError("仅 NeOmega 系框架可使用 BlobHashHolder 功能")
-        return self.blobHashHolder()

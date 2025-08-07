@@ -15,9 +15,6 @@ from ..types import UnreadyPlayer, Abilities
 from .standard_launcher import StandardFrame
 from .neo_libs import file_download as neo_fd, neo_conn
 from .neo_libs.neo_conn import LIB as _Library
-from .neo_libs.blob_hash.blob_hash_holder import (
-    BlobHashHolder,
-)
 
 
 class FrameNeOmgAccessPoint(StandardFrame):
@@ -45,7 +42,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             address="tcp://localhost:24013",
             accountOption=None,
         )
-        self.blob_hash_holder = BlobHashHolder(self.omega)
         self.serverNumber: int | None = None
         self.serverPassword: str | None = None
         self.fbToken: str | None = None
@@ -201,7 +197,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
             address="tcp://localhost:24013",
             accountOption=self.neomega_account_opt,
         )
-        self.blob_hash_holder = BlobHashHolder(self.omega)
         openat_port = self.start_neomega_proc()
         launch_event = threading.Event()
         self._msg_show_thread(launch_event)
@@ -373,13 +368,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.check_avaliable()
         self.omega.send_packet(pkID, pk)
-    def blobHashHolder(self) -> BlobHashHolder:
-        """blobHashHolder 返回当前结点的 Blob hash cache 缓存数据集的持有人
-
-        Returns:
-            BlobHashHolder: 当前结点的 Blob hash cache 缓存数据集的持有人
-        """
-        return self.blob_hash_holder
 
     def place_command_block_with_nbt_data(
         self,
