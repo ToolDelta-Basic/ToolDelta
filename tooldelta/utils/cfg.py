@@ -2,6 +2,7 @@
 
 import os
 import json
+from pathlib import Path
 from typing import Any
 from ..constants import TOOLDELTA_PLUGIN_CFG_DIR
 
@@ -167,9 +168,9 @@ class FindNone:
     """找不到值"""
 
 
-def get_cfg(path: str, standard_type: Any):
+def get_cfg(path: str | Path, standard_type: Any):
     """从 path 路径获取 json 文件文本信息，并按照 standard_type 给出的标准形式进行检测。"""
-    path = path if path.endswith(".json") else f"{path}.json"
+    path = path if str(path).endswith(".json") else f"{path}.json"
     with open(path, encoding="utf-8") as f:
         try:
             obj = json.load(f)

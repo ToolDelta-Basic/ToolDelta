@@ -14,7 +14,6 @@ from ...utils import fmts, sys_args, urlmethod
 from ..types import UnreadyPlayer, Abilities
 from .standard_launcher import StandardFrame
 from .neo_libs import file_download as neo_fd, neo_conn
-from .neo_libs.neo_conn import LIB as _Library
 from .neo_libs.blob_hash.blob_hash_holder import (
     BlobHashHolder,
 )
@@ -234,6 +233,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         return SystemError("未知的退出状态")
 
     def get_neomega_library(self):
+        from .neo_libs.neo_conn import LIB as _Library
         return _Library
 
     def get_players_info(self):

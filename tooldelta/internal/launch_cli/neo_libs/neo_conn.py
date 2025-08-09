@@ -19,11 +19,8 @@ CLongLong = ctypes.c_longlong
 CString = ctypes.c_void_p
 CBytes = ctypes.c_void_p
 
-# Give an initial value
-LIB: Any = None
 
-
-APIVersion: int = 110
+APIVersion: int = 0
 OldAccessPointVersion = False
 
 USE_FASTER_MSGPACK_SEND_PACKET = True
@@ -238,6 +235,15 @@ def SendWebSocketCommandOmitResponse(cmd: str):
 def SendPlayerCommandOmitResponse(cmd: str):
     OmegaAvailable()
     LIB.SendPlayerCommandOmitResponse(toCString(cmd))
+
+def SetPacketFilterMode(pkID: int, enabled: bool):
+    if APIVersion < 115:
+        raise NotImplementedError(f"SetPacketFilterMode is not supported in this version {APIVersion}")
+    pkid = to_GoInt(pkID)
+    e = ctypes.c_bool(enabled)
+    errStr = toPyString(LIB.SetPacketFilterMode(pkid, e))
+    if errStr != "":
+        raise ValueError(errStr)
 
 
 # Instance Actions
@@ -974,6 +980,9 @@ class ThreadOmega:
         del self._soft_call_cbs_is_bytes_result[retriever_id]
         return res
 
+    def set_packet_filter_mode(self, pkID: int, enabled: bool):
+        SetPacketFilterMode(pkID, enabled)
+
     def soft_pub_json(self, api: str, args: Any) -> None:
         SoftPubJSON(api, json.dumps(args))
 
@@ -1195,6 +1204,12 @@ def load_lib():
 
     # define lib functions
 
+    if not hasattr(LIB, "OmegaAPIVersion"):
+        raise ValueError("neOmega 版本过于老旧")
+
+    LIB.OmegaAPIVersion.restype = ctypes.c_int32
+    APIVersion = LIB.OmegaAPIVersion()
+
     # lib core functions: connect
     LIB.ConnectOmega.argtypes = [CString]
     LIB.ConnectOmega.restype = CString
@@ -1323,3 +1338,7 @@ def load_lib():
 
     if APIVersion >= 100:
         LIB.ConsumeMCPacketToMsgpack.restype = MCMsgpackPacketEvent
+
+    if APIVersion >= 115:
+        LIB.SetPacketFilterMode.argtypes = [CInt, ctypes.c_bool]
+        LIB.SetPacketFilterMode.restype = CString

@@ -20,7 +20,7 @@ class SubPacket_CmdOutputMsg:
 
     Success: bool
     Message: str
-    Parameters: list
+    Parameters: list[str]
 
     def __init__(self, pkt: dict):
         self.Success = pkt["Success"]
