@@ -34,7 +34,7 @@ class ChatbarLock:
             self.oth_cb(self.player)
             fmts.print_war(f"玩家 {self.player} 的线程锁正在锁定状态")
             raise ThreadExit
-        if self.player not in players_in_chatbar_lock:
+        else:
             players_in_chatbar_lock.append(self.player)
 
     def __exit__(self, *_):
