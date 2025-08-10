@@ -23,22 +23,23 @@ class ChatbarLock:
     ```
     """
 
-    __slots__ = ("oth_cb", "player")
+    __slots__ = ("oth_cb", "playername")
 
-    def __init__(self, player: str, oth_cb: Callable[[str], None] = lambda _: None):
-        self.player = player
+    def __init__(self, playername: str, oth_cb: Callable[[str], None] = lambda _: None):
+        self.playername = playername
         self.oth_cb = oth_cb
 
     def __enter__(self):
-        if self.player in players_in_chatbar_lock:
-            self.oth_cb(self.player)
-            fmts.print_war(f"玩家 {self.player} 的线程锁正在锁定状态")
+        if self.playername in players_in_chatbar_lock:
+            self.oth_cb(self.playername)
+            fmts.print_war(f"玩家 {self.playername} 的线程锁正在锁定状态")
             raise ThreadExit
         else:
-            players_in_chatbar_lock.append(self.player)
+            players_in_chatbar_lock.append(self.playername)
 
     def __exit__(self, *_):
-        players_in_chatbar_lock.remove(self.player)
+        if self.playername in players_in_chatbar_lock:
+            players_in_chatbar_lock.remove(self.playername)
 
 
 class BotActionLock:
