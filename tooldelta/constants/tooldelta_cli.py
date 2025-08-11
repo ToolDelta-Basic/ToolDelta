@@ -56,12 +56,21 @@ FBLIKE_APIS = [
 ]
 "验证服务器: FastBuilder API 列表"
 
+
 AUTH_SERVERS = [
     ("§7FastBuilder 官方验证服务器 §c✘不再可用", "https://user.fastbuilder.pro"),
     ("§7咕咕酱 FB验证服务器 §c✘不再可用", "https://liliya233.uk"),
-    ("NetHard 验证服务器 §a✔可用", "https://nv1.nethard.pro")
+    ("NetHard 验证服务器 §a✔可用", "https://nv1.nethard.pro"),
 ]
 "验证服务器列表"
+
+ALL_AVAILABLE_GITHUB_MIRRORS = (
+    "https://kkgithub.com"
+    "https://gh-proxy.com",
+    "https://ghfast.top",
+    "https://ghp.ci",
+    "https://github.tooldelta.top",
+)
 
 TOOLDELTA_PLUGIN_DIR = "插件文件"
 "插件文件路径"

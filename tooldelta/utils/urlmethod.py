@@ -15,7 +15,7 @@ import requests
 from colorama import Fore, Style
 from tqdm.asyncio import tqdm
 
-from ..constants.tooldelta_cli import TDREPO_URL, TDDEPENDENCY_REPO_RAW
+from ..constants.tooldelta_cli import TDREPO_URL, TDDEPENDENCY_REPO_RAW, ALL_AVAILABLE_GITHUB_MIRRORS
 from ..version import get_tool_delta_version
 from . import fmts
 
@@ -60,13 +60,12 @@ def get_global_github_src_url():
 
 
 def get_fastest_github_mirror():
-    fmts.print_inf("正在对各 GitHub 镜像进行测速 (这需要 5s) ...")
-    res = test_site_latency([
-        "https://gh-proxy.com/",
-        "https://ghfast.top",
-        "https://ghp.ci",
-        "https://github.tooldelta.top",
-    ])
+    MAX_TIMEOUT = 10
+    fmts.print_inf(f"正在对各 GitHub 镜像进行测速 (最多需要 {MAX_TIMEOUT}s) ...")
+    res = test_site_latency(
+        ALL_AVAILABLE_GITHUB_MIRRORS,
+        timeout=MAX_TIMEOUT,
+    )
     fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
     return site
     # return "https://github.tooldelta.top"
@@ -362,7 +361,7 @@ def download_unknown_file(url: str, save_dir: str) -> None:
     download_file_singlethreaded(url, save_dir)
 
 
-def test_site_latency(urls: list[str]) -> list[tuple[str, float]]:
+def test_site_latency(urls: tuple[str, ...], timeout: float) -> list[tuple[str, float]]:
     """测试网站延迟
 
     Args:
@@ -376,9 +375,9 @@ def test_site_latency(urls: list[str]) -> list[tuple[str, float]]:
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(measure_latencyt, url) for url in urls]
 
-        for future, url in zip(as_completed(futures), urls):
+        for future, url in zip(as_completed(futures, timeout=timeout), urls):
             try:
-                latency = future.result(timeout=5)
+                latency = future.result(timeout=timeout)
                 if latency != -1:
                     tmp_speed[url] = latency
             except Exception as e:
