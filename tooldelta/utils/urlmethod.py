@@ -15,7 +15,11 @@ import requests
 from colorama import Fore, Style
 from tqdm.asyncio import tqdm
 
-from ..constants.tooldelta_cli import TDREPO_URL, TDDEPENDENCY_REPO_RAW, ALL_AVAILABLE_GITHUB_MIRRORS
+from ..constants.tooldelta_cli import (
+    TDREPO_URL,
+    TDDEPENDENCY_REPO_RAW,
+    ALL_AVAILABLE_GITHUB_MIRRORS,
+)
 from ..version import get_tool_delta_version
 from . import fmts
 
@@ -66,7 +70,13 @@ def get_fastest_github_mirror():
         ALL_AVAILABLE_GITHUB_MIRRORS,
         timeout=MAX_TIMEOUT,
     )
-    fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
+    if res == []:
+        mirrors_fmt = "\n\t".join(ALL_AVAILABLE_GITHUB_MIRRORS)
+        fmts.print_err(f"所有 GitHub 镜像均无法连接: \n\t{mirrors_fmt}")
+        # TODO: 应使用户自行输入镜像源地址
+        raise SystemExit
+    else:
+        fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
     return site
     # return "https://github.tooldelta.top"
 
