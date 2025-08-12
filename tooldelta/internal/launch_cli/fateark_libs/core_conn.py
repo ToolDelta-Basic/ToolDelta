@@ -74,6 +74,9 @@ def wait_dead():
     res = next(get_core_stub().WaitDead(wait_dead_request))
     return res.reason
 
+def ping():
+    return get_core_stub().Ping(reversaler_pb2.PingRequest()).success
+
 def login(
     auth_server: str,
     fbtoken: str,

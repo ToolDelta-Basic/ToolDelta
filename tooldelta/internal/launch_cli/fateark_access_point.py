@@ -56,15 +56,7 @@ class FrameFateArk(StandardFrame):
         con_retries = 0
         while True:
             try:
-                status, _, err_msg = fateark_core.login(
-                    self.auth_server,
-                    self.fbToken,
-                    str(self.serverNumber),
-                    self.serverPassword,
-                )
-                if status != 0:
-                    self.update_status(SysStatus.CRASHED_EXIT)
-                    return SystemError(f"FateArk 登录到租赁服失败: {err_msg}")
+                fateark_core.ping()
                 break
             except grpc.RpcError as err:
                 fmts.print_war(f"FateArk 登录到租赁服失败, 重试第 {con_retries+1} 次", end="\r")

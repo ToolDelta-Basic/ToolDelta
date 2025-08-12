@@ -45,6 +45,11 @@ class FateReversalerServiceStub(object):
                 request_serializer=proto_dot_reversaler__pb2.WaitDeadRequest.SerializeToString,
                 response_deserializer=proto_dot_response__pb2.DeadReason.FromString,
                 _registered_method=True)
+        self.Ping = channel.unary_unary(
+                '/fateark.proto.reversaler.FateReversalerService/Ping',
+                request_serializer=proto_dot_reversaler__pb2.PingRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.PingResponse.FromString,
+                _registered_method=True)
 
 
 class FateReversalerServiceServicer(object):
@@ -62,6 +67,12 @@ class FateReversalerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Ping(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FateReversalerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -74,6 +85,11 @@ def add_FateReversalerServiceServicer_to_server(servicer, server):
                     servicer.WaitDead,
                     request_deserializer=proto_dot_reversaler__pb2.WaitDeadRequest.FromString,
                     response_serializer=proto_dot_response__pb2.DeadReason.SerializeToString,
+            ),
+            'Ping': grpc.unary_unary_rpc_method_handler(
+                    servicer.Ping,
+                    request_deserializer=proto_dot_reversaler__pb2.PingRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.PingResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -130,6 +146,33 @@ class FateReversalerService(object):
             '/fateark.proto.reversaler.FateReversalerService/WaitDead',
             proto_dot_reversaler__pb2.WaitDeadRequest.SerializeToString,
             proto_dot_response__pb2.DeadReason.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Ping(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.reversaler.FateReversalerService/Ping',
+            proto_dot_reversaler__pb2.PingRequest.SerializeToString,
+            proto_dot_response__pb2.PingResponse.FromString,
             options,
             channel_credentials,
             insecure,
