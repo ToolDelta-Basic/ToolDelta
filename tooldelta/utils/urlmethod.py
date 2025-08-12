@@ -10,8 +10,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import aiohttp
 import anyio
-import pyspeedtest
 import requests
+import pyspeedtest
 from colorama import Fore, Style
 from tqdm.asyncio import tqdm
 
@@ -36,7 +36,9 @@ def get_global_github_src_url():
 
 
 def get_fastest_github_mirror():
-    MAX_TIMEOUT = 10
+    MAX_TIMEOUT = 5
+    if input(fmts.fmt_info("是否自行输入 GitHub 镜像源, 否则自动选择(y/n): ")).strip().lower() == "y":
+        return input(fmts.fmt_info("请输入 GitHub 镜像源: "))
     fmts.print_inf(f"正在对各 GitHub 镜像进行测速 (最多需要 {MAX_TIMEOUT}s) ...")
     res = test_site_latency(
         ALL_AVAILABLE_GITHUB_MIRRORS,
@@ -45,7 +47,6 @@ def get_fastest_github_mirror():
     if res == []:
         mirrors_fmt = "\n\t".join(ALL_AVAILABLE_GITHUB_MIRRORS)
         fmts.print_err(f"所有 GitHub 镜像均无法连接: \n\t{mirrors_fmt}")
-        # TODO: 应使用户自行输入镜像源地址
         raise SystemExit
     else:
         fmts.print_suc(f"检测完成: 将使用 {(site := res[0][0])}")
@@ -354,20 +355,25 @@ def test_site_latency(urls: tuple[str, ...], timeout: float) -> list[tuple[str, 
     """
     tmp_speed: dict[str, float] = {}
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(measure_latencyt, url) for url in urls]
-
-        for future, url in zip(as_completed(futures, timeout=timeout), urls):
-            try:
-                latency = future.result(timeout=timeout)
-                if latency != -1:
+        futures = {executor.submit(measure_latencyt, url, timeout): url for url in urls}
+        try:
+            for future in as_completed(futures, timeout=timeout):
+                url = futures[future]
+                try:
+                    latency = future.result(timeout=timeout)
                     tmp_speed[url] = latency
-            except Exception as e:
-                fmts.print_war(f"Error measuring latency for {url}: {e}")
-
+                except Exception as e:
+                    fmts.print_war(f"{url} 测速失败: {e}")
+        except Exception as e:
+            fmts.print_war(f"一些网址的结果测速失败: {e}")
+            # 可能是 Timeout
+            executor.shutdown(wait=False, cancel_futures=True)
+            pass
+    print(tmp_speed)
     return sorted(tmp_speed.items(), key=lambda x: x[1])
 
 
-def measure_latencyt(url: str) -> float:
+def measure_latencyt(url: str, timeout: float) -> float:
     """测量延迟
 
     Args:
@@ -389,8 +395,7 @@ def measure_latencyt(url: str) -> float:
         return download_speed
     except Exception as e:
         fmts.print_war(f"Error measuring latency for {url}: {e}")
-    return -1.0  # 返回 -1 表示测速失败
-
+    return -1.0  # 返回 -
 
 def get_free_port(start: int = 2000, end: int = 65535) -> int:
     """获取空闲端口号

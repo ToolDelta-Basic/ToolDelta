@@ -69,7 +69,7 @@ ALL_AVAILABLE_GITHUB_MIRRORS = (
     "https://gh-proxy.com",
     "https://ghfast.top",
     "https://ghp.ci",
-    "https://github.tooldelta.top",
+    "https://github.tooldelta.top"
 )
 
 TOOLDELTA_PLUGIN_DIR = "插件文件"
@@ -105,7 +105,7 @@ TDREPO_URL = (
 TDDEPENDENCY_REPO_RAW = "ToolDelta-Basic/DependencyLibrary"
 TDDEPENDENCY_REPO = "https://raw.githubusercontent.com/" + TDDEPENDENCY_REPO_RAW
 
-PLUGIN_MARKET_SOURCE_OFFICIAL = "https://github.tooldelta.top/https://raw.githubusercontent.com/ToolDelta-Basic/PluginMarket/main"
+PLUGIN_MARKET_SOURCE_OFFICIAL = "https://pm.tooldelta.top"
 
 
 class LaunchMode(IntEnum):
