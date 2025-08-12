@@ -171,5 +171,3 @@ class StandardFrame(metaclass=ABCMeta):
             NotImplementedError: 未实现此方法
         """
         raise NotImplementedError
-
-    sendPacketJson = sendPacket
