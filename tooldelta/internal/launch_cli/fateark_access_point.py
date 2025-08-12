@@ -112,6 +112,12 @@ class FrameFateArk(StandardFrame):
             fmts.print_with_info(msg.removesuffix("\n"), "§c FARK ")
         # fmts.print_inf("FateArk 进程已退出")
 
+    @utils.thread_func("FateArk 等待退出线程")
+    def _wait_dead(self):
+        dead_reason = fateark_core.wait_dead()
+        fmts.print_err(f"FateArk 已崩溃: {dead_reason}")
+        self.update_status(SysStatus.CRASHED_EXIT)
+
     @utils.thread_func(
         "FateArk 进程输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
@@ -218,7 +224,9 @@ class FrameFateArk(StandardFrame):
         self.check_avaliable()
         fateark_core.sendwocmd(cmd)
 
-    def sendPacket(self, pkID: int, pk: dict | base_bytes_packet.BaseBytesPacket) -> None:
+    def sendPacket(
+        self, pkID: int, pk: dict | base_bytes_packet.BaseBytesPacket
+    ) -> None:
         """发送数据包
 
         Args:

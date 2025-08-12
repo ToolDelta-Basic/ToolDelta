@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from . import response_pb2 as proto_dot_response__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16proto/reversaler.proto\x12\x18\x66\x61teark.proto.reversaler\x1a\x14proto/response.proto\"\x9b\x01\n\x18NewFateReversalerRequest\x12\x13\n\x0b\x61uth_server\x18\x01 \x01(\t\x12\x11\n\tuser_name\x18\x02 \x01(\t\x12\x15\n\ruser_password\x18\x03 \x01(\t\x12\x12\n\nuser_token\x18\x04 \x01(\t\x12\x13\n\x0bserver_code\x18\x05 \x01(\t\x12\x17\n\x0fserver_password\x18\x06 \x01(\t2\x89\x01\n\x15\x46\x61teReversalerService\x12p\n\x11NewFateReversaler\x12\x32.fateark.proto.reversaler.NewFateReversalerRequest\x1a\'.fateark.proto.response.GeneralResponseB%Z#network_api/reversaler;reversalerpbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16proto/reversaler.proto\x12\x18\x66\x61teark.proto.reversaler\x1a\x14proto/response.proto\"\x9b\x01\n\x18NewFateReversalerRequest\x12\x13\n\x0b\x61uth_server\x18\x01 \x01(\t\x12\x11\n\tuser_name\x18\x02 \x01(\t\x12\x15\n\ruser_password\x18\x03 \x01(\t\x12\x12\n\nuser_token\x18\x04 \x01(\t\x12\x13\n\x0bserver_code\x18\x05 \x01(\t\x12\x17\n\x0fserver_password\x18\x06 \x01(\t\"\x11\n\x0fWaitDeadRequest2\xe6\x01\n\x15\x46\x61teReversalerService\x12p\n\x11NewFateReversaler\x12\x32.fateark.proto.reversaler.NewFateReversalerRequest\x1a\'.fateark.proto.response.GeneralResponse\x12[\n\x08WaitDead\x12).fateark.proto.reversaler.WaitDeadRequest\x1a\".fateark.proto.response.DeadReason0\x01\x42%Z#network_api/reversaler;reversalerpbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._serialized_options = b'Z#network_api/reversaler;reversalerpb'
   _globals['_NEWFATEREVERSALERREQUEST']._serialized_start=75
   _globals['_NEWFATEREVERSALERREQUEST']._serialized_end=230
-  _globals['_FATEREVERSALERSERVICE']._serialized_start=233
-  _globals['_FATEREVERSALERSERVICE']._serialized_end=370
+  _globals['_WAITDEADREQUEST']._serialized_start=232
+  _globals['_WAITDEADREQUEST']._serialized_end=249
+  _globals['_FATEREVERSALERSERVICE']._serialized_start=252
+  _globals['_FATEREVERSALERSERVICE']._serialized_end=482
 # @@protoc_insertion_point(module_scope)

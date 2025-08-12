@@ -22,6 +22,7 @@ grpc_con: grpc.Channel | None = None
 utils_stub: UtilsServiceStub | None = None
 listener_stub: ListenerServiceStub | None = None
 playerkit_stub: PlayerKitServiceStub | None = None
+core_stub: FateReversalerServiceStub | None = None
 
 listen_packets: set[int] = set()
 
@@ -32,6 +33,12 @@ def get_grpc_con():
         raise Exception("在建立连接前调用")
     return grpc_con
 
+
+def get_core_stub():
+    global core_stub
+    if core_stub is None:
+        raise Exception("在建立连接前调用")
+    return core_stub
 
 def get_utils_stub():
     global utils_stub
@@ -55,12 +62,16 @@ def get_playerkit_stub():
 
 
 def connect(address: str) -> None:
-    global grpc_con, listener_stub, playerkit_stub, utils_stub
+    global grpc_con, listener_stub, playerkit_stub, utils_stub, core_stub
     grpc_con = grpc.insecure_channel(address)
     utils_stub = UtilsServiceStub(grpc_con)
     listener_stub = ListenerServiceStub(grpc_con)
     playerkit_stub = PlayerKitServiceStub(grpc_con)
+    core_stub = FateReversalerServiceStub(grpc_con)
 
+def wait_dead():
+    wait_dead_request = reversaler_pb2.WaitDeadRequest()
+    return get_core_stub().WaitDead(wait_dead_request)
 
 def login(
     auth_server: str,
@@ -76,7 +87,7 @@ def login(
         server_code=server_code,
         server_password=server_password,
     )
-    resp = FateReversalerServiceStub(get_grpc_con()).NewFateReversaler(request)
+    resp = get_core_stub().NewFateReversaler(request)
     return resp.status, resp.payload, resp.error_msg
 
 

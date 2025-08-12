@@ -40,12 +40,23 @@ class FateReversalerServiceStub(object):
                 request_serializer=proto_dot_reversaler__pb2.NewFateReversalerRequest.SerializeToString,
                 response_deserializer=proto_dot_response__pb2.GeneralResponse.FromString,
                 _registered_method=True)
+        self.WaitDead = channel.unary_stream(
+                '/fateark.proto.reversaler.FateReversalerService/WaitDead',
+                request_serializer=proto_dot_reversaler__pb2.WaitDeadRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.DeadReason.FromString,
+                _registered_method=True)
 
 
 class FateReversalerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def NewFateReversaler(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def WaitDead(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -58,6 +69,11 @@ def add_FateReversalerServiceServicer_to_server(servicer, server):
                     servicer.NewFateReversaler,
                     request_deserializer=proto_dot_reversaler__pb2.NewFateReversalerRequest.FromString,
                     response_serializer=proto_dot_response__pb2.GeneralResponse.SerializeToString,
+            ),
+            'WaitDead': grpc.unary_stream_rpc_method_handler(
+                    servicer.WaitDead,
+                    request_deserializer=proto_dot_reversaler__pb2.WaitDeadRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.DeadReason.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -87,6 +103,33 @@ class FateReversalerService(object):
             '/fateark.proto.reversaler.FateReversalerService/NewFateReversaler',
             proto_dot_reversaler__pb2.NewFateReversalerRequest.SerializeToString,
             proto_dot_response__pb2.GeneralResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def WaitDead(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/fateark.proto.reversaler.FateReversalerService/WaitDead',
+            proto_dot_reversaler__pb2.WaitDeadRequest.SerializeToString,
+            proto_dot_response__pb2.DeadReason.FromString,
             options,
             channel_credentials,
             insecure,
