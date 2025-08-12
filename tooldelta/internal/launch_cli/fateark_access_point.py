@@ -42,8 +42,16 @@ class FrameFateArk(StandardFrame):
         self._proc_message_show_thread()
         self._proc_stderr_show_thread()
         fmts.print_suc(f"将在 {free_port} 端口启动 FateArk 接入点")
-        time.sleep(3)
-        fateark_core.connect(f"localhost:{free_port}")
+        con_retries = 0
+        while True:
+            try:
+                fateark_core.connect(f"localhost:{free_port}")
+                break
+            except grpc.RpcError:
+                con_retries += 1
+                time.sleep(0.5)
+                if con_retries > 20:
+                    return SystemError("FateArk 进程连接超时")
         fmts.print_suc("FateArk 接入点进程已启动")
         self._message_show_thread()
         try:
@@ -65,6 +73,7 @@ class FrameFateArk(StandardFrame):
         self._packets_handler_thread()
         self._bytes_packets_handler_thread()
         self._exec_launched_listen_cbs()
+        self._wait_and_handle_dead()
         self.wait_crashed()
         self._safe_exit()
         if self.status == SysStatus.NORMAL_EXIT:
@@ -113,7 +122,7 @@ class FrameFateArk(StandardFrame):
         # fmts.print_inf("FateArk 进程已退出")
 
     @utils.thread_func("FateArk 等待退出线程")
-    def _wait_dead(self):
+    def _wait_and_handle_dead(self):
         dead_reason = fateark_core.wait_dead()
         fmts.print_err(f"FateArk 已崩溃: {dead_reason}")
         self.update_status(SysStatus.CRASHED_EXIT)

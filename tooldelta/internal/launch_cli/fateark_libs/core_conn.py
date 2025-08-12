@@ -71,7 +71,8 @@ def connect(address: str) -> None:
 
 def wait_dead():
     wait_dead_request = reversaler_pb2.WaitDeadRequest()
-    return get_core_stub().WaitDead(wait_dead_request)
+    res = next(get_core_stub().WaitDead(wait_dead_request))
+    return res.reason
 
 def login(
     auth_server: str,
