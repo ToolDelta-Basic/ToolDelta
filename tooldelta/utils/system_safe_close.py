@@ -1,3 +1,4 @@
+from ..constants.tooldelta_cli import SysStatus
 from . import (
     tooldelta_thread,
     tempjson,
@@ -6,7 +7,7 @@ from . import (
     logger
 )
 
-def safe_close():
+def safe_close(close_status: SysStatus):
     """安全关闭: 保存JSON配置文件和关闭所有定时任务"""
     timer_events.timer_event_stop.set()
     timer_events.timer_events_clear()

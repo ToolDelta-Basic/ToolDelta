@@ -11,7 +11,7 @@ class SysStatus(IntEnum):
     NORMAL_EXIT: 正常退出
     FB_LAUNCH_EXC: FastBuilder 启动异常
     CRASHED_EXIT: 启动器崩溃退出
-    NEED_RESTART: 需要重启
+    RELOAD: 需要重启
     """
 
     LOADING = 100
@@ -20,7 +20,7 @@ class SysStatus(IntEnum):
     NORMAL_EXIT = 103
     FB_LAUNCH_EXC = 104
     CRASHED_EXIT = 105
-    NEED_RESTART = 106
+    RELOAD = 106
 
 
 TOOLDELTA_LOGO = """╔═════════════════════════════════════════════════════════════════════════╗

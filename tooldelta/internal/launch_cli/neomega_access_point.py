@@ -10,10 +10,10 @@ from ... import utils
 from ...constants import SysStatus, PacketIDS
 from ...packets import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
-from ...utils import fmts, sys_args, urlmethod
+from ...utils import fmts, urlmethod
 from ..types import UnreadyPlayer, Abilities
 from .standard_launcher import StandardFrame
-from .neo_libs import file_download as neo_fd, neo_conn
+from .neo_libs import neo_conn
 from .neo_libs.blob_hash.blob_hash_holder import (
     BlobHashHolder,
 )
@@ -226,11 +226,16 @@ class FrameNeOmgAccessPoint(StandardFrame):
             return SystemError(err_str)
         self.update_status(SysStatus.RUNNING)
         self.wait_crashed()
+        self.kill_proc()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")
         if self.status == SysStatus.CRASHED_EXIT:
             return Exception("接入点进程已崩溃")
         return SystemError("未知的退出状态")
+
+    def kill_proc(self):
+        if self.neomg_proc is not None:
+            self.neomg_proc.kill()
 
     def get_neomega_library(self):
         from .neo_libs.neo_conn import LIB as _Library

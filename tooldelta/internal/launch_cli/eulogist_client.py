@@ -34,7 +34,7 @@ class FrameEulogistLauncher(StandardFrame):
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launch_listeners: list[Callable[[], None]]
         self.exit_event = threading.Event()
-        self.status: int = SysStatus.LOADING
+        self.status: SysStatus = SysStatus.LOADING
         self.bot_name: str = ""
 
     def init(self):
@@ -88,16 +88,6 @@ class FrameEulogistLauncher(StandardFrame):
         if self.bot_name == "":
             self.bot_name = self.eulogist.bot_name
         return self.bot_name
-
-    def update_status(self, new_status: int) -> None:
-        """更新启动器状态
-
-        Args:
-            new_status (int): 新的状态码
-        """
-        self.status = new_status
-        if new_status in (SysStatus.NORMAL_EXIT, SysStatus.CRASHED_EXIT):
-            self.exit_event.set()
 
     def dict_packet_handler_parent(self, pkt_type: int, pkt: dict) -> None:
         """数据包处理器

@@ -1,4 +1,5 @@
 import threading
+from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 
 from ...constants import SysStatus, PacketIDS
@@ -9,7 +10,7 @@ from ..types import UnreadyPlayer
 from .neo_libs.blob_hash.blob_hash_holder import BlobHashHolder
 
 
-class StandardFrame:
+class StandardFrame(metaclass=ABCMeta):
     """
     提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口
     新增的启动框架都应为此类的子类, 并实现和覆写所有 NotImplemented 的内容
@@ -31,7 +32,9 @@ class StandardFrame:
         self.exit_event = threading.Event()
         self.status: SysStatus = SysStatus.LOADING
         self._launcher_listeners: list[Callable[[], None]] = []
+        self.kill_proc: Callable[[], None] | None = None
 
+    @abstractmethod
     def init(self):
         """初始化启动器框架"""
 
@@ -49,7 +52,8 @@ class StandardFrame:
         self.bytes_packet_handler = handler.entrance_bytes_packet
         self.need_listen_packets |= handler.listen_packets
 
-    def launch(self) -> None:
+    @abstractmethod
+    def launch(self) -> BaseException:
         """启动器启动
 
         Raises:
@@ -64,10 +68,14 @@ class StandardFrame:
     def wait_crashed(self):
         self.exit_event.wait()
 
+    def get_final_status(self):
+        return self.status
+
     def _exec_launched_listen_cbs(self):
         for cb in self._launcher_listeners:
             cb()
 
+    @abstractmethod
     def get_players_info(self) -> dict[str, UnreadyPlayer] | None:
         """
         获取启动器框架内存储的玩家信息
@@ -75,6 +83,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_bot_name(self) -> str:
         """获取机器人名字"""
         raise NotImplementedError
@@ -89,6 +98,7 @@ class StandardFrame:
         if new_status in (SysStatus.NORMAL_EXIT, SysStatus.CRASHED_EXIT):
             self.exit_event.set()
 
+    @abstractmethod
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
@@ -107,6 +117,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
@@ -125,6 +136,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def sendwocmd(self, cmd: str) -> None:
         """以 wo 身份发送命令
 
@@ -136,6 +148,7 @@ class StandardFrame:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def sendPacket(self, pckID: int, pck: dict | BaseBytesPacket) -> None:
         """发送数据包
 

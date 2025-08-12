@@ -23,7 +23,6 @@ class FrameFateArk(StandardFrame):
         self.command_output_cbs: dict[str, Callable] = {}
 
     def init(self) -> None:
-        super().init()
         if "no-download-libs" not in sys_args.sys_args_to_dict().keys():
             fateark_utils.check_update(urlmethod.get_global_github_src_url())
 
@@ -79,7 +78,7 @@ class FrameFateArk(StandardFrame):
         self._packets_handler_thread()
         self._bytes_packets_handler_thread()
         self._exec_launched_listen_cbs()
-        self._wait_and_handle_dead()
+        self._wait_and_handle_dead_thread()
         self.wait_crashed()
         self._safe_exit()
         if self.status == SysStatus.NORMAL_EXIT:
@@ -128,7 +127,7 @@ class FrameFateArk(StandardFrame):
         # fmts.print_inf("FateArk 进程已退出")
 
     @utils.thread_func("FateArk 等待退出线程")
-    def _wait_and_handle_dead(self):
+    def _wait_and_handle_dead_thread(self):
         dead_reason = fateark_core.wait_dead()
         fmts.print_err(f"FateArk 已崩溃: {dead_reason}")
         self.update_status(SysStatus.CRASHED_EXIT)
@@ -186,6 +185,9 @@ class FrameFateArk(StandardFrame):
         #     fmts.print_war(f"命令没有对应回调: {pkUUID}")
 
     def _safe_exit(self):
+        self.kill_proc()
+
+    def kill_proc(self):
         self.proc.kill()
 
     def check_avaliable(self):

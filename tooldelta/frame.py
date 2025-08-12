@@ -157,7 +157,7 @@ class ToolDelta:
             try:
                 fmts.print_inf("重载: 正在让插件自行退出..")
                 fmts.print_inf("重载: 正在保存数据缓存文件..")
-                utils.safe_close()
+                utils.safe_close(SysStatus.RELOAD)
                 self.cmd_manager.reset_cmds()
                 fmts.print_inf("重载: 正在重新载入插件..")
                 self.plugin_group.reload()
@@ -211,14 +211,15 @@ class ToolDelta:
             # 然后使得启动框架联络进程也退出
             if isinstance(self.launcher, FB_LIKE_LAUNCHERS):
                 self.launcher.exit_event.set()
-        # 最后做善后工作
-        self.actions_before_exited()
+            self.actions_before_exited(self.launcher.get_final_status())
+        else:
+            self.actions_before_exited(SysStatus.CRASHED_EXIT)
         # 到这里就基本上退出完成了
 
     @staticmethod
-    def actions_before_exited() -> None:
+    def actions_before_exited(close_status: SysStatus) -> None:
         """安全退出"""
-        utils.safe_close()
+        utils.safe_close(close_status)
         fmts.print_inf("已保存数据与日志等信息。")
 
 
