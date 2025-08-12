@@ -48,15 +48,15 @@ class FrameFateArk(StandardFrame):
                 con_retries += 1
                 time.sleep(0.5)
                 if con_retries > 20:
-                    return SystemError("FateArk 进程连接超时")
-        fmts.print_suc("FateArk 接入点进程已启动")
+                    return SystemError("FateArk gRPC 进程连接超时")
+        fmts.print_suc("§9FateArk 接入点进程已弹射")
         con_retries = 0
         while True:
             try:
                 fateark_core.ping()
                 break
             except grpc.RpcError as err:
-                fmts.print_war(f"FateArk 连接失败, 重试第 {con_retries+1} 次: {err.details()}", end="\r")
+                fmts.print_war(f"FateArk 连接失败, 重试第 {con_retries+1} 次", end="\r")
                 con_retries += 1
                 time.sleep(0.5)
                 if con_retries > 20:
@@ -64,10 +64,10 @@ class FrameFateArk(StandardFrame):
                     self._safe_exit()
                     return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
                 fateark_core.connect(f"localhost:{free_port}")
-        fmts.print_suc("已与 FateArk 建立网络联系")
-        self._message_show_thread()
-        self._proc_message_show_thread()
-        self._proc_stderr_show_thread()
+        fmts.print_suc("§9成功与 FateArk 建立神经网络连接")
+        self._start_message_show_thread()
+        self._start_proc_message_show_thread()
+        self._start_proc_stderr_show_thread()
         status, _, err_msg = fateark_core.login(
             self.auth_server,
             self.fbToken,
@@ -76,13 +76,13 @@ class FrameFateArk(StandardFrame):
         )
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
-            return SystemError(f"FateArk 登录到租赁服失败: {err_msg}")
+            return SystemError(f"FateArk 无法通过我的世界网络登录到租赁服: {err_msg}")
         self.update_status(SysStatus.RUNNING)
         fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()
         self._bytes_packets_handler_thread()
         self._exec_launched_listen_cbs()
-        self._wait_and_handle_dead_thread()
+        self._start_wait_and_handle_dead_thread()
         self.wait_crashed()
         self._safe_exit()
         if self.status == SysStatus.NORMAL_EXIT:
@@ -104,7 +104,7 @@ class FrameFateArk(StandardFrame):
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
-    def _message_show_thread(self):
+    def _start_message_show_thread(self):
         try:
             for msg_prefix, msg, err_msg in fateark_core.read_output():
                 fmts.print_with_info(f"§b[{msg_prefix}]§r {msg}", "§b FARK ")
@@ -119,7 +119,7 @@ class FrameFateArk(StandardFrame):
     @utils.thread_func(
         "FateArk 报错输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
-    def _proc_stderr_show_thread(self):
+    def _start_proc_stderr_show_thread(self):
         if self.proc.stderr is None:
             fmts.print_war("FateArk 错误输出通道不可用")
             return
@@ -131,7 +131,7 @@ class FrameFateArk(StandardFrame):
         # fmts.print_inf("FateArk 进程已退出")
 
     @utils.thread_func("FateArk 等待退出线程")
-    def _wait_and_handle_dead_thread(self):
+    def _start_wait_and_handle_dead_thread(self):
         dead_reason = fateark_core.wait_dead()
         fmts.print_err(f"FateArk 已崩溃: {dead_reason}")
         self.update_status(SysStatus.CRASHED_EXIT)
@@ -139,7 +139,7 @@ class FrameFateArk(StandardFrame):
     @utils.thread_func(
         "FateArk 进程输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
-    def _proc_message_show_thread(self):
+    def _start_proc_message_show_thread(self):
         assert self.proc.stdout
         while 1:
             msg = self.proc.stdout.readline().decode("utf-8").strip()
