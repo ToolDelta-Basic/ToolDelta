@@ -26,34 +26,6 @@ from . import fmts
 GGithubSrcURL = ""
 GPluginMarketURL = ""
 
-# def get_avali_github_url(self):
-#     """自动选择最佳镜像地址"""
-#     url_list = ["https://ghp.ci", "https://github.tooldelta.top"]
-#     try:
-#         if not Config.get_cfg(
-#                 "ToolDelta基本配置.json", {"是否使用github镜像": bool}
-#             )["是否使用github镜像"]:
-#             self.url = "https://raw.githubusercontent.com"
-#             return self.url
-#         if url := Config.get_cfg(
-#                 "ToolDelta基本配置.json", {"插件市场源": str}
-#             )["插件市场源"]:
-#             self.url = f"{url}/https://raw.githubusercontent.com"
-#             return self.url
-#     except Exception:
-#         fmts.clean_print("§c未发现配置文件，将选择内置镜像地址")
-#     for url in url_list:
-#         try:
-#             response = requests.get(url)
-#             if response.status_code == 200:
-#                 self.url = f"{url}/https://raw.githubusercontent.com"
-#                 return self.url
-#         except requests.RequestException:
-#             continue
-#     self.url = "https://github.tooldelta.top/https://raw.githubusercontent.com"
-#     return self.url
-
-
 def set_global_github_src_url(url: str):
     global GGithubSrcURL
     GGithubSrcURL = url
@@ -381,7 +353,6 @@ def test_site_latency(urls: tuple[str, ...], timeout: float) -> list[tuple[str, 
         list: 按延迟排序的 URL 和延迟时间的元组列表
     """
     tmp_speed: dict[str, float] = {}
-
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(measure_latencyt, url) for url in urls]
 

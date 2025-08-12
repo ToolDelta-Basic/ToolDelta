@@ -65,7 +65,7 @@ AUTH_SERVERS = [
 "验证服务器列表"
 
 ALL_AVAILABLE_GITHUB_MIRRORS = (
-    "https://kkgithub.com"
+    "https://kkgithub.com",
     "https://gh-proxy.com",
     "https://ghfast.top",
     "https://ghp.ci",
