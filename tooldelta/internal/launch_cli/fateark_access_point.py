@@ -38,8 +38,6 @@ class FrameFateArk(StandardFrame):
         self.update_status(SysStatus.LAUNCHING)
         free_port = urlmethod.get_free_port(19200)
         self.start_fateark_proc(free_port)
-        self._proc_message_show_thread()
-        self._proc_stderr_show_thread()
         fmts.print_suc(f"将在 {free_port} 端口启动 FateArk 接入点")
         con_retries = 0
         while True:
@@ -52,20 +50,33 @@ class FrameFateArk(StandardFrame):
                 if con_retries > 20:
                     return SystemError("FateArk 进程连接超时")
         fmts.print_suc("FateArk 接入点进程已启动")
-        self._message_show_thread()
         con_retries = 0
         while True:
             try:
                 fateark_core.ping()
                 break
             except grpc.RpcError as err:
-                fmts.print_war(f"FateArk 登录到租赁服失败, 重试第 {con_retries+1} 次", end="\r")
+                fmts.print_war(f"FateArk 连接失败, 重试第 {con_retries+1} 次: {err.details()}", end="\r")
                 con_retries += 1
                 time.sleep(0.5)
                 if con_retries > 20:
                     self.update_status(SysStatus.CRASHED_EXIT)
                     self._safe_exit()
                     return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
+                fateark_core.connect(f"localhost:{free_port}")
+        fmts.print_suc("已与 FateArk 建立网络联系")
+        self._message_show_thread()
+        self._proc_message_show_thread()
+        self._proc_stderr_show_thread()
+        status, _, err_msg = fateark_core.login(
+            self.auth_server,
+            self.fbToken,
+            str(self.serverNumber),
+            self.serverPassword,
+        )
+        if status != 0:
+            self.update_status(SysStatus.CRASHED_EXIT)
+            return SystemError(f"FateArk 登录到租赁服失败: {err_msg}")
         self.update_status(SysStatus.RUNNING)
         fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()
