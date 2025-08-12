@@ -67,12 +67,13 @@ class FrameFateArk(StandardFrame):
                     return SystemError(f"FateArk 登录到租赁服失败: {err_msg}")
                 break
             except grpc.RpcError as err:
+                fmts.print_war(f"FateArk 登录到租赁服失败, 重试第 {con_retries+1} 次", end="\r")
                 con_retries += 1
                 time.sleep(0.5)
                 if con_retries > 20:
                     self.update_status(SysStatus.CRASHED_EXIT)
                     self._safe_exit()
-                return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
+                    return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
         self.update_status(SysStatus.RUNNING)
         fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()

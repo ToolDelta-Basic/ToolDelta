@@ -58,3 +58,6 @@ message DeadReason {
   string reason = 1;
 }
 
+message PingResponse {
+  bool success = 1;
+}

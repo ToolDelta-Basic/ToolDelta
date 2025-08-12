@@ -15,12 +15,15 @@ message NewFateReversalerRequest {
   string server_password = 6;
 }
 
-message WaitDeadRequest {
-}
+message WaitDeadRequest {}
+
+message PingRequest {}
 
 service FateReversalerService {
   rpc NewFateReversaler(NewFateReversalerRequest)
       returns (response.GeneralResponse);
 
   rpc WaitDead(WaitDeadRequest) returns (stream response.DeadReason);
+
+  rpc Ping(PingRequest) returns (response.PingResponse);
 }

@@ -32,7 +32,6 @@ class StandardFrame(metaclass=ABCMeta):
         self.exit_event = threading.Event()
         self.status: SysStatus = SysStatus.LOADING
         self._launcher_listeners: list[Callable[[], None]] = []
-        self.kill_proc: Callable[[], None] | None = None
 
     @abstractmethod
     def init(self):
