@@ -50,15 +50,14 @@ def timer_event(
 
 def timer_events_clear():
     "清理所有定时任务"
-    timer_event_lock.acquire()
-    for k, funcs_args in timer_events_table.copy().items():
-        for func_args in funcs_args:
-            (_, _, _, _, priority) = func_args
-            if priority != ToolDeltaThread.SYSTEM:
-                timer_events_table[k].remove(func_args)
-        if timer_events_table[k] == []:
-            del timer_events_table[k]
-    timer_event_lock.release()
+    with timer_event_lock:
+        for k, funcs_args in timer_events_table.copy().items():
+            for func_args in funcs_args:
+                (_, _, _, _, priority) = func_args
+                if priority != ToolDeltaThread.SYSTEM:
+                    timer_events_table[k].remove(func_args)
+            if timer_events_table[k] == []:
+                del timer_events_table[k]
 
 
 def timer_event_boostrap():
@@ -72,11 +71,10 @@ def _internal_timer_event_boostrap():
     timer = 0
     timer_event_stop.clear()
     while not timer_event_stop.is_set():
-        timer_event_lock.acquire()
-        for k, func_args in timer_events_table.copy().items():
-            if timer % k == 0:
-                for _, caller, args, kwargs, _ in func_args:
-                    caller(*args, **kwargs)
-        timer_event_lock.release()
+        with timer_event_lock:
+            for k, func_args in timer_events_table.copy().items():
+                if timer % k == 0:
+                    for _, caller, args, kwargs, _ in func_args:
+                        caller(*args, **kwargs)
         timer_event_stop.wait(1)
         timer += 1
