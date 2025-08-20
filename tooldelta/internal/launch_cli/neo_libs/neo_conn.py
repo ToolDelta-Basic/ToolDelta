@@ -1156,11 +1156,11 @@ class ThreadOmega:
 
     @staticmethod
     def use_hotbar_item(slotID: int) -> None:
-        LIB.UseHotbarItem(slotID)
+        LIB.UseHotbarItem(to_GoInt(slotID))
 
     @staticmethod
     def drop_item_from_hotbar(slotID: int) -> None:
-        LIB.DropItemFromHotBar(slotID)
+        LIB.DropItemFromHotBar(to_GoInt(slotID))
 
     @staticmethod
     def reset_omega_status():
