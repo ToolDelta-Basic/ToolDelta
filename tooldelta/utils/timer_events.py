@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     PT = ParamSpec("PT")
 
-timer_event_stop = threading.Event()
+stop_event = threading.Event()
 timer_events_table: dict[int, list[tuple[str, Callable, tuple, dict, int]]] = {}
 timer_event_lock = threading.Lock()
 
@@ -48,7 +48,7 @@ def timer_event(
     return receiver
 
 
-def timer_events_clear():
+def reset():
     "清理所有定时任务"
     with timer_event_lock:
         for k, funcs_args in timer_events_table.copy().items():
@@ -59,6 +59,8 @@ def timer_events_clear():
             if timer_events_table[k] == []:
                 del timer_events_table[k]
 
+def stopall():
+    stop_event.set()
 
 def timer_event_boostrap():
     "启动定时任务, 请不要在系统调用以外调用"
@@ -69,12 +71,13 @@ def timer_event_boostrap():
 @thread_func("ToolDelta 定时任务", ToolDeltaThread.SYSTEM)
 def _internal_timer_event_boostrap():
     timer = 0
-    timer_event_stop.clear()
-    while not timer_event_stop.is_set():
+    stop_event.clear()
+    while not stop_event.is_set():
         with timer_event_lock:
             for k, func_args in timer_events_table.copy().items():
                 if timer % k == 0:
                     for _, caller, args, kwargs, _ in func_args:
                         caller(*args, **kwargs)
-        timer_event_stop.wait(1)
+        stop_event.wait(1)
         timer += 1
+
