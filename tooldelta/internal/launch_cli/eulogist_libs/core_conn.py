@@ -1,3 +1,4 @@
+import json
 import uuid
 import msgpack
 import threading
@@ -21,8 +22,10 @@ class MessageType(str, enum.Enum):
     CMD_SET_SERVER_BLOCK_PKTS = "SetBlockingServerPackets"
     CMD_SET_CLIENT_BLOCK_PKTS = "SetBlockingClientPackets"
     MSG_SERVER_PKT = "ServerMCPacket"
+    MSG_SERVER_PKT_JSON = "ServerMCPacketJson"
     MSG_SERVER_CUSTOM_PKT = "ServerCustomMCPacket"
     MSG_CLIENT_PKT = "ClientMCPacket"
+    MSG_CLIENT_PKT_JSON = "ClientMCPacketJson"
     MSG_CLIENT_CUSTOM_PKT = "ClientCustomMCPacket"
     MSG_SET_BOT_BASIC_INFO = "SetBotBasicInfo"
     MSG_UPDATE_UQ = "UpdateUQ"
@@ -78,7 +81,8 @@ class Eulogist:
     def set_client_packet_listener(
         self,
         client_dict_packet_handler: Callable[[PacketIDS, dict], None] | None,
-        client_bytes_packet_handler: Callable[[PacketIDS, BaseBytesPacket], None] | None,
+        client_bytes_packet_handler: Callable[[PacketIDS, BaseBytesPacket], None]
+        | None,
     ):
         self.client_dict_packet_handler = client_dict_packet_handler
         self.client_bytes_packet_handler = client_bytes_packet_handler
@@ -146,20 +150,39 @@ class Eulogist:
             )
         elif isinstance(pk, BaseBytesPacket):
             self.send(
-                Message(MessageType.MSG_SERVER_CUSTOM_PKT, {"ID": pkID, "Content": pk.encode()})
+                Message(
+                    MessageType.MSG_SERVER_CUSTOM_PKT,
+                    {"ID": pkID, "Content": pk.encode()},
+                )
             )
         else:
             raise ValueError("sendPacket() arg 1 must be dict or BaseBytesPacket")
 
-    def sendClientPacket(self, pkID: int, pk: dict | BaseBytesPacket):
+    def sendClientPacket(
+        self, pkID: int, pk: dict | BaseBytesPacket, json_encode: bool = False
+    ):
         if isinstance(pk, dict):
-            pk_bytes: Any = msgpack.packb(pk)
-            self.send(
-                Message(MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": pk_bytes})
-            )
+            if json_encode:
+                self.send(
+                    Message(
+                        MessageType.MSG_CLIENT_PKT_JSON,
+                        {"ID": pkID, "Content": json.dumps(pk).encode()},
+                    )
+                )
+
+            else:
+                pk_bytes: Any = msgpack.packb(pk)
+                self.send(
+                    Message(
+                        MessageType.MSG_CLIENT_PKT, {"ID": pkID, "Content": pk_bytes}
+                    )
+                )
         elif isinstance(pk, BaseBytesPacket):
             self.send(
-                Message(MessageType.MSG_CLIENT_CUSTOM_PKT, {"ID": pkID, "Content": pk.encode()})
+                Message(
+                    MessageType.MSG_CLIENT_CUSTOM_PKT,
+                    {"ID": pkID, "Content": pk.encode()},
+                )
             )
         else:
             raise ValueError("sendClientPacket() arg 1 must be dict or BaseBytesPacket")

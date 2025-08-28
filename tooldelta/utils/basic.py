@@ -195,6 +195,7 @@ def create_result_cb(typechecker: type[VT] = object):
     lock.acquire()
 
     def getter(timeout=60.0) -> VT | None:
+        "timeout 设置为 -1 视为一直等待"
         lock.acquire(timeout=timeout)
         return ret[0]
 
