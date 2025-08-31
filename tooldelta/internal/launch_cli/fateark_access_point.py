@@ -76,6 +76,7 @@ class FrameFateArk(StandardFrame):
         )
         if status != 0:
             self.update_status(SysStatus.CRASHED_EXIT)
+            self.kill_proc()
             return SystemError(f"FateArk 无法通过我的世界网络登录到租赁服: {err_msg}")
         self.update_status(SysStatus.RUNNING)
         fateark_core.set_listen_packets(set(self.need_listen_packets))

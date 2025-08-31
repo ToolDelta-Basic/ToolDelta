@@ -27,7 +27,7 @@ class FrameFateArkIndirect(FrameFateArk):
         self.update_status(SysStatus.LAUNCHING)
         fmts.print_suc(f"将在 {openat_addr} 端口启动 FateArk 接入点")
         fateark_core.connect(openat_addr)
-        self._message_show_thread()
+        self._start_message_show_thread()
         try:
             status, _, err_msg = fateark_core.login(
                 self.auth_server,
