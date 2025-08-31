@@ -5,20 +5,21 @@ import traceback
 from .utils import fmts
 from .utils.internal import init_dirs
 from .frame import GameCtrl, ToolDelta
-
-from .plugin_load.plugins import PluginGroup
+from .internal.launch_config import LaunchConfig
 from .internal.config_loader import ConfigLoader
 from .internal.cmd_executor import ConsoleCmdManager
 from .internal.maintainers.players import PlayerInfoMaintainer
 from .internal.packet_handler import PacketHandler
-
+from .plugin_load.plugins import PluginGroup
 
 tooldelta = ToolDelta()
 
 
-def start_tool_delta() -> None:
+def start_tool_delta(launch_config: LaunchConfig | None = None) -> None:
     """启动 ToolDelta"""
-    tooldelta.bootstrap()
+    if launch_config is None:
+        launch_config = LaunchConfig(restart_delay=-1)
+    tooldelta.bootstrap(launch_config)
 
 
 def init_cfg_only() -> None:
@@ -32,7 +33,9 @@ def init_cfg_only() -> None:
         tooldelta.players_maintainer = PlayerInfoMaintainer(tooldelta)
         tooldelta.plugin_group = PluginGroup(tooldelta)
         tooldelta.game_ctrl = GameCtrl(tooldelta)
-        tooldelta.add_console_cmd_trigger = tooldelta.cmd_manager.add_console_cmd_trigger
+        tooldelta.add_console_cmd_trigger = (
+            tooldelta.cmd_manager.add_console_cmd_trigger
+        )
         tooldelta.launcher = tooldelta.cfg_loader.load_tooldelta_cfg_and_get_launcher()
         tooldelta.launcher.set_packet_listener(tooldelta.packet_handler)
         tooldelta.game_ctrl.hook_launcher(tooldelta.launcher)
@@ -47,5 +50,3 @@ def init_cfg_only() -> None:
             fmts.print_inf("ToolDelta 已关闭")
     except Exception:
         fmts.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
-
-

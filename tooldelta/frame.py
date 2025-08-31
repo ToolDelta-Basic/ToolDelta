@@ -16,6 +16,7 @@ import json
 from . import constants, extend_functions, game_utils, utils
 from .constants import SysStatus, TextType
 from .internal.config_loader import ConfigLoader
+from .internal.launch_config import LaunchConfig
 from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
 from .internal.maintainers.players import PlayerInfoMaintainer
@@ -68,7 +69,7 @@ class ToolDelta:
 
         signal.signal(signal.SIGINT, signal_handler)
 
-    def bootstrap(self):
+    def bootstrap(self, launch_config: LaunchConfig):
         try:
             self.cfg_loader = ConfigLoader(self)
             self.welcome()
@@ -101,12 +102,16 @@ class ToolDelta:
             )
             fmts.print_inf("正在唤醒游戏框架, 等待中...", end="\r")
             self.ready = True
-            err = self.wait_closed()
-            if not isinstance(err, SystemExit):
-                fmts.print_err(f"启动器框架崩溃, 原因: {err}")
-                return -1
-            else:
-                return 0
+            while True:
+                err = self.launch_and_wait_closed()
+                if not isinstance(err, SystemExit):
+                    fmts.print_err(f"启动器框架崩溃, 原因: {err}")
+                    if launch_config.restart_delay == -1:
+                        return -1
+                    else:
+                        fmts.print_war(f"ToolDelta 将在 {launch_config.restart_delay} 秒后重启")
+                else:
+                    return 0
         except (KeyboardInterrupt, SystemExit, EOFError) as err:
             if str(err):
                 fmts.print_inf(f"ToolDelta 已关闭，退出原因：{err}")
@@ -117,7 +122,7 @@ class ToolDelta:
         finally:
             self.system_exit("normal")
 
-    def wait_closed(self):
+    def launch_and_wait_closed(self):
         return self.launcher.launch()
 
     @staticmethod
