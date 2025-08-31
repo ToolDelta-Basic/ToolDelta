@@ -14,7 +14,7 @@ class GameruleWarnings(ExtendFunction):
 
         def on_gamerule_changed(pk: dict):
             for rule in pk["GameRules"]:
-                if rule["Name"] == "sendcommandfeedback":
+                if rule["Name"] == "sendCommandFeedback":
                     if not rule["Value"]:
                         fmts.print_war("租赁服 sendcommandfeedback 被设置为 false")
                         self.sendcommandfeedback_was_disabled = True
