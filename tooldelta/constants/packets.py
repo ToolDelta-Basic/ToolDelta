@@ -4,8 +4,6 @@ from enum import IntEnum
 class PacketIDs(IntEnum):
     "数据包 ID 常量表"
 
-    # https://prismarinejs.github.io/minecraft-data/protocol/bedrock/1.21.42/#Action
-
     IDLogin = Login = 1  # 客户端登录（本地）
     IDPlayStatus = PlayStatus = 2  # 玩家状态
     IDServerToClientHandshake = ServerToClientHandshake = 3  # 服务端到客户端握手
@@ -29,8 +27,8 @@ class PacketIDs(IntEnum):
     IDPassengerJump = PassengerJump = 20  # 乘骑跳跃（客户端 -> 服务端）
     IDUpdateBlock = UpdateBlock = 21  # 更新方块（单方块修改）
     IDAddPainting = AddPainting = 22  # 添加绘画实体
-    IDTickSync = TickSync = 23  # 同步Tick（服务端 <-> 客户端）
-    IDLevelSoundEventV1 = LevelSoundEventV1 = 24  # ???
+    IDTickSync = TickSync = 23  # 已弃用
+    IDLevelSoundEventV1 = LevelSoundEventV1 = 24  # ...
     IDLevelEvent = LevelEvent = 25  # 世界事件（服务端 -> 客户端）
     IDBlockEvent = BlockEvent = 26  # 方块事件（服务端 -> 客户端）[打开箱子./././...]
     IDActorEvent = ActorEvent = 27  # 实体事件（服务端 -> 客户端）[狼抖干自己./././...]
@@ -68,7 +66,7 @@ class PacketIDs(IntEnum):
     IDCraftingData = CraftingData = 52  # 合成数据（服务端 -> 客户端）
     IDCraftingEvent = CraftingEvent = 53  # 合成事件（客户端 -> 服务端）
     IDGUIDataPickItem = GUIDataPickItem = 54  # GUI数据拾取物品（客户端 -> 服务端）
-    IDAdventureSettings = AdventureSettings = 55  # 冒险设置（服务端 -> 客户端）
+    IDAdventureSettings = AdventureSettings = 55  # 已弃用
     IDBlockActorData = BlockActorData = 56  # 方块实体数据（服务端 -> 客户端）
     IDPlayerInput = PlayerInput = 57  # 玩家输入（客户端 -> 服务端）
     IDLevelChunk = LevelChunk = 58  # 区块数据（服务端 -> 客户端）
@@ -157,7 +155,7 @@ class PacketIDs(IntEnum):
     IDNetworkStackLatency = NetworkStackLatency = (
         115  # 网络堆栈延迟（服务端 -> 客户端）
     )
-    IDScriptCustomEvent = ScriptCustomEvent = 117  # 脚本自定义事件（客户端 -> 服务端）
+    IDScriptCustomEvent = ScriptCustomEvent = 117  # 已弃用
     IDSpawnParticleEffect = SpawnParticleEffect = (
         118  # 生成粒子效果（服务端 -> 客户端）
     )
@@ -237,7 +235,7 @@ class PacketIDs(IntEnum):
         161  # 纠正玩家移动预测（服务端 -> 客户端）
     )
     IDItemComponent = ItemComponent = 162  # 物品组件（服务端 -> 客户端）
-    IDFilterText = FilterText = 163  # 过滤文本（客户端 -> 服务端）
+    IDFilterText = FilterText = 163  # 已弃用
     IDClientBoundDebugRenderer = ClientBoundDebugRenderer = (
         164  # 客户端绑定调试渲染器（服务端 -> 客户端）
     )
@@ -253,7 +251,7 @@ class PacketIDs(IntEnum):
     IDUpdateSubChunkBlocks = UpdateSubChunkBlocks = (
         172  # 更新子区块方块（服务端 -> 客户端）
     )
-    IDPhotoInfoRequest = PhotoInfoRequest = 173  # 照片信息请求（客户端 -> 服务端）
+    IDPhotoInfoRequest = PhotoInfoRequest = 173  # 已弃用
     IDSubChunk = SubChunk = 174  # 子区块（服务端 -> 客户端）
     IDSubChunkRequest = SubChunkRequest = 175  # 子区块请求（客户端 -> 服务端）
     IDClientStartItemCooldown = ClientStartItemCooldown = (
@@ -287,9 +285,7 @@ class PacketIDs(IntEnum):
     IDUpdateClientInputLocks = UpdateClientInputLocks = (
         196  # 更新客户端输入锁（服务端 -> 客户端）
     )
-    IDClientCheatAbility = ClientCheatAbility = (
-        197  # 客户端作弊能力（客户端 -> 服务端）
-    )
+    IDClientCheatAbility = ClientCheatAbility = 197  # 已弃用
     IDCameraPresets = CameraPresets = 198  # 相机预设（服务端 -> 客户端）
     IDUnlockedRecipes = UnlockedRecipes = 199  # 已解锁配方（服务端 -> 客户端）
     IDPyRpc = PyRpc = 200  # Python远程过程调用（客户端 -> 服务端）
@@ -320,13 +316,28 @@ class PacketIDs(IntEnum):
     )
     IDChangeActorMotion = ChangeActorMotion = 232  # 改变实体运动（服务端 -> 客户端）
     IDAnimateEmoteEntity = AnimateEmoteEntity = 233  # 动画表情实体（服务端 -> 客户端）
+    IDChangeBiome = ChangeBiome = 234  # 未知
+    IDUpdateBiome = UpdateBiome = 235  # 未知
+    IDSyncSkin = SyncSkin = 236  # 同步皮肤（服务端 <-> 客户端）
     IDCameraInstruction = CameraInstruction = 300  # 相机指令（服务端 -> 客户端）
-    IDCompressedBiomeDefinitionList = CompressedBiomeDefinitionList = (
-        301  # 压缩生物群系定义列表（服务端 -> 客户端）
-    )
+    IDCompressedBiomeDefinitionList = CompressedBiomeDefinitionList = 301  # 已弃用
     IDTrimData = TrimData = 302  # 修剪数据（服务端 -> 客户端）
     IDOpenSign = OpenSign = 303  # 打开标志（服务端 -> 客户端）
     IDAgentAnimation = AgentAnimation = 304  # 代理动画（服务端 -> 客户端）
+    IDRefreshEntitlements = RefreshEntitlements = (
+        305  # Refresh the entitlements of the player (client -> server)
+    )
+    IDPlayerToggleCrafterSlotRequest = PlayerToggleCrafterSlotRequest = (
+        306  # 设置合成器槽位是否禁用（客户端 -> 服务端）
+    )
+    IDSetPlayerInventoryOptions = SetPlayerInventoryOptions = (
+        307  # Update the inventory options of a player (server <-> client)
+    )
+    IDSetHud = SetHud = 308  # 设置客户端的 HUD 隐藏与否（服务端 -> 客户端）
+    IDAwardAchievement = AwardAchievement = 309  # 设置成就（服务端 -> 客户端）
+    IDClientBoundCloseForm = ClientBoundCloseForm = (
+        310  # 强制关闭模态表单（服务端 -> 客户端）
+    )
 
 
 PacketIDS = PacketIDs
