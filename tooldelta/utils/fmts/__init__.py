@@ -3,23 +3,24 @@
 import datetime
 import threading
 import re
-import colorama
+import enum
+import logging
 from typing import Any
+from . import logger
 
-from .logger import publicLogger
-
-colorama.init(autoreset=True)
+logger.init()
 MC_COLOR_CODE_REG = re.compile("§.")
-
-INFO_NORMAL = "§f 信息 "
-INFO_WARN = "§6 警告 "
-INFO_ERROR = "§4 报错 "
-INFO_FAIL = "§c 失败 "
-INFO_SUCC = "§a 成功 "
-INFO_LOAD = "§d 加载 "
 print_lock = threading.RLock()
-
 _original_print = print
+
+
+class PrintInfo(str, enum.Enum):
+    INFO_NORMAL = "§f 信息 "
+    INFO_WARN = "§6 警告 "
+    INFO_ERROR = "§4 报错 "
+    INFO_FAIL = "§c 失败 "
+    INFO_SUCC = "§a 成功 "
+    INFO_LOAD = "§d 加载 "
 
 
 def simple_fmt(kw: dict[str, Any], sub: str) -> str:
@@ -149,7 +150,7 @@ def print_gradient(text, start_rgb, end_rgb):
 
 
 def print_with_info(
-    text: str, info: str = INFO_NORMAL, need_log: bool = True, **print_kwargs
+    text: str, info: str, **print_kwargs
 ):
     """输出带有信息的文本
 
@@ -162,44 +163,7 @@ def print_with_info(
     Raises:
         AssertionError: 无法找到对应的颜色代码
     """
-
-    if need_log:
-        c_log(info, text)
-    set_next_color = "§r"
-    if "\n" in text:
-        output_txts = []
-        for text_line in str(text).split("\n"):
-            if "§" in text_line:
-                try:
-                    n = text_line.rfind("§")
-                    _set_next_col_value = text_line[n : n + 2]
-                    set_next_color = _set_next_col_value
-                except Exception as exc:
-                    string = "输出信息时出现错误:\n"
-                    string += "    %s\n"
-                    string += "    原信息: %s"
-                    _original_print(string % (str(exc), text))
-            output_txts.append(
-                datetime.datetime.now().strftime("%H:%M ")
-                + colormode_replace(info, 7)
-                + " "
-                + colormode_replace(set_next_color + text_line)
-            )
-        content = "\n".join(output_txts)
-        with print_lock:
-            _original_print(content, **print_kwargs)
-    else:
-        content = (
-            datetime.datetime.now().strftime("%H:%M ")
-            + colormode_replace(info, 7)
-            + " "
-            + colormode_replace(text)
-        )
-        with print_lock:
-            _original_print(
-                content,
-                **print_kwargs,
-            )
+    logging.info(text)
 
 
 def clean_print(text: str, **print_kwargs) -> None:
@@ -235,7 +199,7 @@ def print_err(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    print_with_info(f"§c{text}", INFO_ERROR, **print_kwargs)
+    logging.error(text)
 
 
 def print_inf(text: str, **print_kwargs) -> None:
@@ -244,7 +208,7 @@ def print_inf(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    print_with_info(f"{text}", INFO_NORMAL, **print_kwargs)
+    logging.info(text)
 
 
 def print_suc(text: str, **print_kwargs) -> None:
@@ -253,7 +217,7 @@ def print_suc(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    print_with_info(f"§a{text}", INFO_SUCC, **print_kwargs)
+    logging.log(logger.ExtraLevel.SUCCESS, text)
 
 
 def print_war(text: str, **print_kwargs) -> None:
@@ -262,7 +226,7 @@ def print_war(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    print_with_info(f"§6{text}", INFO_WARN, **print_kwargs)
+    logging.warning(text)
 
 
 def print_load(text: str, **print_kwargs) -> None:
@@ -271,8 +235,7 @@ def print_load(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    with print_lock:
-        print_with_info(f"§d{text}", INFO_LOAD, **print_kwargs)
+    logging.log(logger.ExtraLevel.LOADING, text)
 
 
 def fmt_info(text: str, info: str = "§f 信息 ") -> str:
@@ -288,6 +251,7 @@ def fmt_info(text: str, info: str = "§f 信息 ") -> str:
     Returns:
         str: 格式化后的信息
     """
+    # Should be deperecated
     with print_lock:
         nextcolor = "§r"
         if "\n" in text:
@@ -315,28 +279,6 @@ def fmt_info(text: str, info: str = "§f 信息 ") -> str:
             + " "
             + colormode_replace(text)
         )
-
-
-def c_log(inf: str, msg: str) -> None:
-    """记录日志
-
-    Args:
-        inf (str): 信息
-        msg (str): 记录的信息
-    """
-    with print_lock:
-        for _g, _s in [
-            ("§6 警告 ", "WARN"),
-            ("§a 成功 ", "INFO"),
-            ("§f 信息 ", "INFO"),
-            ("§c 失败 ", "FAIL"),
-            ("§4 报错 ", "ERROR"),
-        ]:
-            if inf == _g:
-                inf = _s
-                break
-        msg = MC_COLOR_CODE_REG.sub("", msg)
-        publicLogger.log_in(msg, inf.strip())
 
 
 def get_ansi_rgb(r: int, g: int, b: int):

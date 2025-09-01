@@ -164,9 +164,9 @@ class ConsoleCmdManager:
                     #         ensure_ascii=False,
                     #     )
                     if result.SuccessCount:
-                        fmts.print_suc("指令执行成功: \n\t" + "\n\t".join(msgs_output))
+                        fmts.print_suc("指令执行成功: \n  " + "\n  ".join(msgs_output))
                     else:
-                        fmts.print_war("指令执行失败: \n\t" + "\n\t".join(msgs_output))
+                        fmts.print_war("指令执行失败: \n  " + "\n  ".join(msgs_output))
             except TimeoutError:
                 fmts.print_err(f"[超时] 指令获取结果返回超时: {cmd}")
 
