@@ -40,7 +40,7 @@ class ConfigError(Exception):
             if isinstance(arg, str):
                 outputs.append(f'键"{arg}"')
             elif isinstance(arg, int):
-                outputs.append(f"列表第{arg+1}项")
+                outputs.append(f"列表第{arg + 1}项")
         return " 的 ".join(outputs) + ": " + self.msg
 
 
@@ -60,6 +60,16 @@ def field(field_name: str, default: T | type[_missing] = _missing) -> T:
 
 
 class JsonSchema:
+    """
+    配置文件模版类基类。所有配置模版类都必须继承它。如：
+    >>> class MyConfig(JsonSchema):
+    ...     cfg_a: int = field("配置A")
+    ...     cfg_b: str = field("配置B")
+    ...     cfg_c: str | int = field("配置C", "Hello dream")
+
+    基本类型标注仅接受 `str`, `int`, `float`, `bool` 基本类型。
+    """
+
     def __init_subclass__(cls) -> None:
         cls._annotations = cls.__annotations__
         cls._fields = {
@@ -100,11 +110,19 @@ def annotation_type_check(typ):
     if typ in checkable_types:
         return
     elif isinstance(typ, GenericAlias):
-        # list[...]
-        if typ.__origin__ is not list:
-            raise ValueError("不支持的泛型类型: 只能为 list")
-        if len(typ.__args__) != 1:
-            raise ValueError("不支持的泛型类型个数, 最多只能为 1 个")
+        # list[...] or dict[str, ...]
+        orig = typ.__origin__
+        if typ.__origin__ is list:
+            if len(typ.__args__) != 1:
+                raise ValueError("不支持的泛型类型个数, 最多只能为 1 个")
+        elif typ.__origin__ is dict:
+            if len(typ.__args__) != 2:
+                raise ValueError("不支持的泛型类型个数, 最多只能为 2 个")
+            if typ.__args__[0] is not str:
+                raise ValueError("dict 泛型首项参数只能为 str")
+            annotation_type_check(typ.__args__[1])
+        else:
+            raise ValueError(f"不支持的泛型类型: {orig}")
         annotation_type_check(typ.__args__[0])
     elif isinstance(typ, UnionType):
         for t in typ.__args__:
@@ -115,6 +133,8 @@ def annotation_type_check(typ):
         for v in typ._annotations.values():
             annotation_type_check(v)
         typ._checked = True
+    else:
+        raise TypeError(f"不支持的类型注释 {typ}")
 
 
 def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
@@ -137,19 +157,35 @@ def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
         )
     elif isinstance(typ, GenericAlias):
         # list[...]
-        assert typ.__origin__ is list
-        if not isinstance(obj, list):
-            raise ConfigError(
-                f"值 {obj} 类型错误, 需为列表, 得到 {_get_cfg_type_name(type(obj))}"
-            )
-        sub_type = typ.__args__[0]
-        lst = []
-        for i, v in enumerate(obj):
-            try:
-                lst.append(load_param_and_type_check(v, sub_type))
-            except ConfigError as e:
-                raise ConfigError(current_key_or_index=i, fromerr=e)
-        return lst  # type: ignore
+        orig = typ.__origin__
+        if orig is list:
+            if not isinstance(obj, list):
+                raise ConfigError(
+                    f"值 {obj} 类型错误, 需为列表, 得到 {_get_cfg_type_name(type(obj))}"
+                )
+            sub_type = typ.__args__[0]
+            lst = []
+            for i, v in enumerate(obj):
+                try:
+                    lst.append(load_param_and_type_check(v, sub_type))
+                except ConfigError as e:
+                    raise ConfigError(current_key_or_index=i, fromerr=e)
+            return lst  # type: ignore
+        elif orig is dict:
+            if not isinstance(obj, dict):
+                raise ConfigError(
+                    f"值 {obj} 类型错误, 需为json对象, 得到 {_get_cfg_type_name(type(obj))}"
+                )
+            sub_type = typ.__args__[1]
+            dic = {}
+            for k, v in obj.items():
+                try:
+                    dic[k] = load_param_and_type_check(v, sub_type)
+                except ConfigError as e:
+                    raise ConfigError(current_key_or_index=k, fromerr=e)
+            return dic  # type: ignore
+        else:
+            raise ValueError(f"未知泛型类型 {typ}")
     elif issubclass(typ, JsonSchema):
         if not isinstance(obj, dict):
             raise ValueError(
