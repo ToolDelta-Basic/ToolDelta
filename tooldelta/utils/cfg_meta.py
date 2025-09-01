@@ -40,7 +40,7 @@ class ConfigError(Exception):
             if isinstance(arg, str):
                 outputs.append(f'键"{arg}"')
             elif isinstance(arg, int):
-                outputs.append(f"索引{arg}")
+                outputs.append(f"列表第{arg+1}项")
         return " 的 ".join(outputs) + ": " + self.msg
 
 
@@ -89,7 +89,7 @@ def _get_cfg_type_name(typ) -> str:
         str: "字符串",
         float: "浮点小数",
         int: "整数",
-        dict: "json 对象",
+        dict: "json对象",
         list: "列表",
         bool: "true/false",
         type(None): "null",
