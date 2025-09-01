@@ -33,6 +33,7 @@ protobuf = "^6.30.1"
 grpcio = "^1.71.0"
 msgpack = "^1.1.0"
 nbtlib = "^2.0.4"
+rich = "^14.1.0"
 
 [[tool.poetry.source]]
 name = "mirrors"
