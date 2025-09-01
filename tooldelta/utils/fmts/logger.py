@@ -95,14 +95,12 @@ class DailyFileHandler(logging.FileHandler):
         super().emit(record)
 
 
-class NoHighlighter(Highlighter):
-    def highlight(self, text):
-        pass
 
 
 class CustomPrefixRichHandler(RichHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, markup=True, highlighter=NoHighlighter(), **kwargs)
+        super().__init__(*args, markup=True, **kwargs)
+        self.highlighter = None
 
     def get_level_text(self, record):
         """自定义级别显示文本"""
