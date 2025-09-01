@@ -62,7 +62,7 @@ class ToolDelta:
             )
         )
         def signal_handler(_, pyframe) -> None:
-            fmts.clean_print("§6ToolDelta 已被手动终止")
+            fmts.print_war("§6ToolDelta 已被手动终止")
             self.system_exit("用户退出程序")
             os._exit(1)
 
