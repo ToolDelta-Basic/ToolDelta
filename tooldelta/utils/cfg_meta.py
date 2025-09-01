@@ -93,6 +93,8 @@ def _get_cfg_type_name(typ) -> str:
     Returns:
         str: 中文字符串
     """
+    if isinstance(typ, UnionType):
+        return " 或".join(_get_cfg_type_name(t) for t in typ.__args__)
     if not isinstance(typ, type):
         typ = type(typ)
     return {
