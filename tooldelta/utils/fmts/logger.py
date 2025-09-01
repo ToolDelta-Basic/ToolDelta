@@ -7,7 +7,6 @@ from rich.logging import RichHandler
 from rich.console import Console
 from rich.markup import escape
 from rich.errors import MarkupError
-from rich.highlighter import Highlighter
 
 enable_logger = False
 
@@ -76,7 +75,9 @@ class DailyFileHandler(logging.FileHandler):
         super().__init__(self._get_current_filename(), encoding="utf-8")
 
     def _get_current_filename(self):
-        filename = datetime.now().strftime(self.filename_fmt)
+        filename = os.path.join(
+            self.log_dir, datetime.now().strftime(self.filename_fmt)
+        )
         return filename
 
     def _is_new_day(self):
@@ -90,11 +91,9 @@ class DailyFileHandler(logging.FileHandler):
             self._update_day()
             self.close()
             new_filename = self._get_current_filename()
-            self.baseFilename = os.path.join(self.log_dir, new_filename)
+            self.baseFilename = new_filename
             self.stream = self._open()
         super().emit(record)
-
-
 
 
 class CustomPrefixRichHandler(RichHandler):
@@ -103,14 +102,12 @@ class CustomPrefixRichHandler(RichHandler):
         self.highlighter = None
 
     def get_level_text(self, record):
-        """自定义级别显示文本"""
         level_name = record.levelname
         # 可以根据需要自定义任何文本
         disp_text, disp_color = custom_levels.get(level_name, (level_name, "777777"))
         return f"[#000000 on #{disp_color}]{disp_text}[/#000000 on #{disp_color}]"
 
     def emit(self, record):
-        global enable_logger
         record.msg = color_to_rich(record.getMessage())
         try:
             super().emit(record)
@@ -146,31 +143,34 @@ def color_to_rich(text: str):
     return re_color.sub(repl_cb, text)
 
 
-def init():
-    console = Console(highlight=False)
-    rich_handler = CustomPrefixRichHandler(
-        console=console, show_time=True, show_path=False
-    )
+console = Console(highlight=False)
+rich_handler = CustomPrefixRichHandler(console=console, show_time=True, show_path=False)
+logging.addLevelName(ExtraLevel.SUCCESS, "成功")
+logging.addLevelName(ExtraLevel.LOADING, "加载")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="%H:%M",
+    handlers=[
+        rich_handler,
+    ],
+)
+
+
+def init_file_logger():
     daily_file_handler = DailyFileHandler()
     file_formatter = logging.Formatter(
         fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="[%X]"
     )
     daily_file_handler.setFormatter(file_formatter)
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(message)s",
-        datefmt="%H:%M",
-        handlers=[
-            daily_file_handler,
-            rich_handler,
-        ],
-    )
-
-    logging.addLevelName(ExtraLevel.SUCCESS, "成功")
-    logging.addLevelName(ExtraLevel.LOADING, "加载")
+    logging.getLogger().removeHandler(rich_handler)
+    logging.getLogger().addHandler(daily_file_handler)
+    # 使其优先级高于 rich_handler
+    logging.getLogger().addHandler(rich_handler)
 
 
 def switch_logger(enabled: bool):
     global enable_logger
     enable_logger = enabled
+    if enabled:
+        init_file_logger()

@@ -8,7 +8,6 @@ import logging
 from typing import Any
 from . import logger
 
-logger.init()
 MC_COLOR_CODE_REG = re.compile("§.")
 print_lock = threading.RLock()
 _original_print = print
