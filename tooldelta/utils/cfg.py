@@ -184,7 +184,7 @@ def get_cfg(path: str | Path, standard_type: Any):
 
 def get_plugin_config_and_version(
     plugin_name: str,
-    standard_type: Any,
+    schema: Any,
     default: dict,
     default_vers: VERSION,
 ) -> tuple[dict[str, Any], VERSION]:
@@ -193,7 +193,7 @@ def get_plugin_config_and_version(
 
     Args:
         plugin_name (str): 插件名
-        standard_type (dict): 配置模版
+        schema (dict): 配置模版
         default (dict): 默认配置
         default_vers (tuple[int, int, int]): 默认版本
 
@@ -201,16 +201,16 @@ def get_plugin_config_and_version(
         tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
     """
     # 详情见 插件编写指南.md
-    assert isinstance(standard_type, dict)
+    assert isinstance(schema, dict)
     p = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, plugin_name)
     if not _jsonfile_exists(p) and default:
         defaultCfg = PLUGINCFG_DEFAULT.copy()
         defaultCfg["配置项"] = default
         defaultCfg["配置版本"] = ".".join([str(n) for n in default_vers])
-        check_auto(standard_type, default)
+        check_auto(schema, default)
         default_cfg(f"{p}.json", defaultCfg, force=True)
     cfg_stdtyp = PLUGINCFG_STANDARD_TYPE.copy()
-    cfg_stdtyp["配置项"] = standard_type
+    cfg_stdtyp["配置项"] = schema
     cfgGet = get_cfg(p, cfg_stdtyp)
     cfgVers = tuple(int(c) for c in cfgGet["配置版本"].split("."))
     VERSION_LENGTH = 3  # 版本长度

@@ -5,7 +5,7 @@ import traceback
 from typing import TYPE_CHECKING, TypeVar
 
 from ... import utils
-from ...utils import cfg, fmts
+from ...utils import cfg, cfg_meta, fmts
 from ...constants import (
     TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
@@ -180,7 +180,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
     except NotValidPluginError as err:
         fmts.print_err(f"插件 {plugin_dirname} 不合法：{err.args[0]}")
         raise SystemExit from err
-    except cfg.ConfigError as err:
+    except (cfg.ConfigError, cfg_meta.ConfigError) as err:
         fmts.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
         fmts.print_err(
             "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"
