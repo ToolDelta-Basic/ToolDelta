@@ -199,7 +199,7 @@ def print_err(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    logging.error(text)
+    logging.error("§c" + text)
 
 
 def print_inf(text: str, **print_kwargs) -> None:
@@ -217,7 +217,7 @@ def print_suc(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    logging.log(logger.ExtraLevel.SUCCESS, text)
+    logging.log(logger.ExtraLevel.SUCCESS, "§a" + text)
 
 
 def print_war(text: str, **print_kwargs) -> None:
@@ -226,7 +226,7 @@ def print_war(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    logging.warning(text)
+    logging.warning("§6" + text)
 
 
 def print_load(text: str, **print_kwargs) -> None:
@@ -235,7 +235,7 @@ def print_load(text: str, **print_kwargs) -> None:
     Args:
         text (str): 输出的文本
     """
-    logging.log(logger.ExtraLevel.LOADING, text)
+    logging.log(logger.ExtraLevel.LOADING, "§d" + text)
 
 
 def fmt_info(text: str, info: str = "§f 信息 ") -> str:
