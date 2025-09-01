@@ -121,6 +121,7 @@ class ToolDelta:
             fmts.print_err(f"ToolDelta 运行过程中出现问题：{traceback.format_exc()}")
         finally:
             self.system_exit("normal")
+        return -1
 
     def launch_and_wait_closed(self):
         return self.launcher.launch()
