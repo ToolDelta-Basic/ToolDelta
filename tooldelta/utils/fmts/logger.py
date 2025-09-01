@@ -7,6 +7,7 @@ from rich.logging import RichHandler
 from rich.console import Console
 from rich.markup import escape
 from rich.errors import MarkupError
+from rich.highlighter import Highlighter
 
 enable_logger = False
 
@@ -94,9 +95,14 @@ class DailyFileHandler(logging.FileHandler):
         super().emit(record)
 
 
+class NoHighlighter(Highlighter):
+    def highlight(self, text):
+        pass
+
+
 class CustomPrefixRichHandler(RichHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, markup=True, **kwargs)
+        super().__init__(*args, markup=True, highlighter=NoHighlighter(), **kwargs)
 
     def get_level_text(self, record):
         """自定义级别显示文本"""
@@ -143,7 +149,7 @@ def color_to_rich(text: str):
 
 
 def init():
-    console = Console()
+    console = Console(highlight=False)
     rich_handler = CustomPrefixRichHandler(
         console=console, show_time=True, show_path=False
     )
