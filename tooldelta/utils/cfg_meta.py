@@ -94,17 +94,17 @@ class JsonSchema:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             if k not in self._fields:
-                raise ConfigError(f"设置默认配置时遇到未知字段 {k}")
+                raise ValueError(f"设置默认配置时遇到未知字段 {k}")
             try:
                 setattr(
                     self, k, load_param_and_type_check(v, self._fields[k]._annotation)
                 )
             except ConfigError as e:
-                raise ConfigError("设置默认配置传参出错: " + e.msg, k, fromerr=e)
+                raise ValueError("设置默认配置传参出错: " + e.msg)
         for k, v in self._fields.items():
             if k not in kwargs:
                 if v.default_value is _missing:
-                    raise ConfigError("字段        缺失默认值", k)
+                    raise ValueError(f'字段 "{k}" 缺失默认值')
                 setattr(self, k, v.default_value)
 
     def __init_subclass__(cls) -> None:
