@@ -64,7 +64,7 @@ def field(field_name: str, default: T | type[_missing] = _missing) -> T:
 
     Args:
         field_name (str): 模版字段对应的配置文件键名
-        default: 该字段的默认值
+        default: 该字段的默认值 (注意, 如果不填写的话, 生成配置文件时就不会生成关于它的默认配置)
 
     >>> class MyConfig(JsonSchema):
     ...     cfg_a: str = field("配置A")
@@ -100,9 +100,11 @@ class JsonSchema:
                     self, k, load_param_and_type_check(v, self._fields[k]._annotation)
                 )
             except ConfigError as e:
-                raise ConfigError("默认配置传参出错: " + e.msg, k, fromerr=e)
+                raise ConfigError("设置默认配置传参出错: " + e.msg, k, fromerr=e)
         for k, v in self._fields.items():
             if k not in kwargs:
+                if v.default_value is _missing:
+                    raise ConfigError("字段        缺失默认值", k)
                 setattr(self, k, v.default_value)
 
     def __init_subclass__(cls) -> None:
@@ -278,9 +280,15 @@ def dump_param(obj):
             for k, v in obj.__dict__.items()
             if not k.startswith("__")
         }
-    else:
+    elif isinstance(obj, list):
+        return [dump_param(v) for v in obj]
+    elif isinstance(obj, dict):
+        return {k: dump_param(v) for k, v in obj.items()}
+    elif type(obj) in (str, int, float, bool, None):
         # Not need to dump
         return obj
+    else:
+        raise ValueError(f"Not support type to dump: {obj}")
 
 
 def get_plugin_config_and_version(
@@ -293,7 +301,7 @@ def get_plugin_config_and_version(
 
     Args:
         plugin_name (str): 插件名
-        schema (dict): 配置模版
+        schema (type[JsonSchema]): 配置模版
         default (dict): 默认配置
         default_vers (tuple[int, int, int]): 默认版本
 
