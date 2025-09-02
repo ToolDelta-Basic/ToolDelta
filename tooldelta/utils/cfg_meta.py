@@ -1,6 +1,6 @@
 import os
 from types import GenericAlias, UnionType
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Any, get_args
 from .cfg import (
     TOOLDELTA_PLUGIN_CFG_DIR,
     PLUGINCFG_DEFAULT,
@@ -29,10 +29,13 @@ class ConfigError(Exception):
             self.msg = msg
         elif fromerr:
             self.msg = fromerr.msg
-        if fromerr:
-            self.pos = [current_key_or_index, *fromerr.pos]
+        if current_key_or_index != "":
+            if fromerr:
+                self.pos = [current_key_or_index, *fromerr.pos]
+            else:
+                self.pos = [current_key_or_index]
         else:
-            self.pos = [current_key_or_index]
+            self.pos = []
 
     def __str__(self):
         outputs = []
@@ -56,6 +59,23 @@ class _Field(Generic[T]):
 
 
 def field(field_name: str, default: T | type[_missing] = _missing) -> T:
+    """
+    为 `JsonSchema` 模版类标注字段。
+
+    Args:
+        field_name (str): 模版字段对应的配置文件键名
+        default: 该字段的默认值
+
+    >>> class MyConfig(JsonSchema):
+    ...     cfg_a: str = field("配置A")
+    ...     cfg_b: int = field("配置B", default=350)
+    ...
+    >>> cfg = load_param_and_type_check({"配置A": "Hello world"}, MyConfig)
+    >>> cfg.cfg_a
+    "Hello world"
+    >>> cfg.cfg_b
+    350
+    """
     return _Field(field_name, default)  # type: ignore
 
 
@@ -68,7 +88,22 @@ class JsonSchema:
     ...     cfg_c: str | int = field("配置C", "Hello dream")
 
     基本类型标注仅接受 `str`, `int`, `float`, `bool` 基本类型。
+    你也可以使用 `str | int`, `list[float]` 这样的复合类型和 `JsonSchema` 嵌套。
     """
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            if k not in self._fields:
+                raise ConfigError(f"设置默认配置时遇到未知字段 {k}")
+            try:
+                setattr(
+                    self, k, load_param_and_type_check(v, self._fields[k]._annotation)
+                )
+            except ConfigError as e:
+                raise ConfigError("默认配置传参出错: " + e.msg, k, fromerr=e)
+        for k, v in self._fields.items():
+            if k not in kwargs:
+                setattr(self, k, v.default_value)
 
     def __init_subclass__(cls) -> None:
         cls._annotations = cls.__annotations__
@@ -78,7 +113,7 @@ class JsonSchema:
             if (annotation := cls._annotations.get(k)) and isinstance(v, _Field)
         }
         cls._checked = False
-        annotation_type_check(cls)
+        _annotation_type_check(cls)
 
 
 checkable_types = (str, int, float, bool, type(None))
@@ -94,7 +129,9 @@ def _get_cfg_type_name(typ) -> str:
         str: 中文字符串
     """
     if isinstance(typ, UnionType):
-        return " 或".join(_get_cfg_type_name(t) for t in typ.__args__)
+        return " 或".join(_get_cfg_type_name(t) for t in get_args(typ))
+    elif typ is Any:
+        return "任意类型"
     if not isinstance(typ, type):
         typ = type(typ)
     return {
@@ -108,54 +145,59 @@ def _get_cfg_type_name(typ) -> str:
     }.get(typ, typ.__name__)
 
 
-def annotation_type_check(typ):
+def _annotation_type_check(typ):
     if typ in checkable_types:
         return
     elif isinstance(typ, GenericAlias):
         # list[...] or dict[str, ...]
         orig = typ.__origin__
+        args = get_args(typ)
         if typ.__origin__ is list:
-            if len(typ.__args__) != 1:
+            if len(args) != 1:
                 raise ValueError("不支持的泛型类型个数, 最多只能为 1 个")
         elif typ.__origin__ is dict:
-            if len(typ.__args__) != 2:
+            if len(args) != 2:
                 raise ValueError("不支持的泛型类型个数, 最多只能为 2 个")
-            if typ.__args__[0] is not str:
+            if args[0] is not str:
                 raise ValueError("dict 泛型首项参数只能为 str")
-            annotation_type_check(typ.__args__[1])
+            _annotation_type_check(args[1])
         else:
             raise ValueError(f"不支持的泛型类型: {orig}")
-        annotation_type_check(typ.__args__[0])
+        _annotation_type_check(args[0])
     elif isinstance(typ, UnionType):
-        for t in typ.__args__:
-            annotation_type_check(t)
-    elif issubclass(typ, JsonSchema):
+        for t in get_args(typ):
+            _annotation_type_check(t)
+    elif type(typ) is type and issubclass(typ, JsonSchema):
         if typ._checked:
             return
         for v in typ._annotations.values():
-            annotation_type_check(v)
+            _annotation_type_check(v)
         typ._checked = True
+    elif typ is Any:
+        return
     else:
         raise TypeError(f"不支持的类型注释 {typ}")
 
 
-def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
+def load_param_and_type_check(obj, typ: type[T] | None, field_name: str = "") -> T:
     if typ in checkable_types:
         if isinstance(obj, int) and typ is float:
             return obj  # type: ignore
         if not isinstance(obj, typ):
             raise ConfigError(
-                f"值 {obj} 类型错误, 需为 {_get_cfg_type_name(typ)}, 得到 {_get_cfg_type_name(type(obj))}"
+                f"值 {obj} 类型错误, 需为 {_get_cfg_type_name(typ)}, 得到 {_get_cfg_type_name(type(obj))}",
+                field_name,
             )
         return obj  # type: ignore
     elif isinstance(typ, UnionType):
-        for t in typ.__args__:
+        for t in get_args(typ):
             try:
                 return load_param_and_type_check(obj, t)
             except ConfigError:
                 pass
         raise ConfigError(
-            f"值 {obj} 类型错误, 需为 {_get_cfg_type_name(typ)}, 得到 {_get_cfg_type_name(type(obj))}"
+            f"值 {obj} 类型错误, 需为 {_get_cfg_type_name(typ)}, 得到 {_get_cfg_type_name(type(obj))}",
+            field_name,
         )
     elif isinstance(typ, GenericAlias):
         # list[...]
@@ -163,9 +205,10 @@ def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
         if orig is list:
             if not isinstance(obj, list):
                 raise ConfigError(
-                    f"值 {obj} 类型错误, 需为列表, 得到 {_get_cfg_type_name(type(obj))}"
+                    f"值 {obj} 类型错误, 需为列表, 得到 {_get_cfg_type_name(type(obj))}",
+                    field_name,
                 )
-            sub_type = typ.__args__[0]
+            sub_type = get_args(typ)[0]
             lst = []
             for i, v in enumerate(obj):
                 try:
@@ -176,9 +219,10 @@ def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
         elif orig is dict:
             if not isinstance(obj, dict):
                 raise ConfigError(
-                    f"值 {obj} 类型错误, 需为json对象, 得到 {_get_cfg_type_name(type(obj))}"
+                    f"值 {obj} 类型错误, 需为json对象, 得到 {_get_cfg_type_name(type(obj))}",
+                    field_name,
                 )
-            sub_type = typ.__args__[1]
+            sub_type = get_args(typ)[1]
             dic = {}
             for k, v in obj.items():
                 try:
@@ -188,10 +232,11 @@ def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
             return dic  # type: ignore
         else:
             raise ValueError(f"未知泛型类型 {typ}")
-    elif issubclass(typ, JsonSchema):
+    elif type(typ) is type and issubclass(typ, JsonSchema):
         if not isinstance(obj, dict):
-            raise ValueError(
-                f"值 {obj} 类型错误, 需为json, 得到 {_get_cfg_type_name(type(obj))}"
+            raise ConfigError(
+                f"值 {obj} 类型错误, 需为json, 得到 {_get_cfg_type_name(type(obj))}",
+                field_name,
             )
         instance = typ()
         for k, v in instance._fields.items():
@@ -214,6 +259,14 @@ def load_param_and_type_check(obj, typ: type[T], field_name: str = "") -> T:
                     raise ConfigError(f"{v.field_name} 缺少必填字段")
                 setattr(instance, k, v.default_value)
         return instance
+    elif typ is Any:
+        return obj
+    elif typ is None:
+        if obj is not None:
+            raise ConfigError(
+                f"值 {obj} 类型错误, 需为null, 得到 {_get_cfg_type_name(type(obj))}"
+            )
+        return obj
     else:
         raise ValueError(f"不支持的模版参数类型: {typ}")
 
