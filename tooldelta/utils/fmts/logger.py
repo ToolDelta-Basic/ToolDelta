@@ -111,7 +111,7 @@ class CustomPrefixRichHandler(RichHandler):
         record.msg = color_to_rich(record.getMessage())
         try:
             super().emit(record)
-        except MarkupError:
+        except Exception:
             record.msg = escape(record.msg)
             super().emit(record)
 
