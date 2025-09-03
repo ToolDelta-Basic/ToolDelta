@@ -126,11 +126,10 @@ def color_to_rich(text: str):
         if color_char == "r":
             if bold:
                 bold = False
-                return f"[/bold {last_color}]"
-            elif last_color:
+                return "[/bold]"
+            if last_color:
                 return f"[/#{last_color}]"
-            else:
-                return ""
+            return ""
         elif color_char == "l":
             bold = True
             return "[bold]"
