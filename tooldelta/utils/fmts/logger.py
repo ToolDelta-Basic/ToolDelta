@@ -116,12 +116,16 @@ class CustomPrefixRichHandler(RichHandler):
                 record.msg = escape(record.msg)
                 super().emit(record)
             except Exception as e:
-                print(f"Can't handle message ({record.msg}): {e}",)
+                print(
+                    f"Can't handle message ({record.msg}): {e}",
+                )
 
 
 def color_to_rich(text: str):
     last_color = ""
     bold = False
+
+    text = text.replace("[", "\\[")  # 为 rich 转义
 
     def repl_cb(match: re.Match[str]) -> str:
         nonlocal bold, last_color
