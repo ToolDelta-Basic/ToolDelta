@@ -112,8 +112,11 @@ class CustomPrefixRichHandler(RichHandler):
         try:
             super().emit(record)
         except Exception:
-            record.msg = escape(record.msg)
-            super().emit(record)
+            try:
+                record.msg = escape(record.msg)
+                super().emit(record)
+            except Exception as e:
+                print(f"Can't handle message ({record.msg}): {e}",)
 
 
 def color_to_rich(text: str):
