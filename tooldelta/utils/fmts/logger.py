@@ -108,7 +108,7 @@ class CustomPrefixRichHandler(RichHandler):
         return f"[#000000 on #{disp_color}]{disp_text}[/#000000 on #{disp_color}]"
 
     def emit(self, record):
-        record.msg = color_to_rich(record.getMessage())
+        record.msg = color_to_rich(record.msg)
         try:
             super().emit(record)
         except Exception:
