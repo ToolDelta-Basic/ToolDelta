@@ -108,24 +108,21 @@ class CustomPrefixRichHandler(RichHandler):
         return f"[#000000 on #{disp_color}]{disp_text}[/#000000 on #{disp_color}]"
 
     def emit(self, record):
-        record.msg = color_to_rich(record.msg)
+        record.msg = color_to_rich(record.getMessage())
+        record.args = None
         try:
             super().emit(record)
-        except Exception:
-            try:
-                record.msg = escape(record.msg)
-                super().emit(record)
-            except Exception as e:
-                print(
-                    f"Can't handle message ({record.msg}): {e}",
-                )
+        except Exception as e:
+            print(
+                f"Can't handle message ({record.msg}): {e}",
+            )
 
 
 def color_to_rich(text: str):
     last_color = ""
     bold = False
 
-    text = text.replace("[", "\\[")  # 为 rich 转义
+    text = escape(text)
 
     def repl_cb(match: re.Match[str]) -> str:
         nonlocal bold, last_color
