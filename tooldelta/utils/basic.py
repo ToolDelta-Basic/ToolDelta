@@ -2,6 +2,7 @@
 
 import re
 import threading
+from functools import partial
 from typing import Any, TypeVar
 from collections.abc import Callable
 import uuid
@@ -33,14 +34,6 @@ def simple_assert(cond: Any, exc: Any) -> None:
         raise exc
 
 
-def try_int(arg: Any) -> int | None:
-    """尝试将提供的参数化为 int 类型并返回，否则返回 None"""
-    try:
-        return int(arg)
-    except Exception:
-        return None
-
-
 def try_convert(
     arg: Any, factory: Callable[[Any], FACTORY_TYPE]
 ) -> FACTORY_TYPE | None:
@@ -65,7 +58,11 @@ def try_convert(
         return None
 
 
-def fuzzy_match(lst: list[str], sub: str, ignore_caps = True) -> list[str]:
+try_int = partial(try_convert, factory=int)
+"""尝试将提供的参数化为 int 类型并返回，否则返回 None"""
+
+
+def fuzzy_match(lst: list[str], sub: str, ignore_caps=True) -> list[str]:
     """
     模糊匹配列表内的字符串，可以用在诸如模糊匹配玩家名的用途
 
@@ -205,6 +202,7 @@ def create_result_cb(typechecker: type[VT] = object):
 
     return getter, setter
 
+
 def parse_uuid(ud: str | bytes | uuid.UUID) -> uuid.UUID:
     if isinstance(ud, str):
         return uuid.UUID(ud)
@@ -214,6 +212,7 @@ def parse_uuid(ud: str | bytes | uuid.UUID) -> uuid.UUID:
         return uuid.UUID(bytes=ud)
     else:
         raise ValueError(f"Invalid UUID type: {type(ud).__name__}")
+
 
 def validate_uuid(ud: str | bytes | uuid.UUID) -> str:
     if isinstance(ud, str):
@@ -234,7 +233,7 @@ class DesperateFuncClass:
         if not object.__getattribute__(self, "_desperate_warn"):
             self._desperate_warn = True
             print_war(f"{type(self).__name__} 已被弃用。请查看文档以使用新方法。")
-            #time.sleep(3)
+            # time.sleep(3)
         return object.__getattribute__(self, attr)
 
 
