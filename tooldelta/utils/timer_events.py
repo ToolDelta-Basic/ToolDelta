@@ -1,22 +1,31 @@
 import threading
+from enum import IntEnum
 from typing import Any, TYPE_CHECKING
 from collections.abc import Callable
 
 from . import fmts
-from .tooldelta_thread import ToolDeltaThread, thread_func
+from .tooldelta_thread import thread_func, ToolDeltaThread
 
 if TYPE_CHECKING:
     from typing import ParamSpec
 
     PT = ParamSpec("PT")
 
+
+class TimerEventPriority(IntEnum):
+    SYSTEM = 0
+    PLUGIN = 1
+
+
 stop_event = threading.Event()
-timer_events_table: dict[int, list[tuple[str, Callable, tuple, dict, int]]] = {}
+timer_events_table: dict[
+    int, list[tuple[str, Callable, tuple, dict, TimerEventPriority]]
+] = {}
 timer_event_lock = threading.Lock()
 
 
 def timer_event(
-    t: int, name: str | None = None, thread_priority=ToolDeltaThread.PLUGIN
+    t: int, name: str | None = None, thread_priority=TimerEventPriority.PLUGIN
 ):
     """
     将修饰器下的方法作为一个定时任务, 每隔一段时间被执行一次。
@@ -52,15 +61,20 @@ def reset():
     "清理所有定时任务"
     with timer_event_lock:
         for k, funcs_args in timer_events_table.copy().items():
-            for func_args in funcs_args:
-                (_, _, _, _, priority) = func_args
-                if priority != ToolDeltaThread.SYSTEM:
+            for func_args in funcs_args.copy():
+                (_n, _, _, _, priority) = func_args
+                if priority != TimerEventPriority.SYSTEM:
                     timer_events_table[k].remove(func_args)
             if timer_events_table[k] == []:
                 del timer_events_table[k]
+    import pprint
+
+    pprint.pprint(timer_events_table)
+
 
 def stopall():
     stop_event.set()
+
 
 def timer_event_boostrap():
     "启动定时任务, 请不要在系统调用以外调用"
@@ -80,4 +94,3 @@ def _internal_timer_event_boostrap():
                         caller(*args, **kwargs)
         stop_event.wait(1)
         timer += 1
-
