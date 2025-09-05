@@ -6,7 +6,6 @@ from enum import IntEnum
 from rich.logging import RichHandler
 from rich.console import Console
 from rich.markup import escape
-from rich.errors import MarkupError
 
 enable_logger = False
 
