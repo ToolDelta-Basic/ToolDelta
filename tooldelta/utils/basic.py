@@ -242,7 +242,7 @@ def create_desperate_attr_class(class_name, attrs: list[Callable | DesperateFunc
         class_name,
         (DesperateFuncClass,),
         {
-            (f.__name__ if callable(f) else type(f).__name__): (
+            (f.__name__ if callable(f) and hasattr(f, "__name__") else type(f).__name__): (
                 staticmethod(f) if callable(f) else f
             )
             for f in attrs
