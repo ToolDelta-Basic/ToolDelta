@@ -62,8 +62,8 @@ class Plugin:
         os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
         self.__path_created__ = True
 
-    def print(self, msg: str):
-        fmts.print_inf(f"{self.name}: {msg}")
+    def print(self, msg: Any):
+        fmts.print_inf(f"[{self.name}] {msg}")
 
     def format_data_path(self, *paths: str):
         """
