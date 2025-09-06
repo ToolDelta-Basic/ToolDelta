@@ -49,9 +49,9 @@ class Plugin:
     @property
     def data_path(self) -> Path:
         "该插件的数据文件夹路径 (调用时直接创建数据文件夹)"
-        path = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name)
+        path = TOOLDELTA_PLUGIN_DATA_DIR / self.name
         if not self.__path_created__:
-            os.makedirs(path, exist_ok=True)
+            path.mkdir(parents=True, exist_ok=True)
             self.__path_created__ = True
         return Path(path)
 
@@ -59,7 +59,7 @@ class Plugin:
         """
         Deprecated: 获取 data_path 属性时会自动创建缺失的插件数据路径。
         """
-        os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, self.name), exist_ok=True)
+        (TOOLDELTA_PLUGIN_DATA_DIR / self.name).mkdir(parents=True, exist_ok=True)
         self.__path_created__ = True
 
     def print(self, msg: Any):
@@ -88,7 +88,7 @@ class Plugin:
 
         Returns:
             tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
-    """
+        """
         return cfg.get_plugin_config_and_version(
             self.name, template, default_cfg, self.version
         )

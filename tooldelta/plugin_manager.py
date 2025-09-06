@@ -242,7 +242,7 @@ class PluginManager:
         readme_path = (
             PLUGIN_TYPE_MAPPING[plugin.plugin_type] / plugin.name / "readme.txt"
         )
-        if os.path.isfile(readme_path):
+        if readme_path.is_file():
             with open(readme_path, encoding="utf-8") as f:
                 lns = f.read().split("\n")
             counter = 0
@@ -310,7 +310,7 @@ class PluginManager:
                     continue
                 is_enabled = not plugin_dir.name.endswith("+disabled")
                 datpath = plugin_dir / "datas.json"
-                if os.path.isfile(datpath):
+                if datpath.is_file():
                     with open(datpath, encoding="utf-8") as f:
                         jsdata = json.load(f)
                         plugins.append(
@@ -344,8 +344,7 @@ class PluginManager:
         f_dir = PLUGIN_TYPE_MAPPING[plugin_data.plugin_type] / (
             plugin_data.name + end_str
         )
-        if not os.path.isdir(f_dir):
-            os.mkdir(f_dir)
+        f_dir.mkdir(exist_ok=True)
         try:
             old_dat: dict = safe_json_load(open(f_dir / "datas.json", encoding="utf-8"))
         except Exception:

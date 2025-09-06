@@ -6,7 +6,7 @@ import time
 import traceback
 import requests
 import json
-
+from pathlib import Path
 from .utils import cfg, fmts
 from .constants import (
     TOOLDELTA_CLASSIC_PLUGIN_PATH,
@@ -22,6 +22,7 @@ FILETREE = dict[str, "int | FILETREE"]
 REMOTE_PLUGIN_DATA_DIR = "插件数据文件"
 REMOTE_PLUGIN_CONFIG_DIR = "插件配置文件"
 
+
 def url_join(*urls: str) -> str:
     return "/".join(url.strip("/") for url in urls).strip("/")
 
@@ -35,6 +36,7 @@ def unfold_directory_dict(dirs: FILETREE, base_path: str = "", sep: str = "/"):
         else:
             unfolded.append(dirpath)
     return unfolded
+
 
 def get_json_from_url(url: str):
     try:
@@ -338,7 +340,9 @@ class PluginMarket:
             ", ".join([f"{k}§7v{v}" for k, v in plugin_data.pre_plugins.items()])
             or "无"
         )
-        has_doc = self.get_plugin_filetree(plugin_data.name).get("readme.txt") is not None
+        has_doc = (
+            self.get_plugin_filetree(plugin_data.name).get("readme.txt") is not None
+        )
         while True:
             fmts.ansi_cls()
             fmts.clean_print(f"{plugin_data.name} v{plugin_data.version_str}")
@@ -349,11 +353,7 @@ class PluginMarket:
             fmts.clean_print(f"介绍：{plugin_data.description}")
             fmts.clean_print("")
             prompt = f"§f下载 = §aY§f, 取消 = §cN§f{', 查看文档 = §dD§f ' if has_doc else ''} 请输入: "
-            res = (
-                input(fmts.clean_fmt(prompt))
-                .lower()
-                .strip()
-            )
+            res = input(fmts.clean_fmt(prompt)).lower().strip()
             if res == "y":
                 fmts.clean_print(f"§6正在下载插件：§f{plugin_data.name}", end="\r")
                 pres = self.download_plugin(plugin_data)
@@ -398,7 +398,9 @@ class PluginMarket:
         dirdata = ftree.get(pack.name)
         if dirdata is None:
             raise ValueError(f"插件市场内不存在整合包 {pack.name}")
-        plugin_config_files = ftree.get(url_join(pack.name, REMOTE_PLUGIN_CONFIG_DIR), {})
+        plugin_config_files = ftree.get(
+            url_join(pack.name, REMOTE_PLUGIN_CONFIG_DIR), {}
+        )
         assert not isinstance(plugin_config_files, int)
         # 计算插件配置文件数量
         config_files_num = len(unfold_directory_dict(plugin_config_files))
@@ -428,11 +430,13 @@ class PluginMarket:
         dirdata = ftree.get(pack.name)
         if dirdata is None:
             raise ValueError(f"插件市场内不存在整合包 {pack.name}")
-        plugin_config_files = ftree.get(url_join(pack.name, REMOTE_PLUGIN_CONFIG_DIR), {})
+        plugin_config_files = ftree.get(
+            url_join(pack.name, REMOTE_PLUGIN_CONFIG_DIR), {}
+        )
         plugin_data_files = ftree.get(url_join(pack.name, "插件数据文件"), {})
         assert not isinstance(plugin_config_files, int)
         assert not isinstance(plugin_data_files, int)
-        download_url_dirs: list[tuple[str, str]] = []
+        download_url_dirs: list[tuple[str, Path]] = []
         # 插件配置文件
         for cfgfile_path in unfold_directory_dict(plugin_config_files):
             f_url = url_join(
@@ -441,8 +445,8 @@ class PluginMarket:
                 REMOTE_PLUGIN_CONFIG_DIR,
                 cfgfile_path,
             )
-            f_local = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, cfgfile_path)
-            if os.path.isfile(f_local) and (
+            f_local = TOOLDELTA_PLUGIN_CFG_DIR / cfgfile_path
+            if f_local.is_file() and (
                 input(
                     fmts.clean_fmt(
                         f"§6配置文件 §r{cfgfile_path}§6 已存在, 是否替换§r(§a[默认]y§r/§cn§r)§6: "
@@ -460,10 +464,8 @@ class PluginMarket:
             f_url = url_join(
                 self.plugin_market_content_url, pack.name, "插件数据文件", inc_file_path
             )
-            f_local = os.path.join(
-                TOOLDELTA_PLUGIN_DATA_DIR, inc_file_path
-            )
-            if not os.path.isfile(f_local) or (
+            f_local = TOOLDELTA_PLUGIN_DATA_DIR / inc_file_path
+            if not f_local.is_file() or (
                 input(
                     fmts.clean_fmt(
                         f"§6数据文件 §r{f_local}§6 已存在, 是否替换§r(§ay§r/§cn[默认]§r)§6: "
@@ -477,7 +479,7 @@ class PluginMarket:
         fmts.clean_print(f"§6开始下载整合包 {pack.name.replace('[pkg]', '')}")
         for _, fpath in download_url_dirs:
             # 初始化需要的文件夹路径
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
+            fpath.mkdir(parents=True, exist_ok=True)
         asyncio.run(urlmethod.download_file_urls(download_url_dirs))
         # 下载插件主体
         for plugin in find_plugins:
@@ -502,11 +504,11 @@ class PluginMarket:
                 self.get_plugin_filetree(plugin_data.name)
             )
         fmts.clean_print(f"§a已获取插件下载清单 §f{plugin_data.name}§a" + " " * 15)
-        plugin_remote_to_local_path: list[tuple[str, str]] = []
+        plugin_remote_to_local_path: list[tuple[str, Path]] = []
         for plugin_name, this_plugin_info in plugin_list.items():
             match this_plugin_info.plugin_type:
                 case "classic":
-                    plugintype_path = TOOLDELTA_CLASSIC_PLUGIN_PATH
+                    _ = TOOLDELTA_CLASSIC_PLUGIN_PATH  # ignore this?
                 case _:
                     raise ValueError(
                         f"未知插件类型：{this_plugin_info.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
@@ -514,8 +516,12 @@ class PluginMarket:
             for filepath in plugin_filepaths_dict[plugin_name]:
                 plugin_remote_to_local_path.append(
                     (
-                        url_join(self.plugin_market_content_url, this_plugin_info.name, filepath),
-                        os.path.join(plugintype_path, this_plugin_info.name, filepath),
+                        url_join(
+                            self.plugin_market_content_url,
+                            this_plugin_info.name,
+                            filepath,
+                        ),
+                        this_plugin_info.dir / filepath,
                     )
                 )
         fmts.clean_print(

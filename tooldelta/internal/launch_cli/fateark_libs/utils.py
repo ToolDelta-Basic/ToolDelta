@@ -62,10 +62,11 @@ def download_fateark_dependency_libs(
 
 def check_update(mirror_src: str):
     fmts.print_inf("正在检测 FateArk 更新..")
-    if not os.path.isfile("tooldelta/bin/fateark_commit"):
+    commit_path = TOOLDELTA_BIN_PATH / "fateark_commit"
+    if not commit_path.is_file():
         commit = ""
     else:
-        with open("tooldelta/bin/fateark_commit", encoding="utf-8") as f:
+        with open(commit_path, encoding="utf-8") as f:
             commit = f.read()
     newest_commit = get_newest_dependency_commit(mirror_src)
     if newest_commit != commit:
@@ -74,7 +75,7 @@ def check_update(mirror_src: str):
         download_fateark_dependency_libs(
             dependency_mir_url, get_fateark_dependency_libs(mirror_src)
         )
-        with open("tooldelta/bin/fateark_commit", "w", encoding="utf-8") as f:
+        with open(commit_path, "w", encoding="utf-8") as f:
             f.write(newest_commit)
     else:
         fmts.print_suc("FateArk 接入点已是最新版本")

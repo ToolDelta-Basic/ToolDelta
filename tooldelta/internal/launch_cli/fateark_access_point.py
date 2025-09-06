@@ -94,7 +94,7 @@ class FrameFateArk(StandardFrame):
 
     def start_fateark_proc(self, port: int):
         path = fateark_utils.get_bin_path()
-        if not os.path.isfile(path):
+        if not path.is_file():
             fmts.print_err(f"FateArk 接入点不存在: {path!s}")
             raise SystemExit
         if not path.name.endswith(".exe"):

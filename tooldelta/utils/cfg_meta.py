@@ -308,7 +308,7 @@ def get_plugin_config_and_version(
     Returns:
         tuple[dict[str, Any], tuple[int, int, int]]: 配置文件内容及版本
     """
-    p = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, plugin_name)
+    p = TOOLDELTA_PLUGIN_CFG_DIR / plugin_name
     if not _jsonfile_exists(p):
         s = load_param_and_type_check({}, schema)
         defaultCfg = PLUGINCFG_DEFAULT.copy()

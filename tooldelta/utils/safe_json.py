@@ -56,10 +56,10 @@ def read_from_plugin(plugin_name: str, file: str, default: dict | None = None) -
     """
     if file.endswith(".json"):
         file = file[:-5]
-    filepath = os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name, f"{file}.json")
-    os.makedirs(os.path.join(TOOLDELTA_PLUGIN_DATA_DIR, plugin_name), exist_ok=True)
+    filepath = TOOLDELTA_PLUGIN_DATA_DIR / plugin_name / f"{file}.json"
+    (TOOLDELTA_PLUGIN_DATA_DIR / plugin_name).mkdir(exist_ok=True)
     try:
-        if default is not None and not os.path.isfile(filepath):
+        if default is not None and not filepath.is_file():
             safe_json_dump(default, filepath)
             return default
         with open(filepath, encoding="utf-8") as f:

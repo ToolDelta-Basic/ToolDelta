@@ -120,7 +120,7 @@ def get_remote_commit(depen_url: str) -> str:
 
 def check_commit_file(commit_file_path: Path, commit_remote: str) -> bool:
     replace_file = False
-    if os.path.isfile(commit_file_path):
+    if commit_file_path.is_file():
         with open(commit_file_path, encoding="utf-8") as f:
             commit_local = f.read()
         if commit_local != commit_remote:
@@ -137,7 +137,7 @@ def get_required_dependencies_solve_dict(
     solve_dict: list[tuple[str, Path]] = []
     for v in source_dict:
         pathdir = TOOLDELTA_BIN_PATH / v
-        if not os.path.isfile(pathdir) or replace_file:
+        if not pathdir.is_file() or replace_file:
             solve_dict.append((depen_url + "/" + v, pathdir))
     return solve_dict
 

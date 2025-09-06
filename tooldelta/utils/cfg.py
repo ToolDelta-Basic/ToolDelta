@@ -202,7 +202,7 @@ def get_plugin_config_and_version(
     """
     # 详情见 插件编写指南.md
     assert isinstance(schema, dict)
-    p = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, plugin_name)
+    p = TOOLDELTA_PLUGIN_CFG_DIR / plugin_name
     if not _jsonfile_exists(p) and default:
         defaultCfg = PLUGINCFG_DEFAULT.copy()
         defaultCfg["配置项"] = default
@@ -232,7 +232,7 @@ def upgrade_plugin_config(
         configs (dict): 配置内容
         default_vers (tuple[int, int, int]): 版本
     """
-    p = os.path.join(TOOLDELTA_PLUGIN_CFG_DIR, plugin_name)
+    p = TOOLDELTA_PLUGIN_CFG_DIR / plugin_name
     defaultCfg = PLUGINCFG_DEFAULT.copy()
     defaultCfg["配置项"] = configs
     defaultCfg["配置版本"] = ".".join([str(n) for n in version])
@@ -410,5 +410,5 @@ def write_default_cfg_file(path: str, default: dict, force: bool = False) -> Non
 default_cfg = write_default_cfg_file
 
 
-def _jsonfile_exists(path: str) -> bool:
-    return os.path.isfile(path if path.endswith(".json") else f"{path}.json")
+def _jsonfile_exists(path: Path) -> bool:
+    return (path if path.name.endswith(".json") else Path(f"{path!s}.json")).is_file()
