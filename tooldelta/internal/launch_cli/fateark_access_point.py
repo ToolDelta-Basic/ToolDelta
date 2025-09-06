@@ -95,13 +95,13 @@ class FrameFateArk(StandardFrame):
     def start_fateark_proc(self, port: int):
         path = fateark_utils.get_bin_path()
         if not os.path.isfile(path):
-            fmts.print_err(f"FateArk 接入点不存在: {path}")
+            fmts.print_err(f"FateArk 接入点不存在: {path!s}")
             raise SystemExit
-        if not path.endswith(".exe"):
+        if not path.name.endswith(".exe"):
             # Maybe is linux and so on
-            os.system("chmod +x " + path)
+            os.system("chmod +x " + str(path))
         self.proc = subprocess.Popen(
-            [path, "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            [str(path), "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)

@@ -7,7 +7,7 @@ import time
 
 from ...mc_bytes_packet.pool import bytes_packet_by_id
 from ... import utils
-from ...constants import SysStatus, PacketIDS
+from ...constants import SysStatus, PacketIDS, TOOLDELTA_BIN_PATH
 from ...packets import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts, urlmethod
@@ -133,9 +133,9 @@ class FrameNeOmgAccessPoint(StandardFrame):
             access_point_file = f"neomega_android_access_point_{sys_machine}"
         if platform.system() == "Windows":
             access_point_file += ".exe"
-        exe_file_path = os.path.join(os.getcwd(), "tooldelta", "bin", access_point_file)
+        exe_file_path = TOOLDELTA_BIN_PATH / access_point_file
         if platform.uname().system.lower() == "linux":
-            os.system(f"chmod +x {shlex.quote(exe_file_path)}")
+            os.system(f"chmod +x {shlex.quote(str(exe_file_path))}")
         # 只需要+x 即可
         if (
             self.serverNumber is None
@@ -147,7 +147,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         fmts.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
         self.neomg_proc = subprocess.Popen(
             [
-                exe_file_path,
+                str(exe_file_path),
                 "-server",
                 str(self.serverNumber),
                 "-T",

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from threading import Thread
 from typing import Any, ClassVar, Optional
 
+from ....constants import TOOLDELTA_BIN_PATH
 from ....utils import fmts, thread_func, ToolDeltaThread
 from ....mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ....packets import Packet_CommandOutput
@@ -1193,7 +1194,7 @@ def load_lib():
     else:
         lib_path = f"neomega_macos_{sys_machine}.dylib"
 
-    lib_path = os.path.join(sys_fn, "bin", lib_path)
+    lib_path = str(TOOLDELTA_BIN_PATH / lib_path)
     if not os.path.isfile(lib_path):
         raise SystemExit("neOmega 目前已停止自动更新服务。请删除 ToolDelta基本配置.json, 并使用推荐的接入点而非 neOmega 接入点。")
     LIB = (

@@ -1,11 +1,12 @@
 import asyncio
 import hashlib
 import os
+from pathlib import Path
 import platform
 import brotli
 import requests
 
-from ....constants.tooldelta_cli import TDDEPENDENCY_REPO_RAW
+from ....constants.tooldelta_cli import TDDEPENDENCY_REPO_RAW, TOOLDELTA_BIN_PATH
 from ....utils import fmts, urlmethod, sys_args
 
 
@@ -25,7 +26,7 @@ def download_libs() -> bool:
             f"未知的系统架构版本: {sys_info_fmt} (目前支持: {', '.join(require_depen.keys())})"
         )
     commit_remote = get_remote_commit(depen_url)
-    commit_file_path = os.path.join(os.getcwd(), "tooldelta", "bin", "neomega_commit")
+    commit_file_path = TOOLDELTA_BIN_PATH / "neomega_commit"
     replace_file = check_commit_file(commit_file_path, commit_remote)
     solve_dict = get_required_dependencies_solve_dict(
         source_dict, depen_url, replace_file
@@ -51,18 +52,14 @@ def download_neomg() -> bool:
     source_dict = require_depen[sys_info_fmt][0]
     neomega_file_hash: str = get_file_hash(source_dict["hash_url"])
     if platform.system().lower() == "windows":
-        neomega_file_path = os.path.join(
-            os.getcwd(),
-            "tooldelta",
-            "bin",
-            f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}.exe",
+        neomega_file_path = (
+            TOOLDELTA_BIN_PATH
+            / f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}.exe"
         )
     else:
-        neomega_file_path = os.path.join(
-            os.getcwd(),
-            "tooldelta",
-            "bin",
-            f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}",
+        neomega_file_path = (
+            TOOLDELTA_BIN_PATH
+            / f"omega_launcher_{sys_info_fmt.split(':')[0].lower()}_{sys_info_fmt.split(':')[1].lower()}"
         )
     replace_file = check_file_hash(neomega_file_hash, neomega_file_path)
     if replace_file:
@@ -71,18 +68,13 @@ def download_neomg() -> bool:
                 [
                     (
                         source_dict["url"],
-                        os.path.join(
-                            os.getcwd(),
-                            "tooldelta",
-                            "bin",
-                            "omega_launcher.brotli",
-                        ),
+                        (TOOLDELTA_BIN_PATH / "omega_launcher.brotli"),
                     )
                 ]
             )
         )
         unzip_brotli_file(
-            os.path.join(os.getcwd(), "tooldelta", "bin", "omega_launcher.brotli"),
+            TOOLDELTA_BIN_PATH / "omega_launcher.brotli",
             neomega_file_path,
         )
         fmts.print_suc("已完成 NeOmega框架 的依赖更新！")
@@ -126,7 +118,7 @@ def get_remote_commit(depen_url: str) -> str:
     return requests.get(f"{depen_url}/commit", timeout=5).text
 
 
-def check_commit_file(commit_file_path: str, commit_remote: str) -> bool:
+def check_commit_file(commit_file_path: Path, commit_remote: str) -> bool:
     replace_file = False
     if os.path.isfile(commit_file_path):
         with open(commit_file_path, encoding="utf-8") as f:
@@ -141,16 +133,16 @@ def check_commit_file(commit_file_path: str, commit_remote: str) -> bool:
 
 def get_required_dependencies_solve_dict(
     source_dict: list[str], depen_url: str, replace_file: bool
-) -> list[tuple[str, str]]:
-    solve_dict = []
+):
+    solve_dict: list[tuple[str, Path]] = []
     for v in source_dict:
-        pathdir = os.path.join(os.getcwd(), "tooldelta", "bin", v)
+        pathdir = TOOLDELTA_BIN_PATH / v
         if not os.path.isfile(pathdir) or replace_file:
             solve_dict.append((depen_url + "/" + v, pathdir))
     return solve_dict
 
 
-def write_commit_file(commit_file_path: str, commit_remote: str):
+def write_commit_file(commit_file_path: Path, commit_remote: str):
     with open(commit_file_path, "w", encoding="utf-8") as f:
         f.write(commit_remote)
 
@@ -159,7 +151,7 @@ def get_file_hash(hash_url: str) -> str:
     return requests.get(f"{hash_url}", timeout=5).text.replace("\n", "")
 
 
-def calculate_file_hash(file_path: str, algorithm: str = "md5") -> str:
+def calculate_file_hash(file_path: Path, algorithm: str = "md5") -> str:
     hash_obj = hashlib.new(algorithm)
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -167,7 +159,7 @@ def calculate_file_hash(file_path: str, algorithm: str = "md5") -> str:
     return hash_obj.hexdigest()
 
 
-def check_file_hash(file_hash: str, file_path: str) -> bool:
+def check_file_hash(file_hash: str, file_path: Path) -> bool:
     replace_file = False
     if os.path.isfile(file_path):
         hash = calculate_file_hash(file_path)
@@ -179,7 +171,7 @@ def check_file_hash(file_hash: str, file_path: str) -> bool:
     return replace_file
 
 
-def unzip_brotli_file(file_path: str, save_path: str) -> bool:
+def unzip_brotli_file(file_path: Path, save_path: Path) -> bool:
     try:
         with open(file_path, "rb") as source_file, open(save_path, "wb") as target_file:
             compressed_data = source_file.read()

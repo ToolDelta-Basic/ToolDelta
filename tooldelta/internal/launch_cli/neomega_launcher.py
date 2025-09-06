@@ -6,7 +6,7 @@ import threading
 import time
 
 from ... import utils
-from ...constants import SysStatus
+from ...constants import SysStatus, TOOLDELTA_BIN_PATH
 from ...utils import fmts, sys_args, urlmethod
 from .neo_libs import file_download as neo_fd, neo_conn
 from .neomega_access_point import FrameNeOmgAccessPoint
@@ -77,11 +77,9 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             access_point_file = f"omega_launcher_android_{sys_machine}"
         if platform.system() == "Windows":
             access_point_file += ".exe"
-        exe_file_path = os.path.join(
-            os.getcwd(), "tooldelta", "bin", access_point_file
-        )
+        exe_file_path = TOOLDELTA_BIN_PATH / access_point_file
         if platform.uname().system.lower() == "linux":
-            os.system(f"chmod +x {shlex.quote(exe_file_path)}")
+            os.system(f"chmod +x {shlex.quote(str(exe_file_path))}")
         # 只需要+x 即可
         if (
             isinstance(self.serverNumber, type(None))
@@ -91,10 +89,10 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
         ):
             raise ValueError("未设置服务器号、密码、Token 或验证服务器地址")
         fmts.print_suc(f"将使用空闲端口 §f{free_port}§a 与接入点进行网络通信")
-        fmts.print_suc(f"NeOmega 可执行文件路径: {exe_file_path}")
+        fmts.print_suc(f"NeOmega 可执行文件路径: {exe_file_path!s}")
         self.neomg_proc = subprocess.Popen(
             [
-                exe_file_path,
+                str(exe_file_path),
                 "-server",
                 str(self.serverNumber),
                 "-T",
@@ -208,7 +206,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             usage="处理来自 NeOmega启动器 的信息",
             thread_level=utils.ToolDeltaThread.SYSTEM,
         )
-        while not self.launch_event.wait(timeout = 1):
+        while not self.launch_event.wait(timeout=1):
             if self.exit_event.is_set():
                 self.update_status(SysStatus.CRASHED_EXIT)
                 return SystemError("NeOmage 启动出现问题")

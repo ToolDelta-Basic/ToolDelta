@@ -3,7 +3,7 @@ import os
 import platform
 import requests
 
-from ....constants.tooldelta_cli import TDDEPENDENCY_REPO
+from ....constants.tooldelta_cli import TDDEPENDENCY_REPO, TOOLDELTA_BIN_PATH
 from ....utils import fmts
 from ....utils.urlmethod import download_file_urls, get_newest_dependency_commit
 
@@ -26,7 +26,7 @@ def get_bin_path():
     else:
         fmts.print_err(f"暂不支持的操作系统: {sys_machine}")
         raise SystemExit
-    return os.path.join(os.getcwd(), "tooldelta", "bin", exe_fn)
+    return TOOLDELTA_BIN_PATH / exe_fn
 
 
 def get_fateark_dependency_libs(mirror_src: str) -> list[str]:
@@ -54,7 +54,7 @@ def download_fateark_dependency_libs(
     dependency_mirror_src: str, require_depends: list[str]
 ):
     url2dst = {
-        dependency_mirror_src + "/" + file: os.path.join("tooldelta", "bin", file)
+        dependency_mirror_src + "/" + file: TOOLDELTA_BIN_PATH / file
         for file in require_depends
     }
     asyncio.run(download_file_urls(list(url2dst.items())))

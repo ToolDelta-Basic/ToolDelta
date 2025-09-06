@@ -6,12 +6,12 @@ import re
 import shutil
 import socket
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import aiohttp
 import anyio
 import requests
 import pyspeedtest
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from colorama import Fore, Style
 from tqdm.asyncio import tqdm
 
@@ -54,14 +54,14 @@ def get_fastest_github_mirror():
     # return "https://github.tooldelta.top"
 
 
-async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
+async def download_file_urls(download_url2dst: list[tuple[str, Path]]) -> None:
     """
     从给定的URL并发下载文件到指定的目标路径。
 
     Args:
-        download_url2dst (List[Tuple[str, str]]): 包含多个元组的列表，每个元组包含：
+        download_url2dst (List[Tuple[str, Path]]): 包含多个元组的列表，每个元组包含：
             - url (str): 要下载的文件的URL。
-            - dst (str): 下载的文件将保存的目标路径。
+            - dst (Path): 下载的文件将保存的目标路径。
 
     Returns:
         None
@@ -72,7 +72,7 @@ async def download_file_urls(download_url2dst: list[tuple[str, str]]) -> None:
         session: aiohttp.ClientSession,
         url: str,
         i: int,
-        file_path: str,
+        file_path: Path,
     ) -> tqdm:
         """
         从给定的URL下载单个文件到指定的目标路径。
