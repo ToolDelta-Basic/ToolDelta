@@ -76,7 +76,7 @@ TOOLDELTA_PLUGIN_DIR = "插件文件"
 "插件文件路径"
 
 TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
-"插件文件: ToolDelta 类式插件 路径"
+"插件文件: ToolDelta 类式插件 子路径"
 
 TOOLDELTA_PLUGIN_CFG_DIR = "插件配置文件"
 "插件配置文件文件夹路径"

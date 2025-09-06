@@ -102,7 +102,7 @@ class PluginManager:
         r = input(fmts.clean_fmt("§c删除插件操作不可逆, 请输入 y, 其他取消：")).lower()
         if r != "y":
             return
-        plugin_dir = Path("插件文件") / f_dirname / plugin.name
+        plugin_dir = Path(TOOLDELTA_PLUGIN_DIR, f_dirname, plugin.name)
         dir_path = plugin_dir / ("+disabled" if not plugin.is_enabled else "")
         if not dir_path.is_dir():
             dir_path = Path(str(dir_path).removesuffix("+disabled"))
@@ -146,7 +146,7 @@ class PluginManager:
             plugin (PluginRegData): 插件数据类
             f_dirname (str): 插件所属类别的文件夹名
         """
-        pth = Path("插件文件", f_dirname, plugin.name)
+        pth = Path(TOOLDELTA_PLUGIN_DIR, f_dirname, plugin.name)
         if plugin.is_enabled:
             # NOT: datas.json 中标明它被启用, 但是文件夹名实际上表明它未被启用
             if not Path(str(pth) + "+disabled").is_dir():
@@ -207,9 +207,7 @@ class PluginManager:
         Args:
             plugin (PluginRegData): 插件注册信息，新旧皆可
         """
-        fmts.clean_print(
-            f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r"
-        )
+        fmts.clean_print(f"§6正在获取插件 §f{plugin.name}§6 的在线插件数据..", end="\r")
         old_plugins = self.get_all_plugin_datas()
         new_plugin_datas = market.get_plugin_data_from_market(plugin.plugin_id)
         new_plugins = market.download_plugin(new_plugin_datas, False, plugin.is_enabled)
@@ -283,7 +281,11 @@ class PluginManager:
         Returns:
             list[PluginRegData]: 插件注册信息列表
         """
-        res = [plugin for plugin in plugins if all(kw.lower() in plugin.name.lower() for kw in kws)]
+        res = [
+            plugin
+            for plugin in plugins
+            if all(kw.lower() in plugin.name.lower() for kw in kws)
+        ]
         return res
 
     def is_valid_registered(self, plugin_name: str) -> bool:
@@ -403,9 +405,7 @@ class PluginManager:
                 rgts.append(t)
         for i, t in enumerate(lfts):
             if i in range(len(rgts)):
-                fmts.clean_print(
-                    "§f" + fmts.align(t, 35) + "§f" + fmts.align(rgts[i])
-                )
+                fmts.clean_print("§f" + fmts.align(t, 35) + "§f" + fmts.align(rgts[i]))
             else:
                 fmts.clean_print("§f" + fmts.align(t, 35))
 

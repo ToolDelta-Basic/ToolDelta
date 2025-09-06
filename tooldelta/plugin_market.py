@@ -9,6 +9,7 @@ import json
 
 from .utils import cfg, fmts
 from .constants import (
+    TOOLDELTA_PLUGIN_DIR,
     TOOLDELTA_CLASSIC_PLUGIN,
     TOOLDELTA_PLUGIN_CFG_DIR,
     TOOLDELTA_PLUGIN_DATA_DIR,
@@ -504,7 +505,7 @@ class PluginMarket:
         for plugin_name, this_plugin_info in plugin_list.items():
             match this_plugin_info.plugin_type:
                 case "classic":
-                    plugintype_path = os.path.join("插件文件", TOOLDELTA_CLASSIC_PLUGIN)
+                    plugintype_path = os.path.join(TOOLDELTA_PLUGIN_DIR, TOOLDELTA_CLASSIC_PLUGIN)
                 case _:
                     raise ValueError(
                         f"未知插件类型：{this_plugin_info.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
