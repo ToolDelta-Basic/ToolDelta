@@ -1,3 +1,9 @@
+"""
+内置扩展功能。
+
+在本文件夹下编写扩展功能后需要在 __init__.py 中的 `import_functions()` 函数下添加导入。
+"""
+
 from typing import TYPE_CHECKING
 from .basic import ExtendFunction
 
@@ -28,4 +34,3 @@ def activate_functions():
 
 def import_functions():
     from . import gamerule_warnings
-
