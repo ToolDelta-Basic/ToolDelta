@@ -1,17 +1,10 @@
 "插件加载主模块"
 
-import json
-import os
-import shutil
+from pathlib import Path
 from typing import Any
 from collections.abc import Callable
 
-from tooldelta.utils import fmts
-from tooldelta.constants import (
-    PLUGIN_TYPE_MAPPING,
-    TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_PLUGIN_DIR,
-)
+from tooldelta.constants import PLUGIN_TYPE_MAPPING
 
 
 def non_func(*_) -> None:
@@ -64,14 +57,8 @@ class PluginRegData:
 
     @property
     def dir(self):
-        name = os.path.join(
-            str(TOOLDELTA_PLUGIN_DIR),
-            {
-                "classic": TOOLDELTA_CLASSIC_PLUGIN,
-            }[self.plugin_type],
-            self.name,
-        )
-        return name + ("" if self.is_enabled else "+disabled")
+        name = str(PLUGIN_TYPE_MAPPING[self.plugin_type] / self.name)
+        return Path(name + ("" if self.is_enabled else "+disabled"))
 
     def dump(self) -> dict[str, Any]:
         """转储数据"""
@@ -129,31 +116,3 @@ def plugin_is_enabled(pname: str) -> bool:
         bool: 是否启用
     """
     return not pname.endswith("+disabled")
-
-
-def auto_move_plugin_dir(fdname: str):
-    """
-    自动尝试移动一个总插件文件夹下可能为插件文件夹的文件夹至正确的插件路径
-    move "插件文件/{plugin_dir}" -> "插件文件/{plugin_type}/{plugin_dir}
-
-    Args:
-        fdname (str): 插件文件夹名
-    """
-    data_path = os.path.join(TOOLDELTA_PLUGIN_DIR, fdname, "datas.json")
-    if os.path.isfile(data_path):
-        try:
-            with open(data_path, encoding="utf-8") as f:
-                plugin_data_json = json.load(f)
-                p_type = plugin_data_json["plugin-type"]
-                if p_type not in PLUGIN_TYPE_MAPPING:
-                    fmts.print_war(f"无法识别插件 {fdname} 的类型，跳过")
-                    return
-            shutil.move(
-                os.path.join(TOOLDELTA_PLUGIN_DIR, fdname),
-                os.path.join(TOOLDELTA_PLUGIN_DIR, PLUGIN_TYPE_MAPPING[p_type]),
-            )
-            fmts.print_suc(
-                f"已将插件 {fdname} 智能移动至 {PLUGIN_TYPE_MAPPING[p_type]} 插件文件夹内"
-            )
-        except Exception as err:
-            fmts.print_err(f"智能移动插件文件夹 {fdname} 出错：{err}")

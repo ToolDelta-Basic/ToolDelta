@@ -1,4 +1,5 @@
 from enum import IntEnum
+from pathlib import Path
 from .packets import PacketIDs
 
 
@@ -72,20 +73,20 @@ ALL_AVAILABLE_GITHUB_MIRRORS = (
     "https://github.tooldelta.top"
 )
 
-TOOLDELTA_PLUGIN_DIR = "插件文件"
+TOOLDELTA_PLUGIN_PATH = Path("插件文件")
 "插件文件路径"
 
-TOOLDELTA_CLASSIC_PLUGIN = "ToolDelta类式插件"
+TOOLDELTA_CLASSIC_PLUGIN_PATH = TOOLDELTA_PLUGIN_PATH / "ToolDelta类式插件"
 "插件文件: ToolDelta 类式插件 子路径"
 
-TOOLDELTA_PLUGIN_CFG_DIR = "插件配置文件"
+TOOLDELTA_PLUGIN_CFG_DIR = Path("插件配置文件")
 "插件配置文件文件夹路径"
 
-TOOLDELTA_PLUGIN_DATA_DIR = "插件数据文件"
+TOOLDELTA_PLUGIN_DATA_DIR = Path("插件数据文件")
 "插件数据文件文件夹路径"
 
 PLUGIN_TYPE_MAPPING = {
-    "classic": TOOLDELTA_CLASSIC_PLUGIN,
+    "classic": TOOLDELTA_CLASSIC_PLUGIN_PATH,
 }
 "插件属性名映射"
 

@@ -6,7 +6,10 @@ from io import TextIOWrapper
 from ..constants import TOOLDELTA_PLUGIN_DATA_DIR
 from .safe_writer import safe_write
 
-def safe_json_dump(obj: Any, filepath: str, indent=2) -> None:
+PathLike = str | os.PathLike[str]
+
+
+def safe_json_dump(obj: Any, filepath: PathLike, indent=2) -> None:
     """将一个 json 对象写入一个文件，会自动关闭文件读写接口.
 
     Args:
@@ -75,5 +78,9 @@ def write_to_plugin(plugin_name: str, file: str, obj: Any, indent=4) -> None:
         file (str): 文件名
         obj (str | dict[Any, Any] | list[Any]): JSON 对象
     """
-    os.makedirs(f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}", exist_ok=True)
-    safe_json_dump(obj, f"{TOOLDELTA_PLUGIN_DATA_DIR}/{plugin_name}/{file}.json", indent=indent)
+    (TOOLDELTA_PLUGIN_DATA_DIR / plugin_name).mkdir(exist_ok=True)
+    safe_json_dump(
+        obj,
+        TOOLDELTA_PLUGIN_DATA_DIR / plugin_name / f"{file.removesuffix('.json')}.json",
+        indent=indent,
+    )

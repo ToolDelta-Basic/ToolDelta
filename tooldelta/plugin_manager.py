@@ -7,11 +7,7 @@ import shutil
 import json
 from pathlib import Path
 from .utils import fmts
-from .constants import (
-    PLUGIN_TYPE_MAPPING,
-    TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_PLUGIN_DIR,
-)
+from .constants import PLUGIN_TYPE_MAPPING
 from .plugin_load import PluginRegData
 from .plugin_market import market
 from .utils import try_int, safe_json_dump, safe_json_load
@@ -73,17 +69,15 @@ class PluginManager:
         fmts.clean_print(
             f"§f1.删除插件  2.检查更新  3.{'禁用插件' if plugin.is_enabled else '启用插件'}  4.查看手册  §c回车退出"
         )
-        f_dirname = {
-            "classic": TOOLDELTA_CLASSIC_PLUGIN,
-        }[plugin.plugin_type]
+        f_dir = PLUGIN_TYPE_MAPPING[plugin.plugin_type]
 
         choice = input(fmts.clean_fmt("§f请选择选项: "))
         if choice == "1":
-            self._delete_plugin(plugin, f_dirname)
+            self._delete_plugin(plugin, f_dir)
         elif choice == "2":
             self._check_update(plugin)
         elif choice == "3":
-            self._toggle_plugin(plugin, f_dirname)
+            self._toggle_plugin(plugin, f_dir)
         elif choice == "4":
             self._lookup_readme(plugin)
         else:
@@ -91,18 +85,18 @@ class PluginManager:
         input(fmts.clean_fmt("§b按 [Enter键] 继续.."))
         self.push_plugin_reg_data(plugin)
 
-    def _delete_plugin(self, plugin: PluginRegData, f_dirname: str) -> None:
+    def _delete_plugin(self, plugin: PluginRegData, parent_dir: Path) -> None:
         """
         删除所选插件
 
         Args:
             plugin (PluginRegData): 插件数据类
-            f_dirname (str): 插件所属类别的文件夹名
+            parent_dir (Path): 插件所属类别的文件夹
         """
         r = input(fmts.clean_fmt("§c删除插件操作不可逆, 请输入 y, 其他取消：")).lower()
         if r != "y":
             return
-        plugin_dir = Path(TOOLDELTA_PLUGIN_DIR, f_dirname, plugin.name)
+        plugin_dir = parent_dir / plugin.name
         dir_path = plugin_dir / ("+disabled" if not plugin.is_enabled else "")
         if not dir_path.is_dir():
             dir_path = Path(str(dir_path).removesuffix("+disabled"))
@@ -138,15 +132,15 @@ class PluginManager:
             else:
                 fmts.clean_print("§6已取消操作")
 
-    def _toggle_plugin(self, plugin: PluginRegData, f_dirname: str) -> None:
+    def _toggle_plugin(self, plugin: PluginRegData, parent_dir: Path) -> None:
         """
         开启或禁用插件
 
         Args:
             plugin (PluginRegData): 插件数据类
-            f_dirname (str): 插件所属类别的文件夹名
+            parent_dir (Path): 插件所属类别的文件夹
         """
-        pth = Path(TOOLDELTA_PLUGIN_DIR, f_dirname, plugin.name)
+        pth = parent_dir / plugin.name
         if plugin.is_enabled:
             # NOT: datas.json 中标明它被启用, 但是文件夹名实际上表明它未被启用
             if not Path(str(pth) + "+disabled").is_dir():
@@ -245,11 +239,8 @@ class PluginManager:
     @staticmethod
     def _lookup_readme(plugin: PluginRegData):
         """查看插件的 readme.txt 文档"""
-        readme_path = os.path.join(
-            TOOLDELTA_PLUGIN_DIR,
-            PLUGIN_TYPE_MAPPING[plugin.plugin_type],
-            plugin.name,
-            "readme.txt",
+        readme_path = (
+            PLUGIN_TYPE_MAPPING[plugin.plugin_type] / plugin.name / "readme.txt"
         )
         if os.path.isfile(readme_path):
             with open(readme_path, encoding="utf-8") as f:
@@ -314,16 +305,16 @@ class PluginManager:
         """
         plugins = []
         for ptype, type_dir in PLUGIN_TYPE_MAPPING.items():
-            p_dirs = Path(TOOLDELTA_PLUGIN_DIR) / type_dir
-            for fd in os.listdir(p_dirs):
-                datpath = p_dirs / fd / "datas.json"
-                is_enabled = not fd.endswith("+disabled")
+            for datpath in type_dir.iterdir():
+                if not datpath.is_dir():
+                    continue
+                is_enabled = not datpath.name.endswith("+disabled")
                 if os.path.isfile(datpath):
                     with open(datpath, encoding="utf-8") as f:
                         jsdata = json.load(f)
                         plugins.append(
                             PluginRegData(
-                                fd.replace("+disabled", ""),
+                                datpath.name.replace("+disabled", ""),
                                 jsdata,
                                 is_enabled=is_enabled,
                             )
@@ -331,7 +322,7 @@ class PluginManager:
                 else:
                     plugins.append(
                         PluginRegData(
-                            fd.replace("+disabled", ""),
+                            datpath.name.replace("+disabled", ""),
                             {"plugin-type": ptype},
                             is_registered=False,
                             is_enabled=is_enabled,
@@ -349,24 +340,17 @@ class PluginManager:
         if plugin_data.is_deleted:
             return
         end_str = "" if plugin_data.is_enabled else "+disabled"
-        f_dir = os.path.join(
-            TOOLDELTA_PLUGIN_DIR,
-            PLUGIN_TYPE_MAPPING[plugin_data.plugin_type],
-            plugin_data.name + end_str,
+        f_dir = PLUGIN_TYPE_MAPPING[plugin_data.plugin_type] / (
+            plugin_data.name + end_str
         )
         if not os.path.isdir(f_dir):
             os.mkdir(f_dir)
         try:
-            old_dat: dict = safe_json_load(
-                open(os.path.join(f_dir, "datas.json"), encoding="utf-8")
-            )
+            old_dat: dict = safe_json_load(open(f_dir / "datas.json", encoding="utf-8"))
         except Exception:
             old_dat = {}
         old_dat.update(plugin_data.dump())
-        safe_json_dump(
-            old_dat,
-            os.path.join(f_dir, "datas.json"),
-        )
+        safe_json_dump(old_dat, f_dir / "datas.json")
 
     @staticmethod
     def make_plugin_icon(plugin: PluginRegData) -> str:

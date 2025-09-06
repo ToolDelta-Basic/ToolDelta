@@ -1,6 +1,5 @@
 "插件加载器框架"
 
-import os
 import traceback
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -8,11 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from .. import utils
 from ..utils import fmts
 from ..mc_bytes_packet.pool import is_bytes_packet
-from ..constants import (
-    TOOLDELTA_CLASSIC_PLUGIN,
-    TOOLDELTA_PLUGIN_DIR,
-    SysStatus,
-)
+from ..constants import SysStatus
 from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
@@ -25,7 +20,7 @@ from ..game_utils import _set_frame
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
-from .basic import auto_move_plugin_dir, ON_ERROR_CB
+from .basic import ON_ERROR_CB
 
 if TYPE_CHECKING:
     from ..frame import ToolDelta
@@ -52,15 +47,15 @@ class PluginGroup:
         重载插件框架前的预处理
         执行插件的框架退出回调
         """
+
         def dont_raise(name, err):
             # 保证每个插件的 on_frame_exit 都能被执行
             try:
                 self.linked_frame.on_plugin_err(name, err)
             except Exception:
                 pass
-        self.execute_frame_exit(
-            FrameExit(SysStatus.NORMAL_EXIT, "normal"), dont_raise
-        )
+
+        self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"), dont_raise)
 
     def reload(self):
         """
@@ -139,9 +134,6 @@ class PluginGroup:
         """
         if self.linked_frame is None or self.linked_frame.on_plugin_err is None:
             raise ValueError("无法读取插件，请确保系统已初始化")
-        for fdir in os.listdir(TOOLDELTA_PLUGIN_DIR):
-            if fdir not in (TOOLDELTA_CLASSIC_PLUGIN,):
-                auto_move_plugin_dir(fdir)
         self.loaded_plugin_ids = []
         self.normal_plugin_loaded_num = 0
         try:

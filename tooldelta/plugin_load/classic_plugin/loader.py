@@ -1,15 +1,12 @@
 import importlib
-import os
 import sys
 import traceback
+from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
 from ... import utils
 from ...utils import cfg, cfg_meta, fmts
-from ...constants import (
-    TOOLDELTA_PLUGIN_DIR,
-    TOOLDELTA_CLASSIC_PLUGIN,
-)
+from ...constants import TOOLDELTA_CLASSIC_PLUGIN_PATH
 from ...version import SystemVersionException
 from ..basic import plugin_is_enabled
 from ..exceptions import NotValidPluginError
@@ -91,28 +88,24 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
     Args:
         plugin_grp (PluginGroup): 插件组
     """
-    PLUGIN_PATH = os.path.join(TOOLDELTA_PLUGIN_DIR, TOOLDELTA_CLASSIC_PLUGIN)
-    if PLUGIN_PATH not in sys.path:
-        sys.path.append(PLUGIN_PATH)
+    plugin_path_str = str(TOOLDELTA_CLASSIC_PLUGIN_PATH)
+    if plugin_path_str not in sys.path:
+        sys.path.append(plugin_path_str)
     event_cbs.broadcast_listener.clear()
     event_cbs.dict_packet_funcs.clear()
     event_cbs.bytes_packet_funcs.clear()
-    for plugin_dir in os.listdir(PLUGIN_PATH):
-        if not plugin_is_enabled(plugin_dir):
+    for plugin_dir in TOOLDELTA_CLASSIC_PLUGIN_PATH.iterdir():
+        if not plugin_is_enabled(str(plugin_dir)):
             continue
-        if os.path.isdir(os.path.join(PLUGIN_PATH, plugin_dir)):
-            sys.path.append(os.path.join(PLUGIN_PATH, plugin_dir))
+        if plugin_dir.is_dir():
+            sys.path.append(str(plugin_dir))
             load_plugin(plugin_grp, plugin_dir)
-            if os.path.isfile(
-                data_path := os.path.join(
-                    TOOLDELTA_PLUGIN_DIR, TOOLDELTA_CLASSIC_PLUGIN, plugin_dir, "datas.json"
-                )
-            ):
-                plugin_data = utils.safe_json.safe_json_load(data_path)
+            if (data_path := plugin_dir / "datas.json").is_file():
+                plugin_data = utils.safe_json.safe_json_load(str(data_path))
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
 
-def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plugin:
+def load_plugin(plugin_group: "PluginGroup", plugin_dir: Path) -> None | Plugin:
     """加载插件
 
     Args:
@@ -140,12 +133,8 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
         raise ValueError("插件组未绑定框架")
     __cached_frame = plugin_group.linked_frame
     try:
-        if os.path.isfile(
-            os.path.join(
-                "插件文件", TOOLDELTA_CLASSIC_PLUGIN, plugin_dirname, "__init__.py"
-            )
-        ):
-            plugin_module = importlib.import_module(plugin_dirname)
+        if (plugin_dir / "__init__.py").is_file():
+            plugin_module = importlib.import_module(plugin_dir.name)
             if plugin_module in loaded_plugin_modules:
                 importlib.reload(plugin_module)
                 mode_str = "重载"
@@ -153,7 +142,7 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
                 loaded_plugin_modules.append(plugin_module)
                 mode_str = "载入"
         else:
-            fmts.print_war(f"{plugin_dirname} 文件夹 未发现插件文件，跳过加载")
+            fmts.print_war(f"{plugin_dir.name} 文件夹 未发现插件文件，跳过加载")
             return None
         plugin: Plugin | None = plugin_module.__dict__.get("entry")
         if not isinstance(plugin, Plugin):
@@ -178,21 +167,21 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dirname: str) -> None | Plug
         plugin_group.normal_plugin_loaded_num += 1
         return plugin
     except NotValidPluginError as err:
-        fmts.print_err(f"插件 {plugin_dirname} 不合法：{err.args[0]}")
+        fmts.print_err(f"插件 {plugin_dir.name} 不合法：{err.args[0]}")
         raise SystemExit from err
     except (cfg.ConfigError, cfg_meta.ConfigError) as err:
-        fmts.print_err(f"插件 {plugin_dirname} 配置文件报错：{err}")
+        fmts.print_err(f"插件 {plugin_dir.name} 配置文件报错：{err}")
         fmts.print_err(
             "你也可以直接删除配置文件，重新启动 ToolDelta 以自动生成配置文件"
         )
         raise SystemExit from err
     except utils.safe_json.DataReadError as err:
-        fmts.print_err(f"插件 {plugin_dirname} 读取数据失败：{err}")
+        fmts.print_err(f"插件 {plugin_dir.name} 读取数据失败：{err}")
     except SystemVersionException as err:
-        fmts.print_err(f"插件 {plugin_dirname} 需要更高版本的 ToolDelta 加载：{err}")
+        fmts.print_err(f"插件 {plugin_dir.name} 需要更高版本的 ToolDelta 加载：{err}")
         raise SystemExit
     except Exception as err:
-        fmts.print_err(f"加载插件 {plugin_dirname} 出现问题，报错如下：")
+        fmts.print_err(f"加载插件 {plugin_dir.name} 出现问题，报错如下：")
         fmts.print_err("§c" + traceback.format_exc())
         raise SystemExit from err
     return None

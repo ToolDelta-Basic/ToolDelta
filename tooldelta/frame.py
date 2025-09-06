@@ -48,7 +48,6 @@ class ToolDelta:
         """系统基本信息"""
 
         system_version = VERSION
-        data_path = "插件数据文件/"
 
     def __init__(self) -> None:
         """初始化"""

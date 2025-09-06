@@ -1,14 +1,10 @@
 from .packets import PacketIDS
-from .minecraft import (
-    TextType,
-    ContainerType,
-    PlayerActionType
-)
+from .minecraft import TextType, ContainerType, PlayerActionType
 from .tooldelta_cli import (
     TOOLDELTA_LOGO_mode,
     TOOLDELTA_LOGO,
-    TOOLDELTA_PLUGIN_DIR,
-    TOOLDELTA_CLASSIC_PLUGIN,
+    TOOLDELTA_PLUGIN_PATH,
+    TOOLDELTA_CLASSIC_PLUGIN_PATH,
     TOOLDELTA_PLUGIN_CFG_DIR,
     PLUGIN_TYPE_MAPPING,
     TDSPECIFIC_MIRROR,
@@ -43,15 +39,15 @@ __all__ = [
     "TDREPO_URL",
     "TDSPECIFIC_GITHUB_DOWNLOAD_URL",
     "TDSPECIFIC_MIRROR",
-    "TOOLDELTA_CLASSIC_PLUGIN",
+    "TOOLDELTA_CLASSIC_PLUGIN_PATH",
     "TOOLDELTA_LOGO",
-    "TOOLDELTA_LOGO_mode",
     "TOOLDELTA_PLUGIN_CFG_DIR",
     "TOOLDELTA_PLUGIN_DATA_DIR",
-    "TOOLDELTA_PLUGIN_DIR",
+    "TOOLDELTA_PLUGIN_PATH",
     "ContainerType",
     "PacketIDS",
     "PlayerActionType",
     "SysStatus",
+    "TOOLDELTA_LOGO_mode",
     "TextType",
 ]

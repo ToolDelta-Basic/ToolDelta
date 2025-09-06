@@ -5,12 +5,9 @@ from tooldelta import constants
 
 def init_dirs():
     """初始化系统文件夹"""
-    os.makedirs(
-        os.path.join(constants.TOOLDELTA_PLUGIN_DIR, constants.TOOLDELTA_CLASSIC_PLUGIN), exist_ok=True
-    )
-    os.makedirs("插件配置文件", exist_ok=True)
+    constants.TOOLDELTA_CLASSIC_PLUGIN_PATH.mkdir(parents=True, exist_ok=True)
+    constants.TOOLDELTA_PLUGIN_DATA_DIR.mkdir(parents=True, exist_ok=True)
     os.makedirs(os.path.join("tooldelta", "bin"), exist_ok=True)
-    os.makedirs(os.path.join("插件数据文件", "game_texts"), exist_ok=True)
     if sys.platform == "win32":
         win_create_batch_file()
 
