@@ -305,16 +305,17 @@ class PluginManager:
         """
         plugins = []
         for ptype, type_dir in PLUGIN_TYPE_MAPPING.items():
-            for datpath in type_dir.iterdir():
-                if not datpath.is_dir():
+            for plugin_dir in type_dir.iterdir():
+                if not plugin_dir.is_dir():
                     continue
-                is_enabled = not datpath.name.endswith("+disabled")
+                is_enabled = not plugin_dir.name.endswith("+disabled")
+                datpath = plugin_dir / "datas.json"
                 if os.path.isfile(datpath):
                     with open(datpath, encoding="utf-8") as f:
                         jsdata = json.load(f)
                         plugins.append(
                             PluginRegData(
-                                datpath.name.replace("+disabled", ""),
+                                plugin_dir.name.replace("+disabled", ""),
                                 jsdata,
                                 is_enabled=is_enabled,
                             )
@@ -322,7 +323,7 @@ class PluginManager:
                 else:
                     plugins.append(
                         PluginRegData(
-                            datpath.name.replace("+disabled", ""),
+                            plugin_dir.name.replace("+disabled", ""),
                             {"plugin-type": ptype},
                             is_registered=False,
                             is_enabled=is_enabled,
