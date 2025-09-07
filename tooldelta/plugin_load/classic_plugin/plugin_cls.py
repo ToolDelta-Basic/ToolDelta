@@ -45,6 +45,7 @@ class Plugin:
     def __init__(self, frame: "ToolDelta"):
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
+        self._init_printer()
 
     def _init_printer(self):
         printer = fmts.Printer(self.name)
