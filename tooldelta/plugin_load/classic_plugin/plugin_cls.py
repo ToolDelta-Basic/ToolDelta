@@ -46,6 +46,14 @@ class Plugin:
         self.frame = frame
         self.game_ctrl = frame.get_game_control()
 
+    def _init_printer(self):
+        printer = fmts.Printer(self.name)
+        self.print = printer.print
+        self.print_inf = printer.print_inf
+        self.print_suc = printer.print_suc
+        self.print_war = printer.print_war
+        self.print_err = printer.print_err
+
     @property
     def data_path(self) -> Path:
         "该插件的数据文件夹路径 (调用时直接创建数据文件夹)"
@@ -61,9 +69,6 @@ class Plugin:
         """
         (TOOLDELTA_PLUGIN_DATA_DIR / self.name).mkdir(parents=True, exist_ok=True)
         self.__path_created__ = True
-
-    def print(self, msg: Any):
-        fmts.print_inf(f"[{self.name}] {msg}")
 
     def format_data_path(self, *paths: str):
         """

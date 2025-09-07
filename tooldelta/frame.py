@@ -36,9 +36,7 @@ from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup
 
 
-
 VERSION = get_tool_delta_version()
-
 
 
 class ToolDelta:
@@ -60,11 +58,11 @@ class ToolDelta:
                 f"插件 <{name}> 出现问题: {err}\n§c{traceback.format_exc()}"
             )
         )
+
         def signal_handler(_, pyframe) -> None:
             fmts.print_war("§6ToolDelta 已被手动终止")
             self.system_exit("用户退出程序")
             os._exit(1)
-
 
         signal.signal(signal.SIGINT, signal_handler)
 
@@ -108,7 +106,9 @@ class ToolDelta:
                     if launch_config.restart_delay == -1:
                         return -1
                     else:
-                        fmts.print_war(f"ToolDelta 将在 {launch_config.restart_delay} 秒后重启")
+                        fmts.print_war(
+                            f"ToolDelta 将在 {launch_config.restart_delay} 秒后重启"
+                        )
                 else:
                     return 0
         except (KeyboardInterrupt, SystemExit, EOFError) as err:

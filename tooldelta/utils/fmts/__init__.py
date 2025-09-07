@@ -148,9 +148,7 @@ def print_gradient(text, start_rgb, end_rgb):
     return "".join(result) + "\033[0m"
 
 
-def print_with_info(
-    text: str, info: str, **print_kwargs
-):
+def print_with_info(text: str, info: str, **print_kwargs):
     """输出带有信息的文本
 
     Args:
@@ -302,3 +300,36 @@ def ansi_save_screen():
 
 def ansi_load_screen():
     _original_print("\033[?47l")
+
+
+class Printer:
+    def __init__(self, name: str):
+        """
+        创建一个输出器, 输出会以 [<name>] <msg> 的方法展示。
+        其所有子方法与 fmts 方法相同。
+
+        Args:
+            name (str): 输出前缀名
+        """
+        self.name = name
+
+    def print(self, *args):
+        print(f"[{self.name}]", *args)
+
+    def print_inf(self, msg: str, **kwargs):
+        print_inf(f"[{self.name}] {msg}", **kwargs)
+
+    def print_suc(self, msg: str, **kwargs):
+        print_suc(f"[{self.name}] {msg}", **kwargs)
+
+    def print_war(self, msg: str, **kwargs):
+        print_war(f"[{self.name}] {msg}", **kwargs)
+
+    def print_err(self, msg: str, **kwargs):
+        print_err(f"[{self.name}] {msg}", **kwargs)
+
+    def print_load(self, msg: str, **kwargs):
+        print_load(f"[{self.name}] {msg}", **kwargs)
+
+
+core_printer = Printer("Core")
