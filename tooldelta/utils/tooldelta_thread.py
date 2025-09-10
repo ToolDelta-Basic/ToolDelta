@@ -49,9 +49,9 @@ class ToolDeltaThread(threading.Thread, Generic[PT, RT]):
         self.usage = usage or f"fn:{func.__name__}"
         self.stopping = False
         self._thread_level = thread_level
-        self._ret: RT | None = None
         self._ret_exc = None
         self._stop_event = threading.Event()
+        self._print_exc = True
         self.start()
 
     def run(self) -> None:
@@ -65,19 +65,21 @@ class ToolDeltaThread(threading.Thread, Generic[PT, RT]):
             pass
         except ValueError as e:
             self._ret_exc = e
-            if str(e) != "未连接到游戏":
+            if self._print_exc:
+                if str(e) != "未连接到游戏":
+                    fmts.print_err(
+                        f"线程 {self.usage or self.func.__name__} 出错:\n"
+                        + traceback.format_exc()
+                    )
+                else:
+                    fmts.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
+        except Exception as e:
+            self._ret_exc = e
+            if self._print_exc:
                 fmts.print_err(
                     f"线程 {self.usage or self.func.__name__} 出错:\n"
                     + traceback.format_exc()
                 )
-            else:
-                fmts.print_war(f"线程 {self.usage} 因游戏断开连接被迫中断")
-        except Exception as e:
-            self._ret_exc = e
-            fmts.print_err(
-                f"线程 {self.usage or self.func.__name__} 出错:\n"
-                + traceback.format_exc()
-            )
         finally:
             threads_list.remove(self)
             self._stop_event.set()
@@ -108,12 +110,14 @@ class ToolDeltaThread(threading.Thread, Generic[PT, RT]):
         return True
 
     def block_get_result(self) -> RT:
+        self._print_exc = False
         self._stop_event.wait()
         if self._ret_exc:
             raise self._ret_exc
         return self._ret  # type: ignore
 
     def block_get_result_with_timeout(self, timeout: float) -> RT | None:
+        self._ret = None
         self._stop_event.wait(timeout)
         return self._ret
 
@@ -180,23 +184,20 @@ def thread_gather(
         list[VT]: 方法的返回 (按传入方法的顺序依次返回其结果)
     """
     res: list[Any] = [None] * len(funcs_and_args)
-    finish_events = [threading.Event() for _ in range(len(funcs_and_args))]
+    threads: list[ToolDeltaThread[..., tuple[int, VT]]] = []
     for i, (func, args) in enumerate(funcs_and_args):
 
-        def _closet(_i: int, _func):
+        def _closet(_i: int, _func: Callable[..., VT]):
+            @thread_func(f"并行方法 {func.__name__}")
             def _cbfunc(*args):
-                try:
-                    assert isinstance(args, tuple), "传参必须是 tuple 类型"
-                    res[_i] = _func(*args)
-                finally:
-                    finish_events[_i].set()
+                ret = _func(*args)
+                return _i, ret
 
             return _cbfunc
-
-        fun, usage = _closet(i, func), f"并行方法 {func.__name__}"
-        ToolDeltaThread(fun, args, usage=usage)
-    for evt in finish_events:
-        evt.wait()
+        threads.append(_closet(i, func)(*args))
+    for thread in threads:
+        idx, ret = thread.block_get_result()
+        res[idx] = ret
     return res
 
 
