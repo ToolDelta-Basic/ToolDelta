@@ -343,6 +343,7 @@ class PluginMarket:
         )
         has_doc = (
             self.get_plugin_filetree(plugin_data.name).get("readme.txt") is not None
+            or self.get_plugin_filetree(plugin_data.name).get("readme.md") is not None
         )
         while True:
             fmts.ansi_cls()
