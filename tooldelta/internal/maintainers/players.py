@@ -144,6 +144,7 @@ class PlayerInfoMaintainer:
         self.uuid_to_player[player.uuid] = ready_player
         self.xuid_to_player[player.xuid] = ready_player
         self._lookup_pendings(ready_player)
+        return ready_player
 
     def remove_player(self, player: Player):
         del self.name_to_player[player.name]
