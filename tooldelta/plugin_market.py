@@ -1,12 +1,13 @@
 "插件市场客户端"
 
 import asyncio
-import os
 import time
 import traceback
 import requests
 import json
 from pathlib import Path
+from rich import print as rich_print
+from rich.markdown import Markdown
 from .utils import cfg, fmts
 from .constants import (
     TOOLDELTA_CLASSIC_PLUGIN_PATH,
@@ -532,21 +533,37 @@ class PluginMarket:
         return list(plugin_list.values())
 
     def lookup_plugin_doc(self, plugin: PluginRegData):
-        url = url_join(self.plugin_market_content_url, plugin.name, "readme.txt")
+        filetree = self.get_plugin_filetree(plugin.name)
+        if filetree.get("readme.txt") is not None:
+            url = url_join(
+                self.plugin_market_content_url,
+                plugin.name,
+                "readme.txt",
+            )
+            markdown = False
+        elif filetree.get("readme.md") is not None:
+            url = url_join(
+                self.plugin_market_content_url,
+                plugin.name,
+                "readme.md",
+            )
+            markdown = True
+        else:
+            fmts.clean_print(
+                "§c该插件没有插件文档 (readme.txt / readme.md) [回车键继续]"
+            )
+            input()
+            return
         resp = requests.get(url)
         if resp.status_code != 200:
             fmts.clean_print("§c无法获取插件文档")
             return
-        counter = 0
-        fmts.ansi_cls()
-        fmts.clean_print("§b文档正文:")
-        for ln in resp.text.split("\n"):
-            fmts.clean_print("  " + ln)
-            counter += 1
-            MAX_LINES = 15
-            if counter > MAX_LINES:
-                counter = 0
-                input(fmts.clean_fmt("§a[按回车键继续阅读..]"))
+        content = resp.content.decode()
+        fmts.clean_print(f"§b文档正文 (原始编码:{resp.encoding}):")
+        if markdown:
+            rich_print(Markdown(content))
+        else:
+            fmts.clean_print(content)
         input(fmts.clean_fmt("§a已经读完正文了 [Enter]"))
 
     # 获取插件 ID 到插件名的映射

@@ -6,6 +6,8 @@ import shlex
 import shutil
 import json
 from pathlib import Path
+from rich import print as rich_print
+from rich.markdown import Markdown
 from .utils import fmts
 from .constants import PLUGIN_TYPE_MAPPING
 from .plugin_load import PluginRegData
@@ -239,25 +241,22 @@ class PluginManager:
     @staticmethod
     def _lookup_readme(plugin: PluginRegData):
         """查看插件的 readme.txt 文档"""
-        readme_path = (
-            PLUGIN_TYPE_MAPPING[plugin.plugin_type] / plugin.name / "readme.txt"
-        )
-        if readme_path.is_file():
-            with open(readme_path, encoding="utf-8") as f:
-                lns = f.read().split("\n")
-            counter = 0
-            clear_screen()
-            fmts.clean_print(f"§b文档正文 ({readme_path}):")
-            for ln in lns:
-                fmts.clean_print("  " + ln)
-                counter += 1
-                MAX_LINES = 15
-                if counter > MAX_LINES:
-                    counter = 0
-                    input(fmts.clean_fmt("§a[按回车键继续阅读..]"))
-            fmts.clean_print("§a已经读完正文了")
+        if (path := plugin.dir / "readme.txt").is_file():
+            markdown = False
+        elif (path := plugin.dir / "readme.md").is_file():
+            markdown = True
         else:
             fmts.clean_print("§6此插件没有手册文档..")
+            return
+        with open(path, encoding="utf-8") as f:
+            lns = f.read()
+        clear_screen()
+        fmts.clean_print(f"§b文档正文 ({path!s}):")
+        if markdown:
+            rich_print(Markdown(lns))
+        else:
+            fmts.clean_print(lns)
+        fmts.clean_print("§a已经读完正文了")
 
     @staticmethod
     def search_plugin_by_kw(
