@@ -560,6 +560,7 @@ class PluginMarket:
             fmts.clean_print("§c无法获取插件文档")
             return
         content = resp.content.decode()
+        fmts.ansi_cls()
         fmts.clean_print(f"§b文档正文 (原始编码:{resp.encoding}):")
         if markdown:
             rich_print(Markdown(content))
