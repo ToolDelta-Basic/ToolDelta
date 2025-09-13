@@ -15,6 +15,7 @@ class UnreadyPlayer:
     name: str
     xuid: str
     platform_chat_id: str
+    runtime_id: int | None
     device_id: str | None
     build_platform: int
     online: bool = True
@@ -28,7 +29,7 @@ class UnreadyPlayer:
             name=self.name,
             xuid=self.xuid,
             device_id=None,
-            runtime_id=None,
+            runtime_id=self.runtime_id,
             platform_chat_id=self.platform_chat_id,
             build_platform=self.build_platform,
             online=self.online,
