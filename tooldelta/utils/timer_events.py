@@ -67,9 +67,6 @@ def reset():
                     timer_events_table[k].remove(func_args)
             if timer_events_table[k] == []:
                 del timer_events_table[k]
-    import pprint
-
-    pprint.pprint(timer_events_table)
 
 
 def stopall():
