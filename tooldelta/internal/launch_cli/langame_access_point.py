@@ -103,7 +103,7 @@ class FrameLanGameAccessPoint(StandardFrame):
     )
     def _start_proc_message_show_thread(self):
         assert self.proc.stdout
-        while 1:
+        while True:
             msg = self.proc.stdout.readline().decode("utf-8").strip()
             if msg == "":
                 break
@@ -124,7 +124,7 @@ class FrameLanGameAccessPoint(StandardFrame):
         if self.proc.stderr is None:
             fmts.print_war("NEMCLanGame 错误输出通道不可用")
             return
-        while 1:
+        while True:
             msg = self.proc.stderr.readline().decode("utf-8")
             if msg == "":
                 break
@@ -141,7 +141,7 @@ class FrameLanGameAccessPoint(StandardFrame):
                 name=v.name,
                 xuid=v.xuid,
                 platform_chat_id="",
-                runtime_id=None,
+                runtime_id=v.runtimeID,
                 device_id=None,
                 build_platform=0,
                 # NOTE: this is dangerous

@@ -41,6 +41,7 @@ class PlayerUQ:
     xuid: str
     uniqueID: int
     abilities: dict
+    runtimeID: int | None = None
 
 
 class LanGame:
