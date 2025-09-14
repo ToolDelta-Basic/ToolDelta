@@ -1,4 +1,5 @@
 import ctypes
+import time
 import threading
 import traceback
 from typing import Any, TypeVar, ParamSpec, Generic
@@ -7,8 +8,6 @@ from . import fmts
 
 
 PT = ParamSpec("PT")
-
-
 VT = TypeVar("VT")
 RT = TypeVar("RT")
 threads_list: list["ToolDeltaThread"] = []
@@ -29,8 +28,8 @@ class ToolDeltaThread(threading.Thread, Generic[PT, RT]):
         self,
         func: Callable[PT, RT],
         args: tuple = (),
-        usage="",
         thread_level=PLUGIN,
+        usage="",
         **kwargs,
     ):
         """新建一个 ToolDelta 子线程
@@ -140,10 +139,10 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
     ```
     """
 
-    def _recv_func(
+    def decorator(
         func: "Callable[PT, RT]",
     ) -> "Callable[PT, ToolDeltaThread[PT, RT]]":
-        def thread_fun(*args: Any, **kwargs):
+        def thread_fun(*args, **kwargs):
             return ToolDeltaThread(
                 func,
                 usage=usage,
@@ -157,7 +156,7 @@ def thread_func(usage: str, thread_level=ToolDeltaThread.PLUGIN):
 
         return thread_fun
 
-    return _recv_func
+    return decorator
 
 
 def thread_gather(
@@ -194,6 +193,7 @@ def thread_gather(
                 return _i, ret
 
             return _cbfunc
+
         threads.append(_closet(i, func)(*args))
     for thread in threads:
         idx, ret = thread.block_get_result()
@@ -211,3 +211,82 @@ def force_stop_normal_threads():
                 fmts.print_suc(f"已终止线程 <{i.usage}>    ")
             else:
                 fmts.print_suc(f"无法终止线程 <{i.usage}>  ")
+
+
+class TimeoutFunc(Generic[PT, RT]):
+    def __init__(
+        self,
+        timeout: float,
+        func: Callable[PT, RT],
+        usage="",
+        thread_level=ToolDeltaThread.PLUGIN,
+    ):
+        self.execute_time = timeout + time.time()
+        self.func = func
+        self.usage = usage or f"timeoutfn:{func.__name__}"
+        self.stop_event = threading.Event()
+        self.finished = False
+        self.thread_level = thread_level
+        self.run = thread_func(self.usage, thread_level=self.thread_level)(self._run)
+
+    def _run(self, *args, **kwargs):
+        if self.finished:
+            raise ValueError("TimeoutFunc 已结束")
+        while True:
+            if self.execute_time > time.time():
+                self.stop_event.wait(self.execute_time - time.time())
+            else:
+                break
+        if not self.stop_event.is_set():
+            self.func(*args, **kwargs)
+        self.finished = True
+
+    def cancel(self):
+        self.stop_event.set()
+
+    def add_time(self, t: float):
+        self.execute_time = time.time() + t
+
+
+def timeout_func(t: float, usage: str = "", thread_level=ToolDeltaThread.PLUGIN):
+    """
+    将下面的函数作为一个延时执行方法, 被调用后延时执行; 调用后返回延时执行对象。
+
+    Args:
+        t (float): 延时时间
+        usage (str, optional): 函数说明
+        thread_level (int, optional): 延时线程等级
+    """
+
+    def decorator(
+        func: "Callable[PT, RT]",
+    ) -> "Callable[PT, TimeoutFunc[PT, RT]]":
+        tfn = TimeoutFunc(t, func, usage, thread_level=thread_level)
+
+        def _run(*args, **kwargs):
+            tfn.run(*args, **kwargs)
+            return tfn
+
+        return _run
+
+    return decorator
+
+
+def set_timeout(
+    t: float, func: "Callable[PT, RT]", *args, **kwargs
+) -> TimeoutFunc[PT, RT]:
+    """
+    延时执行传入的函数。
+
+    Args:
+        t (float): 延时时间
+        func (Callable[PT, RT]): 延时函数
+        *args: 函数参数
+        **kwargs: 函数参数
+
+    Returns:
+        TimeoutFunc[PT, RT]: 延时方法对象
+    """
+    tfn = TimeoutFunc(t, func)
+    tfn.run(*args, **kwargs)
+    return tfn

@@ -11,7 +11,14 @@ from .safe_json import (
 )
 from .system_safe_close import safe_close
 from .timer_events import timer_event, timer_event_boostrap
-from .tooldelta_thread import ToolDeltaThread, createThread, thread_func, thread_gather
+from .tooldelta_thread import (
+    ToolDeltaThread,
+    createThread,
+    thread_func,
+    thread_gather,
+    set_timeout,
+    timeout_func,
+)
 from .basic import (
     simple_fmt,
     simple_assert,
