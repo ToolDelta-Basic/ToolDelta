@@ -100,8 +100,11 @@ class FrameFateArk(StandardFrame):
         if not path.name.endswith(".exe"):
             # Maybe is linux and so on
             os.system("chmod +x " + str(path))
+        args = [str(path), "-p", str(port)]
+        if sec_auth_proxy_url := sys_args.sys_args_to_dict().get("secondary-auth-proxy"):
+            args.extend(["-s", sec_auth_proxy_url])
         self.proc = subprocess.Popen(
-            [str(path), "-p", str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
