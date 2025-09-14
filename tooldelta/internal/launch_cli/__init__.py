@@ -10,6 +10,7 @@ from .neomega_launcher import FrameNeOmegaLauncher
 from .eulogist_client import FrameEulogistLauncher
 from .fateark_access_point import FrameFateArk
 from .fateark_access_point_indirect import FrameFateArkIndirect
+from .langame_access_point import FrameLanGameAccessPoint
 
 FrameNeOmg = FrameNeOmgAccessPoint
 FrameNeOmgRemote = FrameNeOmgAccessPointRemote
@@ -22,6 +23,7 @@ FB_LIKE_LAUNCHERS = (
     | FrameEulogistLauncher
     | FrameFateArk
     | FrameFateArkIndirect
+    | FrameLanGameAccessPoint
 )
 "类FastBuilder启动器框架"
 
@@ -29,7 +31,8 @@ ACCESS_POINT_LAUNCHERS = (
     FrameNeOmgAccessPoint,
     FrameNeOmegaLauncher,
     FrameFateArk,
-    FrameFateArkIndirect
+    FrameFateArkIndirect,
+    FrameLanGameAccessPoint
 )
 "接入点类型的启动框架"
 
@@ -42,6 +45,7 @@ __all__ = [
     "FrameEulogistLauncher",
     "FrameFateArk",
     "FrameFateArkIndirect",
+    "FrameLanGameAccessPoint",
     "FrameNeOmegaLauncher",
     "FrameNeOmgAccessPoint",
     "FrameNeOmgAccessPointRemote",

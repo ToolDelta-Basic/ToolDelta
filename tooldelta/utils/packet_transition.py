@@ -23,7 +23,7 @@ def get_playername_and_msg_from_text_packet(
     msg: str = pkt["Message"]
     sender_name = ""
 
-    if (extraData := pkt["NeteaseExtraData"]) and len(extraData) > 1:
+    if (extraData := pkt.get("NeteaseExtraData", pkt.get("Unknown1"))) and len(extraData) > 1:
         sender_uqID = int(extraData[1])
         if sender_player := frame.get_players().getPlayerByUniqueID(sender_uqID):
             sender_name = sender_player.name

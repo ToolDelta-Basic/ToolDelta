@@ -62,3 +62,13 @@ LAUNCHER_FATEARK_INDIRECT_DEFAULT: dict = {
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
+LAUNCHER_NEMCLANGAME_STD: dict = {
+    "房间号": int,
+    "密码": str,
+    "验证服务器地址(更换时记得更改fbtoken)": str,
+}
+LAUNCHER_NEMCLANGAME_DEFAULT: dict = {
+    "房间号": 0,
+    "密码": "",
+    "验证服务器地址(更换时记得更改fbtoken)": "",
+}

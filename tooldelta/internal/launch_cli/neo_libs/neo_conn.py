@@ -48,7 +48,7 @@ def to_GoInt(i: int):
 def toPyString(c_string: CString | None):
     if c_string is None:
         return ""
-    result = ctypes.string_at(c_string).decode(encoding="utf-8")
+    result = ctypes.string_at(c_string).decode(encoding="utf-8", errors="ignore")
     LIB.FreeMem(c_string)
     return result
 

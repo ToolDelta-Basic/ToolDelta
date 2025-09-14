@@ -12,6 +12,7 @@ from .launch_cli import (
     FrameEulogistLauncher,
     FrameFateArk,
     FrameFateArkIndirect,
+    FrameLanGameAccessPoint,
     LAUNCHERS,
     ACCESS_POINT_LAUNCHERS,
 )
@@ -34,6 +35,7 @@ LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
     ("§7Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
     ("FateArk 框架 §a[推荐]", FrameFateArk),
     ("FateArk 远程框架", FrameFateArkIndirect),
+    ("NEMCLanGame 框架", FrameLanGameAccessPoint),
 ]
 
 
@@ -88,9 +90,8 @@ class ConfigLoader:
                 except ValueError:
                     fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
             cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
-        launcher: LAUNCHERS = LAUNCHERS_SHOWN[
-            cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"] - 1
-        ][1]()
+        section: int = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+        launcher = LAUNCHERS_SHOWN[section - 1][1]()
         launcher_type = type(launcher)
         # 每个启动器框架的单独启动配置
         LAUNCHER_CONFIG_KEY = ""
@@ -181,29 +182,61 @@ class ConfigLoader:
                         f"ToolDelta 基本配置-FateArk 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
+        elif launcher_type is FrameLanGameAccessPoint:
+            LAUNCHER_CONFIG_KEY = "NEMCLanGame接入点启动模式"
+            launch_data = cfgs.get(
+                LAUNCHER_CONFIG_KEY, tooldelta_cfg.LAUNCHER_NEMCLANGAME_DEFAULT
+            )
+            try:
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEMCLANGAME_STD, launch_data)
+            except cfg.ConfigError as err:
+                r = self.upgrade_cfg()
+                if r:
+                    fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
+                else:
+                    fmts.print_err(
+                        f"ToolDelta 基本配置-NEMCLanGame 启动配置有误，需要更正：{err}"
+                    )
+                raise SystemExit from err
         else:
             raise ValueError(f"LAUNCHER error: {launcher_type.__name__}")
 
         if launcher_type in ACCESS_POINT_LAUNCHERS:
-            serverNumber = launch_data["服务器号"]
+            if "服务器号" in launch_data.keys():
+                serverNumber = launch_data["服务器号"]
+                is_server = True
+            elif "房间号" in launch_data.keys():
+                serverNumber = launch_data["房间号"]
+                is_server = False
+            else:
+                raise ValueError("Need serverNumber or roomID")
             serverPasswd: str = launch_data["密码"]
             auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
             if serverNumber == 0:
                 while 1:
                     try:
+                        serverNumberPrompt = (
+                            "请输入租赁服号" if is_server else "请输入房间号"
+                        )
+                        serverPasswordPrompt = (
+                            "请输入租赁服密码" if is_server else "请输入房间密码"
+                        )
                         serverNumber = int(
-                            input(fmts.fmt_info("请输入租赁服号：", "§b 输入 "))
+                            input(fmts.fmt_info(f"{serverNumberPrompt}:", "§b 输入 "))
                         )
                         serverPasswd = (
                             getpass.getpass(
                                 fmts.fmt_info(
-                                    "请输入租赁服密码 (不会回显，没有请直接回车): ",
+                                    f"{serverPasswordPrompt} (不会回显，没有请直接回车): ",
                                     "§b 输入 ",
                                 )
                             )
                             or ""
                         )
-                        launch_data["服务器号"] = int(serverNumber)
+                        if is_server:
+                            launch_data["服务器号"] = int(serverNumber)
+                        else:
+                            launch_data["房间号"] = int(serverNumber)
                         launch_data["密码"] = serverPasswd
                         cfgs[LAUNCHER_CONFIG_KEY] = launch_data
                         cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
