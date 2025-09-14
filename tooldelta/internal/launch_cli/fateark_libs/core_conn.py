@@ -250,6 +250,9 @@ def get_unready_player(uuid: str) -> UnreadyPlayer:
         platform_chat_id=stub.GetPlayerPlatformChatID(
             playerkit_pb2.GetPlayerPlatformChatIDRequest(uuid_str=uuid)
         ).payload,
+        runtime_id=stub.GetPlayerEntityRuntimeID(
+            playerkit_pb2.GetPlayerEntityRuntimeIDRequest(uuid_str=uuid)
+        ).payload,
         device_id=stub.GetPlayerDeviceID(
             playerkit_pb2.GetPlayerDeviceIDRequest(uuid_str=uuid)
         ).payload,
