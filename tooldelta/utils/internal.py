@@ -6,6 +6,7 @@ from tooldelta import constants
 def init_dirs():
     """初始化系统文件夹"""
     constants.TOOLDELTA_CLASSIC_PLUGIN_PATH.mkdir(parents=True, exist_ok=True)
+    constants.TOOLDELTA_PLUGIN_CFG_DIR.mkdir(parents=True, exist_ok=True)
     constants.TOOLDELTA_PLUGIN_DATA_DIR.mkdir(parents=True, exist_ok=True)
     constants.TOOLDELTA_BIN_PATH.mkdir(parents=True, exist_ok=True)
     if sys.platform == "win32":
