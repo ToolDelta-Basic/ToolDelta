@@ -227,11 +227,14 @@ class TimeoutFunc(Generic[PT, RT]):
         self.stop_event = threading.Event()
         self.finished = False
         self.thread_level = thread_level
-        self.run = thread_func(self.usage, thread_level=self.thread_level)(self._run)
+        self.run()
 
-    def _run(self, *args, **kwargs):
+    def run(self):
         if self.finished:
             raise ValueError("TimeoutFunc 已结束")
+        createThread(self._run, usage=self.usage, thread_level=self.thread_level)
+
+    def _run(self, *args, **kwargs):
         while True:
             if self.execute_time > time.time():
                 self.stop_event.wait(self.execute_time - time.time())
