@@ -213,6 +213,7 @@ class PlayerInfoMaintainer:
             UnreadyPlayer(
                 uuid=ud,
                 unique_id=unique_id,
+                runtime_id=None,
                 name=playername,
                 xuid=entry["XUID"],
                 platform_chat_id=entry["PlatformChatID"],
