@@ -230,7 +230,7 @@ class TimeoutFunc(Generic[PT, RT]):
     def run(self, *args: PT.args, **kwargs: PT.kwargs):
         if self.finished:
             raise ValueError("TimeoutFunc 已结束")
-        createThread(self._run, usage=self.usage, thread_level=self.thread_level)
+        createThread(self._run, args=args, **kwargs, usage=self.usage, thread_level=self.thread_level)
 
     def _run(self, *args, **kwargs):
         while True:
