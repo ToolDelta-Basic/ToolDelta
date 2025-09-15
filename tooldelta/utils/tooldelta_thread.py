@@ -264,9 +264,8 @@ def timeout_func(t: float, usage: str = "", thread_level=ToolDeltaThread.PLUGIN)
     def decorator(
         func: "Callable[PT, RT]",
     ) -> "Callable[PT, TimeoutFunc[PT, RT]]":
-        tfn = TimeoutFunc(t, func, usage, thread_level=thread_level)
-
         def _run(*args, **kwargs):
+            tfn = TimeoutFunc(t, func, usage, thread_level=thread_level)
             tfn.run(*args, **kwargs)
             return tfn
 
