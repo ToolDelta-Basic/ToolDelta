@@ -219,7 +219,7 @@ class TimeoutFunc(Generic[PT, RT]):
         timeout: float,
         func: Callable[PT, RT],
         usage="",
-        thread_level=ToolDeltaThread.PLUGIN,
+        thread_level=ToolDeltaThread.PLUGIN
     ):
         self.execute_time = timeout + time.time()
         self.func = func
@@ -227,9 +227,7 @@ class TimeoutFunc(Generic[PT, RT]):
         self.stop_event = threading.Event()
         self.finished = False
         self.thread_level = thread_level
-        self.run()
-
-    def run(self):
+    def run(self, *args: PT.args, **kwargs: PT.kwargs):
         if self.finished:
             raise ValueError("TimeoutFunc 已结束")
         createThread(self._run, usage=self.usage, thread_level=self.thread_level)
