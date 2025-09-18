@@ -37,4 +37,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: registry.cn-hangzhou.aliyuncs.com/${{ secrets.DOCKERHUB_USERNAME }}/tooldelta:latest
+          tags: registry.cn-hangzhou.aliyuncs.com/tooldelta/tooldelta:latest
