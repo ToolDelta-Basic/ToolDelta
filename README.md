@@ -13,6 +13,7 @@
    - NeOmega启动器
    - Eulogist（赞颂者）
    - FateArk接入点
+   - LanGame本地联机接入点
 
 ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化租赁服的流畅度。
 
@@ -42,13 +43,30 @@ ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化�
 
 
 ## 运行和配置
- - 直接下载 ToolDelta 可执行文件并运行
-    - [发行版 ToolDelta 下载点这里](https://github.com/ToolDelta/ToolDelta/releases)
- - 在 `pip` 安装 ToolDelta 并运行
-    - `pip install tooldelta`
-    - `echo import tooldelta;tooldelta.client_title() > main.py`
-    运行:
-      - `python main.py` 或 `python3 main.py`
+- 直接下载 ToolDelta 可执行文件并运行
+   - [发行版 ToolDelta 下载点这里](https://github.com/ToolDelta/ToolDelta/releases)
+- 在 `pip` 安装 ToolDelta 并运行
+   ```sh
+   pip install tooldelta
+   echo import tooldelta;tooldelta.client_title() > main.py
+   ```
+- 运行:
+   ```sh
+   python3 main.py
+   ```
+   或
+   ```
+   python main.py
+   ```
 
 ## 打包 Docker 镜像
-   - 在项目目录下使用 docker build -t tooldelta . 即可
+在项目目录下运行命令：
+```sh
+docker build -t tooldelta .
+```
+
+## 使用已打包的 Docker 镜像
+运行命令：
+```sh
+sudo docker pull crpi-6pmrt6su7uwffyo4.cn-shanghai.personal.cr.aliyuncs.com/tooldelta/tooldelta:latest
+```
