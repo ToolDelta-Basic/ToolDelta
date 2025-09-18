@@ -70,3 +70,4 @@ docker build -t tooldelta .
 ```sh
 sudo docker pull crpi-6pmrt6su7uwffyo4.cn-shanghai.personal.cr.aliyuncs.com/tooldelta/tooldelta:latest
 ```
+如果您需要将 ToolDelta 运行在 MCSM 中，在 **应用实例设置>容器化** 中选择镜像名 **tooldelta:latest** 即可。
