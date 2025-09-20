@@ -67,9 +67,8 @@ AUTH_SERVERS = [
 
 ALL_AVAILABLE_GITHUB_MIRRORS = (
     "https://kkgithub.com",
-    "https://gh-proxy.com",
+    "https://ghproxy.net",
     "https://ghfast.top",
-    "https://ghp.ci",
     "https://github.tooldelta.top"
 )
 
