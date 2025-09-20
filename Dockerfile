@@ -12,4 +12,4 @@ RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip3 install --no-cache-dir . && \
     rm -rf /app/*
 
-CMD ["python", "-c", "from tooldelta.launch_options import client_title; client_title()"]
+CMD ["python", "-c", "from tooldelta.launch_options import client_title; import os; client_title(); os._exit(0)"]
