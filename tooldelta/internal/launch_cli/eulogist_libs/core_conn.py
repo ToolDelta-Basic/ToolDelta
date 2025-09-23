@@ -10,7 +10,7 @@ from websocket import WebSocketApp, WebSocket
 from dataclasses import dataclass
 from .... import constants, utils
 from ....constants import PacketIDS
-from ....packets import Packet_CommandOutput
+from ....internal.types import Packet_CommandOutput
 from ....utils import fmts
 from ....mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ....mc_bytes_packet.pool import BYTES_PACKET_ID_POOL

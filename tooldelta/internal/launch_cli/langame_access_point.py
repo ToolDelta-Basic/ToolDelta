@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 from ... import utils
 from ...constants import SysStatus
-from ...packets import Packet_CommandOutput
+from ...internal.types import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts, urlmethod
 from ..types import UnreadyPlayer, Abilities

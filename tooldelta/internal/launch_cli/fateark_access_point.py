@@ -7,7 +7,7 @@ import grpc
 
 from ... import utils
 from ...constants import SysStatus, PacketIDS
-from ...packets import Packet_CommandOutput
+from ...internal.types import Packet_CommandOutput
 from ...mc_bytes_packet import base_bytes_packet, pool
 from ...utils import fmts, urlmethod, sys_args
 from .standard_launcher import StandardFrame

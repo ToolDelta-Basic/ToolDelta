@@ -20,7 +20,7 @@ from .internal.launch_config import LaunchConfig
 from .internal.packet_handler import PacketHandler
 from .internal.cmd_executor import ConsoleCmdManager
 from .internal.maintainers.players import PlayerInfoMaintainer
-from .internal.types import FrameExit
+from .internal.types import FrameExit, Packet_CommandOutput
 from .internal.launch_cli.neo_libs.blob_hash.blob_hash_holder import (
     BlobHashHolder,
 )
@@ -30,7 +30,7 @@ from .internal.launch_cli import (
     FB_LIKE_LAUNCHERS,
     LAUNCHERS,
 )
-from .packets import Packet_CommandOutput
+
 from .utils import internal as utils_internal, cfg, fmts, mc_translator
 from .version import get_tool_delta_version
 from .plugin_load.plugins import PluginGroup

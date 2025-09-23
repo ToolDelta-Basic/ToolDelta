@@ -13,7 +13,7 @@ from typing import Any, ClassVar, Optional
 from ....constants import TOOLDELTA_BIN_PATH
 from ....utils import fmts, thread_func, ToolDeltaThread
 from ....mc_bytes_packet.base_bytes_packet import BaseBytesPacket
-from ....packets import Packet_CommandOutput
+from ....internal.types import Packet_CommandOutput
 
 CInt = ctypes.c_int
 CLongLong = ctypes.c_longlong

@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 
 from ...constants import SysStatus, PacketIDS
-from ...packets import Packet_CommandOutput
+from ...internal.types import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..packet_handler import PacketHandler
 from ..types import UnreadyPlayer

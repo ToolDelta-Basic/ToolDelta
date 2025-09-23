@@ -11,7 +11,7 @@ from .utils import create_result_cb
 from . import utils
 from .constants import PacketIDS, TextType
 from .internal.packet_handler import PacketHandler
-from .packets import Packet_CommandOutput
+from .internal.types import Packet_CommandOutput
 from .utils import to_player_selector, createThread
 
 if TYPE_CHECKING:
