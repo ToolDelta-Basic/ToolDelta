@@ -3,8 +3,8 @@
 import datetime
 import threading
 import re
-import enum
 import logging
+import rich
 from typing import Any
 from . import logger
 
@@ -13,13 +13,6 @@ print_lock = threading.RLock()
 _original_print = print
 
 
-class PrintInfo(str, enum.Enum):
-    INFO_NORMAL = "§f 信息 "
-    INFO_WARN = "§6 警告 "
-    INFO_ERROR = "§4 报错 "
-    INFO_FAIL = "§c 失败 "
-    INFO_SUCC = "§a 成功 "
-    INFO_LOAD = "§d 加载 "
 
 
 def simple_fmt(kw: dict[str, Any], sub: str) -> str:
@@ -184,6 +177,9 @@ def clean_fmt(text: str) -> str:
         str: 格式化后的文本
     """
     return colormode_replace(text)
+
+def rich_print(obj: Any):
+    rich.print(obj)
 
 
 def print(*args):
