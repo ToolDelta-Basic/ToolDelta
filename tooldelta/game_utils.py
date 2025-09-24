@@ -413,7 +413,7 @@ def notifyToServer(
         PacketIDS.PyRpc,
         {
             "Value": [
-                "ModEventS2C",
+                "ModEventC2S",
                 [gameNamespace, modNamespace, eventName, eventData],
                 None,
             ],
