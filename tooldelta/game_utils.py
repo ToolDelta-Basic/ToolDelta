@@ -415,6 +415,7 @@ def notifyToServer(
             "Value": [
                 "ModEventS2C",
                 [gameNamespace, modNamespace, eventName, eventData],
+                None,
             ],
             "OperationType": 32346342,
         },
