@@ -114,8 +114,8 @@ class FrameFateArk(StandardFrame):
                 fmts.print_with_info(f"§b[{msg_prefix}]§r {msg}", "§b FARK ")
                 if err_msg:
                     fmts.print_err("FateArk: " + err_msg)
-                    self.update_status(SysStatus.CRASHED_EXIT)
                 if msg_prefix == "Crash":
+                    fmts.print_err("FateArk: " + err_msg)
                     self.update_status(SysStatus.CRASHED_EXIT)
         except RpcError:
             fmts.print_inf("FateArk 输出通道已断开连接")
