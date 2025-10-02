@@ -35,7 +35,10 @@ def get_fateark_dependency_libs(mirror_src: str) -> list[str]:
 
     # Mapping architecture names to common naming
     arch_map = {"x86_64": "amd64", "aarch64": "arm64"}
-    sys_machine = arch_map.get(sys_machine, sys_machine)
+    if "TERMUX_VERSION" in os.environ:
+        sys_type = "Android"
+    else:
+        sys_machine = arch_map.get(sys_machine, sys_machine)
     try:
         url = f"{mirror_src}/https://raw.githubusercontent.com/ToolDelta-Basic/ToolDelta/main/require_files.json"
         resp = requests.get(url, timeout=5)

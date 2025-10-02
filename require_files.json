@@ -30,6 +30,9 @@
         ],
         "Linux:arm64": [
             "FateArk_linux_arm64"
+        ],
+        "Android:aarch64": [
+            "FateArk_android_aarch64"
         ]
     }
 }
