@@ -38,7 +38,9 @@ ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化�
 
 ## 友情链接
 - [ToolDelta Wiki 用户指南](https://wiki.tooldelta.top/)
-- [ToolDelta 社区交流群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ywf-Y9Sb7G3McLAN7TveI-qh-g1FEtLB&authKey=C0ZLK09UWRzWv9dpReVnZljSnZ15crGpNpdT5O%2BX%2B%2BQvZ%2Bsm2BWfN8qqdJ5OMnTq&noverify=0&group_code=1030755163)
+- [ToolDelta 官方技术交流群](https://qm.qq.com/q/3JtUTHzZwY) 准入等级为 QQ 16 级（一个太阳）
+- [ToolDelta 第三方社区交流群](https://qm.qq.com/q/6J79yelYNq) 无准入门槛
+
 
 
 
