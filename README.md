@@ -5,24 +5,24 @@
   <img src="https://img.shields.io/github/stars/ToolDelta/ToolDelta.svg?style=falt" alt="Stars">
 </p>
 
-🍓ToolDelta🍓 是**为《我的世界：中国版》手机端租赁服**制作的、基于机器人的插件加载器。
+**ToolDelta** 是**为《我的世界：中国版》手机端租赁服**制作的、基于机器人的插件加载器。
 
-不同于其他类型的租赁服插件加载器，ToolDelta 可以运行在**多种游戏交互启动器核心**上， 包括但不限于：
+ToolDelta 可以运行在**多种游戏交互启动器核心**上， 包括但不限于：
    - ~~FastBuilder~~
    - NeOmega接入点
    - NeOmega启动器
-   - Eulogist（赞颂者）
-   - FateArk接入点
-   - LanGame本地联机接入点
+   - Eulogist赞颂者
+   - FateArk接入点  （目前公开可用）
+   - LanGame本地联机接入点 （目前公开可用）
 
 ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化租赁服的流畅度。
 
 
 ## 目录
 - [目录](#目录)
+- [相关网站和交流群](#相关网站和交流群)
 - [插件市场](#插件市场)
 - [注意事项](#注意事项)
-- [友情链接](#友情链接)
 - [运行和配置](#运行和配置)
 
 
@@ -36,8 +36,9 @@ ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化�
 - 源码运行时，ToolDelta 仅能运行在 Python 3.10+ 版本上
 
 
-## 友情链接
-- [ToolDelta Wiki 用户指南](https://wiki.tooldelta.top/)
+## 相关网站和交流群
+- [ToolDelta 官站](https://tooldelta.top)
+- [ToolDelta 百科及用户指南](https://wiki.tooldelta.top)
 - [ToolDelta 官方技术交流群](https://qm.qq.com/q/3JtUTHzZwY) 准入等级为 QQ 16 级（一个太阳）
 - [ToolDelta 第三方社区交流群](https://qm.qq.com/q/6J79yelYNq) 无准入门槛
 
