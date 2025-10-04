@@ -15,7 +15,7 @@ from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts, urlmethod
 from ..types import UnreadyPlayer, Abilities
 from .tangame_libs import core_conn as lamgame_conn
-from .tangame_libs import utils as langame_utils
+from .tangame_libs import utils as tangame_utils
 from .standard_launcher import StandardFrame
 
 
@@ -33,7 +33,7 @@ class FrameTanGameAccessPoint(StandardFrame):
             auth_server_url (str): 验证服务器地址
         """
         super().__init__()
-        self.conn = lamgame_conn.LanGame()
+        self.conn = lamgame_conn.TanGame()
         self.need_listen_packets: set[int] = {9, 63, 79}
         self._launch_listeners: list[Callable[[], None]]
         self.exit_event = threading.Event()
@@ -57,7 +57,7 @@ class FrameTanGameAccessPoint(StandardFrame):
         free_port = urlmethod.get_free_port(24010)
         self.openat_port = free_port
         fmts.print_inf(f"正在从 {free_port} 端口启动本地联机接入点...")
-        self.start_langame_acp_proc(free_port)
+        self.start_tangame_acp_proc(free_port)
         self._start_proc_message_show_thread()
         self._start_proc_stderr_show_thread()
         self.conn.set_server_packet_listener(
@@ -69,12 +69,12 @@ class FrameTanGameAccessPoint(StandardFrame):
         self._exec_launched_listen_cbs()
         self.conn.exit_event.wait()
         self.update_status(SysStatus.NORMAL_EXIT)
-        return SystemExit("NEMCLanGame 和 ToolDelta 断开连接")
+        return SystemExit("NEMCTanGame 和 ToolDelta 断开连接")
 
-    def start_langame_acp_proc(self, port: int):
-        path = langame_utils.get_bin_path()
+    def start_tangame_acp_proc(self, port: int):
+        path = tangame_utils.get_bin_path()
         if not path.is_file():
-            fmts.print_err(f"NEMCLanGame 接入点不存在: {path!s}")
+            fmts.print_err(f"NEMCTanGame 接入点不存在: {path!s}")
             raise SystemExit
         if not path.name.endswith(".exe"):
             # Maybe is linux and so on
@@ -99,7 +99,7 @@ class FrameTanGameAccessPoint(StandardFrame):
         )
 
     @utils.thread_func(
-        "NEMCLanGame 进程输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
+        "NEMCTanGame 进程输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
     def _start_proc_message_show_thread(self):
         assert self.proc.stdout
@@ -115,14 +115,14 @@ class FrameTanGameAccessPoint(StandardFrame):
                 )
                 self.ws_service_opened = True
             fmts.print_inf(msg)
-        fmts.print_inf("NEMCLanGame 进程已退出")
+        fmts.print_inf("NEMCTanGame 进程已退出")
 
     @utils.thread_func(
-        "NEMCLanGame 报错输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
+        "NEMCTanGame 报错输出线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
     def _start_proc_stderr_show_thread(self):
         if self.proc.stderr is None:
-            fmts.print_war("NEMCLanGame 错误输出通道不可用")
+            fmts.print_war("NEMCTanGame 错误输出通道不可用")
             return
         while True:
             msg = self.proc.stderr.readline().decode("utf-8")
