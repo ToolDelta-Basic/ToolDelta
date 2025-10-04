@@ -10,16 +10,16 @@ from collections.abc import Callable
 
 from ... import utils
 from ...constants import SysStatus
-from ...internal.types import Packet_CommandOutput
+from ..types import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts, urlmethod
 from ..types import UnreadyPlayer, Abilities
-from .langame_libs import core_conn as lamgame_conn
-from .langame_libs import utils as langame_utils
+from .tangame_libs import core_conn as lamgame_conn
+from .tangame_libs import utils as langame_utils
 from .standard_launcher import StandardFrame
 
 
-class FrameLanGameAccessPoint(StandardFrame):
+class FrameTanGameAccessPoint(StandardFrame):
     # 启动器类型
     launch_type = "LamGameACP"
 

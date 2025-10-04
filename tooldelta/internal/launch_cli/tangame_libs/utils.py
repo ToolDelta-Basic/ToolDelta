@@ -15,11 +15,11 @@ def get_bin_path():
 
     # Mapping system types to library file names
     if sys_type == "Windows":
-        exe_fn = f"NEMCLanGame_windows_{sys_machine}.exe"
+        exe_fn = f"NEMCTanGame_windows_{sys_machine}.exe"
     elif "TERMUX_VERSION" in os.environ:
-        exe_fn = "NEMCLanGame_linux_arm64"
+        exe_fn = "NEMCTanGame_linux_arm64"
     elif sys_type == "Linux":
-        exe_fn = f"NEMCLanGame_linux_{sys_machine}"
+        exe_fn = f"NEMCTanGame_linux_{sys_machine}"
     else:
         fmts.print_err(f"暂不支持的操作系统: {sys_machine}")
         raise SystemExit

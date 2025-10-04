@@ -12,7 +12,7 @@ from .launch_cli import (
     FrameEulogistLauncher,
     FrameFateArk,
     FrameFateArkIndirect,
-    FrameLanGameAccessPoint,
+    FrameTanGameAccessPoint,
     LAUNCHERS,
     ACCESS_POINT_LAUNCHERS,
 )
@@ -35,7 +35,7 @@ LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
     ("§7Eulogist 框架 (赞颂者和ToolDelta并行使用)", FrameEulogistLauncher),
     ("FateArk 框架 §a[推荐]", FrameFateArk),
     ("FateArk 远程框架", FrameFateArkIndirect),
-    ("NEMCLanGame 框架", FrameLanGameAccessPoint),
+    ("NEMCTanGame 框架", FrameTanGameAccessPoint),
 ]
 
 
@@ -182,20 +182,20 @@ class ConfigLoader:
                         f"ToolDelta 基本配置-FateArk 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
-        elif launcher_type is FrameLanGameAccessPoint:
-            LAUNCHER_CONFIG_KEY = "NEMCLanGame接入点启动模式"
+        elif launcher_type is FrameTanGameAccessPoint:
+            LAUNCHER_CONFIG_KEY = "NEMCTanGame接入点启动模式"
             launch_data = cfgs.get(
-                LAUNCHER_CONFIG_KEY, tooldelta_cfg.LAUNCHER_NEMCLANGAME_DEFAULT
+                LAUNCHER_CONFIG_KEY, tooldelta_cfg.LAUNCHER_NEMCTANGAME_DEFAULT
             )
             try:
-                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEMCLANGAME_STD, launch_data)
+                cfg.check_auto(tooldelta_cfg.LAUNCHER_NEMCTANGAME_STD, launch_data)
             except cfg.ConfigError as err:
                 r = self.upgrade_cfg()
                 if r:
                     fmts.print_war("配置文件未升级，已自动升级，请重启 ToolDelta")
                 else:
                     fmts.print_err(
-                        f"ToolDelta 基本配置-NEMCLanGame 启动配置有误，需要更正：{err}"
+                        f"ToolDelta 基本配置-NEMCTanGame 启动配置有误，需要更正：{err}"
                     )
                 raise SystemExit from err
         else:

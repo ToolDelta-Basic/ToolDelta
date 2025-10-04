@@ -24,12 +24,8 @@ LAUNCHER_NEOMEGA_DEFAULT: dict = {
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
-LAUNCHER_NEOMEGARM_STD: dict = {
-    "远程连接地址": str
-}
-LAUNCHER_NEOMEGARM_DEFAULT: dict = {
-    "远程连接地址": "tcp://127.0.0.1:24020"
-}
+LAUNCHER_NEOMEGARM_STD: dict = {"远程连接地址": str}
+LAUNCHER_NEOMEGARM_DEFAULT: dict = {"远程连接地址": "tcp://127.0.0.1:24020"}
 LAUNCHER_NEOMG2TD_STD: dict = {
     "服务器号": int,
     "密码": str,
@@ -62,12 +58,12 @@ LAUNCHER_FATEARK_INDIRECT_DEFAULT: dict = {
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",
 }
-LAUNCHER_NEMCLANGAME_STD: dict = {
+LAUNCHER_NEMCTANGAME_STD: dict = {
     "房间号": int,
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
-LAUNCHER_NEMCLANGAME_DEFAULT: dict = {
+LAUNCHER_NEMCTANGAME_DEFAULT: dict = {
     "房间号": 0,
     "密码": "",
     "验证服务器地址(更换时记得更改fbtoken)": "",

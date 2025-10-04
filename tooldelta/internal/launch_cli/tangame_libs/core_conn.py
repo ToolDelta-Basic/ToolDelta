@@ -44,7 +44,7 @@ class PlayerUQ:
     runtimeID: int | None = None
 
 
-class LanGame:
+class TanGame:
     """本地联机启动器核心"""
 
     connected = False
@@ -76,8 +76,9 @@ class LanGame:
     def set_client_packet_listener(
         self,
         client_dict_packet_handler: Callable[[PacketIDS, dict], None] | None,
-        client_bytes_packet_handler: Callable[[PacketIDS, BaseBytesPacket], None]
-        | None,
+        client_bytes_packet_handler: (
+            Callable[[PacketIDS, BaseBytesPacket], None] | None
+        ),
     ):
         self.client_dict_packet_handler = client_dict_packet_handler
         self.client_bytes_packet_handler = client_bytes_packet_handler
@@ -104,7 +105,7 @@ class LanGame:
         self.connected = True
         self.on_wait()
 
-    @utils.thread_func("等待LanGame连接初始化")
+    @utils.thread_func("等待TanGame连接初始化")
     def on_wait(self):
         # 需要一些时间
         fmts.print_inf("正在接收机器人基本信息...")
@@ -118,12 +119,12 @@ class LanGame:
         try:
             self.handler(Message(msgdata["type"], msgdata["content"]))
         except Exception:
-            fmts.print_err("LanGame发送的消息解析失败")
+            fmts.print_err("TanGame发送的消息解析失败")
             fmts.print_err(traceback.format_exc())
 
     def on_clos(self, ws: WebSocket, _, _2):
         self.connected = False
-        fmts.print_inf("LanGame和 ToolDelta 断开连接")
+        fmts.print_inf("TanGame和 ToolDelta 断开连接")
         self.exit_event.set()
 
     def set_listen_server_packets(self, pkIDs: list[int]):
@@ -215,7 +216,7 @@ class LanGame:
             {"CommandLine": cmd, "SuppressOutput": False},
         )
 
-    @utils.thread_func("LanGame消息处理", utils.ToolDeltaThread.SYSTEM)
+    @utils.thread_func("TanGame消息处理", utils.ToolDeltaThread.SYSTEM)
     def handler(self, msg: Message) -> None:
         try:
             match msg.type:
@@ -259,7 +260,7 @@ class LanGame:
                         pkID = msg.content["ID"]
                         packet = BYTES_PACKET_ID_POOL.get(pkID)
                         if packet is None:
-                            raise ValueError(f"LanGame: 未知自定义字节数据包 {pkID}")
+                            raise ValueError(f"TanGame: 未知自定义字节数据包 {pkID}")
                         pk = packet()
                         pk.decode(msg.content["Content"])
                         self.server_bytes_packet_handler(pkID, pk)
@@ -268,7 +269,7 @@ class LanGame:
                 case _:
                     fmts.print_war(f"未知数据传输类型: {msg.type}")
         except Exception as err:
-            fmts.print_err(f"处理LanGame通信出错: {err}")
+            fmts.print_err(f"处理TanGame通信出错: {err}")
             fmts.print_err(traceback.format_exc())
 
     def send(self, msg: Message):
