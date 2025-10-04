@@ -169,4 +169,4 @@ class StandardFrame(metaclass=ABCMeta):
         Raises:
             NotImplementedError: 未实现此方法
         """
-        raise NotImplementedError
+        raise NotImplementedError("此启动器 / 接入点并未支持 BlobHashHolder (您可以理解为 世界数据缓存) 功能。")
