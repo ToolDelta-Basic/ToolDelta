@@ -2,6 +2,7 @@ import time
 import json
 import os
 import copy
+from pathlib import Path
 from typing import Any, TypeVar
 from collections.abc import Callable
 from threading import Lock, RLock
@@ -13,13 +14,19 @@ PathLike = str | os.PathLike[str]
 VT = TypeVar("VT")
 
 tempjson_rw_lock = Lock()
-tempjson_paths: dict[PathLike, "_jsonfile_status"] = {}
+tempjson_paths: dict[Path, "_jsonfile_status"] = {}
+
+def validate_path(path: PathLike):
+    if isinstance(path, Path):
+        return path
+    else:
+        return Path(path)
 
 
 class _jsonfile_status:
     def __init__(
         self,
-        path: PathLike,
+        path: Path,
         need_file_exists: bool,
         default: Any = None,
         unload_delay: float | None = None,
@@ -60,12 +67,14 @@ class _jsonfile_status:
     def write(self, content):
         with self.lock:
             self.flush_time()
-            self.is_changed = content != self.content
+            if not self.is_changed:
+                self.is_changed = content != self.content
             self.content = content
 
     def save(self):
         with self.lock:
             if self.is_changed:
+                print(f"write {self.path}")
                 safe_write(self.path, self.content)
 
 
@@ -91,6 +100,7 @@ def load_from_path(
     Raises:
         err: 文件不存在时
     """
+    path = validate_path(path)
     if j := tempjson_paths.get(path):
         return j
     j = tempjson_paths[path] = _jsonfile_status(
@@ -110,6 +120,7 @@ def unload_to_path(path: PathLike) -> bool:
     Returns:
         bool: 存盘是否成功
     """
+    path = validate_path(path)
     if (jsonf := tempjson_paths.get(path)) is not None:
         jsonf.save()
         del tempjson_paths[path]
@@ -129,6 +140,7 @@ def read(path: PathLike, deepcopy: bool = True):
     Returns:
         list[Any] | dict[Any, Any] | Any: 该虚拟路径的 JSON
     """
+    path = validate_path(path)
     if jsonf := tempjson_paths.get(path):
         return jsonf.read(deepcopy=deepcopy)
     raise ValueError(f"json 路径未初始化，不能进行读取和写入操作: {path}")
@@ -142,6 +154,7 @@ def get(path: PathLike) -> Any:
     Args:
         path (str): 文件的虚拟路径
     """
+    path = validate_path(path)
     if jsonf := tempjson_paths.get(path):
         return jsonf.read(deepcopy=False)
     raise ValueError(f"json 路径未初始化, 不能进行读取和写入操作: {path}")
@@ -155,6 +168,7 @@ def write(path: PathLike, obj: Any) -> None:
         path (str): 文件的虚拟路径
         obj (Any): 任何合法的 JSON 类型 例如 dict/list/str/bool/int/float
     """
+    path = validate_path(path)
     if jsonf := tempjson_paths.get(path):
         jsonf.write(obj)
     else:
@@ -206,7 +220,8 @@ def load_and_write(
 
 def cancel_change(path: str):
     "取消缓存 json 所做的更改，非必要情况请勿调用，你不知道什么时候会自动保存所做更改"
-    tempjson_paths[path].is_changed = False
+    _path = validate_path(path)
+    tempjson_paths[_path].is_changed = False
 
 
 def flush(path: PathLike | None = None):
@@ -217,6 +232,7 @@ def flush(path: PathLike | None = None):
         path (str | None, optional): 文件虚拟路径, 默认全部存盘
     """
     if path:
+        path = validate_path(path)
         if tmpjson := tempjson_paths.get(path):
             tmpjson.save()
         else:
