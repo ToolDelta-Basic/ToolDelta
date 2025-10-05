@@ -369,7 +369,6 @@ def test_site_latency(urls: tuple[str, ...], timeout: float) -> list[tuple[str, 
             # 可能是 Timeout
             executor.shutdown(wait=False, cancel_futures=True)
             pass
-    print(tmp_speed)
     return sorted(tmp_speed.items(), key=lambda x: x[1])
 
 
