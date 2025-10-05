@@ -206,7 +206,7 @@ def download_progress_bar(
     b = f"{progressBar} {pretty_kb(current_bytes)}B / {pretty_kb(total_bytes)}B"
     if speed != 0:
         b += f" ({pretty_kb(speed)}B/s)    "
-    fmts.print_with_info(b, "§a 下载 ", need_log=False, end="\r")
+    print(b, end="\r", flush=True)
 
 
 KB = 1024
