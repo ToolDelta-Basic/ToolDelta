@@ -74,7 +74,6 @@ class _jsonfile_status:
     def save(self):
         with self.lock:
             if self.is_changed:
-                print(f"write {self.path}")
                 safe_write(self.path, self.content)
 
 
