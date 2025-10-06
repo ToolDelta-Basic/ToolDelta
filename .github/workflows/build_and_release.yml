@@ -38,7 +38,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           poetry add pyinstaller
-          poetry run pyinstaller --disable-windows-anti-tracing --strip -F -i logo.ico -n ${{ matrix.artifact_name }} main.py
+          poetry run pyinstaller --strip -F -i logo.ico -n ${{ matrix.artifact_name }} main.py
           mv dist/${{ matrix.artifact_name }} .
 
       - name: Build for Linux x86_64
