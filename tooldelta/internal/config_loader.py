@@ -38,7 +38,7 @@ LAUNCHERS_SHOWN: list[tuple[str, type[LAUNCHERS]]] = [
     ("NEMCTanGame 框架", FrameTanGameAccessPoint),
 ]
 
-
+launch_args = sys_args.sys_args_to_dict()
 class ConfigLoader:
     def __init__(self, frame: "ToolDelta"):
         self.frame = frame
@@ -49,7 +49,7 @@ class ConfigLoader:
         try:
             # 读取配置文件
             cfgs = cfg.get_cfg("ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD)
-            self.launchMode = cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
+            self.launchMode = int(launch_args.get("launchMode") or "0") or cfgs["启动器启动模式(请不要手动更改此项, 改为0可重置)"]
             self.plugin_market_url = cfgs["插件市场源"]
             fmts.logger.switch_logger(cfgs["是否记录日志"])
             if self.launchMode != 0 and self.launchMode not in range(
@@ -202,8 +202,8 @@ class ConfigLoader:
             raise ValueError(f"LAUNCHER error: {launcher_type.__name__}")
 
         if launcher_type in ACCESS_POINT_LAUNCHERS:
-            if "服务器号" in launch_data.keys():
-                serverNumber = launch_data["服务器号"]
+            if "服务器号" in launch_data.keys() or "server" in launch_args:
+                serverNumber = int(launch_args.get("server") or "0") or launch_data["服务器号"]
                 is_server = True
             elif "房间号" in launch_data.keys():
                 serverNumber = launch_data["房间号"]
@@ -211,7 +211,7 @@ class ConfigLoader:
             else:
                 raise ValueError("Need serverNumber or roomID")
             serverPasswd: str = launch_data["密码"]
-            auth_server = launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
+            auth_server = launch_args.get("auth_server") or launch_data.get("验证服务器地址(更换时记得更改fbtoken)", "")
             if serverNumber == 0:
                 while 1:
                     try:
@@ -278,7 +278,7 @@ class ConfigLoader:
                         fmts.print_err("输入不合法，或者是不在范围内，请重新输入")
                 cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
             # 读取 token
-            if not (fbtoken := sys_args.sys_args_to_dict().get("user-token")):
+            if not (fbtoken := launch_args.get("T") or sys_args.sys_args_to_dict().get("user-token")):
                 if not os.path.isfile("fbtoken"):
                     fmts.print_inf(
                         "请选择登录方法:\n 1 - 使用账号密码获取 fbtoken\n 2 - 手动输入 fbtoken\r"
