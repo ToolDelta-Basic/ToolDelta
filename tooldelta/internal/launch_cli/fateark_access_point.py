@@ -205,16 +205,6 @@ class FrameFateArk(StandardFrame):
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
         self.check_avaliable()
         if waitForResp:
             ud = fateark_core.sendcmd_and_get_uuid(cmd)
@@ -240,12 +230,6 @@ class FrameFateArk(StandardFrame):
             return Packet_CommandOutput(res)
 
     def sendwocmd(self, cmd: str):
-        """以控制台身份发送命令
-
-        Args:
-            cmd (str): 命令
-
-        """
         self.check_avaliable()
         fateark_core.sendwocmd(cmd)
 

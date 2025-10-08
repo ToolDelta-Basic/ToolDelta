@@ -191,19 +191,6 @@ class FrameTanGameAccessPoint(StandardFrame):
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Raises:
-            TimeoutError: 获取命令返回超时
-
-        Returns:
-            Packet_CommandOutput: 返回命令结果
-        """
         if not waitForResp:
             self.conn.sendcmd(cmd)
         else:
@@ -215,19 +202,6 @@ class FrameTanGameAccessPoint(StandardFrame):
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以 ws 身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Raises:
-            TimeoutError: 获取命令返回超时
-
-        Returns:
-            Packet_CommandOutput: 返回命令结果
-        """
         if not waitForResp:
             self.conn.sendwscmd(cmd)
         else:
@@ -237,12 +211,6 @@ class FrameTanGameAccessPoint(StandardFrame):
                 raise TimeoutError("获取命令返回超时")
 
     def sendwocmd(self, cmd: str) -> None:
-        """以 wo 身份发送命令
-
-        Args:
-            cmd (str): 命令
-
-        """
         self.conn.sendwocmd(cmd)
 
     def sendPacket(self, pckID: int, pk: dict | BaseBytesPacket) -> None:

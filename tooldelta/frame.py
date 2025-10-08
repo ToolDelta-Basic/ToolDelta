@@ -247,9 +247,6 @@ class GameCtrl:
 
     def hook_launcher(self, launcher: "LAUNCHERS"):
         self.launcher = launcher
-        self.sendcmd = launcher.sendcmd
-        self.sendwscmd = launcher.sendwscmd
-        self.sendwocmd = launcher.sendwocmd
         self.sendPacket = launcher.sendPacket
         # TODO: pretty this code because it is not a good interface
         if hasattr(launcher, "blobHashHolder"):
@@ -359,9 +356,22 @@ class GameCtrl:
             f"此启动器 ({self.launcher.__class__.__name__}) 框架无法产生机器人名"
         )
 
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """
+        以机器人玩家身份发送指令。
+
+        Args:
+            cmd (str): Minecraft 命令
+            waitForResp (bool, optional): 是否等待返回。默认为 False
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+        """
+        return self.launcher.sendcmd(cmd, waitForResp, timeout)
+
     def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
         """
-        发送普通指令并获取返回。
+        以机器人玩家身份发送指令并获取返回。
 
         Args:
             cmd (str): Minecraft 指令
@@ -372,6 +382,19 @@ class GameCtrl:
         """
         resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
         return resp
+
+    def sendwscmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """
+        以 WebSocket 身份发送指令。
+
+        Args:
+            cmd (str): Minecraft 命令
+            waitForResp (bool, optional): 是否等待返回。默认为 False
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+        """
+        return self.launcher.sendwscmd(cmd, waitForResp, timeout)
 
     def sendwscmd_with_resp(
         self, cmd: str, timeout: float = 30
@@ -388,6 +411,15 @@ class GameCtrl:
         """
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
+
+    def sendwocmd(self, cmd: str) -> None:
+        """
+        发送 SettingsCommand 指令。
+
+        Args:
+            cmd (str): Minecraft 命令
+        """
+        self.launcher.sendwocmd(cmd)
 
     def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息

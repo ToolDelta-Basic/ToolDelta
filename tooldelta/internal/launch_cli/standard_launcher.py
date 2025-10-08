@@ -101,15 +101,13 @@ class StandardFrame(metaclass=ABCMeta):
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以玩家身份发送命令
+        """
+        以玩家身份发送命令
 
         Args:
             cmd (str): 命令
             waitForResp (bool, optional): 是否等待结果
             timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
 
         Returns:
             Optional[Packet_CommandOutput]: 返回命令结果
@@ -120,15 +118,13 @@ class StandardFrame(metaclass=ABCMeta):
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以 ws 身份发送命令
+        """
+        以 WebSocket 身份发送命令
 
         Args:
             cmd (str): 命令
             waitForResp (bool, optional): 是否等待结果
             timeout (int | float, optional): 超时时间
-
-        Raises:
-            NotImplementedError: 未实现此方法
 
         Returns:
             Optional[Packet_CommandOutput]: 返回命令结果
@@ -137,13 +133,8 @@ class StandardFrame(metaclass=ABCMeta):
 
     @abstractmethod
     def sendwocmd(self, cmd: str) -> None:
-        """以 wo 身份发送命令
-
-        Args:
-            cmd (str): 命令
-
-        Raises:
-            NotImplementedError: 未实现此方法
+        """
+        发送 SettingsCommand 命令
         """
         raise NotImplementedError
 

@@ -317,16 +317,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
     def sendcmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
         self.check_avaliable()
         if waitForResp:
             res = self.omega.send_player_command_need_response(cmd, timeout)
@@ -339,16 +329,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
-        """以玩家身份发送命令
-
-        Args:
-            cmd (str): 命令
-            waitForResp (bool, optional): 是否等待结果
-            timeout (int | float, optional): 超时时间
-
-        Returns:
-            Optional[Packet_CommandOutput]: 返回命令结果
-        """
         self.check_avaliable()
         if waitForResp:
             res = self.omega.send_websocket_command_need_response(cmd, timeout)
@@ -359,14 +339,6 @@ class FrameNeOmgAccessPoint(StandardFrame):
         return None
 
     def sendwocmd(self, cmd: str) -> None:
-        """以 wo 身份发送命令
-
-        Args:
-            cmd (str): 命令
-
-        Raises:
-            NotImplementedError: 未实现此方法
-        """
         self.check_avaliable()
         self.omega.send_settings_command(cmd)
 
