@@ -257,7 +257,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
                     i.can_operator_commands,
                     i.can_teleport,
                     0,  # TODO: player_permission 现在固定为 0
-                    3 if i.op else 1,  # TODO: 除非玩家为 OP, 否则命令等级恒为 1
+                    3 if i.op else 1,  # 除非玩家为 OP, 否则命令等级恒为 1
                 )
                 players_data[i.name] = UnreadyPlayer(
                     i.uuid,
