@@ -9,7 +9,16 @@ from ..packet_handler import PacketHandler
 from ..types import UnreadyPlayer
 from .neo_libs.blob_hash.blob_hash_holder import BlobHashHolder
 
-
+# 一个可用的启动器框架至少应该提供以下接口:
+# - 发送数据包, 即 sendPacket, 发送 json 及其他兼容类型的数据包, 或者数据包的 bytes
+# - 接收数据包, 接收 json 及其他兼容类型的数据包, 或者数据包的 bytes
+# 如果允许的话, 它还需要提供以下接口:
+# - 玩家数据存储, 存储玩家名对应的玩家数据, 如 XUID, UniqueID
+#   - 当无法提供时, ToolDelta 可能需要以分别 /querytarget 的方式获取玩家的 XUID
+# - 机器人名称
+#   - 当无法提供时, ToolDelta 可能需要以 getTarget("@s") 获得机器人本身的名称
+# - 可以返回请求的 UUID 的发送命令的函数
+#   - 当无法提供时, ToolDelta 可自行实现 sendcmd 等方法, 将发送命令请求转换为发送数据包
 class StandardFrame(metaclass=ABCMeta):
     """
     提供了标准的启动器框架，作为 ToolDelta 和游戏交互的接口
@@ -17,7 +26,7 @@ class StandardFrame(metaclass=ABCMeta):
     """
 
     # 启动器类型
-    launch_type = "Original"
+    launch_type = "Interface"
 
     def __init__(self) -> None:
         """实例化启动器框架"""
