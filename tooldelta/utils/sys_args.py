@@ -51,7 +51,9 @@ def print_help():
     print("    -no-download-libs  禁用自动更新依赖库")
     print("    -no-download-neomega 在NeOmega混合启动模式下, 禁用自动更新NeOmega启动器")
     print("    -l <启动模式>  按照特定的启动模式，跳过启动页面")
-    print("    -user-token <token>  使用传入的而非本地的token来登录验证服务器")
+    print("    -server <号码> 强制指定进入的租赁服/房间号")
+    print("    -T <token>  使用传入的而非本地的token来登录验证服务器")
+    print("    --auth_server <url> 强制指定验证服务器地址")
 
 
 def parse_addopt(opt_str: str):
