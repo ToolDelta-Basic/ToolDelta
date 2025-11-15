@@ -43,7 +43,7 @@ def client_title() -> None:
             time.sleep(0.5)
             start_tool_delta()
             return
-        while 1:
+        while True:
             if launch_section:
                 r = launch_section
             else:

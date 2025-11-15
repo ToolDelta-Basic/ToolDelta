@@ -84,7 +84,7 @@ class ConfigLoader:
             fmts.print_inf("请选择启动器启动模式 (之后可在 ToolDelta 启动配置更改):")
             for i, (launcher_name, _) in enumerate(LAUNCHERS_SHOWN):
                 fmts.print_inf(f" {i + 1} - {launcher_name}")
-            while 1:
+            while True:
                 try:
                     ch = int(input(fmts.fmt_info("请选择：", "§f 输入 ")))
                     if ch not in range(1, len(LAUNCHERS_SHOWN) + 1):
@@ -273,7 +273,7 @@ class ConfigLoader:
                 fmts.print_inf(
                     "§cNOTE: 使用的机器人账号是在哪里获取的就选择哪一个验证服务器，不能混用"
                 )
-                while 1:
+                while True:
                     try:
                         ch = int(input(fmts.fmt_info("请选择: ", "§f 输入 ")))
                         if ch not in range(1, len(auth_servers) + 1):
@@ -382,7 +382,7 @@ class ConfigLoader:
                 f"配置文件损坏：启动模式错误：{old_cfg['启动器启动模式(请不要手动更改此项, 改为0可重置)']}"
             )
             return
-        while 1:
+        while True:
             md = (
                 "NeOmega 框架 (NeOmega 模式，租赁服适应性强，推荐)",
                 "NeOmega 框架 (NeOmega 连接模式，需要先启动对应的 neOmega 接入点)",
@@ -407,7 +407,7 @@ class ConfigLoader:
                     )
                     for i, (launcher_name, _) in enumerate(LAUNCHERS_SHOWN):
                         fmts.print_inf(f" {i + 1} - {launcher_name}")
-                    while 1:
+                    while True:
                         try:
                             ch = int(input(fmts.clean_fmt("请选择：")))
                             if ch not in range(1, len(LAUNCHERS_SHOWN) + 1):

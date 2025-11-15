@@ -127,7 +127,7 @@ class FrameFateArk(StandardFrame):
         if self.proc.stderr is None:
             fmts.print_war("FateArk 错误输出通道不可用")
             return
-        while 1:
+        while True:
             msg = self.proc.stderr.readline().decode("utf-8")
             if msg == "":
                 break
@@ -145,7 +145,7 @@ class FrameFateArk(StandardFrame):
     )
     def _start_proc_message_show_thread(self):
         assert self.proc.stdout
-        while 1:
+        while True:
             msg = self.proc.stdout.readline().decode("utf-8").strip()
             if msg == "":
                 break

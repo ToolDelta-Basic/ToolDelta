@@ -88,7 +88,7 @@ class ConsoleCmdManager:
             counter = 0
             invalid = False
             origin_trigger = trigger
-            while 1:
+            while True:
                 if not (
                     trigger.startswith(exists_trigger)
                     or exists_trigger.startswith(trigger)
@@ -107,7 +107,7 @@ class ConsoleCmdManager:
     @thread_func("控制台执行命令", ToolDeltaThread.SYSTEM)
     def command_readline_proc(self):
         fmts.print_suc("ToolHack Terminal 进程已注入, 允许开启标准输入")
-        while 1:
+        while True:
             try:
                 try:
                     rsp = input().encode(errors="ignore").decode("utf-8")

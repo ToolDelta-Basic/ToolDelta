@@ -158,7 +158,7 @@ class ToolDelta:
         如果需要在插件内调用, 请为执行这个方法的函数分配系统级的 ToolDeltaThread。
         """
         self.plugin_group.pre_reload()
-        while 1:
+        while True:
             try:
                 fmts.print_inf("重载: 正在让插件自行退出..")
                 fmts.print_inf("重载: 正在保存数据缓存文件..")

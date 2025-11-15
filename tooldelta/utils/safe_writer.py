@@ -14,7 +14,7 @@ def safe_write(filepath: PathLike, obj: Any, indent=2):
         obj (Any): 写入的 json 待序列化对象
     """
     retry_times = 0
-    while 1:
+    while True:
         try:
             bak_name = str(filepath) + ".bak"
             content = json.dumps(obj, indent=indent, ensure_ascii=False)

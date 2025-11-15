@@ -35,7 +35,7 @@ class PluginManager:
     def manage_plugins(self) -> None:
         "插件管理界面"
         clear_screen()
-        while 1:
+        while True:
             plugins = self.list_plugins_list()
             fmts.clean_print("§f输入§bu§f更新本地所有插件, §f输入§cq§f退出")
             r = input(fmts.clean_fmt("§f输入插件关键词进行选择\n(空格可分隔关键词):"))

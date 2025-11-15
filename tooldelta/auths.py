@@ -16,7 +16,7 @@ def fblike_sign_login(url: str, api_urls_fmt: list[str] = FBLIKE_APIS) -> str:
         requests.exceptions.RequestException: 登录失败
     """
     login_api, new_api, main_api = (i % url for i in api_urls_fmt)
-    while 1:
+    while True:
         hash_obj = hashlib.sha256()
         username = input(fmts.fmt_info("请输入账号: ", "§6 账号 "))
         hash_obj.update(

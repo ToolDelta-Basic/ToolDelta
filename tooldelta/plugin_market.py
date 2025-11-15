@@ -91,7 +91,7 @@ class PluginMarket:
                 for i, j in market_datas["Packages"].items()
             ] + list(market_datas["MarketPlugins"].items())
 
-            while 1:
+            while True:
                 fmts.ansi_cls()
                 valid_show_list = self.search_by_rule(market_datas, show_list)
                 if valid_show_list is None:
@@ -106,7 +106,7 @@ class PluginMarket:
                 sum_pages = (total_indexes - 1) // CONTENT_LENGTH + 1
                 last_operation = ""
 
-                while 1:
+                while True:
                     self.display_plugins_and_packages(
                         market_datas,
                         plugin_ids_map,

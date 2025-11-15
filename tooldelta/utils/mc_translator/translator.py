@@ -61,7 +61,7 @@ def translate(key: str, args: list | None = None, translate_args=True) -> str:
 def split_color_and_key(key_with_color: str):
     char_idx = 0
     color_chars = ""
-    while 1:
+    while True:
         now_char = key_with_color[char_idx]
         if now_char == "§":
             color_chars += key_with_color[char_idx : char_idx + 2]
