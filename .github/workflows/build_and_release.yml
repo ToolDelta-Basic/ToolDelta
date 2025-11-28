@@ -37,14 +37,14 @@ jobs:
       - name: Build for Windows
         if: matrix.os == 'windows-latest'
         run: |
-          poetry add pyinstaller
+          poetry install
           poetry run pyinstaller --strip -F -i logo.ico -n ${{ matrix.artifact_name }} main.py
           mv dist/${{ matrix.artifact_name }} .
 
       - name: Build for Linux x86_64
         if: matrix.os == 'ubuntu-latest'
         run: |
-          poetry add pyinstaller
+          poetry install
           poetry run pyinstaller --strip -F -n ${{ matrix.artifact_name }} main.py
           mv dist/${{ matrix.artifact_name }} .
 
