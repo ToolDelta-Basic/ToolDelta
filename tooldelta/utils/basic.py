@@ -117,8 +117,11 @@ def remove_mc_color_code(string: str):
 
 def to_plain_name(name: str) -> str:
     """
-    去除 网易版 Minecraft 的名字中的颜色代码
-    可用于将 VIP 玩家名 转换为普通玩家名
+    移除玩家名字中的颜色代码和称号，
+    这意味着它将返回玩家的原始名称。
+
+    例如，若给定的字符串是 `§a<花语龙吟>PLAYER_NAME§r§f`，
+    则 to_plain_name 将会返回 `PLAYER_NAME`
 
     Args:
         name (str): 玩家名
@@ -128,22 +131,9 @@ def to_plain_name(name: str) -> str:
     """
     if "§" in name:
         name = remove_mc_color_code(name)
-    if name.count("<") > 1:
-        # <<VIP名><玩家名>> -> 玩家名
-        cached_str = ""
-        words = []
-        for char in name:
-            if char == "<":
-                cached_str = ""
-            elif char == ">":
-                words.append(cached_str)
-            else:
-                cached_str += char
-        return words[-1]
-    elif name.startswith("<") and name.endswith(">"):
-        # <玩家名> -> 玩家名
-        return name[1:-1]
-    return name
+    if ">" not in name:
+        return name
+    return name[name.index(">") + 1 :]
 
 
 def to_player_selector(playername: str) -> str:
@@ -242,9 +232,11 @@ def create_desperate_attr_class(class_name, attrs: list[Callable | DesperateFunc
         class_name,
         (DesperateFuncClass,),
         {
-            (f.__name__ if callable(f) and hasattr(f, "__name__") else type(f).__name__): (
-                staticmethod(f) if callable(f) else f
-            )
+            (
+                f.__name__
+                if callable(f) and hasattr(f, "__name__")
+                else type(f).__name__
+            ): (staticmethod(f) if callable(f) else f)
             for f in attrs
         },
     )
