@@ -143,6 +143,20 @@ class FrameEulogistLauncher(StandardFrame):
     def sendwocmd(self, cmd: str) -> None:
         self.eulogist.sendwocmd(cmd)
 
+    def sendaicmd(
+        self,
+        cmd: str,
+        my_runtimeid: int | None,
+        waitForResp: bool = False,
+        timeout: float = 30,
+    ) -> Packet_CommandOutput | None:
+        if not waitForResp:
+            self.eulogist.sendaicmd(cmd, my_runtimeid)
+        else:
+            self.eulogist.sendaicmd(cmd, my_runtimeid)
+            fmts.print_err("赞颂者 未实现 SendAiCmdWithResp 方法")
+            ...
+
     def sendPacket(self, pckID: int, pk: dict | BaseBytesPacket) -> None:
         """发送数据包
 

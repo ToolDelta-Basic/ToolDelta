@@ -6,6 +6,7 @@ import importlib
 from .... import constants
 from ....internal.types import UnreadyPlayer, Abilities
 from ....mc_bytes_packet.pool import is_bytes_packet
+from ....mc_bytes_packet.py_rpc import PYRPC_OP_SEND
 
 utils_pb2 = importlib.import_module(".proto.utils_pb2", package=__package__)
 reversaler_pb2 = importlib.import_module(".proto.reversaler_pb2", package=__package__)
@@ -192,6 +193,30 @@ def sendwocmd(cmd: str):
         constants.PacketIDS.SettingsCommand,
         {"CommandLine": cmd, "SuppressOutput": False},
     )
+
+def sendaicmd_and_get_uuid(cmd: str, my_runtimeid: int | None):
+    ud = str(uuid.uuid4())
+    sendPacket(
+        constants.PacketIDS.PyRpc,
+        {
+            "Value": [
+                "ModEventC2S",
+                [
+                    "Minecraft",
+                    "aiCommand",
+                    "ExecuteCommandEvent",
+                    {
+                        "playerId": str(my_runtimeid),
+                        "cmd": cmd,
+                        "uuid": ud,
+                    },
+                ],
+                None,
+            ],
+            "OperationType": PYRPC_OP_SEND,
+        },
+    )
+    return ud
 
 
 def get_online_player_uuids() -> list[str]:

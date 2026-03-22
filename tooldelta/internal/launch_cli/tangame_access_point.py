@@ -213,6 +213,20 @@ class FrameTanGameAccessPoint(StandardFrame):
     def sendwocmd(self, cmd: str) -> None:
         self.conn.sendwocmd(cmd)
 
+    def sendaicmd(
+        self,
+        cmd: str,
+        my_runtimeid: int | None,
+        waitForResp: bool = False,
+        timeout: float = 30,
+    ) -> Packet_CommandOutput | None:
+        if not waitForResp:
+            self.conn.sendaicmd(cmd, my_runtimeid)
+        else:
+            self.conn.sendaicmd(cmd, my_runtimeid)
+            fmts.print_err("TanGame接入点 未实现 SendAiCmdWithResp 方法")
+            ...
+
     def sendPacket(self, pckID: int, pk: dict | BaseBytesPacket) -> None:
         """发送数据包
 
