@@ -56,13 +56,17 @@ class FrameFateArk(StandardFrame):
                 fateark_core.ping()
                 break
             except grpc.RpcError as err:
-                fmts.print_war(f"FateArk 连接失败, 重试第 {con_retries+1} 次", end="\r")
+                fmts.print_war(
+                    f"FateArk 连接失败, 重试第 {con_retries + 1} 次", end="\r"
+                )
                 con_retries += 1
                 time.sleep(0.5)
                 if con_retries >= 20:
                     self.update_status(SysStatus.CRASHED_EXIT)
                     self._safe_exit()
-                    return SystemError(f"FateArk 与 ToolDelta 断开连接: {err.details()}")
+                    return SystemError(
+                        f"FateArk 与 ToolDelta 断开连接: {err.details()}"
+                    )
                 fateark_core.connect(f"localhost:{free_port}")
         fmts.print_suc("§9成功与 FateArk 建立神经网络连接")
         self._start_message_show_thread()
@@ -101,7 +105,9 @@ class FrameFateArk(StandardFrame):
             # Maybe is linux and so on
             os.system("chmod +x " + str(path))
         args = [str(path), "-p", str(port)]
-        if sec_auth_proxy_url := sys_args.sys_args_to_dict().get("secondary-auth-proxy"):
+        if sec_auth_proxy_url := sys_args.sys_args_to_dict().get(
+            "secondary-auth-proxy"
+        ):
             args.extend(["-s", sec_auth_proxy_url])
         self.proc = subprocess.Popen(
             args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -214,7 +220,9 @@ class FrameFateArk(StandardFrame):
             if res is None:
                 raise TimeoutError("指令超时", ud)
             return Packet_CommandOutput(res)
-        return None
+        else:
+            fateark_core.sendcmd_and_get_uuid(cmd)
+            return None
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
@@ -228,6 +236,9 @@ class FrameFateArk(StandardFrame):
             if res is None:
                 raise TimeoutError("指令超时", ud)
             return Packet_CommandOutput(res)
+        else:
+            fateark_core.sendwscmd_and_get_uuid(cmd)
+            return None
 
     def sendwocmd(self, cmd: str):
         self.check_avaliable()
