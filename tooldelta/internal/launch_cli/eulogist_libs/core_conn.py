@@ -14,6 +14,7 @@ from ....internal.types import Packet_CommandOutput
 from ....utils import fmts
 from ....mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ....mc_bytes_packet.pool import BYTES_PACKET_ID_POOL
+from ....mc_bytes_packet.py_rpc import PYRPC_OP_SEND
 
 
 class MessageType(str, enum.Enum):
@@ -256,6 +257,30 @@ class Eulogist:
             140,
             {"CommandLine": cmd, "SuppressOutput": False},
         )
+
+    def sendaicmd(self, cmd: str, my_runtimeid: int | None):
+        u = uuid.uuid4()
+        self.sendPacket(
+            constants.PacketIDS.PyRpc,
+            {
+                "Value": [
+                    "ModEventC2S",
+                    [
+                        "Minecraft",
+                        "aiCommand",
+                        "ExecuteCommandEvent",
+                        {
+                            "playerId": str(my_runtimeid),
+                            "cmd": cmd,
+                            "uuid": str(u),
+                        },
+                    ],
+                    None,
+                ],
+                "OperationType": PYRPC_OP_SEND,
+            },
+        )
+        return u
 
     @utils.thread_func("赞颂者消息处理", utils.ToolDeltaThread.SYSTEM)
     def handler(self, msg: Message) -> None:

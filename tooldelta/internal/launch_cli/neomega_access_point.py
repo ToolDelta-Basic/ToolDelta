@@ -4,12 +4,14 @@ import shlex
 import subprocess
 import threading
 import time
+import uuid
 
 from ...mc_bytes_packet.pool import bytes_packet_by_id
 from ... import utils
 from ...constants import SysStatus, PacketIDS, TOOLDELTA_BIN_PATH
 from ...internal.types import Packet_CommandOutput
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
+from ...mc_bytes_packet.py_rpc import PYRPC_OP_SEND
 from ...utils import fmts, urlmethod
 from ..types import UnreadyPlayer, Abilities
 from .standard_launcher import StandardFrame
@@ -239,6 +241,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
 
     def get_neomega_library(self):
         from .neo_libs.neo_conn import LIB as _Library
+
         return _Library
 
     def get_players_info(self):
@@ -342,6 +345,36 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.check_avaliable()
         self.omega.send_settings_command(cmd)
 
+    def sendaicmd(
+        self,
+        cmd: str,
+        my_runtimeid: int | None,
+        waitForResp: bool = False,
+        timeout: float = 30,
+    ) -> Packet_CommandOutput | None:
+        self.check_avaliable()
+        if waitForResp:
+            fmts.print_err("NeOmega接入点 未实现 SendAiCmdWithResp 方法")
+        pk = {
+            "Value": [
+                "ModEventC2S",
+                [
+                    "Minecraft",
+                    "aiCommand",
+                    "ExecuteCommandEvent",
+                    {
+                        "playerId": str(my_runtimeid),
+                        "cmd": cmd,
+                        "uuid": str(uuid.uuid4()),
+                    },
+                ],
+                None,
+            ],
+            "OperationType": PYRPC_OP_SEND,
+        }
+        self.omega.send_packet(PacketIDS.PyRpc, pk)
+        return None
+
     def sendPacket(self, pkID: int, pk: dict | bytes | BaseBytesPacket) -> None:
         """发送数据包
 
@@ -351,6 +384,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         """
         self.check_avaliable()
         self.omega.send_packet(pkID, pk)
+
     def blobHashHolder(self) -> BlobHashHolder:
         """blobHashHolder 返回当前结点的 Blob hash cache 缓存数据集的持有人
 

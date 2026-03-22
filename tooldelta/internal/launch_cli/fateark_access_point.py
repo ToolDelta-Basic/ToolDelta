@@ -220,9 +220,8 @@ class FrameFateArk(StandardFrame):
             if res is None:
                 raise TimeoutError("指令超时", ud)
             return Packet_CommandOutput(res)
-        else:
-            fateark_core.sendcmd_and_get_uuid(cmd)
-            return None
+        fateark_core.sendcmd_and_get_uuid(cmd)
+        return None
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
@@ -236,13 +235,31 @@ class FrameFateArk(StandardFrame):
             if res is None:
                 raise TimeoutError("指令超时", ud)
             return Packet_CommandOutput(res)
-        else:
-            fateark_core.sendwscmd_and_get_uuid(cmd)
-            return None
+        fateark_core.sendwscmd_and_get_uuid(cmd)
+        return None
 
     def sendwocmd(self, cmd: str):
         self.check_avaliable()
         fateark_core.sendwocmd(cmd)
+
+    def sendaicmd(
+        self,
+        cmd: str,
+        my_runtimeid: int | None,
+        waitForResp: bool = False,
+        timeout: float = 30,
+    ) -> Packet_CommandOutput | None:
+        self.check_avaliable()
+        if waitForResp:
+            ud = fateark_core.sendaicmd_and_get_uuid(cmd, my_runtimeid)
+            getter, setter = utils.create_result_cb(dict)
+            self.command_output_cbs[ud] = setter
+            res = getter(timeout)
+            if res is None:
+                raise TimeoutError("指令超时", ud)
+            return Packet_CommandOutput(res)
+        fateark_core.sendaicmd_and_get_uuid(cmd, my_runtimeid)
+        return None
 
     def sendPacket(
         self, pkID: int, pk: dict | base_bytes_packet.BaseBytesPacket
@@ -254,9 +271,10 @@ class FrameFateArk(StandardFrame):
             pk (str | BaseBytesPacket): 数据包内容
 
         """
-        if type(pk) is not dict:
+        if isinstance(pk, dict):
+            fateark_core.sendPacket(pkID, pk)
+        elif isinstance(pk, base_bytes_packet.BaseBytesPacket):
             raise Exception("sendPacket: Bytes packet is not supported")
-        fateark_core.sendPacket(pkID, pk)
 
     def get_players_info(self):
         uuids = fateark_core.get_online_player_uuids()
