@@ -274,7 +274,7 @@ class FrameFateArk(StandardFrame):
         if isinstance(pk, dict):
             fateark_core.sendPacket(pkID, pk)
         elif isinstance(pk, base_bytes_packet.BaseBytesPacket):
-            ...
+            raise Exception("sendPacket: Bytes packet is not supported")
 
     def get_players_info(self):
         uuids = fateark_core.get_online_player_uuids()
