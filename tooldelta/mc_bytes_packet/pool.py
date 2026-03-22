@@ -8,7 +8,6 @@ from .sub_chunk_request import SubChunkRequest
 from .structure_template_data_response import (
     StructureTemplateDataResponse,
 )
-from .py_rpc import PyRpc
 
 
 class BytesPacketIDs(IntEnum):
@@ -16,7 +15,6 @@ class BytesPacketIDs(IntEnum):
     LevelChunk = PacketIDS.IDLevelChunk
     SubChunk = PacketIDS.IDSubChunk
     StructureTemplateDataResponse = PacketIDS.IDStructureTemplateDataResponse
-    PyRpc = PacketIDS.PyRpc
 
 
 BYTES_PACKET_ID_POOL: dict[int, Callable[[], BaseBytesPacket]] = {
@@ -24,7 +22,6 @@ BYTES_PACKET_ID_POOL: dict[int, Callable[[], BaseBytesPacket]] = {
     PacketIDS.IDLevelChunk: lambda: LevelChunk(),
     PacketIDS.IDSubChunk: lambda: SubChunk(),
     PacketIDS.IDStructureTemplateDataResponse: lambda: StructureTemplateDataResponse(),
-    PacketIDS.IDPyRpc: lambda: PyRpc()
 }
 
 
