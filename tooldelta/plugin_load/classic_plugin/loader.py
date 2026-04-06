@@ -99,9 +99,15 @@ def read_plugins(plugin_grp: "PluginGroup") -> None:
             continue
         if plugin_dir.is_dir():
             sys.path.append(str(plugin_dir))
-            load_plugin(plugin_grp, plugin_dir)
-            if (data_path := plugin_dir / "datas.json").is_file():
+            data_path = plugin_dir / "datas.json"
+            plugin_data = None
+            if data_path.is_file():
                 plugin_data = utils.safe_json.safe_json_load(str(data_path))
+                if plugin_data.get("enabled", True) is False:
+                    fmts.print_war(f"插件 {plugin_dir.name} 已被禁用，跳过加载")
+                    continue
+            load_plugin(plugin_grp, plugin_dir)
+            if plugin_data and "plugin-id" in plugin_data:
                 plugin_grp.loaded_plugin_ids.append(plugin_data["plugin-id"])
 
 
