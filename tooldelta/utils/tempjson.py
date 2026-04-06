@@ -16,6 +16,7 @@ VT = TypeVar("VT")
 tempjson_rw_lock = Lock()
 tempjson_paths: dict[Path, "_jsonfile_status"] = {}
 
+
 def validate_path(path: PathLike):
     if isinstance(path, Path):
         return path
@@ -58,11 +59,12 @@ class _jsonfile_status:
         return time.time() - self.load_time > self.unload_delay
 
     def read(self, deepcopy: bool = True):
-        self.flush_time()
-        if deepcopy:
-            return copy.deepcopy(self.content)
-        else:
-            return self.content
+        with self.lock:
+            self.flush_time()
+            if deepcopy:
+                return copy.deepcopy(self.content)
+            else:
+                return self.content
 
     def write(self, content):
         with self.lock:
@@ -75,8 +77,6 @@ class _jsonfile_status:
         with self.lock:
             if self.is_changed:
                 safe_write(self.path, self.content)
-
-
 
 
 def load_from_path(
@@ -100,12 +100,16 @@ def load_from_path(
         err: 文件不存在时
     """
     path = validate_path(path)
-    if j := tempjson_paths.get(path):
+    with tempjson_rw_lock:
+        if j := tempjson_paths.get(path):
+            return j
+        j = tempjson_paths[path] = _jsonfile_status(
+            path,
+            need_file_exists=need_file_exists,
+            default=default,
+            unload_delay=unload_delay,
+        )
         return j
-    j = tempjson_paths[path] = _jsonfile_status(
-        path, need_file_exists=need_file_exists, default=default, unload_delay=unload_delay
-    )
-    return j
 
 
 def unload_to_path(path: PathLike) -> bool:
@@ -120,10 +124,11 @@ def unload_to_path(path: PathLike) -> bool:
         bool: 存盘是否成功
     """
     path = validate_path(path)
-    if (jsonf := tempjson_paths.get(path)) is not None:
-        jsonf.save()
-        del tempjson_paths[path]
-        return True
+    with tempjson_rw_lock:
+        if (jsonf := tempjson_paths.get(path)) is not None:
+            jsonf.save()
+            del tempjson_paths[path]
+            return True
     return False
 
 
@@ -191,13 +196,12 @@ def load_and_read(
     Returns:
         Any: 该虚拟路径的 JSON
     """
-    if path not in tempjson_paths.keys():
-        load_from_path(
-            path,
-            need_file_exists,
-            default() if callable(default) else default,
-            timeout,
-        )
+    load_from_path(
+        path,
+        need_file_exists,
+        default() if callable(default) else default,
+        timeout,
+    )
     return read(path)
 
 
@@ -212,15 +216,16 @@ def load_and_write(
         needFileExists (bool, optional): 默认为 True, 为 False 时，若文件路径不存在，就会自动创建一个文件，且写入默认值 null
         timeout (int, optional): 多久没有再进行读取操作时卸载缓存
     """
-    if path not in tempjson_paths.keys():
-        load_from_path(path, need_file_exists, default=obj, unload_delay=timeout)
+    load_from_path(path, need_file_exists, default=obj, unload_delay=timeout)
     write(path, obj)
 
 
 def cancel_change(path: str):
     "取消缓存 json 所做的更改，非必要情况请勿调用，你不知道什么时候会自动保存所做更改"
     _path = validate_path(path)
-    tempjson_paths[_path].is_changed = False
+    if jsonf := tempjson_paths.get(_path):
+        with jsonf.lock:
+            jsonf.is_changed = False
 
 
 def flush(path: PathLike | None = None):
@@ -259,4 +264,5 @@ def save_all():
 
 
 def reset():
-    tempjson_paths.clear()
+    with tempjson_rw_lock:
+        tempjson_paths.clear()
