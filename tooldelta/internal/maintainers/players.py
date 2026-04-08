@@ -28,6 +28,8 @@ class PlayerInfoMaintainer:
         self.uq_to_player: dict[int, Player] = {}
         self.uuid_to_player: dict[str, Player] = {}
         self.xuid_to_player: dict[str, Player] = {}
+        self.did_to_player: dict[str, Player] = {}
+        self.rtid_to_player: dict[int, Player] = {}
         self.player_abilities: dict[KeyUniqueID, Abilities] = {}
         self.player_abilities_getter_callback: dict[
             KeyUniqueID, Callable[[bool], None]
@@ -128,6 +130,29 @@ class PlayerInfoMaintainer:
         """
         return self.xuid_to_player.get(xuid)
 
+    def getPlayerByDeviceID(self, did: str) -> Player | None:
+        """
+        通过玩家DeviceID获取玩家对象。
+        Args:
+            did (str): DeviceID
+
+        Returns:
+            Player | None: 玩家对象
+        """
+        return self.did_to_player.get(did)
+
+    def getPlayerByRuntimeID(self, rtID: int) -> Player | None:
+        """
+        通过玩家RuntimeID获取玩家对象。
+
+        Args:
+            rtID (int): RuntimeID
+
+        Returns:
+            Player | None: 玩家对象
+        """
+        return self.rtid_to_player.get(rtID)
+
     def getAllPlayers(self) -> list[Player]:
         """
         获取所有当前在线的玩家的玩家对象列表。
@@ -151,6 +176,10 @@ class PlayerInfoMaintainer:
         del self.uq_to_player[player.unique_id]
         del self.uuid_to_player[player.uuid]
         del self.xuid_to_player[player.xuid]
+        if player.device_id:
+            del self.did_to_player[player.device_id]
+        if player.runtime_id:
+            del self.rtid_to_player[player.runtime_id]
         if player.unique_id in self.player_abilities:
             del self.player_abilities[player.unique_id]
         player.online = False
@@ -252,6 +281,10 @@ class PlayerInfoMaintainer:
     def _update_player_by_add_player_packet(self, player: Player, packet: dict):
         player.runtime_id = packet["EntityRuntimeID"]
         player.device_id = packet["DeviceID"]
+        if player.device_id:
+            self.did_to_player[player.device_id] = player
+        if player.runtime_id:
+            self.rtid_to_player[player.runtime_id] = player
         update_player_ability_from_ability_data(self, player, packet["AbilityData"])
 
     def __iter__(self):
