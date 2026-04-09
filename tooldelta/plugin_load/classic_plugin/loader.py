@@ -139,14 +139,31 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dir: Path) -> None | Plugin:
         raise ValueError("插件组未绑定框架")
     __cached_frame = plugin_group.linked_frame
     try:
+        plugin_name = plugin_dir.name
         if (plugin_dir / "__init__.py").is_file():
-            plugin_module = importlib.import_module(plugin_dir.name)
-            if plugin_module in loaded_plugin_modules:
-                importlib.reload(plugin_module)
+            is_reloading = False
+            for idx, mod in enumerate(loaded_plugin_modules):
+                if mod.__name__ == plugin_name:
+                    is_reloading = True
+                    break
+            if is_reloading:
+                prefix = f"{plugin_name}."
+                keys_to_remove = [
+                    k for k in sys.modules if k == plugin_name or k.startswith(prefix)
+                ]
+                for key in keys_to_remove:
+                    del sys.modules[key]
                 mode_str = "重载"
             else:
-                loaded_plugin_modules.append(plugin_module)
                 mode_str = "载入"
+            plugin_module = importlib.import_module(plugin_name)
+            if is_reloading:
+                for idx, mod in enumerate(loaded_plugin_modules):
+                    if mod.__name__ == plugin_name:
+                        loaded_plugin_modules[idx] = plugin_module
+                        break
+            else:
+                loaded_plugin_modules.append(plugin_module)
         else:
             fmts.print_war(f"{plugin_dir.name} 文件夹 未发现插件文件，跳过加载")
             return None
