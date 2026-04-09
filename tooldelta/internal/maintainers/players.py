@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 from threading import Event
 import uuid
+import re
 
 from ...utils import fmts, create_result_cb
 from ...utils.basic import validate_uuid
@@ -168,6 +169,8 @@ class PlayerInfoMaintainer:
         self.uq_to_player[player.unique_id] = ready_player
         self.uuid_to_player[player.uuid] = ready_player
         self.xuid_to_player[player.xuid] = ready_player
+        if player.device_id:
+            self.did_to_player[player.device_id] = ready_player
         self._lookup_pendings(ready_player)
         return ready_player
 
@@ -234,10 +237,22 @@ class PlayerInfoMaintainer:
                 self._hook_playerlist_remove_player(entry)
         return False
 
+    def _extract_device_id_from_skin_id(self, skin_id: str) -> str | None:
+        match = re.search(r"(?:CustomSlim|Custom)([a-fA-F0-9]{32})", skin_id)
+        if match:
+            raw_did = match.group(1)
+            try:
+                return uuid.UUID(raw_did).hex.upper()
+            except ValueError:
+                return None
+        return None
+
     def _hook_playerlist_add_player(self, entry: dict):
         unique_id = entry["EntityUniqueID"]
         playername = entry["Username"]
         ud = validate_uuid(entry["UUID"])
+        skin_id = entry["Skin"]["SkinID"]
+        did = self._extract_device_id_from_skin_id(skin_id)
         self.add_player(
             UnreadyPlayer(
                 uuid=ud,
@@ -246,7 +261,7 @@ class PlayerInfoMaintainer:
                 name=playername,
                 xuid=entry["XUID"],
                 platform_chat_id=entry["PlatformChatID"],
-                device_id=None,
+                device_id=did,
                 build_platform=entry["BuildPlatform"],
                 online=True,
             )
@@ -280,7 +295,7 @@ class PlayerInfoMaintainer:
 
     def _update_player_by_add_player_packet(self, player: Player, packet: dict):
         player.runtime_id = packet["EntityRuntimeID"]
-        player.device_id = packet["DeviceID"]
+        player.device_id = packet["DeviceID"].upper()
         if player.device_id:
             self.did_to_player[player.device_id] = player
         if player.runtime_id:
