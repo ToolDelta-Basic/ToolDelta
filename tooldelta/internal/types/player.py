@@ -28,7 +28,7 @@ class UnreadyPlayer:
             unique_id=self.unique_id,
             name=self.name,
             xuid=self.xuid,
-            device_id=None,
+            device_id=self.device_id,
             runtime_id=self.runtime_id,
             platform_chat_id=self.platform_chat_id,
             build_platform=self.build_platform,
