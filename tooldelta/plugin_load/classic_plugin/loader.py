@@ -139,31 +139,26 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dir: Path) -> None | Plugin:
         raise ValueError("插件组未绑定框架")
     __cached_frame = plugin_group.linked_frame
     try:
-        plugin_name = plugin_dir.name
         if (plugin_dir / "__init__.py").is_file():
-            is_reloading = False
-            for idx, mod in enumerate(loaded_plugin_modules):
+            plugin_name = plugin_dir.name
+            is_reload = False
+            for i, mod in enumerate(loaded_plugin_modules):
                 if mod.__name__ == plugin_name:
-                    is_reloading = True
+                    is_reload = True
+                    idx = i
                     break
-            if is_reloading:
+            if is_reload:
                 prefix = f"{plugin_name}."
-                keys_to_remove = [
-                    k for k in sys.modules if k == plugin_name or k.startswith(prefix)
-                ]
-                for key in keys_to_remove:
-                    del sys.modules[key]
+                for mod_name in list(sys.modules.keys()):
+                    if mod_name == plugin_name or mod_name.startswith(prefix):
+                        del sys.modules[mod_name]
+                plugin_module = importlib.import_module(plugin_name)
+                loaded_plugin_modules[idx] = plugin_module
                 mode_str = "重载"
             else:
-                mode_str = "载入"
-            plugin_module = importlib.import_module(plugin_name)
-            if is_reloading:
-                for idx, mod in enumerate(loaded_plugin_modules):
-                    if mod.__name__ == plugin_name:
-                        loaded_plugin_modules[idx] = plugin_module
-                        break
-            else:
+                plugin_module = importlib.import_module(plugin_name)
                 loaded_plugin_modules.append(plugin_module)
+                mode_str = "载入"
         else:
             fmts.print_war(f"{plugin_dir.name} 文件夹 未发现插件文件，跳过加载")
             return None
