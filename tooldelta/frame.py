@@ -424,36 +424,6 @@ class GameCtrl:
         """
         self.launcher.sendwocmd(cmd)
 
-    def sendaicmd(
-        self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Packet_CommandOutput | None:
-        """
-        发送 魔法指令。
-
-        Args:
-            cmd (str): Minecraft 命令
-            waitForResp (bool, optional): 是否等待返回。默认为 False
-            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
-        """
-        my_runtimeid = self.players.getBotInfo().runtime_id
-        return self.launcher.sendaicmd(cmd, my_runtimeid, waitForResp, timeout)
-
-    def sendaicmd_with_resp(
-        self, cmd: str, timeout: float = 30
-    ) -> Packet_CommandOutput:
-        """
-        发送 魔法指令 并获取返回。
-
-        Args:
-            cmd (str): Minecraft 命令
-            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
-
-        Returns:
-            Packet_CommandOutput: 指令返回类
-        """
-        resp: Packet_CommandOutput = self.sendaicmd(cmd, True, timeout)  # type: ignore
-        return resp
-
     def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息
 
