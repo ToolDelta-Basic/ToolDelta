@@ -140,23 +140,11 @@ def load_plugin(plugin_group: "PluginGroup", plugin_dir: Path) -> None | Plugin:
     __cached_frame = plugin_group.linked_frame
     try:
         if (plugin_dir / "__init__.py").is_file():
-            plugin_name = plugin_dir.name
-            is_reload = False
-            for i, mod in enumerate(loaded_plugin_modules):
-                if mod.__name__ == plugin_name:
-                    is_reload = True
-                    idx = i
-                    break
-            if is_reload:
-                prefix = f"{plugin_name}."
-                for mod_name in list(sys.modules.keys()):
-                    if mod_name == plugin_name or mod_name.startswith(prefix):
-                        del sys.modules[mod_name]
-                plugin_module = importlib.import_module(plugin_name)
-                loaded_plugin_modules[idx] = plugin_module
+            plugin_module = importlib.import_module(plugin_dir.name)
+            if plugin_module in loaded_plugin_modules:
+                importlib.reload(plugin_module)
                 mode_str = "重载"
             else:
-                plugin_module = importlib.import_module(plugin_name)
                 loaded_plugin_modules.append(plugin_module)
                 mode_str = "载入"
         else:
