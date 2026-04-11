@@ -233,8 +233,14 @@ class ConsoleCmdManager:
         self.add_console_cmd_trigger(
             ["reload"],
             None,
-            "重载插件 (可能有部分特殊插件无法重载)",
-            lambda _: self.frame.reload(),
+            "浅重载插件 (重载插件的__init__.py, 可能有部分特殊插件无法重载)",
+            lambda _: self.frame.reload(deep_reload=False),
+        )
+        self.add_console_cmd_trigger(
+            ["deepreload"],
+            None,
+            "深重载插件 (重载整个插件模块, 可能导致某些进程被强制清除, 建议开发时使用)",
+            lambda _: self.frame.reload(deep_reload=True)
         )
         if isinstance(self.frame.launcher, FrameNeOmegaLauncher):
             self.add_console_cmd_trigger(

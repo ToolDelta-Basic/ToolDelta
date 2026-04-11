@@ -57,17 +57,20 @@ class PluginGroup:
 
         self.execute_frame_exit(FrameExit(SysStatus.NORMAL_EXIT, "normal"), dont_raise)
 
-    def reload(self):
+    def reload(self, deep_reload: bool = False):
         """
         重载插件框架
         这是一个不很安全的操作, 多次 reload 后
         可能会因为一些插件线程由于底层原因无法被停止, 或者有垃圾无法被回收, 导致内存泄露等问题
+
+        Args:
+            deep_reload (bool): 启用深重载模式 (重载整个插件模块, 可能导致某些进程被强制清除, 建议开发时使用)
         """
         self.plugins_api = {}
         self.global_broadcast_listeners = {}
         classic_plugin.reload()
         fmts.print_inf("正在重新读取所有插件")
-        self.load_plugins()
+        self.load_plugins(deep_reload)
         self.execute_reloaded(self.linked_frame.on_plugin_err)
         fmts.print_inf("开始执行插件游戏初始化方法")
         self.execute_init(self.linked_frame.on_plugin_err)
@@ -125,9 +128,12 @@ class PluginGroup:
         self.linked_frame = frame
         _set_frame(frame)
 
-    def load_plugins(self) -> None:
+    def load_plugins(self, deep_load: bool = False) -> None:
         """
         读取所有插件/重载所有插件 并对插件进行预初始化
+
+        Args:
+            deep_load (bool): 启用深加载模式 (仅重载时需要传入, 用于深重载整个插件模块, 初始加载默认为深加载)
 
         Raises:
             SystemExit: 读取插件出现问题
@@ -138,7 +144,7 @@ class PluginGroup:
         self.normal_plugin_loaded_num = 0
         try:
             fmts.print_inf("§a正在使用 §bHiQuality §dDX§r§a 模式读取插件")
-            classic_plugin_loader.read_plugins(self)
+            classic_plugin_loader.read_plugins(self, deep_load)
             fmts.print_suc("所有插件读取完毕, 将进行插件初始化")
             self.execute_preload(self.linked_frame.on_plugin_err)
             # 主动读取类式插件监听的数据包

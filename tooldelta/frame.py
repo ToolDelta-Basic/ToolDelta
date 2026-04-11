@@ -151,11 +151,14 @@ class ToolDelta:
         """
         return self.players_maintainer
 
-    def reload(self):
+    def reload(self, deep_reload: bool = False):
         """
         重载系统插件。
 
         如果需要在插件内调用, 请为执行这个方法的函数分配系统级的 ToolDeltaThread。
+
+        Args:
+            deep_reload (bool): 启用深重载模式 (重载整个插件模块, 可能导致某些进程被强制清除, 建议开发时使用)
         """
         self.plugin_group.pre_reload()
         while True:
@@ -165,7 +168,7 @@ class ToolDelta:
                 utils.safe_close(SysStatus.RELOAD)
                 self.cmd_manager.reset_cmds()
                 fmts.print_inf("重载: 正在重新载入插件..")
-                self.plugin_group.reload()
+                self.plugin_group.reload(deep_reload)
                 fmts.print_suc("重载插件: 全部插件重载成功！")
                 utils.timer_event_boostrap()
                 return
@@ -420,6 +423,36 @@ class GameCtrl:
             cmd (str): Minecraft 命令
         """
         self.launcher.sendwocmd(cmd)
+
+    def sendaicmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """
+        发送 魔法指令。
+
+        Args:
+            cmd (str): Minecraft 命令
+            waitForResp (bool, optional): 是否等待返回。默认为 False
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+        """
+        my_runtimeid = self.players.getBotInfo().runtime_id
+        return self.launcher.sendaicmd(cmd, my_runtimeid, waitForResp, timeout)
+
+    def sendaicmd_with_resp(
+        self, cmd: str, timeout: float = 30
+    ) -> Packet_CommandOutput:
+        """
+        发送 魔法指令 并获取返回。
+
+        Args:
+            cmd (str): Minecraft 命令
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+
+        Returns:
+            Packet_CommandOutput: 指令返回类
+        """
+        resp: Packet_CommandOutput = self.sendaicmd(cmd, True, timeout)  # type: ignore
+        return resp
 
     def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息
