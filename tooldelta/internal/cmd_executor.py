@@ -11,6 +11,7 @@ from .launch_cli import FrameNeOmegaLauncher, FrameNeOmgAccessPoint
 if TYPE_CHECKING:
     from tooldelta import ToolDelta
 
+
 def get_nearest_command(cmd: str, available_commands: list[str]):
     cmd_weights: dict[str, float] = {}
     for char in cmd:
@@ -19,13 +20,16 @@ def get_nearest_command(cmd: str, available_commands: list[str]):
                 cmd_weights[_cmd] = cmd_weights.get(_cmd, 0) + 1
                 if (fc := _cmd.find(char)) != -1:
                     cmd_weights[_cmd] += max(0, 10 - abs(fc - cmd.find(char)))
-    cmd_weights = dict(sorted(cmd_weights.items(), key=lambda x: x[1], reverse=True)[:5])
+    cmd_weights = dict(
+        sorted(cmd_weights.items(), key=lambda x: x[1], reverse=True)[:5]
+    )
     for _cmd, _weight in cmd_weights.copy().items():
         cmd_weights[_cmd] = _weight + max(0, 10 - abs(len(_cmd) - len(cmd))) / 2
     nearest_cmds = sorted(cmd_weights.items(), key=lambda x: x[1], reverse=True)
     if len(nearest_cmds) < 1:
         return None
     return nearest_cmds[0][0]
+
 
 @dataclass
 class CommandTrigger:
@@ -50,17 +54,14 @@ class ConsoleCmdManager:
         usage: str,
         func: Callable[[list[str]], Any],
     ):
-        """注册 ToolDelta 控制台的菜单项
-
-        Args:
-            triggers (list[str]): 触发词列表
-            arg_hint (str | None): 菜单命令参数提示句
-            usage (str): 命令说明
-            func (Callable[[list[str]], None]): 菜单回调方法
-        """
-        trig = CommandTrigger(triggers, arg_hint, usage, func)
-        for trigger in triggers:
-            self.commands[self.test_duplicate_trigger(trigger)] = trig
+        """注册 ToolDelta 控制台的菜单项"""
+        triggers_copy = triggers.copy()
+        trig = CommandTrigger(triggers_copy, arg_hint, usage, func)
+        for i, trigger in enumerate(triggers_copy):
+            valid_trigger = self.test_duplicate_trigger(trigger, usage)
+            self.commands[valid_trigger] = trig
+            if valid_trigger != trigger:
+                trig.triggers[i] = valid_trigger
 
     def get_cmd_triggers(self):
         return list(self.commands.values())
@@ -68,41 +69,45 @@ class ConsoleCmdManager:
     def execute_cmd(self, cmd: str) -> bool:
         cmd = cmd.strip()
         cmd_finded = False
-        for prefix, trig in self.commands.copy().items():
+        sorted_prefixes = sorted(self.commands.keys(), key=len, reverse=True)
+
+        for prefix in sorted_prefixes:
+            trig = self.commands[prefix]
             if cmd.startswith(prefix):
                 cmds = cmd.removeprefix(prefix).split()
                 res = trig.cb(cmds)
                 cmd_finded = True
                 if res is True:
                     return True
+                break
+
         if not cmd_finded and cmd:
             nearest_cmd = get_nearest_command(cmd, list(self.commands.keys()))
             if nearest_cmd is not None:
-                fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 你指的是 {nearest_cmd} 吗？\n输入 ? 查看帮助")
+                fmts.print_war(
+                    f"命令 {cmd.split()[0]} 不存在, 你指的是 {nearest_cmd} 吗？\n输入 ? 查看帮助"
+                )
             else:
                 fmts.print_war(f"命令 {cmd.split()[0]} 不存在, 输入 ? 查看帮助")
         return False
 
-    def test_duplicate_trigger(self, trigger: str):
-        for exists_trigger in self.commands.keys():
-            counter = 0
-            invalid = False
-            origin_trigger = trigger
-            while True:
-                if not (
-                    trigger.startswith(exists_trigger)
-                    or exists_trigger.startswith(trigger)
-                ):
-                    if invalid:
-                        fmts.print_war(
-                            f"命令 {origin_trigger} 与 {exists_trigger} 冲突, 已更改为 {trigger}"
-                        )
-                        return trigger
-                    break
-                invalid = True
-                counter += 1
-                trigger = f"{counter}-{trigger}"
-        return trigger
+    def test_duplicate_trigger(self, trigger: str, usage: str):
+        if trigger not in self.commands:
+            return trigger
+
+        origin_trigger = trigger
+        counter = 1
+        new_trigger = f"{counter}-{origin_trigger}"
+
+        while new_trigger in self.commands:
+            counter += 1
+            new_trigger = f"{counter}-{origin_trigger}"
+
+        existing_usage = self.commands[origin_trigger].usage
+        fmts.print_war(
+            f"功能 {usage} 的命令触发词 {origin_trigger} 与已有功能 {existing_usage} 冲突, 已自动更改为 {new_trigger}"
+        )
+        return new_trigger
 
     @thread_func("控制台执行命令", ToolDeltaThread.SYSTEM)
     def command_readline_proc(self):
@@ -240,7 +245,7 @@ class ConsoleCmdManager:
             ["deepreload"],
             None,
             "深重载插件 (重载整个插件模块, 可能导致某些进程被强制清除, 建议开发时使用)",
-            lambda _: self.frame.reload(deep_reload=True)
+            lambda _: self.frame.reload(deep_reload=True),
         )
         if isinstance(self.frame.launcher, FrameNeOmegaLauncher):
             self.add_console_cmd_trigger(
