@@ -54,7 +54,15 @@ class ConsoleCmdManager:
         usage: str,
         func: Callable[[list[str]], Any],
     ):
-        """注册 ToolDelta 控制台的菜单项"""
+        """
+        注册 ToolDelta 控制台的菜单项
+
+        Args:
+            triggers (list[str]): 触发词列表
+            arg_hint (str | None): 菜单命令参数提示句
+            usage (str): 命令说明
+            func (Callable[[list[str]], None]): 菜单回调方法
+        """
         triggers_copy = triggers.copy()
         trig = CommandTrigger(triggers_copy, arg_hint, usage, func)
         for i, trigger in enumerate(triggers_copy):
