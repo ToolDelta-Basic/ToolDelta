@@ -175,13 +175,17 @@ class PlayerInfoMaintainer:
         return ready_player
 
     def remove_player(self, player: Player):
-        del self.name_to_player[player.name]
-        del self.uq_to_player[player.unique_id]
-        del self.uuid_to_player[player.uuid]
-        del self.xuid_to_player[player.xuid]
-        if player.device_id:
+        if player.name in self.name_to_player:
+            del self.name_to_player[player.name]
+        if player.unique_id in self.uq_to_player:
+            del self.uq_to_player[player.unique_id]
+        if player.uuid in self.uuid_to_player:
+            del self.uuid_to_player[player.uuid]
+        if player.xuid in self.xuid_to_player:
+            del self.xuid_to_player[player.xuid]
+        if player.device_id in self.did_to_player:
             del self.did_to_player[player.device_id]
-        if player.runtime_id:
+        if player.runtime_id in self.rtid_to_player:
             del self.rtid_to_player[player.runtime_id]
         if player.unique_id in self.player_abilities:
             del self.player_abilities[player.unique_id]
