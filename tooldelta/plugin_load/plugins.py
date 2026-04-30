@@ -5,18 +5,17 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from .. import utils
-from ..utils import fmts
+from ..utils import basic as utils_basic, fmts
 from ..mc_bytes_packet.pool import is_bytes_packet
-from ..constants import SysStatus
-from .exceptions import (
-    PluginAPINotFoundError,
-    PluginAPIVersionError,
-)
-from ..constants import TextType, PacketIDS
+from ..constants import SysStatus, TextType, PacketIDS
 from ..internal.packet_handler import PacketHandler
 from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..game_utils import _set_frame
+from .exceptions import (
+    PluginAPINotFoundError,
+    PluginAPIVersionError,
+)
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
@@ -98,6 +97,9 @@ class PluginGroup:
                 hdl.add_dict_packet_listener(pkID, any_dict_pk_handler, 0)
 
         hdl.add_dict_packet_listener(PacketIDS.Text, self.handle_text_packet)
+        hdl.add_dict_packet_listener(
+            PacketIDS.PlayerList, self.handle_playerlist_packet
+        )
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
         callback_list = []
@@ -259,6 +261,18 @@ class PluginGroup:
         """
         blocking = classic_plugin.execute_bytes_packet_funcs(pktID, pkt, onerr)
         return blocking
+
+    def handle_playerlist_packet(self, pkt: dict):
+        if pkt["ActionType"] == 1:
+            for entry in pkt["Entries"]:
+                player_uuid = utils_basic.validate_uuid(entry["UUID"])
+                if player := self.linked_frame.players_maintainer.getPlayerByUUID(
+                    player_uuid
+                ):
+                    self.execute_player_leave(player, self.linked_frame.on_plugin_err)
+                else:
+                    fmts.print_war(f"玩家 UUID {player_uuid} 未找到")
+        return False
 
     def handle_text_packet(self, pkt: dict):
         match pkt["TextType"]:

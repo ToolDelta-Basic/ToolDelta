@@ -1,14 +1,14 @@
+import uuid
+import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 from threading import Event
-import uuid
-import re
 
+from ...constants import PacketIDS
 from ...utils import fmts, create_result_cb
 from ...utils.basic import validate_uuid
 from ..types.player import Player, UnreadyPlayer
 from ..types.player_abilities import Abilities, update_player_ability_from_ability_data
-from ...constants import PacketIDS
 
 if TYPE_CHECKING:
     from tooldelta import ToolDelta
