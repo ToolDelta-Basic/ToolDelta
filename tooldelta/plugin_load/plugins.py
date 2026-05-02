@@ -7,12 +7,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from .. import utils
 from ..utils import fmts
 from ..mc_bytes_packet.pool import is_bytes_packet
-from ..constants import SysStatus
+from ..constants import SysStatus, TextType, PacketIDS
 from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
 )
-from ..constants import TextType, PacketIDS
 from ..internal.packet_handler import PacketHandler
 from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
 from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
