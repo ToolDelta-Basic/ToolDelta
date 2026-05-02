@@ -25,6 +25,7 @@ PluginEvents_P = dict[int, list[tuple["Plugin", T]]]
 on_preload_cbs: PluginEvents_P[Callable[[], None]] = {}
 on_active_cbs: PluginEvents_P[Callable[[], None]] = {}
 on_player_join_cbs: PluginEvents_P[Callable[[Player], None]] = {}
+on_player_pre_join_cbs: PluginEvents_P[Callable[[Player], None]] = {}
 on_player_leave_cbs: PluginEvents_P[Callable[[Player], None]] = {}
 on_chat_cbs: PluginEvents_P[Callable[[Chat], None]] = {}
 on_frame_exit_cbs: PluginEvents_P[Callable[[FrameExit], None]] = {}
@@ -39,6 +40,7 @@ def reload():
     on_preload_cbs.clear()
     on_active_cbs.clear()
     on_player_join_cbs.clear()
+    on_player_pre_join_cbs.clear()
     on_player_leave_cbs.clear()
     on_chat_cbs.clear()
     on_frame_exit_cbs.clear()
@@ -48,7 +50,11 @@ def reload():
     broadcast_listener.clear()
 
 
-def run_by_priority(listeners: PluginEvents_P[Callable], args: tuple, onerr: ON_ERROR_CB,):
+def run_by_priority(
+    listeners: PluginEvents_P[Callable],
+    args: tuple,
+    onerr: ON_ERROR_CB,
+):
     for _, sub_listeners in sorted(listeners.items(), reverse=True):
         for plugin, listener in sub_listeners:
             try:
@@ -70,9 +76,12 @@ def execute_preload(onerr: ON_ERROR_CB) -> None:
         SystemExit: 缺少前置
         SystemExit: 前置版本过低
     """
+
     def error_handler(plugin_name: str, err: Exception):
         if isinstance(err, PluginAPINotFoundError):
-            fmts.print_err(f"插件 {plugin_name} 需要包含该种接口的前置组件：{err.api_name}")
+            fmts.print_err(
+                f"插件 {plugin_name} 需要包含该种接口的前置组件：{err.api_name}"
+            )
             raise SystemExit from err
         elif isinstance(err, PluginAPIVersionError):
             fmts.print_err(
@@ -82,6 +91,7 @@ def execute_preload(onerr: ON_ERROR_CB) -> None:
         else:
             onerr(plugin_name, err)
             raise SystemExit
+
     run_by_priority(on_preload_cbs, (), error_handler)
 
 
@@ -99,9 +109,19 @@ def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
 
     Args:
         player (str): 玩家
-        onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     run_by_priority(on_player_join_cbs, (player,), onerr)
+
+
+def execute_player_pre_join(player: Player, onerr: ON_ERROR_CB) -> None:
+    """执行玩家预加入的方法
+
+    Args:
+        player (str): 玩家
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    run_by_priority(on_player_pre_join_cbs, (player,), onerr)
 
 
 def execute_chat(

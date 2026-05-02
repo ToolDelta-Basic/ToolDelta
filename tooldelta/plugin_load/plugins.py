@@ -5,17 +5,18 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from .. import utils
-from ..utils import basic as utils_basic, fmts
+from ..utils import fmts
 from ..mc_bytes_packet.pool import is_bytes_packet
-from ..constants import SysStatus, TextType, PacketIDS
-from ..internal.packet_handler import PacketHandler
-from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
-from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
-from ..game_utils import _set_frame
+from ..constants import SysStatus
 from .exceptions import (
     PluginAPINotFoundError,
     PluginAPIVersionError,
 )
+from ..constants import TextType, PacketIDS
+from ..internal.packet_handler import PacketHandler
+from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
+from ..game_utils import _set_frame
 from .classic_plugin.loader import Plugin
 from .classic_plugin import event_cbs as classic_plugin
 from .classic_plugin import loader as classic_plugin_loader
@@ -189,9 +190,18 @@ class PluginGroup:
 
         Args:
             player (str): 玩家
-            onerr (Callable[[str, Exception, str], None], optional): q 插件出错时的处理方法
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_join(player, onerr)
+
+    def execute_player_pre_join(self, player: Player, onerr: ON_ERROR_CB) -> None:
+        """执行玩家预加入的方法
+
+        Args:
+            player (str): 玩家
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        classic_plugin.execute_player_pre_join(player, onerr)
 
     def execute_chat(
         self,
@@ -263,15 +273,17 @@ class PluginGroup:
         return blocking
 
     def handle_playerlist_packet(self, pkt: dict):
-        if pkt["ActionType"] == 1:
+        if pkt["ActionType"] == 0:
             for entry in pkt["Entries"]:
-                player_uuid = utils_basic.validate_uuid(entry["UUID"])
-                if player := self.linked_frame.players_maintainer.getPlayerByUUID(
-                    player_uuid
+                playername = entry["Username"]
+                if player := self.linked_frame.players_maintainer.getPlayerByName(
+                    playername
                 ):
-                    self.execute_player_leave(player, self.linked_frame.on_plugin_err)
+                    self.execute_player_pre_join(
+                        player, self.linked_frame.on_plugin_err
+                    )
                 else:
-                    fmts.print_war(f"玩家 UUID {player_uuid} 未找到")
+                    fmts.print_war(f"玩家 {playername} 未找到")
         return False
 
     def handle_text_packet(self, pkt: dict):

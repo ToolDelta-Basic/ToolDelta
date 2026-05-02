@@ -252,7 +252,7 @@ class PlayerInfoMaintainer:
         if match:
             raw_did = match.group(1)
             try:
-                return uuid.UUID(raw_did).hex.upper()
+                return validate_uuid(raw_did).upper()
             except ValueError:
                 return None
         return None

@@ -123,17 +123,27 @@ class Plugin:
     def ListenPlayerJoin(self, cb: Callable[[Player], Any], priority: int = 0):
         """
         监听玩家加入事件
-        玩家加入事件: 在有玩家加入游戏时触发一次
+        玩家加入事件: 在有玩家加入游戏时触发一次 (Text判据, 即收到黄色字体的玩家加入提示)
 
         Args:
             cb (Callable[[Player], None]): 监听回调, 传参: 玩家 (Player)
         """
         event_cbs.on_player_join_cbs.setdefault(priority, []).append((self, cb))
 
+    def ListenPlayerPreJoin(self, cb: Callable[[Player], Any], priority: int = 0):
+        """
+        监听玩家预加入事件
+        玩家预加入事件: 在有玩家预加入游戏时触发一次 (PlayerList判据)
+
+        Args:
+            cb (Callable[[Player], None]): 监听回调, 传参: 玩家 (Player)
+        """
+        event_cbs.on_player_pre_join_cbs.setdefault(priority, []).append((self, cb))
+
     def ListenPlayerLeave(self, cb: Callable[[Player], Any], priority: int = 0):
         """
         监听玩家退出事件
-        玩家退出事件: 在有玩家退出游戏时触发一次
+        玩家退出事件: 在有玩家退出游戏时触发一次 (Text判据, 即收到黄色字体的玩家退出提示)
 
         Args:
             cb (Callable[[Player], None]): 监听回调, 传参: 玩家 (Player)
