@@ -165,12 +165,18 @@ class PlayerInfoMaintainer:
 
     def add_player(self, player: UnreadyPlayer):
         ready_player = player.ready(self)
-        self.name_to_player[player.name] = ready_player
-        self.uq_to_player[player.unique_id] = ready_player
-        self.uuid_to_player[player.uuid] = ready_player
-        self.xuid_to_player[player.xuid] = ready_player
+        if player.name:
+            self.name_to_player[player.name] = ready_player
+        if player.unique_id:
+            self.uq_to_player[player.unique_id] = ready_player
+        if player.uuid:
+            self.uuid_to_player[player.uuid] = ready_player
+        if player.xuid:
+            self.xuid_to_player[player.xuid] = ready_player
         if player.device_id:
             self.did_to_player[player.device_id] = ready_player
+        if player.runtime_id:
+            self.rtid_to_player[player.runtime_id] = ready_player
         self._lookup_pendings(ready_player)
         return ready_player
 
