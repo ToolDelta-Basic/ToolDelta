@@ -227,7 +227,7 @@ def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
         if Message == r"commands.scoreboard.players.list.player.empty":
             continue
         if Message == r"§a%commands.scoreboard.players.list.player.count":
-            targetName = i.Parameters[1][1:]
+            targetName = i.Parameters[1]
         elif Message == "commands.scoreboard.players.list.player.entry":
             if targetName == "commands.scoreboard.players.offlinePlayerName":
                 continue
