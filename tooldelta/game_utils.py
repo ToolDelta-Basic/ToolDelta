@@ -186,8 +186,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         raise ValueError("物品 ID 错误")
     if result.OutputMessages[0].Message == "commands.clear.failure.no.items":
         return 0
-    # TODO!!! 租赁服的/clear指令返回会乘以2
-    return int(result.OutputMessages[0].Parameters[1]) // 2
+    return int(result.OutputMessages[0].Parameters[1])
 
 
 def getPosXYZ(playername: str, timeout: float = 30) -> tuple[float, float, float]:
