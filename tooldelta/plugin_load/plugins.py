@@ -13,7 +13,7 @@ from .exceptions import (
     PluginAPIVersionError,
 )
 from ..internal.packet_handler import PacketHandler
-from ..internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ..internal.types import Player, Chat, Death, Attack, InternalBroadcast, FrameExit
 from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..game_utils import _set_frame
 from .classic_plugin.loader import Plugin
@@ -99,6 +99,9 @@ class PluginGroup:
         hdl.add_dict_packet_listener(PacketIDS.Text, self.handle_text_packet)
         hdl.add_dict_packet_listener(
             PacketIDS.PlayerList, self.handle_playerlist_packet
+        )
+        hdl.add_dict_packet_listener(
+            PacketIDS.LevelEvent, self.handle_levelevent_packet
         )
 
     def brocast_event(self, evt: InternalBroadcast) -> list[Any]:
@@ -188,7 +191,7 @@ class PluginGroup:
         """执行玩家加入的方法
 
         Args:
-            player (str): 玩家
+            player (Player): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_join(player, onerr)
@@ -197,7 +200,7 @@ class PluginGroup:
         """执行玩家预加入的方法
 
         Args:
-            player (str): 玩家
+            player (Player): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_pre_join(player, onerr)
@@ -210,17 +213,68 @@ class PluginGroup:
         """执行玩家消息的方法
 
         Args:
-            player (str): 玩家
-            msg (str): 消息
+            chat (Chat): 玩家消息类
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_chat(chat, onerr)
+
+    def execute_death(
+        self,
+        death: Death,
+        onerr: ON_ERROR_CB,
+    ) -> None:
+        """执行玩家死亡的方法
+
+        Args:
+            death (Death): 玩家死亡类
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        classic_plugin.execute_death(death, onerr)
+
+    def execute_attack(
+        self,
+        attack: Attack,
+        onerr: ON_ERROR_CB,
+    ) -> None:
+        """执行玩家击杀的方法
+
+        Args:
+            attack (Attack): 玩家击杀类
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        classic_plugin.execute_attack(attack, onerr)
+
+    def execute_sleep(
+        self,
+        player: Player,
+        onerr: ON_ERROR_CB,
+    ) -> None:
+        """执行玩家睡觉的方法
+
+        Args:
+            player (Player): 玩家
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        classic_plugin.execute_sleep(player, onerr)
+
+    def execute_weather(
+        self,
+        event_type: int,
+        onerr: ON_ERROR_CB,
+    ) -> None:
+        """执行天气更新的方法
+
+        Args:
+            event_type (int): 事件类型
+            onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+        """
+        classic_plugin.execute_weather(event_type, onerr)
 
     def execute_player_leave(self, player: Player, onerr: ON_ERROR_CB) -> None:
         """执行玩家离开的方法
 
         Args:
-            player (str): 玩家
+            player (Player): 玩家
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_player_leave(player, onerr)
@@ -229,6 +283,7 @@ class PluginGroup:
         """执行框架退出的方法
 
         Args:
+            evt (FrameExit): 框架退出类
             onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
         """
         classic_plugin.execute_frame_exit(evt, onerr)
@@ -288,8 +343,10 @@ class PluginGroup:
     def handle_text_packet(self, pkt: dict):
         match pkt["TextType"]:
             case TextType.TextTypeTranslation:
-                if pkt["Message"] == "§e%multiplayer.player.joined":
-                    playername = pkt["Parameters"][0]
+                pkt_msg = pkt["Message"]
+                parameters = pkt["Parameters"]
+                if pkt_msg == "§e%multiplayer.player.joined" and len(parameters) > 0:
+                    playername = parameters[0]
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):
@@ -298,8 +355,8 @@ class PluginGroup:
                         )
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
-                elif pkt["Message"] == "§e%multiplayer.player.left":
-                    playername = pkt["Parameters"][0]
+                elif pkt_msg == "§e%multiplayer.player.left" and len(parameters) > 0:
+                    playername = parameters[0]
                     if player := self.linked_frame.players_maintainer.getPlayerByName(
                         playername
                     ):
@@ -308,6 +365,45 @@ class PluginGroup:
                         )
                     else:
                         fmts.print_war(f"玩家 {playername} 未找到")
+                elif pkt_msg.startswith("death") and len(parameters) > 0:
+                    target_playername = parameters[0]
+                    if (
+                        target_player
+                        := self.linked_frame.players_maintainer.getPlayerByName(
+                            target_playername
+                        )
+                    ):
+                        death = Death(target_player, pkt_msg)
+                        self.execute_death(death, self.linked_frame.on_plugin_err)
+                        if (
+                            pkt_msg.startswith("death.attack.player")
+                            and len(parameters) > 1
+                        ):
+                            origin_playername = parameters[1]
+                            weapon_name = ""
+                            if (
+                                pkt_msg == "death.attack.player.item"
+                                and len(parameters) > 2
+                            ):
+                                weapon_name = parameters[2]
+                            if (
+                                origin_player
+                                := self.linked_frame.players_maintainer.getPlayerByName(
+                                    origin_playername
+                                )
+                            ):
+                                attack = Attack(
+                                    origin_player, target_player, weapon_name
+                                )
+                                self.execute_attack(
+                                    attack, self.linked_frame.on_plugin_err
+                                )
+                elif pkt_msg == "chat.type.sleeping" and len(parameters) > 0:
+                    playername = parameters[0]
+                    if player := self.linked_frame.players_maintainer.getPlayerByName(
+                        playername
+                    ):
+                        self.execute_sleep(player, self.linked_frame.on_plugin_err)
             case _:
                 playername, message, ensurePlayer = (
                     utils.get_playername_and_msg_from_text_packet(
@@ -320,6 +416,18 @@ class PluginGroup:
                     ):
                         chat = Chat(player, message)
                         self.execute_chat(chat, self.linked_frame.on_plugin_err)
+        return False
+
+    def handle_levelevent_packet(self, pkt: dict):
+        match pkt["EventType"]:
+            case 3001:
+                self.execute_weather(1, self.linked_frame.on_plugin_err)
+            case 3002:
+                self.execute_weather(2, self.linked_frame.on_plugin_err)
+            case 3003:
+                self.execute_weather(3, self.linked_frame.on_plugin_err)
+            case 3004:
+                self.execute_weather(4, self.linked_frame.on_plugin_err)
         return False
 
     help = staticmethod(classic_plugin_loader.help)

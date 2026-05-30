@@ -4,7 +4,7 @@ from collections.abc import Callable
 from ...mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ...utils import fmts
 from ...constants import PacketIDS
-from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ...internal.types import Player, Chat, Death, Attack, InternalBroadcast, FrameExit
 from ..basic import ON_ERROR_CB
 from ..exceptions import (
     PluginAPINotFoundError,
@@ -28,6 +28,10 @@ on_player_join_cbs: PluginEvents_P[Callable[[Player], None]] = {}
 on_player_pre_join_cbs: PluginEvents_P[Callable[[Player], None]] = {}
 on_player_leave_cbs: PluginEvents_P[Callable[[Player], None]] = {}
 on_chat_cbs: PluginEvents_P[Callable[[Chat], None]] = {}
+on_death_cbs: PluginEvents_P[Callable[[Death], None]] = {}
+on_attack_cbs: PluginEvents_P[Callable[[Attack], None]] = {}
+on_sleep_cbs: PluginEvents_P[Callable[[Player], None]] = {}
+on_weather_cbs: PluginEvents_P[Callable[[int], None]] = {}
 on_frame_exit_cbs: PluginEvents_P[Callable[[FrameExit], None]] = {}
 on_reloaded_cbs: PluginEvents_P[Callable[[], None]] = {}
 dict_packet_funcs: dict[PacketIDS, PluginEvents_P["DictPacketListener"]] = {}
@@ -43,6 +47,10 @@ def reload():
     on_player_pre_join_cbs.clear()
     on_player_leave_cbs.clear()
     on_chat_cbs.clear()
+    on_death_cbs.clear()
+    on_attack_cbs.clear()
+    on_sleep_cbs.clear()
+    on_weather_cbs.clear()
     on_frame_exit_cbs.clear()
     on_reloaded_cbs.clear()
     dict_packet_funcs.clear()
@@ -108,7 +116,7 @@ def execute_player_join(player: Player, onerr: ON_ERROR_CB) -> None:
     """执行玩家加入的方法
 
     Args:
-        player (str): 玩家
+        player (Player): 玩家
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     run_by_priority(on_player_join_cbs, (player,), onerr)
@@ -118,7 +126,7 @@ def execute_player_pre_join(player: Player, onerr: ON_ERROR_CB) -> None:
     """执行玩家预加入的方法
 
     Args:
-        player (str): 玩家
+        player (Player): 玩家
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     run_by_priority(on_player_pre_join_cbs, (player,), onerr)
@@ -131,18 +139,68 @@ def execute_chat(
     """执行玩家消息的方法
 
     Args:
-        player (str): 玩家
-        msg (str): 消息
+        chat (Chat): 玩家消息类
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     run_by_priority(on_chat_cbs, (chat,), onerr)
+
+
+def execute_death(
+    death: Death,
+    onerr: ON_ERROR_CB,
+) -> None:
+    """执行玩家死亡的方法
+
+    Args:
+        death (Death): 玩家死亡类
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    run_by_priority(on_death_cbs, (death,), onerr)
+
+
+def execute_attack(
+    attack: Attack,
+    onerr: ON_ERROR_CB,
+) -> None:
+    """执行玩家击杀的方法
+
+    Args:
+        attack (Attack): 玩家击杀类
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    run_by_priority(on_attack_cbs, (attack,), onerr)
+
+
+def execute_sleep(
+    player: Player,
+    onerr: ON_ERROR_CB,
+) -> None:
+    """执行玩家睡觉的方法
+
+    Args:
+        player (Player): 玩家
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    run_by_priority(on_sleep_cbs, (player,), onerr)
+
+def execute_weather(
+    event_type: int,
+    onerr: ON_ERROR_CB,
+) -> None:
+    """执行天气更新的方法
+
+    Args:
+        event_type (int): 事件类型
+        onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
+    """
+    run_by_priority(on_weather_cbs, (event_type,), onerr)
 
 
 def execute_player_leave(player: Player, onerr: ON_ERROR_CB) -> None:
     """执行玩家离开的方法
 
     Args:
-        player (str): 玩家
+        player (Player): 玩家
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     run_by_priority(on_player_leave_cbs, (player,), onerr)
@@ -152,6 +210,7 @@ def execute_frame_exit(evt: FrameExit, onerr: ON_ERROR_CB):
     """执行框架退出的方法
 
     Args:
+        evt (FrameExit): 框架退出类
         onerr (Callable[[str, Exception, str], None], optional): 插件出错时的处理方法
     """
     run_by_priority(on_frame_exit_cbs, (evt,), onerr)

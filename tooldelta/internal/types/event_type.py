@@ -13,6 +13,17 @@ class Chat(BasicEvent):
     msg: str
 
 @dataclass
+class Death(BasicEvent):
+    player: Player
+    death_type: str
+
+@dataclass
+class Attack(BasicEvent):
+    origin_player: Player
+    target_player: Player
+    weapon_name: str
+
+@dataclass
 class InternalBroadcast(BasicEvent):
     evt_name: str
     data: Any

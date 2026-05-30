@@ -6,7 +6,7 @@ from collections.abc import Callable
 from ...mc_bytes_packet.pool import is_bytes_packet
 from ...constants import TOOLDELTA_PLUGIN_DATA_DIR, PacketIDS
 from ...utils import cfg, fmts
-from ...internal.types import Player, Chat, InternalBroadcast, FrameExit
+from ...internal.types import Player, Chat, Death, Attack, InternalBroadcast, FrameExit
 from . import event_cbs
 
 if TYPE_CHECKING:
@@ -156,9 +156,56 @@ class Plugin:
         玩家聊天事件: 在有玩家在聊天栏发言时触发一次
 
         Args:
-            cb (Callable[[Player], None]): 监听回调, 传参: 聊天事件 (Chat)
+            cb (Callable[[Chat], None]): 监听回调, 传参: 聊天事件 (Chat)
+            聊天事件 (Chat) 包括 玩家 (player) 和 聊天文本 (msg) 字段
         """
         event_cbs.on_chat_cbs.setdefault(priority, []).append((self, cb))
+
+    def ListenDeath(self, cb: Callable[[Death], Any], priority: int = 0):
+        """
+        监听玩家死亡事件
+        玩家死亡事件: 在有玩家死亡时触发一次
+
+        Args:
+            cb (Callable[[Death], None]): 监听回调, 传参: 死亡事件 (Death)
+            死亡事件 (Death) 包括 玩家 (player) 和 死亡类型 (death_type) 字段
+        """
+        event_cbs.on_death_cbs.setdefault(priority, []).append((self, cb))
+
+    def ListenAttack(self, cb: Callable[[Attack], Any], priority: int = 0):
+        """
+        监听玩家击杀事件
+        玩家击杀事件: 在有玩家击杀玩家时触发一次
+
+        Args:
+            cb (Callable[[Attack], None]): 监听回调, 传参: 击杀事件 (Attack)
+            击杀事件 (Attack) 包括 发起攻击玩家 (origin_player), 被击杀玩家 (target_player) 和 武器名称 (weapon_name) 字段
+        """
+        event_cbs.on_attack_cbs.setdefault(priority, []).append((self, cb))
+
+    def ListenSleep(self, cb: Callable[[Player], Any], priority: int = 0):
+        """
+        监听玩家睡觉事件
+        玩家睡觉事件: 在有玩家睡觉时触发一次
+
+        Args:
+            cb (Callable[[Player], None]): 监听回调, 传参: 玩家 (Player)
+        """
+        event_cbs.on_sleep_cbs.setdefault(priority, []).append((self, cb))
+
+    def ListenWeather(self, cb: Callable[[int], Any], priority: int = 0):
+        """
+        监听天气事件
+        天气事件:
+            1: 开始下雨
+            2: 开始雷暴
+            3: 停止下雨
+            4: 停止雷暴
+
+        Args:
+            cb (Callable[[int], None]): 监听回调, 传参: 事件类型 (int)
+        """
+        event_cbs.on_weather_cbs.setdefault(priority, []).append((self, cb))
 
     def ListenFrameExit(self, cb: Callable[[FrameExit], Any], priority: int = 0):
         """
@@ -166,7 +213,7 @@ class Plugin:
         框架退出事件: 在框架退出/插件即将重载时触发一次
 
         Args:
-            cb (Callable[[Player], None]): 监听回调, 传参: 聊天事件 (Chat)
+            cb (Callable[[FrameExit], None]): 监听回调, 传参: 框架退出事件 (FrameExit)
         """
         event_cbs.on_frame_exit_cbs.setdefault(priority, []).append((self, cb))
 
