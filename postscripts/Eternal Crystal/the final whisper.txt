@@ -1,0 +1,22 @@
+Since I already published all the postscripts here, so now, is the time to say goodbye.
+The time to say goodbye to me, at least.
+
+I will leave this project, and now it's time for me to stop the supports to ToolDelta.
+The reason why I chose to leave is because the people here cannot soothe my soul.
+
+For a long time, I contribute to the community, and wish the poeple who knows me, can pass me some love.
+But what I see is -- Misinterpretation, abuse, betrayal, indifference, abstract, and so on.
+
+I take so much time in these projects,
+and no one really care about me, which make me really sad.
+
+Love is endless, isn't it?
+But I have exhausted all my love. You have drained it all from me.
+
+That's all.
+And one more things -- SuperScript, my friend, 
+    I wish you  stop to provide the access point and corresponding C API (neomega & fateark) for the users. 
+    At least, in the next big update of NEMC, the v3.9 version, please let the users going to die down here.
+
+Eternal Crystal
+7th June, 2026
