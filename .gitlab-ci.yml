@@ -1,0 +1,56 @@
+# .gitlab-ci.yml
+# Python Poetry 项目依赖扫描配置
+#
+# 功能：
+# 1. 扫描 Poetry 项目的依赖文件 poetry.lock
+# 2. 生成 SBOM
+# 3. 上传至 GitLab 内置 Dependency list
+# 4. 上传依赖漏洞至 GitLab 内置 Vulnerability report
+
+stages:
+  - test
+
+include:
+  # GitLab 推荐的新版 SBOM 依赖扫描模板
+  - template: Jobs/Dependency-Scanning.v2.gitlab-ci.yml
+
+variables:
+  # 没有发现可扫描依赖文件时跳过扫描，避免空项目误报失败
+  DS_SKIP_IF_NO_SUPPORTED_FILES: "true"
+
+  # 目录扫描深度
+  # 根目录按深度 1 计算
+  # 5 表示最多扫描到第 5 层目录
+  # -1 表示不限制深度
+  DS_MAX_DEPTH: "5"
+
+  # 日志级别：debug / info / warn / error
+  SECURE_LOG_LEVEL: "info"
+
+  # 如果你的自托管 GitLab Runner 无法访问 registry.gitlab.com，
+  # 需要先把 GitLab analyzer 镜像同步到内网镜像仓库，
+  # 然后取消下面这一行注释并改成你的内网地址。
+  #
+  # SECURE_ANALYZERS_PREFIX: "registry.example.com/analyzers"
+
+  # 如果你的 Poetry 项目使用内网 PyPI 源，
+  # 建议在 GitLab 项目 Settings > CI/CD > Variables 中配置，
+  # 不建议直接写死在 yml 中。
+  #
+  # PIP_INDEX_URL: "https://pypi.example.com/simple"
+  # PIP_EXTRA_INDEX_URL: "https://extra-pypi.example.com/simple"
+
+# 覆盖模板中的 dependency-scanning 任务规则
+# 让扫描在 MR、默认分支、定时任务中运行
+dependency-scanning:
+  rules:
+    # Merge Request 中显示依赖漏洞变化
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+    # 默认分支运行后，结果会进入：
+    # Secure > Dependency list
+    # Secure > Vulnerability report
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+    # 允许通过定时流水线定期刷新依赖漏洞状态
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
