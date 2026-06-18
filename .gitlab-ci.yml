@@ -1,11 +1,13 @@
 # .gitlab-ci.yml
-# Python Poetry 项目依赖扫描配置
+# Python Poetry 项目安全扫描配置
 #
 # 功能：
 # 1. 扫描 Poetry 项目的依赖文件 poetry.lock
 # 2. 生成 SBOM
 # 3. 上传至 GitLab 内置 Dependency list
 # 4. 上传依赖漏洞至 GitLab 内置 Vulnerability report
+# 5. 启用 GitLab SAST
+# 6. 启用 GitLab Advanced SAST：GITLAB_ADVANCED_SAST_ENABLED=true
 
 stages:
   - test
@@ -14,7 +16,15 @@ include:
   # GitLab 推荐的新版 SBOM 依赖扫描模板
   - template: Jobs/Dependency-Scanning.v2.gitlab-ci.yml
 
+  # GitLab SAST 模板
+  # Advanced SAST 需要先启用标准 SAST
+  - template: Jobs/SAST.gitlab-ci.yml
+
 variables:
+  # ============================================================
+  # Dependency Scanning 配置
+  # ============================================================
+
   # 没有发现可扫描依赖文件时跳过扫描，避免空项目误报失败
   DS_SKIP_IF_NO_SUPPORTED_FILES: "true"
 
@@ -23,6 +33,20 @@ variables:
   # 5 表示最多扫描到第 5 层目录
   # -1 表示不限制深度
   DS_MAX_DEPTH: "5"
+
+  # Dependency Scanning 排除路径
+  DS_EXCLUDED_PATHS: "spec,test,tests,tmp,node_modules,vendor,dist,build"
+
+  # ============================================================
+  # SAST / Advanced SAST 配置
+  # ============================================================
+
+  # 启用 GitLab Advanced SAST
+  # 适用于 Python、Java、Go、JavaScript、TypeScript、C#、PHP、Ruby 等
+  GITLAB_ADVANCED_SAST_ENABLED: "true"
+
+  # SAST 排除路径
+  SAST_EXCLUDED_PATHS: "spec,test,tests,tmp,node_modules,vendor,dist,build"
 
   # 日志级别：debug / info / warn / error
   SECURE_LOG_LEVEL: "info"
@@ -41,7 +65,7 @@ variables:
   # PIP_EXTRA_INDEX_URL: "https://extra-pypi.example.com/simple"
 
 # 覆盖模板中的 dependency-scanning 任务规则
-# 让扫描在 MR、默认分支、定时任务中运行
+# 让依赖扫描在 MR、默认分支、定时任务中运行
 dependency-scanning:
   rules:
     # Merge Request 中显示依赖漏洞变化
@@ -53,4 +77,19 @@ dependency-scanning:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
     # 允许通过定时流水线定期刷新依赖漏洞状态
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+# Advanced SAST 主任务规则
+# 让 Advanced SAST 在 MR、默认分支、定时任务中运行
+gitlab-advanced-sast:
+  rules:
+    # Merge Request 中显示 SAST 漏洞变化
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+    # 默认分支运行后，结果会进入：
+    # Secure > Vulnerability report
+    # Secure > Security dashboard
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+    # 允许通过定时流水线定期刷新 SAST 漏洞状态
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
