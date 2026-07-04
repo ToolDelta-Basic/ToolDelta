@@ -2,6 +2,8 @@ import traceback
 from dataclasses import dataclass
 from typing import Any, TYPE_CHECKING
 from collections.abc import Callable
+import json
+import textwrap
 from .. import plugin_market
 from ..constants import SysStatus
 from ..utils import fmts, mc_translator, thread_func, ToolDeltaThread
@@ -138,50 +140,149 @@ class ConsoleCmdManager:
                 fmts.print_err("§6虽然出现了问题, 但是您仍然可以继续使用控制台菜单")
 
     def prepare_internal_cmds(self):
-        @thread_func("控制台执行指令并获取回调", ToolDeltaThread.SYSTEM)
-        def _execute_mc_command_and_get_callback(cmds: list[str]) -> None:
-            """执行 Minecraft 指令并获取回调结果。
+        @thread_func("控制台执行WO命令", ToolDeltaThread.SYSTEM)
+        def _execute_wo_command(cmds: list[str]) -> None:
+            """以控制台身份发送命令。
 
             Args:
-                cmd (str): 要执行的 Minecraft 指令。
-
-            Raises:
-                ValueError: 当指令执行失败时抛出。
+                cmds (list[str]): Minecraft 命令
             """
+            if not cmds:
+                fmts.print_err("命令参数为空")
+                return
+            cmd = " ".join(cmds)
+            self.frame.get_game_control().sendwocmd(cmd)
+
+        @thread_func("控制台执行WS命令并获取返回", ToolDeltaThread.SYSTEM)
+        def _execute_ws_command_and_get_callback(cmds: list[str]) -> None:
+            """以 WebSocket 身份发送命令并获取返回。
+
+            Args:
+                cmds (list[str]): Minecraft 命令
+            """
+            if not cmds:
+                fmts.print_err("命令参数为空")
+                return
             cmd = " ".join(cmds)
             try:
-                result = self.frame.get_game_control().sendcmd_with_resp(cmd, 10)
-                if (result.OutputMessages[0].Message == "commands.generic.syntax") | (
-                    result.OutputMessages[0].Message == "commands.generic.unknown"
-                ):
-                    fmts.print_err(f'未知的 MC 指令, 可能是指令格式有误: "{cmd}"')
+                result = self.frame.get_game_control().sendwscmd_with_resp(cmd, 5)
+                msgs_output = [
+                    mc_translator.translate(o.Message, o.Parameters)
+                    for o in result.OutputMessages
+                ]
+                pkt_output = json.dumps(result.as_dict, indent=2, ensure_ascii=False)
+                msgs_formatted = textwrap.indent("\n".join(msgs_output), "  ")
+                pkt_formatted = textwrap.indent(pkt_output, "  ")
+                if result.SuccessCount:
+                    fmts.print_suc(
+                        f"命令执行成功:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                    )
                 else:
-                    msgs_output = [
-                        mc_translator.translate(o.Message, o.Parameters)
-                        for o in result.OutputMessages
-                    ]
-                    # if (
-                    #     game_text_handler
-                    #     := self.frame.get_game_control().game_data_handler
-                    # ):
-                    #     msgs_output = " ".join(
-                    #         json.loads(i)
-                    #         for i in game_text_handler.Handle_Text_Class1(
-                    #             result.as_dict["OutputMessages"]
-                    #         )
-                    #     )
-                    # else:
-                    #     msgs_output = json.dumps(
-                    #         result.as_dict["OutputMessages"],
-                    #         indent=2,
-                    #         ensure_ascii=False,
-                    #     )
-                    if result.SuccessCount:
-                        fmts.print_suc("指令执行成功: \n  " + "\n  ".join(msgs_output))
+                    if len(result.OutputMessages) > 0 and (
+                        result.OutputMessages[0].Message
+                        in ("commands.generic.syntax", "commands.generic.unknown")
+                    ):
+                        fmts.print_err(
+                            f"命令执行错误:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                        )
                     else:
-                        fmts.print_war("指令执行失败: \n  " + "\n  ".join(msgs_output))
+                        fmts.print_war(
+                            f"命令执行失败:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                        )
             except TimeoutError:
-                fmts.print_err(f"[超时] 指令获取结果返回超时: {cmd}")
+                fmts.print_err(f"获取命令 {cmd} 返回超时")
+            except Exception as err:
+                fmts.print_err(f"解析命令 {cmd} 返回时出现未知的错误: {err}")
+
+        @thread_func("控制台执行玩家命令并获取返回", ToolDeltaThread.SYSTEM)
+        def _execute_command_and_get_callback(cmds: list[str]) -> None:
+            """以机器人玩家身份发送命令并获取返回。
+
+            Args:
+                cmds (list[str]): Minecraft 命令
+            """
+            if not cmds:
+                fmts.print_err("命令参数为空")
+                return
+            cmd = " ".join(cmds)
+            try:
+                result = self.frame.get_game_control().sendcmd_with_resp(cmd, 5)
+                msgs_output = [
+                    mc_translator.translate(o.Message, o.Parameters)
+                    for o in result.OutputMessages
+                ]
+                pkt_output = json.dumps(result.as_dict, indent=2, ensure_ascii=False)
+                msgs_formatted = textwrap.indent("\n".join(msgs_output), "  ")
+                pkt_formatted = textwrap.indent(pkt_output, "  ")
+                if result.SuccessCount:
+                    fmts.print_suc(
+                        f"命令执行成功:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                    )
+                else:
+                    if len(result.OutputMessages) > 0 and (
+                        result.OutputMessages[0].Message
+                        in ("commands.generic.syntax", "commands.generic.unknown")
+                    ):
+                        fmts.print_err(
+                            f"命令执行错误:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                        )
+                    else:
+                        fmts.print_war(
+                            f"命令执行失败:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                        )
+            except TimeoutError:
+                fmts.print_err(f"获取命令 {cmd} 返回超时")
+            except Exception as err:
+                fmts.print_err(f"解析命令 {cmd} 返回时出现未知的错误: {err}")
+
+        @thread_func("控制台执行魔法命令并获取返回", ToolDeltaThread.SYSTEM)
+        def _execute_ai_command_and_get_callback(cmds: list[str]) -> None:
+            """发送魔法命令并获取返回。
+
+            Args:
+                cmds (list[str]): Minecraft 命令
+            """
+            if not cmds:
+                fmts.print_err("命令参数为空")
+                return
+            cmd = " ".join(cmds)
+            try:
+                gc = self.frame.get_game_control()
+                if hasattr(gc.launcher, "sendaicmd"):
+                    result = gc.sendaicmd_with_resp(cmd, 5)
+                else:
+                    fmts.print_war(
+                        "此接入点尚未实现 sendaicmd_with_resp 方法, 无法获取返回结果"
+                    )
+                    gc.sendaicmd(cmd)
+                    return
+                msgs_output = [
+                    mc_translator.translate(o.Message, o.Parameters)
+                    for o in result.OutputMessages
+                ]
+                pkt_output = json.dumps(result.as_dict, indent=2, ensure_ascii=False)
+                msgs_formatted = textwrap.indent("\n".join(msgs_output), "  ")
+                pkt_formatted = textwrap.indent(pkt_output, "  ")
+                if result.SuccessCount:
+                    fmts.print_suc(
+                        f"命令执行成功:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                    )
+                else:
+                    if len(result.OutputMessages) > 0 and (
+                        result.OutputMessages[0].Message
+                        in ("commands.generic.syntax", "commands.generic.unknown")
+                    ):
+                        fmts.print_err(
+                            f"命令执行错误:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                        )
+                    else:
+                        fmts.print_war(
+                            f"命令执行失败:\n{msgs_formatted}\n\n命令返回数据包:\n{pkt_formatted}"
+                        )
+            except TimeoutError:
+                fmts.print_err(f"获取命令 {cmd} 返回超时")
+            except Exception as err:
+                fmts.print_err(f"解析命令 {cmd} 返回时出现未知的错误: {err}")
 
         def _send_to_neomega(cmds: list[str]):
             # 仅当启动模式为 neomega 并行模式才生效
@@ -237,22 +338,40 @@ class ConsoleCmdManager:
             lambda _: plugin_market.market.enter_plugin_market(in_game=True),
         )
         self.add_console_cmd_trigger(
+            ["wo/"],
+            "[命令]",
+            "以控制台身份发送命令",
+            lambda args: _execute_wo_command(args) and None,
+        )
+        self.add_console_cmd_trigger(
+            ["ws/"],
+            "[命令]",
+            "以 WebSocket 身份发送命令并获取返回",
+            lambda args: _execute_ws_command_and_get_callback(args) and None,
+        )
+        self.add_console_cmd_trigger(
             ["/"],
-            "[指令]",
-            "执行 MC 指令",
-            lambda args: _execute_mc_command_and_get_callback(args) and None,
+            "[命令]",
+            "以机器人玩家身份发送命令并获取返回",
+            lambda args: _execute_command_and_get_callback(args) and None,
+        )
+        self.add_console_cmd_trigger(
+            ["ai/"],
+            "[命令]",
+            "发送魔法命令并获取返回",
+            lambda args: _execute_ai_command_and_get_callback(args) and None,
         )
         self.add_console_cmd_trigger(["list"], None, "查询在线玩家", _list)
         self.add_console_cmd_trigger(
             ["reload"],
             None,
-            "浅重载插件 (重载插件的__init__.py, 可能有部分特殊插件无法重载)",
+            "浅重载插件 (重载插件的__init__.py, 可能有部分特殊插件无法重载, 建议一般情况时使用)",
             lambda _: self.frame.reload(deep_reload=False),
         )
         self.add_console_cmd_trigger(
             ["deepreload"],
             None,
-            "深重载插件 (重载整个插件模块, 可能导致某些进程被强制清除, 建议开发时使用)",
+            "深重载插件 (重载整个插件模块, 可能导致某些进程被强制清除, 建议插件开发时使用)",
             lambda _: self.frame.reload(deep_reload=True),
         )
         if isinstance(self.frame.launcher, FrameNeOmegaLauncher):
