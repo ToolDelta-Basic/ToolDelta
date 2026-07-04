@@ -1,12 +1,11 @@
 import os
 import subprocess
-from collections.abc import Callable
 import time
 from grpc import RpcError
 import grpc
 
 from ... import utils
-from ...constants import SysStatus, PacketIDS
+from ...constants import SysStatus
 from ...internal.types import Packet_CommandOutput
 from ...mc_bytes_packet import base_bytes_packet, pool
 from ...utils import fmts, urlmethod, sys_args
@@ -20,7 +19,6 @@ class FrameFateArk(StandardFrame):
     def __init__(self) -> None:
         super().__init__()
         self.bot_name = ""
-        self.command_output_cbs: dict[str, Callable] = {}
 
     def init(self) -> None:
         if "no-download-libs" not in sys_args.sys_args_to_dict().keys():
@@ -187,16 +185,7 @@ class FrameFateArk(StandardFrame):
         if isinstance(pk, base_bytes_packet.BaseBytesPacket):
             self.bytes_packet_handler(pkID, pk)
         else:
-            if pkID == PacketIDS.CommandOutput:
-                self._command_output_handler(pk)
             self.dict_packet_handler(pkID, pk)
-
-    def _command_output_handler(self, pk: dict):
-        pkUUID = utils.basic.validate_uuid(pk["CommandOrigin"]["UUID"])
-        if pkUUID in self.command_output_cbs:
-            self.command_output_cbs[pkUUID](pk)
-        # else:
-        #     fmts.print_war(f"命令没有对应回调: {pkUUID}")
 
     def _safe_exit(self):
         self.kill_proc()
@@ -208,41 +197,51 @@ class FrameFateArk(StandardFrame):
         if self.status != SysStatus.RUNNING:
             raise ValueError("未连接到游戏")
 
-    def sendcmd(
-        self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Packet_CommandOutput | None:
+    def sendwocmd(self, cmd: str):
         self.check_avaliable()
-        if waitForResp:
-            ud = fateark_core.sendcmd_and_get_uuid(cmd)
-            getter, setter = utils.create_result_cb(dict)
-            self.command_output_cbs[ud] = setter
-            res = getter(timeout)
-            if res is None:
-                raise TimeoutError("指令超时", ud)
-            return Packet_CommandOutput(res)
-        else:
-            fateark_core.sendcmd_and_get_uuid(cmd)
-            return None
+        fateark_core.send_wo_command(cmd)
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
         self.check_avaliable()
         if waitForResp:
-            ud = fateark_core.sendwscmd_and_get_uuid(cmd)
-            getter, setter = utils.create_result_cb(dict)
-            self.command_output_cbs[ud] = setter
-            res = getter(timeout)
-            if res is None:
-                raise TimeoutError("指令超时", ud)
-            return Packet_CommandOutput(res)
-        else:
-            fateark_core.sendwscmd_and_get_uuid(cmd)
-            return None
+            co, err = fateark_core.send_ws_command_with_response(cmd, timeout)
+            if err == "timeout":
+                raise TimeoutError(f"获取命令 {cmd} 返回超时")
+            elif err != "":
+                raise Exception(f"执行命令 {cmd} 时出现未知的错误: {err}")
+            return Packet_CommandOutput(co)
+        fateark_core.send_ws_command(cmd)
+        return None
 
-    def sendwocmd(self, cmd: str):
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
         self.check_avaliable()
-        fateark_core.sendwocmd(cmd)
+        if waitForResp:
+            co, err = fateark_core.send_player_command_with_response(cmd, timeout)
+            if err == "timeout":
+                raise TimeoutError(f"获取命令 {cmd} 返回超时")
+            elif err != "":
+                raise Exception(f"执行命令 {cmd} 时出现未知的错误: {err}")
+            return Packet_CommandOutput(co)
+        fateark_core.send_player_command(cmd)
+        return None
+
+    def sendaicmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        self.check_avaliable()
+        if waitForResp:
+            co, err = fateark_core.send_ai_command_with_response(cmd, timeout)
+            if err == "timeout":
+                raise TimeoutError(f"获取命令 {cmd} 返回超时")
+            elif err != "":
+                raise Exception(f"执行命令 {cmd} 时出现未知的错误: {err}")
+            return Packet_CommandOutput(co)
+        fateark_core.send_ai_command(cmd)
+        return None
 
     def sendPacket(
         self, pkID: int, pk: dict | base_bytes_packet.BaseBytesPacket

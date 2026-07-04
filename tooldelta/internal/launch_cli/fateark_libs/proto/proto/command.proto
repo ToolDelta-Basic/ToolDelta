@@ -12,18 +12,21 @@ message SendWSCommandRequest { string cmd = 1; }
 
 message SendPlayerCommandRequest { string cmd = 1; }
 
-message SendAICommandRequest {
-  string runtime_id = 1;
-  string cmd = 2;
+message SendAICommandRequest { string cmd = 1; }
+
+message SendWSCommandWithResponseRequest {
+  string cmd = 1;
+  double timeout = 2;
 }
 
-message SendWSCommandWithResponseRequest { string cmd = 1; }
-
-message SendPlayerCommandWithResponseRequest { string cmd = 1; }
+message SendPlayerCommandWithResponseRequest {
+  string cmd = 1;
+  double timeout = 2;
+}
 
 message SendAICommandWithResponseRequest {
-  string runtime_id = 1;
-  string cmd = 2;
+  string cmd = 1;
+  double timeout = 2;
 }
 
 service CommandService {

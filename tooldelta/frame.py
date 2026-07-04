@@ -12,9 +12,11 @@ import os
 import signal
 import traceback
 import json
+import uuid
 
 from . import constants, extend_functions, game_utils, utils
 from .constants import SysStatus, TextType
+from .constants.netease import PYRPC_OP_SEND
 from .internal.config_loader import ConfigLoader
 from .internal.launch_config import LaunchConfig
 from .internal.packet_handler import PacketHandler
@@ -359,38 +361,20 @@ class GameCtrl:
             f"此启动器 ({self.launcher.__class__.__name__}) 框架无法产生机器人名"
         )
 
-    def sendcmd(
-        self, cmd: str, waitForResp: bool = False, timeout: float = 30
-    ) -> Packet_CommandOutput | None:
+    def sendwocmd(self, cmd: str) -> None:
         """
-        以机器人玩家身份发送指令。
+        以控制台身份发送命令。
 
         Args:
             cmd (str): Minecraft 命令
-            waitForResp (bool, optional): 是否等待返回。默认为 False
-            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
         """
-        return self.launcher.sendcmd(cmd, waitForResp, timeout)
-
-    def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
-        """
-        以机器人玩家身份发送指令并获取返回。
-
-        Args:
-            cmd (str): Minecraft 指令
-            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
-
-        Returns:
-            Packet_CommandOutput: 指令返回类
-        """
-        resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
-        return resp
+        self.launcher.sendwocmd(cmd)
 
     def sendwscmd(
         self, cmd: str, waitForResp: bool = False, timeout: float = 30
     ) -> Packet_CommandOutput | None:
         """
-        以 WebSocket 身份发送指令。
+        以 WebSocket 身份发送命令。
 
         Args:
             cmd (str): Minecraft 命令
@@ -403,26 +387,106 @@ class GameCtrl:
         self, cmd: str, timeout: float = 30
     ) -> Packet_CommandOutput:
         """
-        发送 WebSocket 指令并获取返回。
+        以 WebSocket 身份发送命令并获取返回。
 
         Args:
-            cmd (str): MC WebSocket 指令
+            cmd (str): Minecraft 命令
             timeout (float, optional): 超时时间, 超时则引发 TimeoutError
 
         Returns:
-            Packet_CommandOutput: 指令返回类
+            Packet_CommandOutput: 命令返回类
         """
         resp: Packet_CommandOutput = self.sendwscmd(cmd, True, timeout)  # type: ignore
         return resp
 
-    def sendwocmd(self, cmd: str) -> None:
+    def sendcmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
         """
-        发送 SettingsCommand 指令。
+        以机器人玩家身份发送命令。
+
+        Args:
+            cmd (str): Minecraft 命令
+            waitForResp (bool, optional): 是否等待返回。默认为 False
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+        """
+        return self.launcher.sendcmd(cmd, waitForResp, timeout)
+
+    def sendcmd_with_resp(self, cmd: str, timeout: float = 30) -> Packet_CommandOutput:
+        """
+        以机器人玩家身份发送命令并获取返回。
+
+        Args:
+            cmd (str): Minecraft 命令
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+
+        Returns:
+            Packet_CommandOutput: 命令返回类
+        """
+        resp: Packet_CommandOutput = self.sendcmd(cmd, True, timeout)  # type: ignore
+        return resp
+
+    # TODO: 当 omega 接入点支持 sendaicmd_with_resp 方法后, 请删除以下的保护性代码
+    def sendaicmd(
+        self, cmd: str, waitForResp: bool = False, timeout: float = 30
+    ) -> Packet_CommandOutput | None:
+        """
+        发送魔法命令。
+
+        Args:
+            cmd (str): Minecraft 命令
+            waitForResp (bool, optional): 是否等待返回。默认为 False
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+        """
+        if hasattr(self.launcher, "sendaicmd"):
+            return self.launcher.sendaicmd(cmd, waitForResp, timeout)  # type: ignore
+        if not waitForResp:
+            self.sendaicmdonly(cmd)
+            return None
+        raise AttributeError("此接入点尚未实现 sendaicmd_with_resp 方法")
+
+    def sendaicmd_with_resp(
+        self, cmd: str, timeout: float = 30
+    ) -> Packet_CommandOutput:
+        """
+        发送魔法命令并获取返回。
+
+        Args:
+            cmd (str): Minecraft 命令
+            timeout (float, optional): 超时时间, 超时则引发 TimeoutError
+
+        Returns:
+            Packet_CommandOutput: 命令返回类
+        """
+        resp: Packet_CommandOutput = self.sendaicmd(cmd, True, timeout)  # type: ignore
+        return resp
+
+    def sendaicmdonly(self, cmd: str) -> None:
+        """
+        仅发送魔法命令, 不获取返回。
 
         Args:
             cmd (str): Minecraft 命令
         """
-        self.launcher.sendwocmd(cmd)
+        my_runtimeid = self.players.getBotInfo().runtime_id
+        pk = {
+            "Value": [
+                "ModEventC2S",
+                [
+                    "Minecraft",
+                    "aiCommand",
+                    "ExecuteCommandEvent",
+                    {
+                        "playerId": str(my_runtimeid),
+                        "cmd": cmd,
+                        "uuid": str(uuid.uuid4()),
+                    },
+                ],
+                None,
+            ],
+            "OperationType": PYRPC_OP_SEND,
+        }
+        self.sendPacket(constants.PacketIDS.PyRpc, pk)
 
     def say_to(self, target: str, text: str) -> None:
         """向玩家发送消息

@@ -7,22 +7,25 @@ from .... import constants
 from ....internal.types import UnreadyPlayer, Abilities
 from ....mc_bytes_packet.pool import is_bytes_packet
 
-utils_pb2 = importlib.import_module(".proto.utils_pb2", package=__package__)
-reversaler_pb2 = importlib.import_module(".proto.reversaler_pb2", package=__package__)
+command_pb2 = importlib.import_module(".proto.command_pb2", package=__package__)
 listener_pb2 = importlib.import_module(".proto.listener_pb2", package=__package__)
 playerkit_pb2 = importlib.import_module(".proto.playerkit_pb2", package=__package__)
+reversaler_pb2 = importlib.import_module(".proto.reversaler_pb2", package=__package__)
+utils_pb2 = importlib.import_module(".proto.utils_pb2", package=__package__)
 
+from .proto.command_pb2_grpc import CommandServiceStub
 from .proto.listener_pb2_grpc import ListenerServiceStub
+from .proto.playerkit_pb2_grpc import PlayerKitServiceStub
 from .proto.reversaler_pb2_grpc import FateReversalerServiceStub
 from .proto.utils_pb2_grpc import UtilsServiceStub
-from .proto.playerkit_pb2_grpc import PlayerKitServiceStub
 
 
 grpc_con: grpc.Channel | None = None
-utils_stub: UtilsServiceStub | None = None
+command_stub: CommandServiceStub | None = None
 listener_stub: ListenerServiceStub | None = None
 playerkit_stub: PlayerKitServiceStub | None = None
 core_stub: FateReversalerServiceStub | None = None
+utils_stub: UtilsServiceStub | None = None
 
 listen_packets: set[int] = set()
 
@@ -34,17 +37,11 @@ def get_grpc_con():
     return grpc_con
 
 
-def get_core_stub():
-    global core_stub
-    if core_stub is None:
+def get_command_stub():
+    global command_stub
+    if command_stub is None:
         raise Exception("在建立连接前调用")
-    return core_stub
-
-def get_utils_stub():
-    global utils_stub
-    if utils_stub is None:
-        raise Exception("在建立连接前调用")
-    return utils_stub
+    return command_stub
 
 
 def get_listener_stub():
@@ -61,21 +58,39 @@ def get_playerkit_stub():
     return playerkit_stub
 
 
+def get_core_stub():
+    global core_stub
+    if core_stub is None:
+        raise Exception("在建立连接前调用")
+    return core_stub
+
+
+def get_utils_stub():
+    global utils_stub
+    if utils_stub is None:
+        raise Exception("在建立连接前调用")
+    return utils_stub
+
+
 def connect(address: str) -> None:
-    global grpc_con, listener_stub, playerkit_stub, utils_stub, core_stub
+    global grpc_con, command_stub, listener_stub, playerkit_stub, core_stub, utils_stub
     grpc_con = grpc.insecure_channel(address)
-    utils_stub = UtilsServiceStub(grpc_con)
+    command_stub = CommandServiceStub(grpc_con)
     listener_stub = ListenerServiceStub(grpc_con)
     playerkit_stub = PlayerKitServiceStub(grpc_con)
     core_stub = FateReversalerServiceStub(grpc_con)
+    utils_stub = UtilsServiceStub(grpc_con)
+
 
 def wait_dead():
     wait_dead_request = reversaler_pb2.WaitDeadRequest()
     res = next(get_core_stub().WaitDead(wait_dead_request))
     return res.reason
 
+
 def ping():
     return get_core_stub().Ping(reversaler_pb2.PingRequest()).success
+
 
 def login(
     auth_server: str,
@@ -109,7 +124,8 @@ def read_packet():
         pk_payload: str = packet.payload
         if pk_payload == "":
             continue
-        yield packet.id, json.loads(packet.payload)
+        yield packet.id, json.loads(pk_payload)
+
 
 def read_bytes_packet():
     for packet in get_listener_stub().ListenBytesPackets(
@@ -119,6 +135,7 @@ def read_bytes_packet():
         if pk_payload == b"":
             continue
         yield packet.id, pk_payload
+
 
 def sendPacket(pkID: int, pk: dict):
     get_utils_stub().SendPacket(
@@ -147,51 +164,56 @@ def set_listen_packets(pkIDs: set[int]):
             listen_packets.add(i)
 
 
-def sendcmd_and_get_uuid(cmd: str):
-    ud = str(uuid.uuid4())
-    sendPacket(
-        constants.PacketIDS.CommandRequest,
-        {
-            "CommandLine": cmd,
-            "CommandOrigin": {
-                "Origin": 0,
-                "UUID": ud,
-                "RequestID": ud,
-                "PlayerUniqueID": 0,
-            },
-            "Internal": False,
-            "Version": constants.minecraft.COMMAND_VERSION,
-            "UnLimited": False,
-        },
+def send_wo_command(cmd: str):
+    get_command_stub().SendWOCommand(command_pb2.SendWOCommandRequest(cmd=cmd))
+
+
+def send_ws_command(cmd: str):
+    get_command_stub().SendWSCommand(command_pb2.SendWSCommandRequest(cmd=cmd))
+
+
+def send_player_command(cmd: str):
+    get_command_stub().SendPlayerCommand(command_pb2.SendPlayerCommandRequest(cmd=cmd))
+
+
+def send_ai_command(cmd: str):
+    get_command_stub().SendAICommand(command_pb2.SendAICommandRequest(cmd=cmd))
+
+
+def send_ws_command_with_response(cmd: str, timeout: float):
+    res = get_command_stub().SendWSCommandWithResponse(
+        command_pb2.SendWSCommandWithResponseRequest(cmd=cmd, timeout=timeout)
     )
-    return ud
+    res_status: int = res.status
+    res_payload: str = res.payload
+    res_error_msg: str = res.error_msg
+    if res_status == 0:
+        return json.loads(res_payload), ""
+    return {}, res_error_msg
 
 
-def sendwscmd_and_get_uuid(cmd: str):
-    ud = str(uuid.uuid4())
-    sendPacket(
-        constants.PacketIDS.CommandRequest,
-        {
-            "CommandLine": cmd,
-            "CommandOrigin": {
-                "Origin": 5,
-                "UUID": ud,
-                "RequestID": ud,
-                "PlayerUniqueID": 0,
-            },
-            "Internal": False,
-            "Version": constants.minecraft.COMMAND_VERSION,
-            "UnLimited": False,
-        },
+def send_player_command_with_response(cmd: str, timeout: float):
+    res = get_command_stub().SendPlayerCommandWithResponse(
+        command_pb2.SendPlayerCommandWithResponseRequest(cmd=cmd, timeout=timeout)
     )
-    return ud
+    res_status: int = res.status
+    res_payload: str = res.payload
+    res_error_msg: str = res.error_msg
+    if res_status == 0:
+        return json.loads(res_payload), ""
+    return {}, res_error_msg
 
 
-def sendwocmd(cmd: str):
-    sendPacket(
-        constants.PacketIDS.SettingsCommand,
-        {"CommandLine": cmd, "SuppressOutput": False},
+def send_ai_command_with_response(cmd: str, timeout: float):
+    res = get_command_stub().SendAICommandWithResponse(
+        command_pb2.SendAICommandWithResponseRequest(cmd=cmd, timeout=timeout)
     )
+    res_status: int = res.status
+    res_payload: str = res.payload
+    res_error_msg: str = res.error_msg
+    if res_status == 0:
+        return json.loads(res_payload), ""
+    return {}, res_error_msg
 
 
 def get_online_player_uuids() -> list[str]:
