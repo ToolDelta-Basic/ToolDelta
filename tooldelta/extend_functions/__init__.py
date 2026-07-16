@@ -32,5 +32,10 @@ def activate_functions():
         func.when_activate()
 
 
+def restore_console_cmds():
+    for func in registered_functions:
+        func.when_console_cmd_reset()
+
+
 def import_functions():
     from . import gamerule_warnings, fast_plugin_download
