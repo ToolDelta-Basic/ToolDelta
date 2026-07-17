@@ -33,6 +33,7 @@ def activate_functions():
 
 
 def restore_console_cmds():
+    """恢复内置扩展提供的控制台命令。"""
     for func in registered_functions:
         func.when_console_cmd_reset()
 
