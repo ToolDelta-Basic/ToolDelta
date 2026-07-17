@@ -39,4 +39,4 @@ def restore_console_cmds():
 
 
 def import_functions():
-    from . import gamerule_warnings, fast_plugin_download
+    from . import gamerule_warnings, fast_plugin_download, plugin_config
