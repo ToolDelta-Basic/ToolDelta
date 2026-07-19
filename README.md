@@ -9,11 +9,11 @@
 
 ToolDelta 可以运行在**多种游戏交互启动器核心**上， 包括但不限于：
    - ~~FastBuilder~~
-   - NeOmega接入点
-   - NeOmega启动器
-   - Eulogist赞颂者
-   - FateArk接入点  （目前公开可用）
-   - TanGame本地联机接入点
+   - NeOmega 接入点
+   - NeOmega 启动器
+   - Eulogist 赞颂者
+   - FateArk 接入点  （目前公开可用）
+   - TanGame 本地联机接入点
 
 ToolDelta 的插件可以极大幅提高您的租赁服的玩法上限和优化租赁服的流畅度。
 
