@@ -1,5 +1,4 @@
 import os
-import re
 import getpass
 import requests
 from typing import TYPE_CHECKING

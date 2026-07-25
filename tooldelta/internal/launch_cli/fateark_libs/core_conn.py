@@ -1,9 +1,7 @@
 import grpc
 import json
-import uuid
 import importlib
 
-from .... import constants
 from ....internal.types import UnreadyPlayer, Abilities
 from ....mc_bytes_packet.pool import is_bytes_packet
 

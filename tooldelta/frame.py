@@ -295,7 +295,7 @@ class GameCtrl:
                     msg_text = "".join(
                         [(i.get("text") or i.get("translate", "???")) for i in msg_text]
                     )
-                fmts.print_with_info(msg_text, "§f 消息 ")
+                    fmts.print_with_info(msg_text, "§f 消息 ")
         return False
 
     def system_inject(self):

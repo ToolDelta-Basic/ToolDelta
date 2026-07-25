@@ -1,4 +1,3 @@
-import struct
 from typing import TypeVar
 from collections.abc import Callable
 
