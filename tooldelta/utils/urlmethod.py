@@ -26,6 +26,7 @@ from . import fmts
 GGithubSrcURL = ""
 GPluginMarketURL = ""
 
+
 def set_global_github_src_url(url: str):
     global GGithubSrcURL
     GGithubSrcURL = url
@@ -37,7 +38,12 @@ def get_global_github_src_url():
 
 def get_fastest_github_mirror():
     MAX_TIMEOUT = 5
-    if input(fmts.fmt_info("是否自行输入 GitHub 镜像源, 否则自动选择(y/n): ")).strip().lower() == "y":
+    if (
+        input(fmts.fmt_info("是否自行输入 GitHub 镜像源, 否则自动选择(y/n): "))
+        .strip()
+        .lower()
+        == "y"
+    ):
         return input(fmts.fmt_info("请输入 GitHub 镜像源: "))
     fmts.print_inf(f"正在对各 GitHub 镜像进行测速 (最多需要 {MAX_TIMEOUT}s) ...")
     res = test_site_latency(
@@ -354,7 +360,8 @@ def test_site_latency(urls: tuple[str, ...], timeout: float) -> list[tuple[str, 
         list: 按延迟排序的 URL 和延迟时间的元组列表
     """
     tmp_speed: dict[str, float] = {}
-    with ThreadPoolExecutor() as executor:
+    executor = ThreadPoolExecutor()
+    try:
         futures = {executor.submit(measure_latencyt, url, timeout): url for url in urls}
         try:
             for future in as_completed(futures, timeout=timeout):
@@ -366,9 +373,8 @@ def test_site_latency(urls: tuple[str, ...], timeout: float) -> list[tuple[str, 
                     fmts.print_war(f"{url} 测速失败: {e}")
         except Exception as e:
             fmts.print_war(f"一些网址的结果测速失败: {e}")
-            # 可能是 Timeout
-            executor.shutdown(wait=False, cancel_futures=True)
-            pass
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
     return sorted(tmp_speed.items(), key=lambda x: x[1])
 
 
@@ -395,6 +401,7 @@ def measure_latencyt(url: str, timeout: float) -> float:
     except Exception as e:
         fmts.print_war(f"Error measuring latency for {url}: {e}")
     return -1.0  # 返回 -
+
 
 def get_free_port(start: int = 2000, end: int = 65535) -> int:
     """获取空闲端口号
