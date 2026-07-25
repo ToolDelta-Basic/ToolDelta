@@ -1,6 +1,7 @@
 """配置文件模块"""
 
 import os
+import re
 import json
 from pathlib import Path
 from typing import Any
@@ -412,3 +413,9 @@ default_cfg = write_default_cfg_file
 
 def _jsonfile_exists(path: Path) -> bool:
     return (path if path.name.endswith(".json") else Path(f"{path!s}.json")).is_file()
+
+def only_digits(text):
+    return bool(re.fullmatch(r'\d+', text))
+
+def has_both_digit_and_letter(text):
+    return bool(re.search(r'\d', text) and re.search(r'[a-zA-Z]', text))

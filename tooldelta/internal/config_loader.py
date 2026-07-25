@@ -1,4 +1,5 @@
 import os
+import re
 import getpass
 import requests
 from typing import TYPE_CHECKING
@@ -211,7 +212,7 @@ class ConfigLoader:
                 _s = outer_launch_args.get("server")
                 if _s is None:
                     raise SystemExit("参数启动有误: --server 无参数")
-                server_number = int(_s)
+                server_number = _s # 支持山头
             elif "服务器号" in launch_data.keys():
                 server_number = launch_data["服务器号"]
                 is_server = True
@@ -234,14 +235,22 @@ class ConfigLoader:
                 while True:
                     try:
                         server_number_prompt = (
-                            "请输入租赁服号" if is_server else "请输入房间号"
+                            "请输入租赁服/山头号" if is_server else "请输入房间号"
                         )
                         server_pwd_prompt = (
-                            "请输入租赁服密码" if is_server else "请输入房间密码"
+                            "请输入租赁服密码(山头直接回车)" if is_server else "请输入房间密码"
                         )
-                        server_number = int(
-                            input(fmts.fmt_info(f"{server_number_prompt}:", "§b 输入 "))
-                        )
+                        server_number = input(fmts.fmt_info(f"{server_number_prompt}:", "§b 输入 ")).strip()
+                        if cfg.only_digits(server_number): # 租赁服号
+                            server_number = int(server_number)
+                        elif cfg.has_both_digit_and_letter(server_number) and len(server_number) == 11: # nv1验证 -山头码
+                            pass
+                        elif server_number.startswith("#") and len(server_number) == 9: # bunker-web验证 -山头号 #XXXXXXXXX
+                            pass
+                        elif server_number.count(":") == 1:
+                            pass
+                        else:
+                            raise ValueError("输入有误，租赁服号和山头号应当是纯数字或包含数字和字母")
                         serverPasswd = (
                             getpass.getpass(
                                 fmts.fmt_info(
@@ -252,7 +261,7 @@ class ConfigLoader:
                             or ""
                         )
                         if is_server:
-                            launch_data["服务器号"] = int(server_number)
+                            launch_data["服务器号"] = server_number
                         else:
                             launch_data["房间号"] = int(server_number)
                         launch_data["密码"] = serverPasswd
@@ -260,8 +269,8 @@ class ConfigLoader:
                         cfg.write_default_cfg_file("ToolDelta基本配置.json", cfgs, True)
                         fmts.print_suc("登录配置设置成功")
                         break
-                    except ValueError:
-                        fmts.print_err("输入有误，租赁服号和密码应当是纯数字")
+                    except ValueError as err:
+                        fmts.print_err(f"{err}")
             auth_servers = tooldelta_cli.AUTH_SERVERS
             # 选择验证服务器
             if auth_server == "":
@@ -337,7 +346,11 @@ class ConfigLoader:
                 fbtokenFix()
                 with open("fbtoken", encoding="utf-8") as f:
                     fbtoken = f.read()
-            if isinstance(launcher, ACCESS_POINT_LAUNCHERS):
+            if isinstance(launcher, FrameTanGameAccessPoint):
+                launcher.set_launch_data(
+                    int(server_number), serverPasswd, fbtoken, auth_server
+                )
+            elif isinstance(launcher, ACCESS_POINT_LAUNCHERS):
                 launcher.set_launch_data(
                     server_number, serverPasswd, fbtoken, auth_server
                 )

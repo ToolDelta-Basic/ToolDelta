@@ -64,14 +64,16 @@ FBLIKE_APIS = [
 
 AUTH_SERVERS = [
     ("§7FastBuilder 官方验证服务器 §c✘不再可用", "https://user.fastbuilder.pro"),
-    ("§7咕咕酱 FB验证服务器 §c✘不再可用", "https://liliya233.uk"),
-    ("NetHard 验证服务器 §a✔可用", "https://nv1.nethard.pro"),
+    ("§7NetHard 验证服务器 §c✘不再可用", "https://nv1.nethard.pro"),
+    ("Bunker-web 验证服务器 §a✔可用", "https://api.liliya233.uk"),
+    ("新nv1 验证服务器 §a✔可用", "https://nv1.aetheredge.top"),
 ]
 "验证服务器列表"
 
 ALL_AVAILABLE_GITHUB_MIRRORS = (
     "https://ghproxy.net",
     "https://ghfast.top",
+    "https://gh-proxy.com",
     "https://github.tooldelta.top",
 )
 
