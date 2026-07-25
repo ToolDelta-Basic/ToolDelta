@@ -25,7 +25,7 @@ class FrameFateArk(StandardFrame):
             fateark_utils.check_update(urlmethod.get_global_github_src_url())
 
     def set_launch_data(
-        self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
+        self, serverNumber: int | str, password: str, fbToken: str, auth_server_url: str
     ):
         self.serverNumber = serverNumber
         self.serverPassword = password

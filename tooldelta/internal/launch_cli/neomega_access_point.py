@@ -45,7 +45,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
             accountOption=None,
         )
         self.blob_hash_holder = BlobHashHolder(self.omega)
-        self.serverNumber: int | None = None
+        self.serverNumber: int | str | None = None
         self.serverPassword: str | None = None
         self.fbToken: str | None = None
         self.auth_server: str | None = None
@@ -65,7 +65,7 @@ class FrameNeOmgAccessPoint(StandardFrame):
         self.status = SysStatus.LAUNCHING
 
     def set_launch_data(
-        self, serverNumber: int, password: str, fbToken: str, auth_server_url: str
+        self, serverNumber: int | str, password: str, fbToken: str, auth_server_url: str
     ):
         self.serverNumber = serverNumber
         self.serverPassword = password

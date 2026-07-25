@@ -15,7 +15,7 @@ LAUNCH_CFG_STD: dict = {
 "默认登录配置标准验证格式"
 
 LAUNCHER_NEOMEGA_STD: dict = {
-    "服务器号": int,
+    "服务器号": (int, str),
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
@@ -27,7 +27,7 @@ LAUNCHER_NEOMEGA_DEFAULT: dict = {
 LAUNCHER_NEOMEGARM_STD: dict = {"远程连接地址": str}
 LAUNCHER_NEOMEGARM_DEFAULT: dict = {"远程连接地址": "tcp://127.0.0.1:24020"}
 LAUNCHER_NEOMG2TD_STD: dict = {
-    "服务器号": int,
+    "服务器号": (int, str),
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }
@@ -39,7 +39,7 @@ LAUNCHER_NEOMG2TD_DEFAULT: dict = {
 LAUNCHER_EULOGIST_DEFAULT: dict = {}
 LAUNCHER_EULOGIST_STD: dict = {}
 LAUNCHER_FATEARK_STD: dict = {
-    "服务器号": int,
+    "服务器号": (int, str),
     "密码": str,
     "验证服务器地址(更换时记得更改fbtoken)": str,
 }

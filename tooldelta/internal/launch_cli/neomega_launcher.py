@@ -38,7 +38,7 @@ class FrameNeOmegaLauncher(FrameNeOmgAccessPoint):
             address="tcp://localhost:24013",
             accountOption=None,
         )
-        self.serverNumber: int | None = None
+        self.serverNumber: int | str | None = None
         self.serverPassword: str | None = None
         self.fbToken: str | None = None
         self.auth_server: str | None = None
