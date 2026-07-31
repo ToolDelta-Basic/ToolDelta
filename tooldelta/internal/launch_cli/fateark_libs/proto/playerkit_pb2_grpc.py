@@ -205,6 +205,26 @@ class PlayerKitServiceStub(object):
                 request_serializer=proto_dot_playerkit__pb2.GetPlayerOnlineRequest.SerializeToString,
                 response_deserializer=proto_dot_response__pb2.GeneralBoolResponse.FromString,
                 _registered_method=True)
+        self.GetPlayerXUID = channel.unary_unary(
+                '/fateark.proto.playerkit.PlayerKitService/GetPlayerXUID',
+                request_serializer=proto_dot_playerkit__pb2.GetPlayerXUIDRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.GeneralResponse.FromString,
+                _registered_method=True)
+        self.GetPlayerCommandPermissions = channel.unary_unary(
+                '/fateark.proto.playerkit.PlayerKitService/GetPlayerCommandPermissions',
+                request_serializer=proto_dot_playerkit__pb2.GetPlayerCommandPermissionsRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.GeneralInt32Response.FromString,
+                _registered_method=True)
+        self.GetPlayerPermissions = channel.unary_unary(
+                '/fateark.proto.playerkit.PlayerKitService/GetPlayerPermissions',
+                request_serializer=proto_dot_playerkit__pb2.GetPlayerPermissionsRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.GeneralInt32Response.FromString,
+                _registered_method=True)
+        self.GetPlayerInfo = channel.unary_unary(
+                '/fateark.proto.playerkit.PlayerKitService/GetPlayerInfo',
+                request_serializer=proto_dot_playerkit__pb2.GetPlayerInfoRequest.SerializeToString,
+                response_deserializer=proto_dot_response__pb2.GeneralResponse.FromString,
+                _registered_method=True)
         self.SendPlayerChat = channel.unary_unary(
                 '/fateark.proto.playerkit.PlayerKitService/SendPlayerChat',
                 request_serializer=proto_dot_playerkit__pb2.SendPlayerChatRequest.SerializeToString,
@@ -439,6 +459,30 @@ class PlayerKitServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetPlayerXUID(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetPlayerCommandPermissions(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetPlayerPermissions(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetPlayerInfo(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def SendPlayerChat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -641,6 +685,26 @@ def add_PlayerKitServiceServicer_to_server(servicer, server):
                     servicer.GetPlayerOnline,
                     request_deserializer=proto_dot_playerkit__pb2.GetPlayerOnlineRequest.FromString,
                     response_serializer=proto_dot_response__pb2.GeneralBoolResponse.SerializeToString,
+            ),
+            'GetPlayerXUID': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPlayerXUID,
+                    request_deserializer=proto_dot_playerkit__pb2.GetPlayerXUIDRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.GeneralResponse.SerializeToString,
+            ),
+            'GetPlayerCommandPermissions': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPlayerCommandPermissions,
+                    request_deserializer=proto_dot_playerkit__pb2.GetPlayerCommandPermissionsRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.GeneralInt32Response.SerializeToString,
+            ),
+            'GetPlayerPermissions': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPlayerPermissions,
+                    request_deserializer=proto_dot_playerkit__pb2.GetPlayerPermissionsRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.GeneralInt32Response.SerializeToString,
+            ),
+            'GetPlayerInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPlayerInfo,
+                    request_deserializer=proto_dot_playerkit__pb2.GetPlayerInfoRequest.FromString,
+                    response_serializer=proto_dot_response__pb2.GeneralResponse.SerializeToString,
             ),
             'SendPlayerChat': grpc.unary_unary_rpc_method_handler(
                     servicer.SendPlayerChat,
@@ -1586,6 +1650,114 @@ class PlayerKitService(object):
             '/fateark.proto.playerkit.PlayerKitService/GetPlayerOnline',
             proto_dot_playerkit__pb2.GetPlayerOnlineRequest.SerializeToString,
             proto_dot_response__pb2.GeneralBoolResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPlayerXUID(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.playerkit.PlayerKitService/GetPlayerXUID',
+            proto_dot_playerkit__pb2.GetPlayerXUIDRequest.SerializeToString,
+            proto_dot_response__pb2.GeneralResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPlayerCommandPermissions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.playerkit.PlayerKitService/GetPlayerCommandPermissions',
+            proto_dot_playerkit__pb2.GetPlayerCommandPermissionsRequest.SerializeToString,
+            proto_dot_response__pb2.GeneralInt32Response.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPlayerPermissions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.playerkit.PlayerKitService/GetPlayerPermissions',
+            proto_dot_playerkit__pb2.GetPlayerPermissionsRequest.SerializeToString,
+            proto_dot_response__pb2.GeneralInt32Response.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPlayerInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.playerkit.PlayerKitService/GetPlayerInfo',
+            proto_dot_playerkit__pb2.GetPlayerInfoRequest.SerializeToString,
+            proto_dot_response__pb2.GeneralResponse.FromString,
             options,
             channel_credentials,
             insecure,

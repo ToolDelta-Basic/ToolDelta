@@ -5,11 +5,12 @@ from grpc import RpcError
 import grpc
 
 from ... import utils
-from ...constants import SysStatus
+from ...constants import PacketIDS, SysStatus
 from ...internal.types import Packet_CommandOutput
 from ...mc_bytes_packet import base_bytes_packet, pool
 from ...utils import fmts, urlmethod, sys_args
 from .standard_launcher import StandardFrame
+from .fateark_libs.blob_hash_holder import FateArkBlobHashHolder
 from .fateark_libs import core_conn as fateark_core, utils as fateark_utils
 
 
@@ -19,6 +20,7 @@ class FrameFateArk(StandardFrame):
     def __init__(self) -> None:
         super().__init__()
         self.bot_name = ""
+        self.blob_hash_holder = FateArkBlobHashHolder()
 
     def init(self) -> None:
         if "no-download-libs" not in sys_args.sys_args_to_dict().keys():
@@ -40,9 +42,9 @@ class FrameFateArk(StandardFrame):
         con_retries = 0
         while True:
             try:
-                fateark_core.connect(f"localhost:{free_port}")
+                fateark_core.connect(f"localhost:{free_port}", timeout=0.5)
                 break
-            except grpc.RpcError:
+            except (grpc.RpcError, TimeoutError):
                 con_retries += 1
                 time.sleep(0.5)
                 if con_retries > 20:
@@ -54,10 +56,11 @@ class FrameFateArk(StandardFrame):
                 fateark_core.ping()
                 break
             except grpc.RpcError as err:
-                fmts.print_war(
-                    f"FateArk 连接失败, 重试第 {con_retries + 1} 次", end="\r"
-                )
                 con_retries += 1
+                if con_retries >= 3:
+                    fmts.print_war(
+                        f"FateArk 服务仍在初始化, 重试第 {con_retries} 次", end="\r"
+                    )
                 time.sleep(0.5)
                 if con_retries >= 20:
                     self.update_status(SysStatus.CRASHED_EXIT)
@@ -65,7 +68,7 @@ class FrameFateArk(StandardFrame):
                     return SystemError(
                         f"FateArk 与 ToolDelta 断开连接: {err.details()}"
                     )
-                fateark_core.connect(f"localhost:{free_port}")
+                fateark_core.connect(f"localhost:{free_port}", timeout=0.5)
         fmts.print_suc("§9成功与 FateArk 建立神经网络连接")
         self._start_message_show_thread()
         self._start_proc_message_show_thread()
@@ -81,9 +84,9 @@ class FrameFateArk(StandardFrame):
             self.kill_proc()
             return SystemError(f"FateArk 无法通过我的世界网络登录到租赁服: {err_msg}")
         self.update_status(SysStatus.RUNNING)
-        fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()
         self._bytes_packets_handler_thread()
+        fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._exec_launched_listen_cbs()
         self._start_wait_and_handle_dead_thread()
         self.wait_crashed()
@@ -113,15 +116,19 @@ class FrameFateArk(StandardFrame):
 
     @utils.thread_func("FateArk 主输出线程", thread_level=utils.ToolDeltaThread.SYSTEM)
     def _start_message_show_thread(self):
+        generation = fateark_core.get_connection_generation()
         try:
             for msg_prefix, msg, err_msg in fateark_core.read_output():
+                if generation != fateark_core.get_connection_generation():
+                    return
                 fmts.print_with_info(f"§b[{msg_prefix}]§r {msg}", "§b FARK ")
                 if err_msg:
                     fmts.print_err("FateArk: " + err_msg)
                 if msg_prefix == "Crash":
-                    fmts.print_err("FateArk: " + err_msg)
                     self.update_status(SysStatus.CRASHED_EXIT)
         except RpcError:
+            if generation != fateark_core.get_connection_generation():
+                return
             fmts.print_inf("FateArk 输出通道已断开连接")
 
     @utils.thread_func(
@@ -140,7 +147,15 @@ class FrameFateArk(StandardFrame):
 
     @utils.thread_func("FateArk 等待退出线程")
     def _start_wait_and_handle_dead_thread(self):
-        dead_reason = fateark_core.wait_dead()
+        generation = fateark_core.get_connection_generation()
+        try:
+            dead_reason = fateark_core.wait_dead()
+        except RpcError as err:
+            if generation != fateark_core.get_connection_generation():
+                return
+            dead_reason = err.details() or str(err)
+        if generation != fateark_core.get_connection_generation():
+            return
         fmts.print_err(f"FateArk 已崩溃: {dead_reason}")
         self.update_status(SysStatus.CRASHED_EXIT)
 
@@ -160,10 +175,15 @@ class FrameFateArk(StandardFrame):
         "FateArk 数据包处理线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
     def _packets_handler_thread(self):
+        generation = fateark_core.get_connection_generation()
         try:
             for id, packet in fateark_core.read_packet():
+                if generation != fateark_core.get_connection_generation():
+                    return
                 self._packets_handler(id, packet)
         except RpcError:
+            if generation != fateark_core.get_connection_generation():
+                return
             fmts.print_inf("FateArk 数据包处理通道已断开连接")
             self.update_status(SysStatus.CRASHED_EXIT)
 
@@ -171,12 +191,17 @@ class FrameFateArk(StandardFrame):
         "FateArk 字节流数据包处理线程", thread_level=utils.ToolDeltaThread.SYSTEM
     )
     def _bytes_packets_handler_thread(self):
+        generation = fateark_core.get_connection_generation()
         try:
             for pkID, packet_bytes in fateark_core.read_bytes_packet():
+                if generation != fateark_core.get_connection_generation():
+                    return
                 packet = pool.bytes_packet_by_id(pkID)
                 packet.decode(packet_bytes)
                 self._packets_handler(pkID, packet)
         except RpcError:
+            if generation != fateark_core.get_connection_generation():
+                return
             fmts.print_inf("FateArk 字节数据包处理通道已断开连接")
             self.update_status(SysStatus.CRASHED_EXIT)
 
@@ -253,18 +278,23 @@ class FrameFateArk(StandardFrame):
             pk (str | BaseBytesPacket): 数据包内容
 
         """
-        if type(pk) is not dict:
-            raise Exception("sendPacket: Bytes packet is not supported")
-        fateark_core.sendPacket(pkID, pk)
+        self.check_avaliable()
+        if isinstance(pk, dict):
+            fateark_core.sendPacket(pkID, pk)
+        elif isinstance(pk, base_bytes_packet.BaseBytesPacket):
+            fateark_core.sendPacket(pkID, pk.encode())
+        else:
+            raise TypeError("sendPacket() 内容必须是 dict 或 BaseBytesPacket")
+
+    def reload_listen_packets(self, listen_packets: set[PacketIDS]) -> None:
+        super().reload_listen_packets(listen_packets)
+        if self.status == SysStatus.RUNNING:
+            fateark_core.set_listen_packets(set(self.need_listen_packets))
 
     def get_players_info(self):
         uuids = fateark_core.get_online_player_uuids()
-        return {
-            fateark_core.get_unready_player(uuid).name: fateark_core.get_unready_player(
-                uuid
-            )
-            for uuid in uuids
-        }
+        players = [fateark_core.get_unready_player(uuid) for uuid in uuids]
+        return {player.name: player for player in players}
 
     def get_bot_name(self) -> str:
         """获取机器人名字
@@ -276,3 +306,7 @@ class FrameFateArk(StandardFrame):
         if not self.bot_name:
             self.bot_name = fateark_core.get_bot_name()
         return self.bot_name
+
+    def blobHashHolder(self) -> FateArkBlobHashHolder:
+        """返回当前 FateArk 会话的世界数据缓存访问器。"""
+        return self.blob_hash_holder

@@ -114,7 +114,7 @@ class Player:
         Returns:
             int: 物品数量
         """
-        return game_utils.getItem(self.name, item_id, item_data)
+        return game_utils.getItem(self.name, item_id, item_data, timeout)
 
     def getScore(self, scoreboard_name: str, timeout: float = 5):
         """

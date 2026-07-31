@@ -163,7 +163,12 @@ def getPos(target: str, timeout: float = 5) -> dict:
     return result[target]
 
 
-def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
+def getItem(
+    target: str,
+    itemName: str,
+    itemSpecialID: int = -1,
+    timeout: float = 5,
+) -> int:
     """
     获取玩家背包内指定的物品的数量
     Args:
@@ -180,7 +185,7 @@ def getItem(target: str, itemName: str, itemSpecialID: int = -1) -> int:
         raise ValueError("未找到目标玩家")
     target = to_player_selector(target)
     result = game_ctrl.sendwscmd_with_resp(
-        f"/clear {target} {itemName} {itemSpecialID} 0"
+        f"/clear {target} {itemName} {itemSpecialID} 0", timeout=timeout
     )
     if result.OutputMessages[0].Message == "commands.generic.syntax":
         raise ValueError("物品 ID 错误")

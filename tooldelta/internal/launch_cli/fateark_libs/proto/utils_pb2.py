@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from . import response_pb2 as proto_dot_response__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/utils.proto\x12\x13\x66\x61teark.proto.utils\x1a\x14proto/response.proto\"8\n\x11SendPacketRequest\x12\x11\n\tpacket_id\x18\x01 \x01(\x05\x12\x10\n\x08json_str\x18\x02 \x01(\t\"\x1f\n\x1dGetPacketNameIDMappingRequest\"(\n&GetClientMaintainedBotBasicInfoRequest\"&\n$GetClientMaintainedExtendInfoRequest2\xf4\x03\n\x0cUtilsService\x12]\n\nSendPacket\x12&.fateark.proto.utils.SendPacketRequest\x1a\'.fateark.proto.response.GeneralResponse\x12u\n\x16GetPacketNameIDMapping\x12\x32.fateark.proto.utils.GetPacketNameIDMappingRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x87\x01\n\x1fGetClientMaintainedBotBasicInfo\x12;.fateark.proto.utils.GetClientMaintainedBotBasicInfoRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x83\x01\n\x1dGetClientMaintainedExtendInfo\x12\x39.fateark.proto.utils.GetClientMaintainedExtendInfoRequest\x1a\'.fateark.proto.response.GeneralResponseB\x1bZ\x19network_api/utils;utilspbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11proto/utils.proto\x12\x13\x66\x61teark.proto.utils\x1a\x14proto/response.proto\"I\n\x11SendPacketRequest\x12\x11\n\tpacket_id\x18\x01 \x01(\r\x12\x10\n\x08json_str\x18\x02 \x01(\t\x12\x0f\n\x07payload\x18\x03 \x01(\x0c\"\x1f\n\x1dGetPacketNameIDMappingRequest\"(\n&GetClientMaintainedBotBasicInfoRequest\"&\n$GetClientMaintainedExtendInfoRequest\",\n\x1aGetBlobHashPayloadsRequest\x12\x0e\n\x06hashes\x18\x01 \x03(\x04\"0\n\x0f\x42lobHashPayload\x12\x0c\n\x04hash\x18\x01 \x01(\x04\x12\x0f\n\x07payload\x18\x02 \x01(\x0c\"\xd3\x01\n\x1bGetBlobHashPayloadsResponse\x12G\n\x06status\x18\x01 \x01(\x0e\x32\x37.fateark.proto.utils.GetBlobHashPayloadsResponse.Status\x12\x35\n\x07payload\x18\x02 \x03(\x0b\x32$.fateark.proto.utils.BlobHashPayload\x12\x11\n\terror_msg\x18\x03 \x01(\t\"!\n\x06Status\x12\x0b\n\x07SUCCESS\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x32\xee\x04\n\x0cUtilsService\x12]\n\nSendPacket\x12&.fateark.proto.utils.SendPacketRequest\x1a\'.fateark.proto.response.GeneralResponse\x12u\n\x16GetPacketNameIDMapping\x12\x32.fateark.proto.utils.GetPacketNameIDMappingRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x87\x01\n\x1fGetClientMaintainedBotBasicInfo\x12;.fateark.proto.utils.GetClientMaintainedBotBasicInfoRequest\x1a\'.fateark.proto.response.GeneralResponse\x12\x83\x01\n\x1dGetClientMaintainedExtendInfo\x12\x39.fateark.proto.utils.GetClientMaintainedExtendInfoRequest\x1a\'.fateark.proto.response.GeneralResponse\x12x\n\x13GetBlobHashPayloads\x12/.fateark.proto.utils.GetBlobHashPayloadsRequest\x1a\x30.fateark.proto.utils.GetBlobHashPayloadsResponseB\x1bZ\x19network_api/utils;utilspbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,13 +34,21 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\031network_api/utils;utilspb'
   _globals['_SENDPACKETREQUEST']._serialized_start=64
-  _globals['_SENDPACKETREQUEST']._serialized_end=120
-  _globals['_GETPACKETNAMEIDMAPPINGREQUEST']._serialized_start=122
-  _globals['_GETPACKETNAMEIDMAPPINGREQUEST']._serialized_end=153
-  _globals['_GETCLIENTMAINTAINEDBOTBASICINFOREQUEST']._serialized_start=155
-  _globals['_GETCLIENTMAINTAINEDBOTBASICINFOREQUEST']._serialized_end=195
-  _globals['_GETCLIENTMAINTAINEDEXTENDINFOREQUEST']._serialized_start=197
-  _globals['_GETCLIENTMAINTAINEDEXTENDINFOREQUEST']._serialized_end=235
-  _globals['_UTILSSERVICE']._serialized_start=238
-  _globals['_UTILSSERVICE']._serialized_end=738
+  _globals['_SENDPACKETREQUEST']._serialized_end=137
+  _globals['_GETPACKETNAMEIDMAPPINGREQUEST']._serialized_start=139
+  _globals['_GETPACKETNAMEIDMAPPINGREQUEST']._serialized_end=170
+  _globals['_GETCLIENTMAINTAINEDBOTBASICINFOREQUEST']._serialized_start=172
+  _globals['_GETCLIENTMAINTAINEDBOTBASICINFOREQUEST']._serialized_end=212
+  _globals['_GETCLIENTMAINTAINEDEXTENDINFOREQUEST']._serialized_start=214
+  _globals['_GETCLIENTMAINTAINEDEXTENDINFOREQUEST']._serialized_end=252
+  _globals['_GETBLOBHASHPAYLOADSREQUEST']._serialized_start=254
+  _globals['_GETBLOBHASHPAYLOADSREQUEST']._serialized_end=298
+  _globals['_BLOBHASHPAYLOAD']._serialized_start=300
+  _globals['_BLOBHASHPAYLOAD']._serialized_end=348
+  _globals['_GETBLOBHASHPAYLOADSRESPONSE']._serialized_start=351
+  _globals['_GETBLOBHASHPAYLOADSRESPONSE']._serialized_end=562
+  _globals['_GETBLOBHASHPAYLOADSRESPONSE_STATUS']._serialized_start=529
+  _globals['_GETBLOBHASHPAYLOADSRESPONSE_STATUS']._serialized_end=562
+  _globals['_UTILSSERVICE']._serialized_start=565
+  _globals['_UTILSSERVICE']._serialized_end=1187
 # @@protoc_insertion_point(module_scope)

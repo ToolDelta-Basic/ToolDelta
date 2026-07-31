@@ -24,7 +24,7 @@ class PacketIDs(IntEnum):
     IDTakeItemActor = TakeItemActor = 17  # 捡起物品实体（动画）
     IDMoveActorAbsolute = MoveActorAbsolute = 18  # 移动实体到绝对位置
     IDMovePlayer = MovePlayer = 19  # 玩家移动（服务端 <-> 客户端）
-    IDPassengerJump = PassengerJump = 20  # 乘骑跳跃（客户端 -> 服务端）
+    IDPassengerJump = PassengerJump = IDRiderJump = RiderJump = 20  # 乘骑跳跃
     IDUpdateBlock = UpdateBlock = 21  # 更新方块（单方块修改）
     IDAddPainting = AddPainting = 22  # 添加绘画实体
     IDTickSync = TickSync = 23  # 已弃用
@@ -234,7 +234,7 @@ class PacketIDs(IntEnum):
     IDCorrectPlayerMovePrediction = CorrectPlayerMovePrediction = (
         161  # 纠正玩家移动预测（服务端 -> 客户端）
     )
-    IDItemComponent = ItemComponent = 162  # 物品组件（服务端 -> 客户端）
+    IDItemComponent = ItemComponent = IDItemRegistry = ItemRegistry = 162
     IDFilterText = FilterText = 163  # 已弃用
     IDClientBoundDebugRenderer = ClientBoundDebugRenderer = (
         164  # 客户端绑定调试渲染器（服务端 -> 客户端）
@@ -259,12 +259,10 @@ class PacketIDs(IntEnum):
     )
     IDScriptMessage = ScriptMessage = 177  # 脚本消息（客户端 -> 服务端）
     IDCodeBuilderSource = CodeBuilderSource = 178  # 代码构建器源（客户端 -> 服务端）
-    IDTickingAreasLoadStatus = TickingAreasLoadStatus = (
-        179  #  ticking 区域加载状态（服务端 -> 客户端）
-    )
-    IDDimensionData = DimensionData = 180  # 维度数据（服务端 -> 客户端）
-    IDAgentAction = AgentAction = 181  # 代理
-    IDChangeMobProperty = ChangeMobProperty = 182  # 改变生物属性（服务端 -> 客户端）
+    IDAgentAction = AgentAction = 179  # 代理
+    IDChangeMobProperty = ChangeMobProperty = 180  # 改变生物属性
+    IDDimensionData = DimensionData = 181  # 维度数据
+    IDTickingAreasLoadStatus = TickingAreasLoadStatus = 182  # ticking 区域状态
     IDLessonProgress = LessonProgress = 183  # 课程进度（客户端 -> 服务端）
     IDRequestAbility = RequestAbility = 184  # 请求能力（客户端 -> 服务端）
     IDRequestPermissions = RequestPermissions = 185  # 请求权限（客户端 -> 服务端）
@@ -310,10 +308,11 @@ class PacketIDs(IntEnum):
     IDCustomV2 = CustomV2 = 227  # 自定义 V2（服务端 -> 客户端）
     IDConfirmSkin = ConfirmSkin = 228  # 确认皮肤（服务端 -> 客户端）
     IDTransportNoCompress = TransportNoCompress = 229  # 无压缩传输（服务端 -> 客户端）
-    IDMobEffectV2 = MobEffectV2 = 230  # 生物效果 V2（服务端 -> 客户端）
-    IDMobBlockActorChanged = MobBlockActorChanged = (
-        231  # 生物方块实体改变（服务端 -> 客户端）
-    )
+    IDMobEffectV2 = MobEffectV2 = IDModEffect = ModEffect = 230
+    IDMobBlockActorChanged = 231
+    MobBlockActorChanged = 231
+    IDModBlockActorChanged = 231
+    ModBlockActorChanged = 231
     IDChangeActorMotion = ChangeActorMotion = 232  # 改变实体运动（服务端 -> 客户端）
     IDAnimateEmoteEntity = AnimateEmoteEntity = 233  # 动画表情实体（服务端 -> 客户端）
     IDChangeBiome = ChangeBiome = 234  # 未知

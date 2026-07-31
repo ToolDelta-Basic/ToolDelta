@@ -55,6 +55,11 @@ class UtilsServiceStub(object):
                 request_serializer=proto_dot_utils__pb2.GetClientMaintainedExtendInfoRequest.SerializeToString,
                 response_deserializer=proto_dot_response__pb2.GeneralResponse.FromString,
                 _registered_method=True)
+        self.GetBlobHashPayloads = channel.unary_unary(
+                '/fateark.proto.utils.UtilsService/GetBlobHashPayloads',
+                request_serializer=proto_dot_utils__pb2.GetBlobHashPayloadsRequest.SerializeToString,
+                response_deserializer=proto_dot_utils__pb2.GetBlobHashPayloadsResponse.FromString,
+                _registered_method=True)
 
 
 class UtilsServiceServicer(object):
@@ -84,6 +89,12 @@ class UtilsServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetBlobHashPayloads(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_UtilsServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -106,6 +117,11 @@ def add_UtilsServiceServicer_to_server(servicer, server):
                     servicer.GetClientMaintainedExtendInfo,
                     request_deserializer=proto_dot_utils__pb2.GetClientMaintainedExtendInfoRequest.FromString,
                     response_serializer=proto_dot_response__pb2.GeneralResponse.SerializeToString,
+            ),
+            'GetBlobHashPayloads': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetBlobHashPayloads,
+                    request_deserializer=proto_dot_utils__pb2.GetBlobHashPayloadsRequest.FromString,
+                    response_serializer=proto_dot_utils__pb2.GetBlobHashPayloadsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -216,6 +232,33 @@ class UtilsService(object):
             '/fateark.proto.utils.UtilsService/GetClientMaintainedExtendInfo',
             proto_dot_utils__pb2.GetClientMaintainedExtendInfoRequest.SerializeToString,
             proto_dot_response__pb2.GeneralResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetBlobHashPayloads(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fateark.proto.utils.UtilsService/GetBlobHashPayloads',
+            proto_dot_utils__pb2.GetBlobHashPayloadsRequest.SerializeToString,
+            proto_dot_utils__pb2.GetBlobHashPayloadsResponse.FromString,
             options,
             channel_credentials,
             insecure,

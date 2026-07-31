@@ -98,6 +98,14 @@ message GetPlayerIsOPRequest { string uuid_str = 1; }
 
 message GetPlayerOnlineRequest { string uuid_str = 1; }
 
+message GetPlayerXUIDRequest { string uuid_str = 1; }
+
+message GetPlayerCommandPermissionsRequest { string uuid_str = 1; }
+
+message GetPlayerPermissionsRequest { string uuid_str = 1; }
+
+message GetPlayerInfoRequest { string uuid_str = 1; }
+
 message SendPlayerChatRequest {
   string uuid_str = 1;
   string msg = 2;
@@ -192,6 +200,14 @@ service PlayerKitService {
       returns (response.GeneralBoolResponse);
   rpc GetPlayerOnline(GetPlayerOnlineRequest)
       returns (response.GeneralBoolResponse);
+  rpc GetPlayerXUID(GetPlayerXUIDRequest)
+      returns (response.GeneralResponse);
+  rpc GetPlayerCommandPermissions(GetPlayerCommandPermissionsRequest)
+      returns (response.GeneralInt32Response);
+  rpc GetPlayerPermissions(GetPlayerPermissionsRequest)
+      returns (response.GeneralInt32Response);
+  rpc GetPlayerInfo(GetPlayerInfoRequest)
+      returns (response.GeneralResponse);
   rpc SendPlayerChat(SendPlayerChatRequest) returns (response.GeneralResponse);
   rpc SendPlayerRawChat(SendPlayerRawChatRequest)
       returns (response.GeneralResponse);

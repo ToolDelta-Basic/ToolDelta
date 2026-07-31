@@ -151,6 +151,8 @@ fbtoken
 本地开发数据文件夹
 
 test*
+!tests/
+!tests/*.py
 ToolDelta基本配置.json
 NeOmega数据
 *.tmp

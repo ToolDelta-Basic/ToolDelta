@@ -15,7 +15,6 @@ class FrameFateArkIndirect(FrameFateArk):
     def __init__(self) -> None:
         super().__init__()
 
-
     def launch(self):
         cfgs = get_cfg("ToolDelta基本配置.json", tooldelta_cfg.LAUNCH_CFG_STD)
         openat_addr = (
@@ -43,10 +42,11 @@ class FrameFateArkIndirect(FrameFateArk):
             return SystemError(f"FateArk 登录失败: {err_msg}")
         fmts.print_suc("FateArk 已连接")
         self.update_status(SysStatus.RUNNING)
-        fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._packets_handler_thread()
         self._bytes_packets_handler_thread()
+        fateark_core.set_listen_packets(set(self.need_listen_packets))
         self._exec_launched_listen_cbs()
+        self._start_wait_and_handle_dead_thread()
         self.wait_crashed()
         if self.status == SysStatus.NORMAL_EXIT:
             return SystemExit("正常退出")

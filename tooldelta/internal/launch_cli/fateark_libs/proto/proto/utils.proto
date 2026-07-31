@@ -7,8 +7,9 @@ import "proto/response.proto";
 option go_package = "network_api/utils;utilspb";
 
 message SendPacketRequest {
-  int32 packet_id = 1;
+  uint32 packet_id = 1;
   string json_str = 2;
+  bytes payload = 3;
 }
 
 message GetPacketNameIDMappingRequest {}
@@ -16,6 +17,25 @@ message GetPacketNameIDMappingRequest {}
 message GetClientMaintainedBotBasicInfoRequest {}
 
 message GetClientMaintainedExtendInfoRequest {}
+
+message GetBlobHashPayloadsRequest {
+  repeated uint64 hashes = 1;
+}
+
+message BlobHashPayload {
+  uint64 hash = 1;
+  bytes payload = 2;
+}
+
+message GetBlobHashPayloadsResponse {
+  enum Status {
+    SUCCESS = 0;
+    FAILED = 1;
+  }
+  Status status = 1;
+  repeated BlobHashPayload payload = 2;
+  string error_msg = 3;
+}
 
 service UtilsService {
   rpc SendPacket(SendPacketRequest) returns (response.GeneralResponse);
@@ -25,4 +45,6 @@ service UtilsService {
       returns (response.GeneralResponse);
   rpc GetClientMaintainedExtendInfo(GetClientMaintainedExtendInfoRequest)
       returns (response.GeneralResponse);
+  rpc GetBlobHashPayloads(GetBlobHashPayloadsRequest)
+      returns (GetBlobHashPayloadsResponse);
 }
