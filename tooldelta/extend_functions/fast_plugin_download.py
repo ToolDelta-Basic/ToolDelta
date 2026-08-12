@@ -12,6 +12,10 @@ class FastPluginDownload(ExtendFunction):
 
     def when_activate(self):
         super().when_activate()
+        self.when_console_cmd_reset()
+
+    def when_console_cmd_reset(self):
+        """注册快速下载插件的控制台命令。"""
         self.frame.add_console_cmd_trigger(
             ["plg add"],
             "插件 ID",
