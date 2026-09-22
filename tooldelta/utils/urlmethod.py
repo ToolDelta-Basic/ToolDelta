@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import socket
+import tempfile
 import time
 import aiohttp
 import anyio
@@ -103,38 +104,53 @@ async def download_file_urls(download_url2dst: list[tuple[str, Path]]) -> None:
                 bar_format="{desc} {n:.2f}MB/{total:.2f}MB",
                 position=i,
             )
-            async with sem:
-                async with session.get(url) as response:
-                    if response.status == Http_Ok:
-                        filename = url.split("/")[-1]
-                        total_size = int(response.headers.get("content-length", 0))
-                        total_size_mb = total_size / (1024 * 1024)  # 转换为 MB
-                        progress_bar.reset(total=total_size_mb)
+            try:
+                async with sem:
+                    async with session.get(url) as response:
+                        if response.status == Http_Ok:
+                            filename = url.split("/")[-1]
+                            total_size = int(response.headers.get("content-length", 0))
+                            total_size_mb = total_size / (1024 * 1024)  # 转换为 MB
+                            progress_bar.reset(total=total_size_mb)
 
-                        progress_bar.set_description_str(
-                            f"• Downloading {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.YELLOW}In Progress...{Style.RESET_ALL}"
-                        )
-                        downloaded = 0
+                            progress_bar.set_description_str(
+                                f"• Downloading {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.YELLOW}In Progress...{Style.RESET_ALL}"
+                            )
+                            downloaded = 0
 
-                        async with await anyio.open_file(file_path, "wb") as f:
-                            async for chunk in response.content.iter_chunked(1024):
-                                await f.write(chunk)
-                                downloaded += len(chunk)
-                                progress_bar.update(
-                                    len(chunk) / (1024 * 1024)
-                                )  # 更新进度为 MB
+                            # 同目录临时文件保证替换在同一文件系统内完成。
+                            fd, temp_name = tempfile.mkstemp(
+                                dir=file_path.parent,
+                                prefix=f".{file_path.name}.",
+                                suffix=".tmp",
+                            )
+                            temp_path = Path(temp_name)
+                            try:
+                                os.close(fd)
+                                async with await anyio.open_file(temp_path, "wb") as f:
+                                    async for chunk in response.content.iter_chunked(1024):
+                                        await f.write(chunk)
+                                        downloaded += len(chunk)
+                                        progress_bar.update(
+                                            len(chunk) / (1024 * 1024)
+                                        )  # 更新进度为 MB
+                                os.replace(temp_path, file_path)
+                            finally:
+                                temp_path.unlink(missing_ok=True)
 
-                        progress_bar.set_description_str(
-                            f"• Downloading {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.GREEN}Succeed{Style.RESET_ALL}"
-                        )
-                        progress_bar.bar_format = "{desc}"  # 只显示描述
-                        progress_bar.refresh()
-                    else:
-                        progress_bar.set_description_str(
-                            f"• Downloading {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.RED}Failed (HTTP {response.status}){Style.RESET_ALL}"
-                        )
-                        progress_bar.bar_format = "{desc}"  # 只显示描述
-                        progress_bar.refresh()
+                            progress_bar.set_description_str(
+                                f"• Downloading {Fore.CYAN}{filename}{Style.RESET_ALL}: {Fore.GREEN}Succeed{Style.RESET_ALL}"
+                            )
+                            progress_bar.bar_format = "{desc}"  # 只显示描述
+                            progress_bar.refresh()
+                        else:
+                            progress_bar.set_description_str(
+                                f"• Downloading {Fore.CYAN}{url.split('/')[-1]}{Style.RESET_ALL}: {Fore.RED}Failed (HTTP {response.status}){Style.RESET_ALL}"
+                            )
+                            progress_bar.bar_format = "{desc}"  # 只显示描述
+                            progress_bar.refresh()
+            finally:
+                progress_bar.close()
             return progress_bar
 
     sem = asyncio.Semaphore(6)  # 限制同时进行的下载任务数量为4
@@ -142,7 +158,6 @@ async def download_file_urls(download_url2dst: list[tuple[str, Path]]) -> None:
 
     async with aiohttp.ClientSession() as session:
         tasks: list[asyncio.Task] = []
-        progress_bars: list[tqdm] = []
 
         for i, (url, dst) in enumerate(download_url2dst):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
@@ -151,9 +166,14 @@ async def download_file_urls(download_url2dst: list[tuple[str, Path]]) -> None:
             )
             tasks.append(task)
 
-        progress_bars = await asyncio.gather(*tasks)
-        for progress_bar in progress_bars:
-            progress_bar.close()
+        try:
+            await asyncio.gather(*tasks)
+        except BaseException:
+            # 等待其余任务清理临时文件后，再关闭会话并传播异常。
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
 
 
 def githubdownloadurl_to_rawurl(url: str) -> str:
