@@ -33,6 +33,9 @@
         ],
         "Android:aarch64": [
             "FateArk_android_aarch64"
+        ],
+        "CoolPotOS:amd64": [
+            "FateArk_linux_amd64"
         ]
     }
 }
