@@ -32,5 +32,11 @@ def activate_functions():
         func.when_activate()
 
 
+def restore_console_cmds():
+    """恢复内置扩展提供的控制台命令。"""
+    for func in registered_functions:
+        func.when_console_cmd_reset()
+
+
 def import_functions():
-    from . import gamerule_warnings, fast_plugin_download
+    from . import gamerule_warnings, fast_plugin_download, plugin_config
