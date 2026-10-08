@@ -9,3 +9,7 @@ class ExtendFunction:
         self.frame = frame
 
     def when_activate(self): ...
+
+    def when_console_cmd_reset(self):
+        """控制台命令重置后的扩展钩子。"""
+        return None
