@@ -37,4 +37,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          # Alibaba Cloud Registry does not support BuildKit provenance manifests.
+          provenance: false
           tags: ${{ secrets.ALIYUN_DOCKER_REGISTRY_ENTRY }}/tooldelta/tooldelta:latest
