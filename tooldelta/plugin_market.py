@@ -62,11 +62,21 @@ class PluginMarket:
         self._cached_plugins_id_map = {}
         self._cached_market_filetree: FILETREE = {}
         try:
-            self.plugin_market_content_url = cfg.get_cfg(
+            source_url = cfg.get_cfg(
                 "ToolDelta基本配置.json", {"插件市场源": str}
             )["插件市场源"]
         except Exception:
-            self.plugin_market_content_url = PLUGIN_MARKET_SOURCE_OFFICIAL
+            source_url = PLUGIN_MARKET_SOURCE_OFFICIAL
+        self.set_source_url(source_url)
+
+    def set_source_url(self, source_url: str) -> None:
+        """切换插件市场源并清空已有缓存。"""
+        self.plugin_market_content_url = (
+            source_url or PLUGIN_MARKET_SOURCE_OFFICIAL
+        )
+        self._cached_market_tree.clear()
+        self._cached_plugins_id_map.clear()
+        self._cached_market_filetree.clear()
 
     def enter_plugin_market(self, source_url: str | None = None, in_game=False) -> None:
         """
@@ -77,7 +87,7 @@ class PluginMarket:
             in_game (bool, optional): 是否在游戏内调用的插件市场命令
         """
         if source_url:
-            self.plugin_market_content_url = source_url
+            self.set_source_url(source_url)
 
         fmts.ansi_save_screen()
         fmts.clean_print("§6正在连接到插件市场..")
