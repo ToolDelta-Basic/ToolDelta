@@ -1,44 +1,57 @@
-[tool.poetry]
+[project]
 name = "Tooldelta"
 version = "0.0.0"                                              # This field is automatically set to the value in the version file
 description = "Plugin Loader for NeteaseRentalServer on Panel"
-authors = ["ToolDelta Studio Staff"]
-license = ""
-
+authors = [{ name = "ToolDelta Studio Staff" }]
 readme = "README.md"
-homepage = "https://github.com/ToolDelta-Basic/ToolDelta"
-repository = "https://github.com/ToolDelta-Basic/ToolDelta"
+requires-python = ">=3.10,<3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 
-# Please don't change this manually, your changes may invalidate other people's package management, use poetry to make changes!
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-colorama = "^0.4.6"
-pyspeedtest = "1.2.7"
-aiohttp = "^3.14.3"
-flask = "^3.1.3"
-websocket-client = "^1.7.0"
-pyyaml = "6.0.1"
-brotli = "^1.2.0"
-websockets = "^12.0"
-tqdm = "^4.66.4"
-anyio = "^4.4.0"
-requests = "^2.33.0"
-numpy = "^2.1.0"
-protobuf = "^6.33.5"
-grpcio = "^1.83.0"
-msgpack = "^1.2.1"
-nbtlib = "^2.0.4"
-rich = "^14.1.0"
+# Please don't change this manually, your changes may invalidate other people's package management, use uv to make changes!
+dependencies = [
+    "colorama>=0.4.6,<0.5.0",
+    "pyspeedtest==1.2.7",
+    "aiohttp>=3.14.3,<4.0.0",
+    "flask>=3.1.3,<4.0.0",
+    "websocket-client>=1.7.0,<2.0.0",
+    "pyyaml==6.0.1",
+    "brotli>=1.2.0,<2.0.0",
+    "websockets>=12.0,<13.0",
+    "tqdm>=4.66.4,<5.0.0",
+    "anyio>=4.4.0,<5.0.0",
+    "requests>=2.33.0,<3.0.0",
+    "numpy>=2.1.0,<3.0.0",
+    "protobuf>=6.33.5,<7.0.0",
+    "grpcio>=1.83.0,<2.0.0",
+    "msgpack>=1.2.1,<2.0.0",
+    "nbtlib>=2.0.4,<3.0.0",
+    "rich>=14.1.0,<15.0.0",
+]
 
-[[tool.poetry.source]]
+[project.urls]
+Homepage = "https://github.com/ToolDelta-Basic/ToolDelta"
+Repository = "https://github.com/ToolDelta-Basic/ToolDelta"
+
+[[tool.uv.index]]
 name = "mirrors"
 url = "http://mirrors.aliyun.com/pypi/simple/"
-priority = "primary"
+default = true
 
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tooldelta"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["tooldelta", "README.md", "LICENSE"]
 
 
 [tool.ruff]

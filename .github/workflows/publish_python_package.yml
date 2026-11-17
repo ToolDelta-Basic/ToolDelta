@@ -18,18 +18,16 @@ jobs:
 
     - name: Checkout Code
       uses: actions/checkout@v4
-  
-    - name: Set Up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
 
-    - name: Install Dependencies
-      run: pip install poetry
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
 
     - name: Build and Publish
+      env:
+        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-        poetry version $(cat version)
-        poetry build
-        poetry publish
+        uv version --no-sync $(cat version)
+        uv build
+        uv publish
