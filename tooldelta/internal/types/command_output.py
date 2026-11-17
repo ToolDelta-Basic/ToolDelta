@@ -38,10 +38,16 @@ class Packet_CommandOutput:
 
     def __init__(self, pkt: dict):
         self.as_dict = pkt
+
         self.CommandOrigin = SubPacket_CmdOrigin(pkt["CommandOrigin"])
         self.OutputMessages = [
             SubPacket_CmdOutputMsg(imsg) for imsg in pkt["OutputMessages"]
         ]
         self.SuccessCount = pkt["SuccessCount"]
         self.OutputType = pkt["OutputType"]
-        self.DataSet = pkt["DataSet"]
+
+        if "Set" in pkt["DataSet"]:
+            self.DataSet = pkt["DataSet"]["Val"]
+            self.as_dict["DataSet"] = self.DataSet
+        else:
+            self.DataSet = pkt["DataSet"]
