@@ -5,6 +5,12 @@ description = "Plugin Loader for NeteaseRentalServer on Panel"
 authors = [{ name = "ToolDelta Studio Staff" }]
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 
 # Please don't change this manually, your changes may invalidate other people's package management, use uv to make changes!
 dependencies = [
