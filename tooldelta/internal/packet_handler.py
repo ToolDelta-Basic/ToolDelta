@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING
 from collections.abc import Callable
+from threading import Lock
+from typing import TYPE_CHECKING
 
 from ..mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from ..constants.packets import PacketIDS
@@ -26,13 +27,22 @@ class PacketHandler:
             int, dict[int, list[BytesPacketListener]]
         ] = {}
         self.dict_packet_wait_callbacks: dict[int, list[DictPacketWaiter]] = {}
+        self._dict_packet_wait_lock = Lock()
 
     def wait_next_packet(self, packet_id: PacketIDS, timeout: float = 30) -> dict | None:
+        """Wait for the next subscribed dictionary packet of this ID."""
         getter, setter = create_result_cb(dict)
-        self.dict_packet_wait_callbacks.setdefault(packet_id, []).append(setter)
-        res = getter(timeout)
-        self.dict_packet_wait_callbacks[packet_id].remove(setter)
-        return res
+        with self._dict_packet_wait_lock:
+            waiters = self.dict_packet_wait_callbacks.setdefault(packet_id, [])
+            waiters.append(setter)
+        try:
+            return getter(timeout)
+        finally:
+            with self._dict_packet_wait_lock:
+                if self.dict_packet_wait_callbacks.get(packet_id) is waiters:
+                    waiters.remove(setter)
+                    if not waiters:
+                        del self.dict_packet_wait_callbacks[packet_id]
 
     def add_dict_packet_listener(
         self,
@@ -65,6 +75,7 @@ class PacketHandler:
             plist.append(cb)
 
     def entrance_dict_packet(self, packetID: int, packet: dict):
+        self._handle_next_dict_packet(packetID, packet)
         self._handle_dict_packet(packetID, packet)
 
     def entrance_bytes_packet(self, packetID: int, packet: BaseBytesPacket):
@@ -87,6 +98,7 @@ class PacketHandler:
                         return
 
     def _handle_next_dict_packet(self, packetID: int, packet: dict):
-        cbs = self.dict_packet_wait_callbacks.get(packetID, [])
-        for cb in cbs.copy():
+        with self._dict_packet_wait_lock:
+            cbs = self.dict_packet_wait_callbacks.pop(packetID, [])
+        for cb in cbs:
             cb(packet)

@@ -204,50 +204,67 @@ def getPosXYZ(playername: str, timeout: float = 30) -> tuple[float, float, float
 
 def getMultiScore(scoreboardNameToGet: str, targetNameToGet: str) -> int | dict:
     """
-    获取单个或多个计分板分数项
+    获取单个或多个计分板分数项。
+
     Args:
-        scoreboardNameToGet: 计分板名
-        targetNameToGet: 获取分数的对象/目标选择器
+        scoreboardNameToGet: 计分板名，* 表示全部计分板
+        targetNameToGet: 计分对象名称、目标选择器，或表示全部对象的 *
     Returns:
-        ...
+        单个分数、计分项到分数的映射，或对象到分数的映射。
+        多个对象且计分板为 * 时，返回 {对象名: {计分板名: 分数}}。
+        服务端未返回名称的离线对象会被跳过。
     Raises:
         ValueError: 无法获取分数
     """
-    game_ctrl = _get_game_ctrl()
-    resultList = game_ctrl.sendwscmd_with_resp(
-        f"/scoreboard players list {targetNameToGet}"
+    target = targetNameToGet.strip()
+    if not target:
+        raise ValueError("获取计分板分数失败：计分对象不能为空")
+    multiple_targets = target == "*" or target.startswith("@")
+    if not multiple_targets and not (target.startswith('"') and target.endswith('"')):
+        target = json.dumps(target, ensure_ascii=False)
+
+    messages = _get_game_ctrl().sendwscmd_with_resp(
+        f"/scoreboard players list {target}"
     ).OutputMessages
-    result = {}
-    result2 = {}
-    if targetNameToGet.strip() != "*":
-        targetNameToGet = to_player_selector(targetNameToGet)
-    for i in resultList:
-        Message = i.Message
-        if Message == r"commands.scoreboard.players.list.player.empty":
-            continue
-        if Message == r"§a%commands.scoreboard.players.list.player.count":
-            targetName = i.Parameters[1]
-        elif Message == "commands.scoreboard.players.list.player.entry":
-            if targetName == "commands.scoreboard.players.offlinePlayerName":
-                continue
-            scoreboardName = i.Parameters[2]
-            targetScore = int(i.Parameters[0])
-            if targetName not in result:
-                result[targetName] = {}
-            result[targetName][scoreboardName] = targetScore
-            if scoreboardName not in result2:
-                result2[scoreboardName] = {}
-            result2[scoreboardName][targetName] = targetScore
-    if not (result or result2):
-        raise Exception("获取计分板分数失败")
-    try:
-        if targetNameToGet == "*" or targetNameToGet.startswith("@"):
-            return result2[scoreboardNameToGet]
+    scores_by_target: dict[str, dict[str, int]] = {}
+    target_name = None
+    for message in messages:
+        key = utils.remove_mc_color_code(message.Message).removeprefix("%")
+        params = message.Parameters
+        if key == "commands.scoreboard.players.list.player.count":
+            target_name = params[1] if len(params) >= 2 else None
+            if (
+                target_name
+                and target_name.removeprefix("%")
+                == "commands.scoreboard.players.offlinePlayerName"
+            ):
+                target_name = None
+        elif key == "commands.scoreboard.players.list.player.empty":
+            target_name = None
+        elif (
+            key == "commands.scoreboard.players.list.player.entry"
+            and target_name
+            and len(params) >= 3
+        ):
+            scores_by_target.setdefault(target_name, {})[params[2]] = int(params[0])
+
+    if multiple_targets:
+        if scoreboardNameToGet == "*" and scores_by_target:
+            return scores_by_target
+        scores = {
+            name: values[scoreboardNameToGet]
+            for name, values in scores_by_target.items()
+            if scoreboardNameToGet in values
+        }
+        if scores:
+            return scores
+    elif scores_by_target:
+        scores = next(iter(scores_by_target.values()))
         if scoreboardNameToGet == "*":
-            return result[targetNameToGet]
-        return result[targetNameToGet][scoreboardNameToGet]
-    except KeyError as err:
-        raise Exception(f"获取计分板分数失败：{err}")
+            return scores
+        if scoreboardNameToGet in scores:
+            return scores[scoreboardNameToGet]
+    raise ValueError(f"获取计分板分数失败：{targetNameToGet} / {scoreboardNameToGet}")
 
 
 def getScore(scb_name: str, target: str, timeout: float = 30) -> int:
@@ -398,10 +415,16 @@ def queryPlayerInventory(selector: str) -> dict:
         dict: 背包内容
     """
     resp = sendwscmd(f"codebuilder_actorinfo inventory {selector}", True)
-    assert resp is not None
-    if resp.SuccessCount < 1:
+    if resp is None or resp.SuccessCount < 1:
         raise ValueError("查询玩家背包内容失败")
-    return json.loads(resp.DataSet)
+
+    try:
+        data = json.loads(resp.DataSet)
+    except json.JSONDecodeError as exc:
+        raise ValueError("查询玩家背包内容失败：回执不是有效的 JSON") from exc
+    if not isinstance(data, dict):
+        raise ValueError("查询玩家背包内容失败：回执数据不是对象")
+    return data
 
 
 def notifyToServer(
