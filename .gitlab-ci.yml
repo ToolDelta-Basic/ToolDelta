@@ -1,8 +1,8 @@
 # .gitlab-ci.yml
-# Python Poetry 项目安全扫描配置
+# Python uv 项目安全扫描配置
 #
 # 功能：
-# 1. 扫描 Poetry 项目的依赖文件 poetry.lock
+# 1. 扫描 uv 项目的依赖文件 uv.lock
 # 2. 生成 SBOM
 # 3. 上传至 GitLab 内置 Dependency list
 # 4. 上传依赖漏洞至 GitLab 内置 Vulnerability report
@@ -57,12 +57,12 @@ variables:
   #
   # SECURE_ANALYZERS_PREFIX: "registry.example.com/analyzers"
 
-  # 如果你的 Poetry 项目使用内网 PyPI 源，
+  # 如果你的 uv 项目使用内网 PyPI 源，
   # 建议在 GitLab 项目 Settings > CI/CD > Variables 中配置，
   # 不建议直接写死在 yml 中。
   #
-  # PIP_INDEX_URL: "https://pypi.example.com/simple"
-  # PIP_EXTRA_INDEX_URL: "https://extra-pypi.example.com/simple"
+  # UV_INDEX_URL: "https://pypi.example.com/simple"
+  # UV_EXTRA_INDEX_URL: "https://extra-pypi.example.com/simple"
 
 # 覆盖模板中的 dependency-scanning 任务规则
 # 让依赖扫描在 MR、默认分支、定时任务中运行
