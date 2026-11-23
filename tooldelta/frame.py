@@ -169,6 +169,7 @@ class ToolDelta:
                 fmts.print_inf("重载: 正在保存数据缓存文件..")
                 utils.safe_close(SysStatus.RELOAD)
                 self.cmd_manager.reset_cmds()
+                extend_functions.restore_console_cmds()
                 fmts.print_inf("重载: 正在重新载入插件..")
                 self.plugin_group.reload(deep_reload)
                 fmts.print_suc("重载插件: 全部插件重载成功！")
